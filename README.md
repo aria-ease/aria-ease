@@ -45,7 +45,7 @@ const App = () => {
       >
         Display
       </button>
-      <div id="custom-menu" role="menu" aria-labelledby="display-button">
+      <div id="custom-menu" role="menu" aria-labelledby="display-button" style={{display: 'none', marginTop: '5px'}}>
         <button role="menuitem" className="profile-menu-item">One</button>
         <button role="menuitem" className="profile-menu-item">Two</button>
         <button role="menuitem" className="profile-menu-item">Three</button>
