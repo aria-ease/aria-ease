@@ -84,3 +84,7 @@ const App = () => {
 
 export default App
 ```
+
+### P.S.
+
+Make sure to add element focus styling in css otherwise visibility might be impacted.
