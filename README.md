@@ -24,8 +24,8 @@ const App = () => {
 
   return (
     <div>
-      <button onClick={toggleMenuDisplay}>Display</button>
-      <div id="custom-menu" role="menu">
+      <button id="display-button" onClick={toggleMenuDisplay}>Display</button>
+      <div id="custom-menu" role="menu" aria-labelledby="display-button">
         <button role="menuitem" className="profile-menu-item">One</button>
         <button role="menuitem" className="profile-menu-item">Two</button>
         <button role="menuitem" className="profile-menu-item">Three</button>
