@@ -40,6 +40,15 @@ export function makeTabAccessible(tabId, tabItemClass) {
                     tabItems.item(tabItemIndex).checked = !tabItems.item(tabItemIndex).checked;
                     break;
                 }
+                else if (tabItems.item(tabItemIndex).tagName === 'BUTTON') {
+                    tabItems.item(tabItemIndex).click();
+                    break;
+                }
+                else if (tabItems.item(tabItemIndex).tagName === 'A') {
+                    event.preventDefault();
+                    window.location.href = tabItems.item(tabItemIndex).href;
+                    break;
+                }
                 break;
             default:
                 break;
