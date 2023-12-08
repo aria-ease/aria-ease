@@ -9,7 +9,10 @@ import { HTMLElement, NodeListOfHTMLElement } from '../../Types'
 export function makeMenuAccessible(menu: string, menuItem: string): void {
     const menuDiv: HTMLElement = document.querySelector(`#${menu}`) as HTMLElement
     const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItem}`)
-    
+
+    const triggerId: string = menuDiv.getAttribute('aria-labelledby') as string
+    const triggerButton: HTMLElement = document.querySelector(`#${triggerId}`) as HTMLElement
+
     menuItems.item(0).focus();
     menuItems.forEach((menuItem: HTMLElement, menuItemIndex: number) => {
         menuItem.addEventListener('keydown', (event: KeyboardEvent) => handleKeyPress(event, menuItems, menuItemIndex))
@@ -33,6 +36,12 @@ export function makeMenuAccessible(menu: string, menuItem: string): void {
                 } else {
                     menuItems.item(menuItemIndex + 1).focus();
                 }
+                break;
+            case 'Escape':
+                (getComputedStyle(menuDiv).display === 'block') ?
+                    triggerButton.click() :
+                    null
+                triggerButton.focus()
                 break;
             default:
                 break;

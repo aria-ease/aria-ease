@@ -6,6 +6,8 @@
 export function makeMenuAccessible(menu, menuItem) {
     var menuDiv = document.querySelector("#".concat(menu));
     var menuItems = menuDiv.querySelectorAll(".".concat(menuItem));
+    var triggerId = menuDiv.getAttribute('aria-labelledby');
+    var triggerButton = document.querySelector("#".concat(triggerId));
     menuItems.item(0).focus();
     menuItems.forEach(function (menuItem, menuItemIndex) {
         menuItem.addEventListener('keydown', function (event) { return handleKeyPress(event, menuItems, menuItemIndex); });
@@ -30,6 +32,12 @@ export function makeMenuAccessible(menu, menuItem) {
                 else {
                     menuItems.item(menuItemIndex + 1).focus();
                 }
+                break;
+            case 'Escape':
+                (getComputedStyle(menuDiv).display === 'block') ?
+                    triggerButton.click() :
+                    null;
+                triggerButton.focus();
                 break;
             default:
                 break;
