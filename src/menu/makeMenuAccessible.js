@@ -43,11 +43,22 @@ export function makeMenuAccessible(menuId, menuItemClass) {
             case ' ':
                 if (menuItems.item(menuItemIndex).tagName === 'BUTTON') {
                     menuItems.item(menuItemIndex).click();
+                    break;
                 }
                 else if (menuItems.item(menuItemIndex).tagName === 'A') {
                     event.preventDefault();
                     window.location.href = menuItems.item(menuItemIndex).href;
+                    break;
                 }
+                else if (menuItems.item(menuItemIndex).type === 'radio') {
+                    menuItems.item(menuItemIndex).checked = true;
+                    break;
+                }
+                else if (menuItems.item(menuItemIndex).type === 'checkbox') {
+                    menuItems.item(menuItemIndex).checked = !menuItems.item(menuItemIndex).checked;
+                    break;
+                }
+                break;
             default:
                 break;
         }
