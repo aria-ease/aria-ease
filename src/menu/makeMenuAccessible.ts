@@ -6,7 +6,7 @@
 
 import { HTMLElement, NodeListOfHTMLElement } from '../../Types'
 
-function makeMenuAccessible(menu: string, menuItem: string): void {
+export function makeMenuAccessible(menu: string, menuItem: string): void {
     const menuDiv: HTMLElement = document.querySelector(`#${menu}`) as HTMLElement
     const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItem}`)
     
@@ -39,5 +39,3 @@ function makeMenuAccessible(menu: string, menuItem: string): void {
         }
     }
 }
-
-export { makeMenuAccessible }

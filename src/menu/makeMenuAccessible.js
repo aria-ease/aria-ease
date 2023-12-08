@@ -3,7 +3,7 @@
  * @param {string} menu The id of the menu
  * @param {string} menuItem The class of the items that are children of the menu
  **/
-function makeMenuAccessible(menu, menuItem) {
+export function makeMenuAccessible(menu, menuItem) {
     var menuDiv = document.querySelector("#".concat(menu));
     var menuItems = menuDiv.querySelectorAll(".".concat(menuItem));
     menuItems.item(0).focus();
@@ -36,4 +36,3 @@ function makeMenuAccessible(menu, menuItem) {
         }
     }
 }
-export { makeMenuAccessible };
