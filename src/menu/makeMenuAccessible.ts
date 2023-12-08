@@ -1,21 +1,21 @@
 /**
- * Adds keyboard navigation to menu.
- * @param {string} menu The id of the menu
- * @param {string} menuItem The class of the items that are children of the menu
- **/
+ * Adds keyboard navigation to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first item of the menu has focus when menu appears.
+ * @param {string} menuId The id of the menu
+ * @param {string} menuItemClass The class of the items that are children of the menu
+*/
 
 import { HTMLElement, NodeListOfHTMLElement } from '../../Types'
 
-export function makeMenuAccessible(menu: string, menuItem: string): void {
-    const menuDiv: HTMLElement = document.querySelector(`#${menu}`) as HTMLElement
-    const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItem}`)
+export function makeMenuAccessible(menuId: string, menuItemClass: string): void {
+    const menuDiv: HTMLElement = document.querySelector(`#${menuId}`) as HTMLElement
+    const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItemClass}`)
 
     const triggerId: string = menuDiv.getAttribute('aria-labelledby') as string
     const triggerButton: HTMLElement = document.querySelector(`#${triggerId}`) as HTMLElement
 
     menuItems.item(0).focus();
-    menuItems.forEach((menuItem: HTMLElement, menuItemIndex: number) => {
-        menuItem.addEventListener('keydown', (event: KeyboardEvent) => handleKeyPress(event, menuItems, menuItemIndex))
+    menuItems.forEach((menuItem: HTMLElement, menuItemIndex: number): void => {
+        menuItem.addEventListener('keydown', (event: KeyboardEvent): void => handleKeyPress(event, menuItems, menuItemIndex))
     })
 
     function handleKeyPress(event: KeyboardEvent, menuItems: NodeListOfHTMLElement, menuItemIndex: number): void {
