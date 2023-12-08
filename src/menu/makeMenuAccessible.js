@@ -1,11 +1,11 @@
 /**
- * Adds keyboard navigation to menu.
- * @param {string} menu The id of the menu
- * @param {string} menuItem The class of the items that are children of the menu
- **/
-export function makeMenuAccessible(menu, menuItem) {
-    var menuDiv = document.querySelector("#".concat(menu));
-    var menuItems = menuDiv.querySelectorAll(".".concat(menuItem));
+ * Adds keyboard navigation to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first item of the menu has focus when menu appears.
+ * @param {string} menuId The id of the menu
+ * @param {string} menuItemClass The class of the items that are children of the menu
+*/
+export function makeMenuAccessible(menuId, menuItemClass) {
+    var menuDiv = document.querySelector("#".concat(menuId));
+    var menuItems = menuDiv.querySelectorAll(".".concat(menuItemClass));
     var triggerId = menuDiv.getAttribute('aria-labelledby');
     var triggerButton = document.querySelector("#".concat(triggerId));
     menuItems.item(0).focus();
