@@ -7,7 +7,9 @@
       "esModuleInterop": false,
       "allowSyntheticDefaultImports": true,
       "strict": true,
-      "forceConsistentCasingInFileNames": true
+      "forceConsistentCasingInFileNames": true,
+      "module": "es2015",
+      "moduleResolution": "node"
     },
     "include": ["src"]
   }
