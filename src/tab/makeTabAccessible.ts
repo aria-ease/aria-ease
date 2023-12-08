@@ -33,6 +33,16 @@ export function makeTabAccessible(tabId: string, tabItemClass: string): void {
                     tabItems.item(tabItemIndex + 1).focus();
                 }
                 break;
+            case 'Enter':
+            case ' ':
+                if (tabItems.item(tabItemIndex).type === 'radio') {
+                    tabItems.item(tabItemIndex).checked = true
+                    break;
+                } else if (tabItems.item(tabItemIndex).type === 'checkbox') {
+                    tabItems.item(tabItemIndex).checked = !tabItems.item(tabItemIndex).checked
+                    break;
+                }
+                break;
             default:
                 break;
         }

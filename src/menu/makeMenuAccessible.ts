@@ -43,6 +43,14 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
                     null
                 triggerButton.focus()
                 break;
+            case 'Enter':
+            case ' ':
+                if(menuItems.item(menuItemIndex).tagName === 'BUTTON') {
+                    menuItems.item(menuItemIndex).click()
+                } else if (menuItems.item(menuItemIndex).tagName === 'A') {
+                    event.preventDefault();
+                    window.location.href = menuItems.item(menuItemIndex).href; 
+                }
             default:
                 break;
         }
