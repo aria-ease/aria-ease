@@ -10,7 +10,7 @@
       "forceConsistentCasingInFileNames": true,
       "module": "es2015",
       "moduleResolution": "node",
-      "declaration": false
+      "declaration": true
     },
     "include": ["src"]
   }
