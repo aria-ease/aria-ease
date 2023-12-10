@@ -1,6 +1,6 @@
 # Aria-Ease
 
-Out of the box accessibility utility package to develop production ready applications.
+Out of the box accessibility utility package to develop production ready packages.
 
 ## Install
 
