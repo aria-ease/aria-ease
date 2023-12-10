@@ -6,6 +6,9 @@
 
 import { HTMLElement, NodeListOfHTMLElement } from '../../Types'
 
+
+let eventListenersAdded: boolean = false
+
 export function makeMenuAccessible(menuId: string, menuItemClass: string): void {
     const menuDiv: HTMLElement = document.querySelector(`#${menuId}`) as HTMLElement
     const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItemClass}`)
@@ -15,7 +18,10 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
 
     menuItems.item(0).focus();
     menuItems.forEach((menuItem: HTMLElement, menuItemIndex: number): void => {
-        menuItem.addEventListener('keydown', (event: KeyboardEvent): void => handleKeyPress(event, menuItems, menuItemIndex))
+        if(!eventListenersAdded) {
+            menuItem.addEventListener('keydown', (event: KeyboardEvent): void => handleKeyPress(event, menuItems, menuItemIndex))
+            eventListenersAdded = true
+        }
     })
 
     function handleKeyPress(event: KeyboardEvent, menuItems: NodeListOfHTMLElement, menuItemIndex: number): void {
