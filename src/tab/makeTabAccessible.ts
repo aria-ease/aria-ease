@@ -7,18 +7,19 @@
 import { HTMLElement, NodeListOfHTMLElement } from "../../Types"
 
 
-let eventListenersAdded: boolean = false  
+let eventListenersAdded: Set<HTMLElement> = new Set();
+
 
 export function makeTabAccessible(tabId: string, tabItemClass: string): void {
     const tabDiv: HTMLElement = document.querySelector(`#${tabId}`) as HTMLElement
     const tabItems: NodeListOfHTMLElement = tabDiv.querySelectorAll(`.${tabItemClass}`)
 
     tabItems.forEach((tabItem: HTMLElement, tabItemIndex: number): void => {
-        if(!eventListenersAdded) {
-            tabItem.addEventListener('keydown', (event: KeyboardEvent) => handleKeyPress(event, tabItems, tabItemIndex))
-            eventListenersAdded = true
-        } 
-    })
+        if (!eventListenersAdded.has(tabItem)) {
+          eventListenersAdded.add(tabItem);
+          tabItem.addEventListener('keydown', (event: KeyboardEvent) => handleKeyPress(event, tabItems, tabItemIndex));
+        }
+      });
 
     function handleKeyPress(event: KeyboardEvent, tabItems: NodeListOfHTMLElement, tabItemIndex: number): void {
         event.preventDefault()

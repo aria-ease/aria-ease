@@ -3,14 +3,14 @@
  * @param {string} tabId The id of the tab
  * @param {string} tabItemClass The class of the items that are children of the tab
 */
-var eventListenersAdded = false;
+var eventListenersAdded = new Set();
 export function makeTabAccessible(tabId, tabItemClass) {
     var tabDiv = document.querySelector("#".concat(tabId));
     var tabItems = tabDiv.querySelectorAll(".".concat(tabItemClass));
     tabItems.forEach(function (tabItem, tabItemIndex) {
-        if (!eventListenersAdded) {
+        if (!eventListenersAdded.has(tabItem)) {
+            eventListenersAdded.add(tabItem);
             tabItem.addEventListener('keydown', function (event) { return handleKeyPress(event, tabItems, tabItemIndex); });
-            eventListenersAdded = true;
         }
     });
     function handleKeyPress(event, tabItems, tabItemIndex) {
