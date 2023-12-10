@@ -59,7 +59,7 @@ export default App
 
 Add accessibility to tab: tab can be tabs, interactive sliders and carousels e.t.c. Basically any component that is permanently displayed and has a list of related interractive children items. The function creates a focus trap within the tab and the focus can be navigated using the arrow keys.
 
-The makeTabAccessible function takes two string arguments; the id of the tab main div, and the class name of the children item of the div. The function should be called on page render, so the event listeners get activated. On click of a button, clicked button gets focused and the focus can be navigated using the arrow keys.
+The makeTabAccessible function takes two string arguments; the id of the tab main div, and the class name of the children item of the div. The function should be called on page render, so the event listeners get activated. On click of a button, the clicked button gets focused and the focus can be navigated using the arrow keys.
 
 #### Usage
 
