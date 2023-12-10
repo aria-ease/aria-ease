@@ -3,7 +3,7 @@
  * @param {string} menuId The id of the menu
  * @param {string} menuItemClass The class of the items that are children of the menu
 */
-var eventListenersAdded = false;
+var eventListenersAdded = new Set();
 export function makeMenuAccessible(menuId, menuItemClass) {
     var menuDiv = document.querySelector("#".concat(menuId));
     var menuItems = menuDiv.querySelectorAll(".".concat(menuItemClass));
@@ -11,9 +11,9 @@ export function makeMenuAccessible(menuId, menuItemClass) {
     var triggerButton = document.querySelector("#".concat(triggerId));
     menuItems.item(0).focus();
     menuItems.forEach(function (menuItem, menuItemIndex) {
-        if (!eventListenersAdded) {
+        if (!eventListenersAdded.has(menuItem)) {
+            eventListenersAdded.add(menuItem);
             menuItem.addEventListener('keydown', function (event) { return handleKeyPress(event, menuItems, menuItemIndex); });
-            eventListenersAdded = true;
         }
     });
     function handleKeyPress(event, menuItems, menuItemIndex) {
