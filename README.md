@@ -64,19 +64,20 @@ The makeTabAccessible function takes two string arguments; the id of the tab mai
 #### Usage
 
 ```
+import { useEffect } from 'react'
 import { makeTabAccessible } from "aria-ease"
 
 const App = () => {
-  const handleTabButtonClick = (): void => {
+  useEffect(() => {
     makeTabAccessible('custom-tab', 'custom-tab-item')
-  }
+  },[])
 
   return (
     <div>
       <div id="custom-tab">
-        <button className="custom-tab-item" onClick={handleTabButtonClick}>One</button>
-        <button className="custom-tab-item" onClick={handleTabButtonClick}>Two</button>
-        <button className="custom-tab-item" onClick={handleTabButtonClick}>Three</button>
+        <button className="custom-tab-item">One</button>
+        <button className="custom-tab-item">Two</button>
+        <button className="custom-tab-item">Three</button>
       </div>
     </div>
   )
