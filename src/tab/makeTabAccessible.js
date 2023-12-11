@@ -14,7 +14,6 @@ export function makeTabAccessible(tabId, tabItemClass) {
         }
     });
     function handleKeyPress(event, tabItems, tabItemIndex) {
-        event.preventDefault();
         switch (event.key) {
             case 'ArrowUp':
             case 'ArrowLeft':

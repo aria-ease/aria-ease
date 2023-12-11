@@ -6,9 +6,7 @@
 
 import { HTMLElement, NodeListOfHTMLElement } from "../../Types"
 
-
 let eventListenersAdded: Set<HTMLElement> = new Set();
-
 
 export function makeTabAccessible(tabId: string, tabItemClass: string): void {
     const tabDiv: HTMLElement = document.querySelector(`#${tabId}`) as HTMLElement
@@ -22,7 +20,6 @@ export function makeTabAccessible(tabId: string, tabItemClass: string): void {
       });
 
     function handleKeyPress(event: KeyboardEvent, tabItems: NodeListOfHTMLElement, tabItemIndex: number): void {
-        event.preventDefault()
         switch(event.key) {
             case 'ArrowUp':
             case 'ArrowLeft':
