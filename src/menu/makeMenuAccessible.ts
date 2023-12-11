@@ -6,9 +6,7 @@
 
 import { HTMLElement, NodeListOfHTMLElement } from '../../Types'
 
-
 let eventListenersAdded: Set<HTMLElement> = new Set();
-
 
 export function makeMenuAccessible(menuId: string, menuItemClass: string): void {
     const menuDiv: HTMLElement = document.querySelector(`#${menuId}`) as HTMLElement
@@ -26,7 +24,6 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
     })
 
     function handleKeyPress(event: KeyboardEvent, menuItems: NodeListOfHTMLElement, menuItemIndex: number): void {
-        event.preventDefault()
         switch(event.key) {
             case 'ArrowUp':
             case 'ArrowLeft':

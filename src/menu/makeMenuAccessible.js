@@ -17,7 +17,6 @@ export function makeMenuAccessible(menuId, menuItemClass) {
         }
     });
     function handleKeyPress(event, menuItems, menuItemIndex) {
-        event.preventDefault();
         switch (event.key) {
             case 'ArrowUp':
             case 'ArrowLeft':
