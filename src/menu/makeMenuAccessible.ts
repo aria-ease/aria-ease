@@ -57,7 +57,6 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
                     menuItems.item(menuItemIndex).click()
                     break;
                 } else if (menuItems.item(menuItemIndex).tagName === 'A') {
-                    event.preventDefault();
                     window.location.href = menuItems.item(menuItemIndex).href; 
                     break;
                 } else if (menuItems.item(menuItemIndex).type === 'radio') {
