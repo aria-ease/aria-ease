@@ -17,3 +17,5 @@ Test features vigorously, for keyboard and screen reader users.
 Algorithms must follow best software practices.
 
 All functions must be JSDoc documented.
+
+All commits must have either format; "fix: fixed event listener perfomance leak" for issues fixing or refactoring, or "build: added ... feature" for creating an entirely new feature that didn't exist before.
