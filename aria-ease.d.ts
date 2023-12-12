@@ -22,9 +22,6 @@ declare module 'aria-ease' {
      * @param {string} ariaLabel The aria-label to be updated.
      */
     function updateMenuTriggerAriaAttributes(triggerId: string, ariaLabel: string): void;
-
-
-
   
     export { makeMenuAccessible, makeTabAccessible, updateMenuTriggerAriaAttributes };
   }
