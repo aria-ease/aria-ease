@@ -1,5 +1,5 @@
 /** 
- * Adds keyboard navigation to tab. The tab traps focus and can be interacted with using the keyboard.
+ * Adds keyboard interaction to tab. The tab traps focus and can be interacted with using the keyboard.
  * @param {string} tabId The id of the tab
  * @param {string} tabItemClass The class of the items that are children of the tab
 */
