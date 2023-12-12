@@ -17,6 +17,7 @@ export function makeTabAccessible(tabId, tabItemClass) {
         switch (event.key) {
             case 'ArrowUp':
             case 'ArrowLeft':
+                event.preventDefault();
                 if (tabItemIndex === 0) {
                     tabItems.item(tabItems.length - 1).focus();
                 }
@@ -26,6 +27,7 @@ export function makeTabAccessible(tabId, tabItemClass) {
                 break;
             case 'ArrowDown':
             case 'ArrowRight':
+                event.preventDefault();
                 if (tabItemIndex === tabItems.length - 1) {
                     tabItems.item(0).focus();
                 }
@@ -35,6 +37,7 @@ export function makeTabAccessible(tabId, tabItemClass) {
                 break;
             case 'Enter':
             case ' ':
+                event.preventDefault();
                 if (tabItems.item(tabItemIndex).type === 'radio') {
                     tabItems.item(tabItemIndex).checked = true;
                     break;
@@ -48,7 +51,6 @@ export function makeTabAccessible(tabId, tabItemClass) {
                     break;
                 }
                 else if (tabItems.item(tabItemIndex).tagName === 'A') {
-                    event.preventDefault();
                     window.location.href = tabItems.item(tabItemIndex).href;
                     break;
                 }

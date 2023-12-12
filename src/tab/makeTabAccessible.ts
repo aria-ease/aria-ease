@@ -52,7 +52,6 @@ export function makeTabAccessible(tabId: string, tabItemClass: string): void {
                     tabItems.item(tabItemIndex).click()
                     break;
                 } else if (tabItems.item(tabItemIndex).tagName === 'A') {
-                    event.preventDefault()
                     window.location.href = tabItems.item(tabItemIndex).href
                     break;
                 }
