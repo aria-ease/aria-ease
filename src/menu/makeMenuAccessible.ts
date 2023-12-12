@@ -27,6 +27,7 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
         switch(event.key) {
             case 'ArrowUp':
             case 'ArrowLeft':
+                event.preventDefault()
                 if (menuItemIndex === 0) {
                     menuItems.item(menuItems.length - 1).focus();
                 } else {
@@ -35,6 +36,7 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
                 break;
             case 'ArrowDown':
             case 'ArrowRight':
+                event.preventDefault()
                 if (menuItemIndex === menuItems.length - 1) {
                     menuItems.item(0).focus();
                 } else {
@@ -42,6 +44,7 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
                 }
                 break;
             case 'Escape':
+                event.preventDefault();
                 (getComputedStyle(menuDiv).display === 'block') ?
                     triggerButton.click() :
                     null
@@ -49,6 +52,7 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
                 break;
             case 'Enter':
             case ' ':
+                event.preventDefault()
                 if(menuItems.item(menuItemIndex).tagName === 'BUTTON') {
                     menuItems.item(menuItemIndex).click()
                     break;

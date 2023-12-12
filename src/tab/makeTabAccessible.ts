@@ -23,6 +23,7 @@ export function makeTabAccessible(tabId: string, tabItemClass: string): void {
         switch(event.key) {
             case 'ArrowUp':
             case 'ArrowLeft':
+                event.preventDefault()
                 if (tabItemIndex === 0) {
                     tabItems.item(tabItems.length - 1).focus();
                 } else {
@@ -31,6 +32,7 @@ export function makeTabAccessible(tabId: string, tabItemClass: string): void {
                 break;
             case 'ArrowDown':
             case 'ArrowRight':
+                event.preventDefault()
                 if (tabItemIndex === tabItems.length - 1) {
                     tabItems.item(0).focus();
                 } else {
@@ -39,6 +41,7 @@ export function makeTabAccessible(tabId: string, tabItemClass: string): void {
                 break;
             case 'Enter':
             case ' ':
+                event.preventDefault()
                 if (tabItems.item(tabItemIndex).type === 'radio') {
                     tabItems.item(tabItemIndex).checked = true
                     break;
