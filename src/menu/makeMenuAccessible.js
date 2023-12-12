@@ -20,6 +20,7 @@ export function makeMenuAccessible(menuId, menuItemClass) {
         switch (event.key) {
             case 'ArrowUp':
             case 'ArrowLeft':
+                event.preventDefault();
                 if (menuItemIndex === 0) {
                     menuItems.item(menuItems.length - 1).focus();
                 }
@@ -29,6 +30,7 @@ export function makeMenuAccessible(menuId, menuItemClass) {
                 break;
             case 'ArrowDown':
             case 'ArrowRight':
+                event.preventDefault();
                 if (menuItemIndex === menuItems.length - 1) {
                     menuItems.item(0).focus();
                 }
@@ -37,6 +39,7 @@ export function makeMenuAccessible(menuId, menuItemClass) {
                 }
                 break;
             case 'Escape':
+                event.preventDefault();
                 (getComputedStyle(menuDiv).display === 'block') ?
                     triggerButton.click() :
                     null;
@@ -44,12 +47,12 @@ export function makeMenuAccessible(menuId, menuItemClass) {
                 break;
             case 'Enter':
             case ' ':
+                event.preventDefault();
                 if (menuItems.item(menuItemIndex).tagName === 'BUTTON') {
                     menuItems.item(menuItemIndex).click();
                     break;
                 }
                 else if (menuItems.item(menuItemIndex).tagName === 'A') {
-                    event.preventDefault();
                     window.location.href = menuItems.item(menuItemIndex).href;
                     break;
                 }
