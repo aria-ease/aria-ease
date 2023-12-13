@@ -1,6 +1,6 @@
 # Aria-Ease
 
-Out of the box accessibility utility package to develop production ready packages.
+Out of the box accessibility utility package to develop production ready applications.
 
 ## Install
 
@@ -57,19 +57,19 @@ const App = () => {
 export default App
 ```
 
-Add accessibility to tab: tab can be tabs, interactive sliders and carousels e.t.c. Basically any component that is permanently displayed and has a list of related interractive children items. The function creates a focus trap within the tab and the focus can be navigated using the arrow keys.
+Add accessibility to block: block can be entire web page body, tabs, interactive sliders and carousels e.t.c. Basically any component that is permanently displayed and has a list of related interractive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys.
 
-The makeTabAccessible function takes two string arguments; the id of the tab main div, and the class name of the children item of the div. The function should be called on page render, so the event listeners get activated. On click of a button, the clicked button gets focused and the focus can be navigated using the arrow keys.
+The makeBlockAccessible function takes two string arguments; the id of the block main div, and the class name of the children item of the div. The function should be called on page render, so the event listeners get activated. On click of a button, the clicked button gets focused and the focus can be navigated using the arrow keys.
 
 #### Usage
 
 ```
 import { useEffect } from 'react'
-import { makeTabAccessible } from "aria-ease"
+import { makeBlockAccessible } from "aria-ease"
 
 const App = () => {
   useEffect(() => {
-    makeTabAccessible('custom-tab', 'custom-tab-item')
+    makeBlockAccessible('custom-tab', 'custom-tab-item')
   },[])
 
   return (
