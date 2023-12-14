@@ -22,7 +22,14 @@ declare module 'aria-ease' {
      * @param {string} ariaLabel The aria-label to be updated.
      */
     function updateMenuTriggerAriaAttributes(triggerId: string, ariaLabel: string): void;
+
+    /**
+     * Cleans up the event listeners that were added to childen items of the menu, to prevent memory leak.
+     * @param {string} menuId The id of the menu
+     * @param {string} menuItemClass The class of the items that are children of the menu
+    */
+   function cleanUpMenuEventListeners(menuId: string, menuItemClass: string): void;
   
-    export { makeMenuAccessible, makeBlockAccessible, updateMenuTriggerAriaAttributes };
+    export { makeMenuAccessible, makeBlockAccessible, updateMenuTriggerAriaAttributes, cleanUpMenuEventListeners };
   }
   
