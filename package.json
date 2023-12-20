@@ -1,0 +1,24 @@
+{
+  "name": "aria-ease",
+  "version": "1.2.4",
+  "description": "Out of the box utility accessibility package to develop production ready applications.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Scriptkidd98/aria-ease.git"
+  },
+  "keywords": [
+    "ARIA",
+    "Accessibility"
+  ],
+  "author": "Isaac Akinduyile",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Scriptkidd98/aria-ease/issues"
+  },
+  "homepage": "https://aria-ease.vercel.app/",
+  "types": "./aria-ease.d.ts"
+}
