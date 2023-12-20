@@ -16,7 +16,7 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
     const triggerId: string = menuDiv.getAttribute('aria-labelledby') as string
     const triggerButton: HTMLElement = document.querySelector(`#${triggerId}`) as HTMLElement
 
-    if(window.innerWidth >= 1025) {
+    if(window.innerWidth >= 992) {
         menuItems.item(0).focus();
         menuItems.forEach((menuItem: HTMLElement, menuItemIndex: number): void => {
             if (!eventListenersAdded.has(menuItem)) {
