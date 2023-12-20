@@ -16,11 +16,13 @@ export function makeMenuAccessible(menuId: string, menuItemClass: string): void 
     const triggerId: string = menuDiv.getAttribute('aria-labelledby') as string
     const triggerButton: HTMLElement = document.querySelector(`#${triggerId}`) as HTMLElement
 
-    menuItems.item(0).focus();
-    menuItems.forEach((menuItem: HTMLElement, menuItemIndex: number): void => {
-        if (!eventListenersAdded.has(menuItem)) {
-            eventListenersAdded.add(menuItem);
-            menuItem.addEventListener('keydown', (event: KeyboardEvent): void => handleKeyPress(event, menuItems, menuItemIndex, menuDiv, triggerButton))
-        }
-    })
+    if(window.innerWidth >= 1025) {
+        menuItems.item(0).focus();
+        menuItems.forEach((menuItem: HTMLElement, menuItemIndex: number): void => {
+            if (!eventListenersAdded.has(menuItem)) {
+                eventListenersAdded.add(menuItem);
+                menuItem.addEventListener('keydown', (event: KeyboardEvent): void => handleKeyPress(event, menuItems, menuItemIndex, menuDiv, triggerButton))
+            }
+        })
+    }
 }
