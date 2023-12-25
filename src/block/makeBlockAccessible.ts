@@ -9,16 +9,23 @@ import { handleKeyPress } from '../handleKeyPress';
 
 let eventListenersAdded: Set<HTMLElement> = new Set();
 
-export function makeBlockAccessible(blockId: string, blockItemClass: string): void {
+export function makeBlockAccessible(blockId: string, blockItemClass: string) {
   const blockDiv: HTMLElement = document.querySelector(`#${blockId}`) as HTMLElement
   const blockItems: NodeListOfHTMLElement = blockDiv.querySelectorAll(`.${blockItemClass}`)
 
-  if(window.innerWidth >= 992) {
+  blockItems.forEach((blockItem: HTMLElement, blockItemIndex: number): void => {
+    if (!eventListenersAdded.has(blockItem)) {
+      eventListenersAdded.add(blockItem);
+      blockItem.addEventListener('keydown', (event: KeyboardEvent) => handleKeyPress(event, blockItems, blockItemIndex));
+    }
+  });
+
+  return function cleanUpBlockEventListeners(): void {
     blockItems.forEach((blockItem: HTMLElement, blockItemIndex: number): void => {
-      if (!eventListenersAdded.has(blockItem)) {
-        eventListenersAdded.add(blockItem);
-        blockItem.addEventListener('keydown', (event: KeyboardEvent) => handleKeyPress(event, blockItems, blockItemIndex));
+      if (eventListenersAdded.has(blockItem)) {
+        blockItem.removeEventListener('keydown', (event: KeyboardEvent) => handleKeyPress(event, blockItems, blockItemIndex));
+        eventListenersAdded.delete(blockItem);
       }
     });
-  }
+  };
 }
