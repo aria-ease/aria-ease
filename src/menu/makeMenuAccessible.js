@@ -10,13 +10,11 @@ export function makeMenuAccessible(menuId, menuItemClass) {
     var menuItems = menuDiv.querySelectorAll(".".concat(menuItemClass));
     var triggerId = menuDiv.getAttribute('aria-labelledby');
     var triggerButton = document.querySelector("#".concat(triggerId));
-    if (window.innerWidth >= 992) {
-        menuItems.item(0).focus();
-        menuItems.forEach(function (menuItem, menuItemIndex) {
-            if (!eventListenersAdded.has(menuItem)) {
-                eventListenersAdded.add(menuItem);
-                menuItem.addEventListener('keydown', function (event) { return handleKeyPress(event, menuItems, menuItemIndex, menuDiv, triggerButton); });
-            }
-        });
-    }
+    menuItems.item(0).focus();
+    menuItems.forEach(function (menuItem, menuItemIndex) {
+        if (!eventListenersAdded.has(menuItem)) {
+            eventListenersAdded.add(menuItem);
+            menuItem.addEventListener('keydown', function (event) { return handleKeyPress(event, menuItems, menuItemIndex, menuDiv, triggerButton); });
+        }
+    });
 }

@@ -14,7 +14,7 @@ declare module 'aria-ease' {
      * @param {string} blockId - The id of the block container.
      * @param {string} blockItemClass - The class of the individual block items.
      */
-    function makeBlockAccessible(blockId: string, blockItemClass: string): void;
+    function makeBlockAccessible(blockId: string, blockItemClass: string);
 
     /**
      * Updates the aria attributes of the menu trigger button. Trigger button element must possess the following aria attributes; aria-expanded, aria-pressed, aria-label.

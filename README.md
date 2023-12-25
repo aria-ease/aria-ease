@@ -17,21 +17,24 @@ The updateMenuTriggerAriaAttributes function take two string arguments; the id o
 #### Usage
 
 ```
-import { makeMenuAccessible, updateMenuTriggerAriaAttributes } from "aria-ease"
+import { makeMenuAccessible, updateMenuTriggerAriaAttributes, cleanUpMenuEventListeners } from 'aria-ease'
 
-const App = () => {
-  const toggleMenuDisplay = (): void => {
-    const menu: HTMLElement = document.querySelector('#custom-menu') as HTMLElement
-    if(getComputedStyle(menu).display === 'none') {
-      menu.style.display = 'block'
-      makeMenuAccessible('custom-menu', 'profile-menu-item');
-      updateMenuTriggerAriaAttributes('display-button', 'Hide profile menu')
-    } else {
-      menu.style.display = 'none'
-      updateMenuTriggerAriaAttributes('display-button', 'Display profile menu')
+const HomeExampleMenu = () => {
+  const toggleMenuDisplay = (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      const menu = document.querySelector('#custom-menu');
+      if (getComputedStyle(menu).display === 'none') {
+        menu.style.display = 'block';
+        makeMenuAccessible('custom-menu', 'profile-menu-item');
+        updateMenuTriggerAriaAttributes('display-button', 'Hide profile menu');
+      } else {
+        cleanUpMenuEventListeners('custom-menu', 'profile-menu-item');
+        menu.style.display = 'none';
+        updateMenuTriggerAriaAttributes('display-button', 'Display profile menu');
+      }
     }
-  }
-
+  };
   return (
     <div>
       <button
@@ -42,19 +45,21 @@ const App = () => {
         aria-expanded={false}
         aria-controls="custom-menu"
         aria-label="Display profile menu"
+        className='home-menu-example-trigger-button block-interactive'
+        onKeyDown={toggleMenuDisplay}
       >
-        Display
+        Display Example Menu
       </button>
       <div id="custom-menu" role="menu" aria-labelledby="display-button" style={{display: 'none', marginTop: '5px'}}>
-        <button role="menuitem" className="profile-menu-item">One</button>
-        <button role="menuitem" className="profile-menu-item">Two</button>
-        <button role="menuitem" className="profile-menu-item">Three</button>
+        <button role="menuitem" className="profile-menu-item" onClick={() => alert('Button clicked')}>One</button>
+        <button role="menuitem" className="profile-menu-item" onClick={() => alert('Button clicked')}>Two</button>
+        <button role="menuitem" className="profile-menu-item" onClick={() => alert('Button clicked')}>Three</button>
       </div>
     </div>
   )
 }
 
-export default App
+export default HomeExampleMenu
 ```
 
 Add accessibility to block: block can be entire web page body, tabs, interactive sliders and carousels e.t.c. Basically any component that is permanently displayed and has a list of related interractive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys.
@@ -69,7 +74,9 @@ import { makeBlockAccessible } from "aria-ease"
 
 const App = () => {
   useEffect(() => {
-    makeBlockAccessible('custom-tab', 'custom-tab-item')
+    const cleanUp = makeBlockAccessible('custom-tab', 'custom-tab-item')
+
+    return cleanUp
   },[])
 
   return (
