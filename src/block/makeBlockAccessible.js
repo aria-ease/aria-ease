@@ -8,12 +8,18 @@ var eventListenersAdded = new Set();
 export function makeBlockAccessible(blockId, blockItemClass) {
     var blockDiv = document.querySelector("#".concat(blockId));
     var blockItems = blockDiv.querySelectorAll(".".concat(blockItemClass));
-    if (window.innerWidth >= 992) {
+    blockItems.forEach(function (blockItem, blockItemIndex) {
+        if (!eventListenersAdded.has(blockItem)) {
+            eventListenersAdded.add(blockItem);
+            blockItem.addEventListener('keydown', function (event) { return handleKeyPress(event, blockItems, blockItemIndex); });
+        }
+    });
+    return function cleanUpBlockEventListeners() {
         blockItems.forEach(function (blockItem, blockItemIndex) {
-            if (!eventListenersAdded.has(blockItem)) {
-                eventListenersAdded.add(blockItem);
-                blockItem.addEventListener('keydown', function (event) { return handleKeyPress(event, blockItems, blockItemIndex); });
+            if (eventListenersAdded.has(blockItem)) {
+                blockItem.removeEventListener('keydown', function (event) { return handleKeyPress(event, blockItems, blockItemIndex); });
+                eventListenersAdded.delete(blockItem);
             }
         });
-    }
+    };
 }
