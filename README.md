@@ -19,9 +19,9 @@ The updateMenuTriggerAriaAttributes function take two string arguments; the id o
 ```
 import { makeMenuAccessible, updateMenuTriggerAriaAttributes, cleanUpMenuEventListeners } from 'aria-ease'
 
-const HomeExampleMenu = () => {
+const MenuExample = () => {
   const toggleMenuDisplay = (event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.type === 'mousedown' || (event.type === 'keydown' && (event.key === 'Enter' || event.key === ' '))) {
       event.preventDefault();
       const menu = document.querySelector('#custom-menu');
       if (getComputedStyle(menu).display === 'none') {
@@ -35,17 +35,18 @@ const HomeExampleMenu = () => {
       }
     }
   };
+
   return (
     <div>
       <button
         id="display-button"
-        onClick={toggleMenuDisplay}
+        onMouseDown={toggleMenuDisplay}
         aria-haspopup={true}
         aria-pressed={false}
         aria-expanded={false}
         aria-controls="custom-menu"
         aria-label="Display profile menu"
-        className='home-menu-example-trigger-button block-interactive'
+        className='menu-example-trigger-button block-interactive'
         onKeyDown={toggleMenuDisplay}
       >
         Display Example Menu
@@ -59,7 +60,7 @@ const HomeExampleMenu = () => {
   )
 }
 
-export default HomeExampleMenu
+export default MenuExample
 ```
 
 Add accessibility to block: block can be entire web page body, tabs, interactive sliders and carousels e.t.c. Basically any component that is permanently displayed and has a list of related interractive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys.
@@ -72,7 +73,7 @@ The makeBlockAccessible function takes two string arguments; the id of the block
 import { useEffect } from 'react'
 import { makeBlockAccessible } from "aria-ease"
 
-const App = () => {
+const BlockExample = () => {
   useEffect(() => {
     const cleanUp = makeBlockAccessible('custom-tab', 'custom-tab-item')
 
@@ -90,7 +91,7 @@ const App = () => {
   )
 }
 
-export default App
+export default BlockExample
 ```
 
 ### P.S.
