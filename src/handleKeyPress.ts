@@ -1,6 +1,13 @@
 import { NodeListOfHTMLElement, HTMLElement } from "../Types";
+import { updateMenuTriggerAriaAttributes } from "./menu/updateMenuTriggerAriaAttributes";
 
-export function handleKeyPress(event: KeyboardEvent, elementItems: NodeListOfHTMLElement, elementItemIndex: number, elementDiv?: HTMLElement | undefined, triggerButton?: HTMLElement | undefined): void {
+function handleMenuEscapeKeyPress(menuElement: HTMLElement, menuTriggerButton: HTMLElement, menuClosedStateAriaLabel: string) {
+    menuElement.style.display = 'none';
+    const menuTriggerButtonId = menuTriggerButton.getAttribute('id');
+    updateMenuTriggerAriaAttributes(`${menuTriggerButtonId}`, `${menuClosedStateAriaLabel}`)
+}
+
+export function handleKeyPress(event: KeyboardEvent, elementItems: NodeListOfHTMLElement, elementItemIndex: number, menuElementDiv?: HTMLElement | undefined, triggerButton?: HTMLElement | undefined, menuClosedStateAriaLabel?: string | undefined): void {
     switch(event.key) {
         case 'ArrowUp':
         case 'ArrowLeft':
@@ -22,9 +29,9 @@ export function handleKeyPress(event: KeyboardEvent, elementItems: NodeListOfHTM
             break;
         case 'Escape':
             event.preventDefault();
-            if(elementDiv && triggerButton) {
-                (getComputedStyle(elementDiv).display === 'block') ?
-                    elementDiv.style.display = 'none':
+            if(menuElementDiv && triggerButton && menuClosedStateAriaLabel) {
+                (getComputedStyle(menuElementDiv).display === 'block') ?
+                    handleMenuEscapeKeyPress(menuElementDiv, triggerButton, menuClosedStateAriaLabel) :
                     null
                 triggerButton.focus()
             }
