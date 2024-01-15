@@ -1,4 +1,10 @@
-export function handleKeyPress(event, elementItems, elementItemIndex, elementDiv, triggerButton) {
+import { updateMenuTriggerAriaAttributes } from "./menu/updateMenuTriggerAriaAttributes";
+function handleMenuEscapeKeyPress(menuElement, menuTriggerButton, menuClosedStateAriaLabel) {
+    menuElement.style.display = 'none';
+    var menuTriggerButtonId = menuTriggerButton.getAttribute('id');
+    updateMenuTriggerAriaAttributes("".concat(menuTriggerButtonId), "".concat(menuClosedStateAriaLabel));
+}
+export function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, menuClosedStateAriaLabel) {
     switch (event.key) {
         case 'ArrowUp':
         case 'ArrowLeft':
@@ -22,9 +28,9 @@ export function handleKeyPress(event, elementItems, elementItemIndex, elementDiv
             break;
         case 'Escape':
             event.preventDefault();
-            if (elementDiv && triggerButton) {
-                (getComputedStyle(elementDiv).display === 'block') ?
-                    elementDiv.style.display = 'none' :
+            if (menuElementDiv && triggerButton && menuClosedStateAriaLabel) {
+                (getComputedStyle(menuElementDiv).display === 'block') ?
+                    handleMenuEscapeKeyPress(menuElementDiv, triggerButton, menuClosedStateAriaLabel) :
                     null;
                 triggerButton.focus();
             }

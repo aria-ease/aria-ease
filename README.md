@@ -10,7 +10,7 @@ Out of the box accessibility utility package to develop production ready applica
 
 Add accessibility to menu: menu can be a dropdown, side menu, slide navigation e.t.c. Basically any component that toggles display and has a list of interactive children items. The function creates a focus trap within the menu and focus can be navigated using the arrow keys. The escape key also closes the menu and returns the focus back to the trigger.
 
-The makeMenuAccessible function takes two string arguments; the id of the menu, and the class name of the children item of the menu. And should only be invoked after the menu has become visible or added to the DOM. When the menu is visible the first item of the menu is in focus and focus can be navigated using the arrow keys
+The makeMenuAccessible function takes three string arguments; the id of the menu, the class name of the children item of the menu, and the aria-label for the closed/hidden state of the menu. And should only be invoked after the menu has become visible or added to the DOM. When the menu is visible the first item of the menu is in focus and focus can be navigated using the arrow keys
 
 The updateMenuTriggerAriaAttributes function take two string arguments; the id of the menu trigger, and the aria-label that will replace the current one in the DOM. Behind the scene the aria-expanded and aria-attributes are also updated based on the visibility of the menu.
 
@@ -26,7 +26,7 @@ const MenuExample = () => {
       const menu = document.querySelector('#custom-menu');
       if (getComputedStyle(menu).display === 'none') {
         menu.style.display = 'block';
-        makeMenuAccessible('custom-menu', 'profile-menu-item');
+        makeMenuAccessible('custom-menu', 'profile-menu-item', 'Display profile menu);
         updateMenuTriggerAriaAttributes('display-button', 'Hide profile menu');
       } else {
         cleanUpMenuEventListeners('custom-menu', 'profile-menu-item');
@@ -42,7 +42,7 @@ const MenuExample = () => {
         id="display-button"
         onMouseDown={toggleMenuDisplay}
         aria-haspopup={true}
-        aria-pressed={false}
+        role="button"
         aria-expanded={false}
         aria-controls="custom-menu"
         aria-label="Display profile menu"
