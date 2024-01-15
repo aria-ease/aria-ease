@@ -24,7 +24,7 @@ export function handleKeyPress(event, elementItems, elementItemIndex, elementDiv
             event.preventDefault();
             if (elementDiv && triggerButton) {
                 (getComputedStyle(elementDiv).display === 'block') ?
-                    triggerButton.click() :
+                    elementDiv.style.display = 'none' :
                     null;
                 triggerButton.focus();
             }
