@@ -6,6 +6,8 @@ Out of the box accessibility utility package to develop production ready applica
 
 `npm i aria-ease`
 
+`yarn add aria-ease`
+
 ## Features
 
 Add accessibility to menu: menu can be a dropdown, side menu, slide navigation e.t.c. Basically any component that toggles display and has a list of interactive children items. The function creates a focus trap within the menu and focus can be navigated using the arrow keys. The escape key also closes the menu and returns the focus back to the trigger.
@@ -94,6 +96,14 @@ const BlockExample = () => {
 export default BlockExample
 ```
 
+[Check out more features/functionality in the docs](https://aria-ease.vercel.app/docs)
+
+[Start contributing on GitHub](https://github.com/aria-ease/aria-ease)
+
+Find a bug? Head on over to [issue page](https://github.com/aria-ease/aria-ease/issues) and open one. We're excited to receive pull requests.
+
+Aria-ease is open-source software by [Isaac Victor](https://isaacvictordev.web.app/)
+
 ### P.S.
 
-Make sure to add element focus styling in css otherwise visibility might be impacted.
+Make sure to add elements focus styling in css otherwise visibility might be impacted.
