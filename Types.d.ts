@@ -4,7 +4,6 @@ declare global {
 }
 
 interface AccordionStates {
-    id: string;
     display: boolean;
     openedAriaLabel: string;
     closedAriaLabel: string;
