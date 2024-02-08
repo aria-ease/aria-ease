@@ -46,14 +46,6 @@ export function handleKeyPress(event, elementItems, elementItemIndex, menuElemen
                 window.location.href = elementItems.item(elementItemIndex).href;
                 break;
             }
-            else if (elementItems.item(elementItemIndex).type === 'radio') {
-                elementItems.item(elementItemIndex).checked = true;
-                break;
-            }
-            else if (elementItems.item(elementItemIndex).type === 'checkbox') {
-                elementItems.item(elementItemIndex).checked = !elementItems.item(elementItemIndex).checked;
-                break;
-            }
             break;
         default:
             break;

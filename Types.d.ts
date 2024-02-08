@@ -8,10 +8,17 @@ interface AccordionStates {
     openedAriaLabel: string;
     closedAriaLabel: string;
 }
+
+interface CheckboxStates {
+    pressed: boolean;
+    checkedAriaLabel: string;
+    uncheckedAriaLabel: string;
+}
   
   
 export {
     HTMLElement,
     NodeListOfHTMLElement,
-    AccordionStates
+    AccordionStates,
+    CheckboxStates
 };
