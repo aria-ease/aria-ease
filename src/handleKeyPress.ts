@@ -41,16 +41,10 @@ export function handleKeyPress(event: KeyboardEvent, elementItems: NodeListOfHTM
         case ' ':
             event.preventDefault()
             if(elementItems.item(elementItemIndex).tagName === 'BUTTON') {
-                elementItems.item(elementItemIndex).click()
+                elementItems.item(elementItemIndex).click();
                 break;
             } else if (elementItems.item(elementItemIndex).tagName === 'A') {
                 window.location.href = elementItems.item(elementItemIndex).href; 
-                break;
-            } else if (elementItems.item(elementItemIndex).type === 'radio') {
-                elementItems.item(elementItemIndex).checked = true
-                break;
-            } else if (elementItems.item(elementItemIndex).type === 'checkbox') {
-                elementItems.item(elementItemIndex).checked = !elementItems.item(elementItemIndex).checked
                 break;
             }
             break;

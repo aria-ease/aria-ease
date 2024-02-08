@@ -2,7 +2,7 @@
  * Declares the module 'aria-ease' and includes type information and JSDoc comments.
  */
 
-import { AccordionStates } from "./Types";
+import { AccordionStates, CheckboxStates } from "./Types";
 
 declare module 'aria-ease' {
     /**
@@ -41,7 +41,15 @@ declare module 'aria-ease' {
      * @param {number} currentClickedTriggerIndex Index of the currently clicked accordion trigger
    */
    function updateAccordionTriggerAriaAttributes(accordionStates: AccordionStates[], accordionsClass: string, currentClickedTriggerIndex: number): void;
+
+   /**
+     * Adds screen reader accessibility to checkboxes. Updates the aria attributes of the checkbox. Checkbox element must possess the following aria attributes; aria-pressed and aria-label.
+     * @param {CheckboxStates[]} checkboxStates Array of objects containing checkboxes state information
+     * @param {string} checkboxesClass The shared class of all the checkboxes
+     * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox
+   */
+   function updateCheckboxAriaAttributes(checkboxStates: CheckboxStates[], checkboxesClass: string, currentPressedCheckboxIndex: number): void;
   
-    export { makeMenuAccessible, makeBlockAccessible, updateMenuTriggerAriaAttributes, cleanUpMenuEventListeners, updateAccordionTriggerAriaAttributes };
+    export { makeMenuAccessible, makeBlockAccessible, updateMenuTriggerAriaAttributes, cleanUpMenuEventListeners, updateAccordionTriggerAriaAttributes, updateCheckboxAriaAttributes };
   }
   
