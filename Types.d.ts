@@ -10,7 +10,7 @@ interface AccordionStates {
 }
 
 interface CheckboxStates {
-    pressed: boolean;
+    checked: boolean;
     checkedAriaLabel: string;
     uncheckedAriaLabel: string;
 }
