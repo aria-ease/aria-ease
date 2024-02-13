@@ -4,6 +4,7 @@ import { updateMenuTriggerAriaAttributes } from './src/menu/updateMenuTriggerAri
 import { cleanUpMenuEventListeners } from './src/menu/cleanUpMenuEventListeners.js'
 import { updateAccordionTriggerAriaAttributes } from './src/accordion/updateAccordionTriggerAriaAttributes.js'
 import { updateCheckboxAriaAttributes } from './src/checkbox/updateCheckboxAriaAttributes.js'
+import { updateRadioAriaAttributes } from './src/radio/updateRadioAriaAttributes.js'
 
 export {
     makeMenuAccessible,
@@ -11,5 +12,6 @@ export {
     updateMenuTriggerAriaAttributes,
     cleanUpMenuEventListeners,
     updateAccordionTriggerAriaAttributes,
-    updateCheckboxAriaAttributes
+    updateCheckboxAriaAttributes,
+    updateRadioAriaAttributes
 }

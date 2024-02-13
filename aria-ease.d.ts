@@ -2,7 +2,7 @@
  * Declares the module 'aria-ease' and includes type information and JSDoc comments.
  */
 
-import { AccordionStates, CheckboxStates } from "./Types";
+import { AccordionStates, CheckboxStates, RadioStates } from "./Types";
 
 declare module 'aria-ease' {
     /**
@@ -49,7 +49,22 @@ declare module 'aria-ease' {
      * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox
    */
    function updateCheckboxAriaAttributes(checkboxStates: CheckboxStates[], checkboxesClass: string, currentPressedCheckboxIndex: number): void;
+
+   /**
+     * Adds screen reader accessibility to radio buttons. Updates the aria attributes of the radio button. Radio element must possess the following aria attributes; aria-checked and aria-label.
+     * @param {RadioStates[]} radioStates Array of objects containing radio buttons state information
+     * @param {string} radiosClass The shared class of all the radio buttons
+     * @param {number} currentPressedRadioIndex Index of the currently checked or unchecked radio button
+   */
+   function updateRadioAriaAttributes(radioStates: RadioStates[], radiosClass: string, currentPressedRadioIndex: number): void;
   
-    export { makeMenuAccessible, makeBlockAccessible, updateMenuTriggerAriaAttributes, cleanUpMenuEventListeners, updateAccordionTriggerAriaAttributes, updateCheckboxAriaAttributes };
-  }
-  
+  export { 
+    makeMenuAccessible, 
+    makeBlockAccessible, 
+    updateMenuTriggerAriaAttributes, 
+    cleanUpMenuEventListeners, 
+    updateAccordionTriggerAriaAttributes, 
+    updateCheckboxAriaAttributes, 
+    updateRadioAriaAttributes 
+  };
+}
