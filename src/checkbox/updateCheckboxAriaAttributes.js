@@ -9,6 +9,7 @@ export function updateCheckboxAriaAttributes(checkboxStates, checkboxesClass, cu
     if (!allCheckboxes) {
         throw new Error('Invalid checkboxes class provided.');
     }
+    ;
     allCheckboxes.forEach(function (checkbox, index) {
         if (index === currentPressedCheckboxIndex) {
             checkbox.setAttribute("aria-checked", checkboxStates[index].checked ? 'true' : 'false');

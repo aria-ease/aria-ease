@@ -15,10 +15,16 @@ interface CheckboxStates {
     uncheckedAriaLabel: string;
 }
   
+interface RadioStates {
+    checked: boolean;
+    checkedAriaLabel: string;
+    uncheckedAriaLabel: string;
+}
   
 export {
     HTMLElement,
     NodeListOfHTMLElement,
     AccordionStates,
-    CheckboxStates
+    CheckboxStates,
+    RadioStates
 };

@@ -12,7 +12,7 @@ export function updateCheckboxAriaAttributes(checkboxStates: CheckboxStates[], c
 
     if ( !allCheckboxes) {
       throw new Error('Invalid checkboxes class provided.');
-    }
+    };
 
     allCheckboxes.forEach((checkbox, index) => {
       if (index === currentPressedCheckboxIndex) {

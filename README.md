@@ -77,9 +77,8 @@ import { makeBlockAccessible } from "aria-ease"
 
 const BlockExample = () => {
   useEffect(() => {
-    const cleanUp = makeBlockAccessible('custom-tab', 'custom-tab-item')
-
-    return cleanUp
+    const accessibleBlock = makeBlockAccessible('custom-tab', 'custom-tab-item');
+    return accessibleBlock
   },[])
 
   return (
