@@ -35,7 +35,6 @@ export function handleKeyPress(event: KeyboardEvent, elementItems: NodeListOfHTM
                     null
                 triggerButton.focus()
             }
-            
             break;
         case 'Enter':
         case ' ':
