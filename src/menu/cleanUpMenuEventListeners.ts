@@ -2,9 +2,9 @@ import { NodeListOfHTMLElement } from "../../Types"
 import { handleKeyPress } from "../handleKeyPress"
 
 
-export function cleanUpMenuEventListeners(menuId: string, menuItemClass: string): void {
+export function cleanUpMenuEventListeners(menuId: string, menuItemsClass: string): void {
     const menuDiv: HTMLElement = document.querySelector(`#${menuId}`) as HTMLElement
-    const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItemClass}`)
+    const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItemsClass}`)
 
     const triggerId: string = menuDiv.getAttribute('aria-labelledby') as string
     const triggerButton: HTMLElement = document.querySelector(`#${triggerId}`) as HTMLElement
