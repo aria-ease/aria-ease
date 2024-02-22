@@ -27,7 +27,7 @@ const MenuExample = () => {
   const toggleMenuDisplay = (event) => {
     if (event.type === 'mousedown' || (event.type === 'keydown' && (event.key === 'Enter' || event.key === ' '))) {
       event.preventDefault();
-      const menu = document.querySelector('#custom-menu');
+      const menu = document.querySelector('#menu-div');
       if (getComputedStyle(menu).display === 'none') {
         menu.style.display = 'block';
         makeMenuAccessible('menu-div', 'menu-interactive-items');
@@ -50,7 +50,7 @@ const MenuExample = () => {
         aria-expanded={false}
         aria-controls="menu-div"
         aria-label="Display profile menu"
-        className='menu-example-trigger-button block-interactive'
+        className='menu-example-trigger-button'
         onKeyDown={toggleMenuDisplay}
       >
         Display Example Menu
@@ -79,13 +79,13 @@ import { makeBlockAccessible } from "aria-ease"
 
 const BlockExample = () => {
   useEffect(() => {
-    const accessibleBlock = makeBlockAccessible('block-div-interactive', 'block-div-interactive-items');
+    const accessibleBlock = makeBlockAccessible('block-div', 'block-div-interactive-items');
     return accessibleBlock;
   },[])
 
   return (
     <div>
-      <div id="block-div-interactive">
+      <div id="block-div">
         <button className="block-div-interactive-items">One</button>
         <button className="block-div-interactive-items">Two</button>
         <button className="block-div-interactive-items">Three</button>
