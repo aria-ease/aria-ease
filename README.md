@@ -35,7 +35,7 @@ const MenuExample = () => {
       } else {
         cleanUpMenuEventListeners('menu-div', 'menu-interactive-items');
         menu.style.display = 'none';
-        updateMenuTriggerAriaAttributes('display-button', 'Close profile menu');
+        updateMenuTriggerAriaAttributes('display-button', 'Open profile menu');
       }
     }
   };
