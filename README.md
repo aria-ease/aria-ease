@@ -10,9 +10,11 @@ Out of the box accessibility utility package to develop production ready applica
 
 ## Features
 
+Don't spend hours wrestling with accessibility code. Aria-Ease provides pre-built, customizable functions that help you integrate accessibility seamlessly into your development workflow. It simplifies the process of adding essential accessibility features to common UI components like menus, accordions, and checkboxes, e.t.c. This allows you to focus on building great user experiences for everyone.
+
 The package currently has support for 5 components: accordions, blocks, checkboxes, menus, radio buttons
 
-Add accessibility to menu: menu can be a dropdown, side menu, slide navigation e.t.c. Basically any component that toggles display and has a list of interactive children items. The function creates a focus trap within the menu and focus can be navigated using the arrow keys. The escape key also closes the menu and returns the focus back to the trigger.
+Add accessibility to menu: menu can be a dropdown, slide navigation menu, e.t.c. Basically any component that toggles display and has a list of interactive children items. The function creates a focus trap within the menu and focus can be navigated using the arrow keys. The escape key also closes the menu and returns the focus back to the trigger.
 
 The makeMenuAccessible function takes two string arguments; the id of the menu, the class name of the children items of the menu. And should only be invoked after the menu has become visible or added to the DOM. When the menu is visible the first item of the menu is in focus and focus can be navigated using the Arrow keys. The Space and Enter keys clicks the menu item if they are buttons or links element. The Escape key closes the menu, and returns the focus back to the button that toggles the menu. The Tab key exits the trap.
 
@@ -67,7 +69,7 @@ const MenuExample = () => {
 export default MenuExample
 ```
 
-Add accessibility to block: block can be entire web page body, tabs, interactive sliders and carousels e.t.c. Basically any component that is permanently displayed and has a list of related interractive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys.
+Add accessibility to block: block can be tabs, entire web page body, interactive sliders and carousels e.t.c. Basically any 'block' component that is permanently displayed and has a list of related interractive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys. Using the entire page as a block, the page serves as a focus trap, and the page can be navigated from one interactive item to another from the top of the page to the bottom and cycle back.
 
 The makeBlockAccessible function takes two string arguments; the id of the block main div, and the class name of the children items of the div. The function should be called on page render, so the event listeners get activated. On click of a button, the clicked button gets focused and the focus can be navigated using the arrow keys.
 
@@ -105,6 +107,17 @@ Find a bug? Head on over to [issue page](https://github.com/aria-ease/aria-ease/
 
 Aria-ease is open-source software by [Isaac Victor](https://isaacvictordev.web.app/)
 
-### P.S.
+### P.S. Don't Forget About Focus Styling!
 
-Make sure to add elements focus styling in css otherwise visibility might be impacted.
+While Aria-Ease significantly aids in making your web applications more accessible, it's essential to remember that visual cues play a crucial role in accessibility. This is especially true for keyboard navigation, where focus styling indicates which element is currently selectable or active.
+
+Without clear focus styling, users who rely on keyboard navigation may find it challenging to determine which part of the page they are interacting with. Therefore, we strongly encourage you to implement distinct focus styles for interactive elements on your web pages.
+
+Here's a simple CSS example to enhance focus visibility:
+
+```css
+:focus {
+  outline: 2px solid rgba(0, 91, 211, 1); /* Blue outline for high contrast */
+  outline-offset: 1px;
+}
+```
