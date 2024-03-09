@@ -22,22 +22,29 @@ The updateMenuTriggerAriaAttributes function take two string arguments; the id o
 
 #### Usage
 
-```
-import { makeMenuAccessible, updateMenuTriggerAriaAttributes, cleanUpMenuEventListeners } from 'aria-ease'
+```javascript
+import {
+  makeMenuAccessible,
+  updateMenuTriggerAriaAttributes,
+  cleanUpMenuEventListeners,
+} from "aria-ease";
 
 const MenuExample = () => {
   const toggleMenuDisplay = (event) => {
-    if (event.type === 'mousedown' || (event.type === 'keydown' && (event.key === 'Enter' || event.key === ' '))) {
+    if (
+      event.type === "mousedown" ||
+      (event.type === "keydown" && (event.key === "Enter" || event.key === " "))
+    ) {
       event.preventDefault();
-      const menu = document.querySelector('#menu-div');
-      if (getComputedStyle(menu).display === 'none') {
-        menu.style.display = 'block';
-        makeMenuAccessible('menu-div', 'menu-interactive-items');
-        updateMenuTriggerAriaAttributes('display-button', 'Close profile menu');
+      const menu = document.querySelector("#menu-div");
+      if (getComputedStyle(menu).display === "none") {
+        menu.style.display = "block";
+        makeMenuAccessible("menu-div", "menu-interactive-items");
+        updateMenuTriggerAriaAttributes("display-button", "Close profile menu");
       } else {
-        cleanUpMenuEventListeners('menu-div', 'menu-interactive-items');
-        menu.style.display = 'none';
-        updateMenuTriggerAriaAttributes('display-button', 'Open profile menu');
+        cleanUpMenuEventListeners("menu-div", "menu-interactive-items");
+        menu.style.display = "none";
+        updateMenuTriggerAriaAttributes("display-button", "Open profile menu");
       }
     }
   };
@@ -52,21 +59,44 @@ const MenuExample = () => {
         aria-expanded={false}
         aria-controls="menu-div"
         aria-label="Display profile menu"
-        className='menu-example-trigger-button'
+        className="menu-example-trigger-button"
         onKeyDown={toggleMenuDisplay}
       >
         Display Example Menu
       </button>
-      <div id="menu-div" role="menu" aria-labelledby="display-button" style={{display: 'none', marginTop: '5px'}}>
-        <button role="menuitem" className="menu-interactive-items" onClick={() => alert('Button clicked')}>One</button>
-        <button role="menuitem" className="menu-interactive-items" onClick={() => alert('Button clicked')}>Two</button>
-        <button role="menuitem" className="menu-interactive-items" onClick={() => alert('Button clicked')}>Three</button>
+      <div
+        id="menu-div"
+        role="menu"
+        aria-labelledby="display-button"
+        style={{ display: "none", marginTop: "5px" }}
+      >
+        <button
+          role="menuitem"
+          className="menu-interactive-items"
+          onClick={() => alert("Button clicked")}
+        >
+          One
+        </button>
+        <button
+          role="menuitem"
+          className="menu-interactive-items"
+          onClick={() => alert("Button clicked")}
+        >
+          Two
+        </button>
+        <button
+          role="menuitem"
+          className="menu-interactive-items"
+          onClick={() => alert("Button clicked")}
+        >
+          Three
+        </button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MenuExample
+export default MenuExample;
 ```
 
 Add accessibility to block: block can be tabs, entire web page body, interactive sliders and carousels e.t.c. Basically any 'block' component that is permanently displayed and has a list of related interractive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys. Using the entire page as a block, the page serves as a focus trap, and the page can be navigated from one interactive item to another from the top of the page to the bottom and cycle back.
@@ -75,15 +105,18 @@ The makeBlockAccessible function takes two string arguments; the id of the block
 
 #### Usage
 
-```
-import { useEffect } from 'react'
-import { makeBlockAccessible } from "aria-ease"
+```javascript
+import { useEffect } from "react";
+import { makeBlockAccessible } from "aria-ease";
 
 const BlockExample = () => {
   useEffect(() => {
-    const accessibleBlock = makeBlockAccessible('block-div', 'block-div-interactive-items');
+    const accessibleBlock = makeBlockAccessible(
+      "block-div",
+      "block-div-interactive-items"
+    );
     return accessibleBlock;
-  },[])
+  }, []);
 
   return (
     <div>
@@ -93,10 +126,10 @@ const BlockExample = () => {
         <button className="block-div-interactive-items">Three</button>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default BlockExample
+export default BlockExample;
 ```
 
 [Check out more features/functionality in the docs](https://aria-ease.vercel.app/docs)
