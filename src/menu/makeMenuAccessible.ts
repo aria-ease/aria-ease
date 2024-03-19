@@ -11,18 +11,36 @@ let eventListenersAdded: Set<HTMLElement> = new Set();
 
 export function makeMenuAccessible(menuId: string, menuItemsClass: string): void {
     const menuDiv: HTMLElement = document.querySelector(`#${menuId}`) as HTMLElement;
-    const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItemsClass}`);
+    if(!menuDiv) {
+        throw new Error("Invalid menu div id provided")
+    }
 
+    const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItemsClass}`);
+    
     const triggerId: string = menuDiv.getAttribute('aria-labelledby') as string;
+    if(!triggerId) {
+        throw new Error("Menu div doesn't contain aria-labelledby attribute")
+    }
+
     const triggerButton: HTMLElement = document.querySelector(`#${triggerId}`) as HTMLElement;
+    if(!triggerButton) {
+        throw new Error("Menu trigger button id does not match menu div aria-labelledby attribute")
+    }
 
     const menuClosedStateAriaLabel: string = triggerButton.getAttribute('aria-label')  as string;
+    if(!menuClosedStateAriaLabel) {
+        throw new Error("Menu trigger button does not have initial aria-label")
+    }
 
-    menuItems.item(0).focus();
-    menuItems.forEach((menuItem: HTMLElement, menuItemIndex: number): void => {
-        if (!eventListenersAdded.has(menuItem)) {
-            eventListenersAdded.add(menuItem);
-            menuItem.addEventListener('keydown', (event: KeyboardEvent): void => handleKeyPress(event, menuItems, menuItemIndex, menuDiv, triggerButton, menuClosedStateAriaLabel));
-        }
-    })
+    if(menuItems && menuItems.length > 0) {
+        menuItems.item(0).focus();
+        menuItems.forEach((menuItem: HTMLElement, menuItemIndex: number): void => {
+            if (!eventListenersAdded.has(menuItem)) {
+                eventListenersAdded.add(menuItem);
+                menuItem.addEventListener('keydown', (event: KeyboardEvent): void => handleKeyPress(event, menuItems, menuItemIndex, menuDiv, triggerButton, menuClosedStateAriaLabel));
+            }
+        })
+    } else {
+        throw new Error("Invalid menu items class provided")
+    }
 }

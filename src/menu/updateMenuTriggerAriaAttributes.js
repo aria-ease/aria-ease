@@ -5,7 +5,13 @@
  */
 export function updateMenuTriggerAriaAttributes(triggerId, ariaLabel) {
     var triggerButton = document.querySelector("#".concat(triggerId));
+    if (!triggerButton) {
+        throw new Error("Invalid menu trigger button id provided");
+    }
     var currentAriaExpandedState = triggerButton.getAttribute('aria-expanded');
+    if (!currentAriaExpandedState) {
+        throw new Error("Menu trigger button does not have aria-expanded attribute");
+    }
     function triggerOpen(ariaLabel) {
         triggerButton.setAttribute('aria-expanded', 'true');
         triggerButton.setAttribute('aria-label', ariaLabel);

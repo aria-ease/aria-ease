@@ -2,6 +2,9 @@ import { updateMenuTriggerAriaAttributes } from "./menu/updateMenuTriggerAriaAtt
 function handleMenuEscapeKeyPress(menuElement, menuTriggerButton, menuClosedStateAriaLabel) {
     menuElement.style.display = 'none';
     var menuTriggerButtonId = menuTriggerButton.getAttribute('id');
+    if (!menuTriggerButtonId) {
+        throw new Error("Menu trigger button does not have id attribute");
+    }
     updateMenuTriggerAriaAttributes("".concat(menuTriggerButtonId), "".concat(menuClosedStateAriaLabel));
 }
 export function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, menuClosedStateAriaLabel) {

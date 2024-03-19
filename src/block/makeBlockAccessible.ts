@@ -11,7 +11,14 @@ let eventListenersAdded: Set<HTMLElement> = new Set();
 
 export function makeBlockAccessible(blockId: string, blockItemsClass: string) {
   const blockDiv: HTMLElement = document.querySelector(`#${blockId}`) as HTMLElement
-  const blockItems: NodeListOfHTMLElement = blockDiv.querySelectorAll(`.${blockItemsClass}`)
+  if(!blockDiv) {
+    throw new Error('Invalid block main div id provided.');
+  }
+
+  const blockItems: NodeListOfHTMLElement = blockDiv.querySelectorAll(`.${blockItemsClass}`);
+  if(!blockItems) {
+    throw new Error('Invalid block items class provided.');
+  }
 
   blockItems.forEach((blockItem: HTMLElement, blockItemIndex: number): void => {
     if (!eventListenersAdded.has(blockItem)) {
