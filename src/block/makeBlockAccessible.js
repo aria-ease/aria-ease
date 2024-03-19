@@ -7,7 +7,13 @@ import { handleKeyPress } from '../handleKeyPress';
 var eventListenersAdded = new Set();
 export function makeBlockAccessible(blockId, blockItemsClass) {
     var blockDiv = document.querySelector("#".concat(blockId));
+    if (!blockDiv) {
+        throw new Error('Invalid block main div id provided.');
+    }
     var blockItems = blockDiv.querySelectorAll(".".concat(blockItemsClass));
+    if (!blockItems) {
+        throw new Error('Invalid block items class provided.');
+    }
     blockItems.forEach(function (blockItem, blockItemIndex) {
         if (!eventListenersAdded.has(blockItem)) {
             eventListenersAdded.add(blockItem);

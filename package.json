@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
   "main": "index.js",
   "scripts": {
@@ -11,14 +11,20 @@
     "url": "git+https://github.com/aria-ease/aria-ease.git"
   },
   "keywords": [
+    "a11y",
     "ARIA",
-    "Accessibility"
+    "Accessibility",
+    "Assistive Technology",
+    "Keyboard Navigation",
+    "Focus Management",
+    "WCAG Guidelines",
+    "Inclusive Design"
   ],
   "author": "Isaac Akinduyile",
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/aria-ease/aria-ease/issues"
   },
-  "homepage": "https://aria-ease.vercel.app/",
+  "homepage": "https://aria-ease.vercel.app/docs",
   "types": "./aria-ease.d.ts"
 }
