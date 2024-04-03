@@ -3,11 +3,15 @@ import { makeBlockAccessible } from './src/block/makeBlockAccessible.js'
 import { updateMenuTriggerAriaAttributes } from './src/menu/updateMenuTriggerAriaAttributes.js'
 import { cleanUpMenuEventListeners } from './src/menu/cleanUpMenuEventListeners.js'
 import { updateAccordionTriggerAriaAttributes } from './src/accordion/updateAccordionTriggerAriaAttributes.js'
+import { updateCheckboxAriaAttributes } from './src/checkbox/updateCheckboxAriaAttributes.js'
+import { updateRadioAriaAttributes } from './src/radio/updateRadioAriaAttributes.js'
 
 export {
     makeMenuAccessible,
     makeBlockAccessible,
     updateMenuTriggerAriaAttributes,
     cleanUpMenuEventListeners,
-    updateAccordionTriggerAriaAttributes
+    updateAccordionTriggerAriaAttributes,
+    updateCheckboxAriaAttributes,
+    updateRadioAriaAttributes
 }

@@ -4,6 +4,10 @@ import { updateMenuTriggerAriaAttributes } from "./menu/updateMenuTriggerAriaAtt
 function handleMenuEscapeKeyPress(menuElement: HTMLElement, menuTriggerButton: HTMLElement, menuClosedStateAriaLabel: string) {
     menuElement.style.display = 'none';
     const menuTriggerButtonId = menuTriggerButton.getAttribute('id');
+    if(!menuTriggerButtonId) {
+        throw new Error("Menu trigger button does not have id attribute")
+    }
+    
     updateMenuTriggerAriaAttributes(`${menuTriggerButtonId}`, `${menuClosedStateAriaLabel}`)
 }
 
@@ -35,22 +39,16 @@ export function handleKeyPress(event: KeyboardEvent, elementItems: NodeListOfHTM
                     null
                 triggerButton.focus()
             }
-            
             break;
         case 'Enter':
         case ' ':
-            event.preventDefault()
             if(elementItems.item(elementItemIndex).tagName === 'BUTTON') {
-                elementItems.item(elementItemIndex).click()
+                event.preventDefault()
+                elementItems.item(elementItemIndex).click();
                 break;
             } else if (elementItems.item(elementItemIndex).tagName === 'A') {
+                event.preventDefault()
                 window.location.href = elementItems.item(elementItemIndex).href; 
-                break;
-            } else if (elementItems.item(elementItemIndex).type === 'radio') {
-                elementItems.item(elementItemIndex).checked = true
-                break;
-            } else if (elementItems.item(elementItemIndex).type === 'checkbox') {
-                elementItems.item(elementItemIndex).checked = !elementItems.item(elementItemIndex).checked
                 break;
             }
             break;

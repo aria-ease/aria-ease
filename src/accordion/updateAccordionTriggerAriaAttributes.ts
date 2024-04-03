@@ -15,12 +15,11 @@ export function updateAccordionTriggerAriaAttributes(accordionStates: AccordionS
     }
 
     allAccordionTrigger.forEach((trigger, index) => {
-        if (index === currentClickedTriggerIndex) {
-          trigger.setAttribute("aria-expanded", accordionStates[index].display ? 'true' : 'false');
-        } else {
-          trigger.setAttribute("aria-expanded", 'false');
-        }
-    
-        trigger.setAttribute("aria-label", accordionStates[index].display ? accordionStates[index].openedAriaLabel : accordionStates[index].closedAriaLabel);
+      if (index === currentClickedTriggerIndex) {
+        trigger.setAttribute("aria-expanded", accordionStates[index].display ? 'true' : 'false');
+      } else {
+        trigger.setAttribute("aria-expanded", 'false');
+      }
+      trigger.setAttribute("aria-label", accordionStates[index].display ? accordionStates[index].openedAriaLabel : accordionStates[index].closedAriaLabel);
     });
 }

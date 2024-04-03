@@ -8,8 +8,14 @@ import { HTMLElement } from "../../Types";
 
 export function updateMenuTriggerAriaAttributes(triggerId: string, ariaLabel: string): void {
     const triggerButton: HTMLElement = document.querySelector(`#${triggerId}`) as HTMLElement
+    if(!triggerButton) {
+        throw new Error("Invalid menu trigger button id provided")
+    }
 
     const currentAriaExpandedState: string = triggerButton.getAttribute('aria-expanded') as string
+    if(!currentAriaExpandedState) {
+        throw new Error("Menu trigger button does not have aria-expanded attribute")
+    }
 
     function triggerOpen(ariaLabel: string): void {
         triggerButton.setAttribute('aria-expanded', 'true')

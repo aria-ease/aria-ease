@@ -2,6 +2,9 @@ import { updateMenuTriggerAriaAttributes } from "./menu/updateMenuTriggerAriaAtt
 function handleMenuEscapeKeyPress(menuElement, menuTriggerButton, menuClosedStateAriaLabel) {
     menuElement.style.display = 'none';
     var menuTriggerButtonId = menuTriggerButton.getAttribute('id');
+    if (!menuTriggerButtonId) {
+        throw new Error("Menu trigger button does not have id attribute");
+    }
     updateMenuTriggerAriaAttributes("".concat(menuTriggerButtonId), "".concat(menuClosedStateAriaLabel));
 }
 export function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, menuClosedStateAriaLabel) {
@@ -37,21 +40,14 @@ export function handleKeyPress(event, elementItems, elementItemIndex, menuElemen
             break;
         case 'Enter':
         case ' ':
-            event.preventDefault();
             if (elementItems.item(elementItemIndex).tagName === 'BUTTON') {
+                event.preventDefault();
                 elementItems.item(elementItemIndex).click();
                 break;
             }
             else if (elementItems.item(elementItemIndex).tagName === 'A') {
+                event.preventDefault();
                 window.location.href = elementItems.item(elementItemIndex).href;
-                break;
-            }
-            else if (elementItems.item(elementItemIndex).type === 'radio') {
-                elementItems.item(elementItemIndex).checked = true;
-                break;
-            }
-            else if (elementItems.item(elementItemIndex).type === 'checkbox') {
-                elementItems.item(elementItemIndex).checked = !elementItems.item(elementItemIndex).checked;
                 break;
             }
             break;

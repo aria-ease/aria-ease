@@ -4,15 +4,27 @@ declare global {
 }
 
 interface AccordionStates {
-    id: string;
     display: boolean;
     openedAriaLabel: string;
     closedAriaLabel: string;
 }
+
+interface CheckboxStates {
+    checked: boolean;
+    checkedAriaLabel: string;
+    uncheckedAriaLabel: string;
+}
   
+interface RadioStates {
+    checked: boolean;
+    checkedAriaLabel: string;
+    uncheckedAriaLabel: string;
+}
   
 export {
     HTMLElement,
     NodeListOfHTMLElement,
-    AccordionStates
+    AccordionStates,
+    CheckboxStates,
+    RadioStates
 };

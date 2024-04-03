@@ -1,7 +1,7 @@
 /** 
  * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.
  * @param {string} blockId The id of the block
- * @param {string} blockItemClass The shared class of the items that are children of the block
+ * @param {string} blockItemsClass The shared class of the items that are children of thes block
 */
 
 import { HTMLElement, NodeListOfHTMLElement } from "../../Types"
@@ -9,9 +9,16 @@ import { handleKeyPress } from '../handleKeyPress';
 
 let eventListenersAdded: Set<HTMLElement> = new Set();
 
-export function makeBlockAccessible(blockId: string, blockItemClass: string) {
+export function makeBlockAccessible(blockId: string, blockItemsClass: string) {
   const blockDiv: HTMLElement = document.querySelector(`#${blockId}`) as HTMLElement
-  const blockItems: NodeListOfHTMLElement = blockDiv.querySelectorAll(`.${blockItemClass}`)
+  if(!blockDiv) {
+    throw new Error('Invalid block main div id provided.');
+  }
+
+  const blockItems: NodeListOfHTMLElement = blockDiv.querySelectorAll(`.${blockItemsClass}`);
+  if(!blockItems) {
+    throw new Error('Invalid block items class provided.');
+  }
 
   blockItems.forEach((blockItem: HTMLElement, blockItemIndex: number): void => {
     if (!eventListenersAdded.has(blockItem)) {
