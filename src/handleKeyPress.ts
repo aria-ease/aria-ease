@@ -42,11 +42,12 @@ export function handleKeyPress(event: KeyboardEvent, elementItems: NodeListOfHTM
             break;
         case 'Enter':
         case ' ':
-            event.preventDefault()
             if(elementItems.item(elementItemIndex).tagName === 'BUTTON') {
+                event.preventDefault()
                 elementItems.item(elementItemIndex).click();
                 break;
             } else if (elementItems.item(elementItemIndex).tagName === 'A') {
+                event.preventDefault()
                 window.location.href = elementItems.item(elementItemIndex).href; 
                 break;
             }
