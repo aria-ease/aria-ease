@@ -11,22 +11,26 @@ export function handleKeyPress(event, elementItems, elementItemIndex, menuElemen
     switch (event.key) {
         case 'ArrowUp':
         case 'ArrowLeft':
-            event.preventDefault();
-            if (elementItemIndex === 0) {
-                elementItems.item(elementItems.length - 1).focus();
-            }
-            else {
-                elementItems.item(elementItemIndex - 1).focus();
+            if ((elementItems.item(elementItemIndex).tagName !== 'INPUT') || (elementItems.item(elementItemIndex).tagName === 'INPUT' && elementItems.item(elementItemIndex).type === 'text' && event.key === 'ArrowUp')) {
+                event.preventDefault();
+                if (elementItemIndex === 0) {
+                    elementItems.item(elementItems.length - 1).focus();
+                }
+                else {
+                    elementItems.item(elementItemIndex - 1).focus();
+                }
             }
             break;
         case 'ArrowDown':
         case 'ArrowRight':
-            event.preventDefault();
-            if (elementItemIndex === elementItems.length - 1) {
-                elementItems.item(0).focus();
-            }
-            else {
-                elementItems.item(elementItemIndex + 1).focus();
+            if ((elementItems.item(elementItemIndex).tagName !== 'INPUT') || (elementItems.item(elementItemIndex).tagName === 'INPUT' && elementItems.item(elementItemIndex).type === 'text' && event.key === 'ArrowDown')) {
+                event.preventDefault();
+                if (elementItemIndex === elementItems.length - 1) {
+                    elementItems.item(0).focus();
+                }
+                else {
+                    elementItems.item(elementItemIndex + 1).focus();
+                }
             }
             break;
         case 'Escape':
