@@ -2,7 +2,7 @@
  * Declares the module 'aria-ease' and includes type information and JSDoc comments.
  */
 
-import { AccordionStates, CheckboxStates, RadioStates } from "./Types";
+import { AccordionStates, CheckboxStates, RadioStates, ToggleStates } from "./Types";
 
 declare module 'aria-ease' {
     /**
@@ -42,28 +42,61 @@ declare module 'aria-ease' {
    function updateAccordionTriggerAriaAttributes(accordionStates: AccordionStates[], accordionsClass: string, currentClickedTriggerIndex: number): void;
 
    /**
-     * Adds screen reader accessibility to checkboxes. Updates the aria attributes of the checkbox. Checkbox element must possess the following aria attributes; aria-checked and aria-label.
+     * Adds screen reader accessibility to a single checkbox. Updates the aria attributes of the checkbox. Checkbox element must possess the following aria attributes; aria-checked and aria-label.
+     * @param {string} checkboxClass The shared class of all the checkboxes
+     * @param {string} updatedAriaLabel The aria label to be updated to checkbox element
+   */
+   function updateSingleCheckboxAriaAttribute(checkboxClass: string, updatedAriaLabel: string): void
+
+   /**
+     * Adds screen reader accessibility to multiple checkboxes. Updates the aria attributes of the checkboxes. Checkbox elements must possess the following aria attributes; aria-checked and aria-label.
      * @param {CheckboxStates[]} checkboxStates Array of objects containing checkboxes state information
      * @param {string} checkboxesClass The shared class of all the checkboxes
      * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox
    */
-   function updateCheckboxAriaAttributes(checkboxStates: CheckboxStates[], checkboxesClass: string, currentPressedCheckboxIndex: number): void;
+   function updateGroupCheckboxesAriaAttributes(checkboxStates: CheckboxStates[], checkboxesClass: string, currentPressedCheckboxIndex: number): void;
 
    /**
-     * Adds screen reader accessibility to radio buttons. Updates the aria attributes of the radio button. Radio element must possess the following aria attributes; aria-checked and aria-label.
+     * Adds screen reader accessibility to multiple radio buttons. Updates the aria attributes of the radio buttons. Radio elements must possess the following aria attributes; aria-checked and aria-label.
      * @param {RadioStates[]} radioStates Array of objects containing radio buttons state information
      * @param {string} radiosClass The shared class of all the radio buttons
      * @param {number} currentPressedRadioIndex Index of the currently checked or unchecked radio button
    */
-   function updateRadioAriaAttributes(radioStates: RadioStates[], radiosClass: string, currentPressedRadioIndex: number): void;
-  
+   function updateGroupRadiosAriaAttributes(radioStates: RadioStates[], radiosClass: string, currentPressedRadioIndex: number): void;
+
+   /**
+     * Adds screen reader accessibility to a single toggle element. Updates the aria attributes of the toggle element. Toggle element must possess the following aria attributes; aria-pressed and aria-label.
+     * @param {string} togglesClass The shared class of all the toggle elements
+     * @param {string} updatedAriaLabel The aria label to be updated to toggle element
+   */
+   function updateSingleToggleAriaAttribute(toggleClass: string, updatedAriaLabel: string): void
+
+   /**
+     * Adds screen reader accessibility to toggle elements. Updates the aria attributes of the toggle elements. Toggle element must possess the following aria attributes; aria-pressed and aria-label.
+     * @param {ToggleStates[]} toggleStates Array of objects containing toggle elements state information
+     * @param {string} togglesClass The shared class of all the toggle elements
+     * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle element
+   */
+   function updateGroupTogglesAriaAttributes(toggleStates: ToggleStates[], togglesClass: string, currentPressedToggleIndex: number): void
+
+   /**
+     * Adds screen reader accessibility to single radio button. Updates the aria attribute of the radio button. Radio element must possess the following aria attributes; aria-checked and aria-label.
+     * @param {string} radioClass The class of the radio button
+     * @param {string} updatedAriaLabel The aria label to be updated to button element
+   */
+   function updateSingleRadioAriaAttribute(radioClass: string, updatedAriaLabel: string): void
+
   export { 
     makeMenuAccessible, 
     makeBlockAccessible, 
     updateMenuTriggerAriaAttributes, 
     cleanUpMenuEventListeners, 
     updateAccordionTriggerAriaAttributes, 
-    updateCheckboxAriaAttributes, 
-    updateRadioAriaAttributes 
+    updateSingleCheckboxAriaAttribute,
+    updateGroupCheckboxesAriaAttributes,
+    updateSingleRadioAriaAttribute, 
+    updateGroupRadiosAriaAttributes,
+    updateSingleToggleAriaAttribute,
+    updateGroupTogglesAriaAttributes 
   };
 }

@@ -10,7 +10,7 @@ export function cleanUpMenuEventListeners(menuId: string, menuItemsClass: string
 
     const menuItems: NodeListOfHTMLElement = menuDiv.querySelectorAll(`.${menuItemsClass}`)
     if(!menuItems) {
-        throw new Error("Invalid menu items class provided")
+        throw new Error("Invalid menu items shared class provided")
     }
 
     const triggerId: string = menuDiv.getAttribute('aria-labelledby') as string

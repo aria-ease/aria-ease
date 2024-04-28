@@ -6,7 +6,7 @@ export function cleanUpMenuEventListeners(menuId, menuItemsClass) {
     }
     var menuItems = menuDiv.querySelectorAll(".".concat(menuItemsClass));
     if (!menuItems) {
-        throw new Error("Invalid menu items class provided");
+        throw new Error("Invalid menu items shared class provided");
     }
     var triggerId = menuDiv.getAttribute('aria-labelledby');
     if (!triggerId) {

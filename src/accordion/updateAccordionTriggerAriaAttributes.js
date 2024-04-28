@@ -5,11 +5,11 @@
  * @param {number} currentClickedTriggerIndex Index of the currently clicked accordion trigger
  */
 export function updateAccordionTriggerAriaAttributes(accordionStates, accordionsClass, currentClickedTriggerIndex) {
-    var allAccordionTrigger = Array.from(document.querySelectorAll(".".concat(accordionsClass)));
-    if (!allAccordionTrigger) {
-        throw new Error('Invalid trigger class provided.');
+    var allAccordionTriggers = Array.from(document.querySelectorAll(".".concat(accordionsClass)));
+    if (!allAccordionTriggers) {
+        throw new Error('Invalid triggers shared class provided.');
     }
-    allAccordionTrigger.forEach(function (trigger, index) {
+    allAccordionTriggers.forEach(function (trigger, index) {
         if (index === currentClickedTriggerIndex) {
             trigger.setAttribute("aria-expanded", accordionStates[index].display ? 'true' : 'false');
         }
