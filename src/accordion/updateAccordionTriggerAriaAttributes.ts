@@ -8,13 +8,13 @@
 import { HTMLElement, AccordionStates } from "../../Types";
 
 export function updateAccordionTriggerAriaAttributes(accordionStates: AccordionStates[], accordionsClass: string, currentClickedTriggerIndex: number): void {
-    const allAccordionTrigger: HTMLElement[] = Array.from(document.querySelectorAll(`.${accordionsClass}`));
+    const allAccordionTriggers: HTMLElement[] = Array.from(document.querySelectorAll(`.${accordionsClass}`));
 
-    if ( !allAccordionTrigger) {
-      throw new Error('Invalid trigger class provided.');
+    if ( !allAccordionTriggers) {
+      throw new Error('Invalid triggers shared class provided.');
     }
 
-    allAccordionTrigger.forEach((trigger, index) => {
+    allAccordionTriggers.forEach((trigger, index) => {
       if (index === currentClickedTriggerIndex) {
         trigger.setAttribute("aria-expanded", accordionStates[index].display ? 'true' : 'false');
       } else {
