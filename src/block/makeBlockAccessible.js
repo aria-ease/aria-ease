@@ -12,7 +12,7 @@ export function makeBlockAccessible(blockId, blockItemsClass) {
     }
     var blockItems = blockDiv.querySelectorAll(".".concat(blockItemsClass));
     if (!blockItems) {
-        throw new Error('Invalid block items class provided.');
+        throw new Error('Invalid block items shared class provided.');
     }
     blockItems.forEach(function (blockItem, blockItemIndex) {
         if (!eventListenersAdded.has(blockItem)) {

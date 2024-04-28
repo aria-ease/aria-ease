@@ -17,7 +17,7 @@ export function makeBlockAccessible(blockId: string, blockItemsClass: string) {
 
   const blockItems: NodeListOfHTMLElement = blockDiv.querySelectorAll(`.${blockItemsClass}`);
   if(!blockItems) {
-    throw new Error('Invalid block items class provided.');
+    throw new Error('Invalid block items shared class provided.');
   }
 
   blockItems.forEach((blockItem: HTMLElement, blockItemIndex: number): void => {

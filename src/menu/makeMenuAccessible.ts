@@ -41,6 +41,6 @@ export function makeMenuAccessible(menuId: string, menuItemsClass: string): void
             }
         })
     } else {
-        throw new Error("Invalid menu items class provided")
+        throw new Error("Invalid menu items shared class provided")
     }
 }

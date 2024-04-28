@@ -33,6 +33,6 @@ export function makeMenuAccessible(menuId, menuItemsClass) {
         });
     }
     else {
-        throw new Error("Invalid menu items class provided");
+        throw new Error("Invalid menu items shared class provided");
     }
 }

@@ -21,10 +21,17 @@ interface RadioStates {
     uncheckedAriaLabel: string;
 }
   
+interface ToggleStates {
+    pressed: boolean;
+    pressedAriaLabel: string;
+    unpressedAriaLabel: string;
+}
+
 export {
     HTMLElement,
     NodeListOfHTMLElement,
     AccordionStates,
     CheckboxStates,
-    RadioStates
+    RadioStates,
+    ToggleStates
 };
