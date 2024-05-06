@@ -11,7 +11,7 @@ export function handleKeyPress(event, elementItems, elementItemIndex, menuElemen
     switch (event.key) {
         case 'ArrowUp':
         case 'ArrowLeft':
-            if ((elementItems.item(elementItemIndex).tagName !== 'INPUT') && (elementItems.item(elementItemIndex).tagName !== 'TEXTAREA') && (elementItems.item(elementItemIndex).tagName === 'INPUT' && (elementItems.item(elementItemIndex).type !== 'text' && elementItems.item(elementItemIndex).type !== 'email' && elementItems.item(elementItemIndex).type !== 'password' && elementItems.item(elementItemIndex).type !== 'tel' && elementItems.item(elementItemIndex).type !== 'number'))) {
+            if (((elementItems.item(elementItemIndex).tagName !== 'INPUT') && (elementItems.item(elementItemIndex).tagName !== 'TEXTAREA')) || (elementItems.item(elementItemIndex).tagName === 'INPUT' && (elementItems.item(elementItemIndex).type !== 'text' && elementItems.item(elementItemIndex).type !== 'email' && elementItems.item(elementItemIndex).type !== 'password' && elementItems.item(elementItemIndex).type !== 'tel' && elementItems.item(elementItemIndex).type !== 'number'))) {
                 event.preventDefault();
                 if (elementItemIndex === 0) {
                     elementItems.item(elementItems.length - 1).focus();
@@ -34,7 +34,7 @@ export function handleKeyPress(event, elementItems, elementItemIndex, menuElemen
             break;
         case 'ArrowDown':
         case 'ArrowRight':
-            if ((elementItems.item(elementItemIndex).tagName !== 'INPUT') && (elementItems.item(elementItemIndex).tagName !== 'TEXTAREA') && (elementItems.item(elementItemIndex).tagName === 'INPUT' && (elementItems.item(elementItemIndex).type !== 'text' && elementItems.item(elementItemIndex).type !== 'email' && elementItems.item(elementItemIndex).type !== 'password' && elementItems.item(elementItemIndex).type !== 'tel' && elementItems.item(elementItemIndex).type !== 'number'))) {
+            if (((elementItems.item(elementItemIndex).tagName !== 'INPUT') && (elementItems.item(elementItemIndex).tagName !== 'TEXTAREA')) || (elementItems.item(elementItemIndex).tagName === 'INPUT' && (elementItems.item(elementItemIndex).type !== 'text' && elementItems.item(elementItemIndex).type !== 'email' && elementItems.item(elementItemIndex).type !== 'password' && elementItems.item(elementItemIndex).type !== 'tel' && elementItems.item(elementItemIndex).type !== 'number'))) {
                 event.preventDefault();
                 if (elementItemIndex === elementItems.length - 1) {
                     elementItems.item(0).focus();
