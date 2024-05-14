@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
   "main": "index.js",
   "scripts": {
