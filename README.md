@@ -99,7 +99,7 @@ const MenuExample = () => {
 export default MenuExample;
 ```
 
-Add accessibility to block: block can be tabs, entire web page body, interactive sliders and carousels e.t.c. Basically any 'block' component that is permanently displayed and has a list of related interactive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys. Using the entire page as a block, the page serves as a focus trap, and the page can be navigated from one interactive item to another from the top of the page to the bottom and cycled back.
+Add accessibility to block: block can be tabs, entire web page body, interactive sliders and carousels e.t.c. Basically any 'block' component that is permanently displayed and has a list of related interactive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys. Using the entire page as a block, the page serves as a focus trap, and the page can be navigated from one interactive item to another from the top of the page to the bottom and cycles back to the top.
 
 The makeBlockAccessible function takes two string arguments; the id of the block main div, and the class name of the children items of the div. The function should be called on page render, so the event listeners get activated. On click of a button, the clicked button gets focused and the focus can be navigated using the arrow keys.
 
@@ -132,7 +132,7 @@ const BlockExample = () => {
 export default BlockExample;
 ```
 
-[Check out more features/functionality in the docs](https://aria-ease.vercel.app/docs)
+[Check out more features/functionality in the docs](https://ariaease.xyz/docs)
 
 [Start contributing on GitHub](https://github.com/aria-ease/aria-ease)
 

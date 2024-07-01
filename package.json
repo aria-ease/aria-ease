@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
   "main": "index.js",
   "scripts": {
@@ -25,6 +25,6 @@
   "bugs": {
     "url": "https://github.com/aria-ease/aria-ease/issues"
   },
-  "homepage": "https://aria-ease.vercel.app/docs",
+  "homepage": "https://ariaease.xyz/docs",
   "types": "./aria-ease.d.ts"
 }
