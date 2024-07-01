@@ -10,9 +10,9 @@ Out of the box accessibility utility package to develop production ready applica
 
 ## Features
 
-Don't spend hours wrestling with accessibility code. Aria-Ease provides pre-built functions that help you integrate accessibility seamlessly into your development workflow. It simplifies the process of adding essential accessibility features (e.g. assistive capability, keyboard navigation, focus management) to common UI components like menus, accordions, and checkboxes, e.t.c. This allows you to focus on building great user experiences for everyone.
+Don't spend hours wrestling with accessibility code. Aria-Ease provides pre-built functions that help you integrate accessibility seamlessly into your development workflow. It simplifies the process of adding essential accessibility features (e.g. assistive capability, keyboard navigation, focus management) to common UI components like menus, accordions, checkboxes, e.t.c. This allows you to focus on building great user experiences for everyone.
 
-The package currently has support for 5 components: accordions, blocks, checkboxes, menus, radios, toggle butttons
+The package currently has support for 5 components: accordions, blocks, checkboxes, menus, radios, toggle butttons.
 
 Add accessibility to menu: menu can be a dropdown, combo box, slide navigation menu, e.t.c. Basically any component that toggles display and has a list of interactive children items. The function creates a focus trap within the menu and focus can be navigated using the arrow keys. The escape key also closes the menu and returns the focus back to the trigger.
 
@@ -99,7 +99,7 @@ const MenuExample = () => {
 export default MenuExample;
 ```
 
-Add accessibility to block: block can be tabs, entire web page body, interactive sliders and carousels e.t.c. Basically any 'block' component that is permanently displayed and has a list of related interractive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys. Using the entire page as a block, the page serves as a focus trap, and the page can be navigated from one interactive item to another from the top of the page to the bottom and cycle back.
+Add accessibility to block: block can be tabs, entire web page body, interactive sliders and carousels e.t.c. Basically any 'block' component that is permanently displayed and has a list of related interactive children items. The function creates a focus trap within the block and the focus can be navigated using the arrow keys. Using the entire page as a block, the page serves as a focus trap, and the page can be navigated from one interactive item to another from the top of the page to the bottom and cycles back to the top.
 
 The makeBlockAccessible function takes two string arguments; the id of the block main div, and the class name of the children items of the div. The function should be called on page render, so the event listeners get activated. On click of a button, the clicked button gets focused and the focus can be navigated using the arrow keys.
 
@@ -132,7 +132,7 @@ const BlockExample = () => {
 export default BlockExample;
 ```
 
-[Check out more features/functionality in the docs](https://aria-ease.vercel.app/docs)
+[Check out more features/functionality in the docs](https://ariaease.xyz/docs)
 
 [Start contributing on GitHub](https://github.com/aria-ease/aria-ease)
 
