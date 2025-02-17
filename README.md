@@ -12,7 +12,7 @@ Out of the box accessibility utility package to develop production ready applica
 
 Don't spend hours wrestling with accessibility code. Aria-Ease provides pre-built functions that help you integrate accessibility seamlessly into your development workflow. It simplifies the process of adding essential accessibility features (e.g. assistive capability, keyboard navigation, focus management) to common UI components like menus, accordions, checkboxes, e.t.c. This allows you to focus on building great user experiences for everyone.
 
-The package currently has support for 5 components: accordions, blocks, checkboxes, menus, radios, toggle butttons.
+The package currently has support for 6 components: accordions, blocks, checkboxes, menus, radios, toggle butttons.
 
 Add accessibility to menu: menu can be a dropdown, combo box, slide navigation menu, e.t.c. Basically any component that toggles display and has a list of interactive children items. The function creates a focus trap within the menu and focus can be navigated using the arrow keys. The escape key also closes the menu and returns the focus back to the trigger.
 
