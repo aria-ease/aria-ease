@@ -73,7 +73,7 @@ export function handleKeyPress(event, elementItems, elementItemIndex, menuElemen
             }
             else if (elementItems.item(elementItemIndex).tagName === 'A') {
                 event.preventDefault();
-                window.location.href = elementItems.item(elementItemIndex).href;
+                elementItems.item(elementItemIndex).click();
                 break;
             }
             break;
