@@ -67,9 +67,8 @@ declare module 'aria-ease' {
    /**
      * Adds screen reader accessibility to a single toggle element. Updates the aria attributes of the toggle element. Toggle element must possess the following aria attributes; aria-pressed and aria-label.
      * @param {string} togglesClass The shared class of all the toggle elements
-     * @param {string} updatedAriaLabel The aria label to be updated to toggle element
    */
-   function updateSingleToggleAriaAttribute(toggleClass: string, updatedAriaLabel: string): void
+   function updateSingleToggleAriaAttribute(toggleClass: string): void
 
    /**
      * Adds screen reader accessibility to toggle elements. Updates the aria attributes of the toggle elements. Toggle element must possess the following aria attributes; aria-pressed and aria-label.
