@@ -6,15 +6,15 @@
 
 import { HTMLElement } from "../../../Types";
 
-export function updateSingleRadioAriaAttribute(radioClass: string, updatedAriaLabel: string): void {
+export function updateSingleRadioAriaAttribute(radioClass: string): void {
     const radio: HTMLElement = document.querySelector(`.${radioClass}`) as HTMLElement;
 
-    if( !radio) {
-      throw new Error('Invalid radio button class provided.');
+    if (!radio) {
+        throw new Error('Invalid radio button class provided.');
     }
 
     const currentAriaCheckedState: string = radio.getAttribute('aria-checked') as string
-    if(!currentAriaCheckedState) {
+    if (!currentAriaCheckedState) {
         throw new Error("Radio element does not have aria-checked attribute")
     }
 

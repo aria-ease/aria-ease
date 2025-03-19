@@ -3,7 +3,7 @@
  * @param {string} radioClass The class of the radio button
  * @param {string} updatedAriaLabel The aria label to be updated to button element
  */
-export function updateSingleRadioAriaAttribute(radioClass, updatedAriaLabel) {
+export function updateSingleRadioAriaAttribute(radioClass) {
     var radio = document.querySelector(".".concat(radioClass));
     if (!radio) {
         throw new Error('Invalid radio button class provided.');
