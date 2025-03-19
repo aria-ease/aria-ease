@@ -12,7 +12,6 @@ export function updateGroupTogglesAriaAttributes(toggleStates, togglesClass, cur
     allToggles.forEach(function (toggle, index) {
         if (index === currentPressedToggleIndex) {
             toggle.setAttribute("aria-pressed", toggleStates[index].pressed ? 'true' : 'false');
-            toggle.setAttribute("aria-label", toggleStates[index].pressed ? toggleStates[index].pressedAriaLabel : toggleStates[index].unpressedAriaLabel);
         }
     });
 }

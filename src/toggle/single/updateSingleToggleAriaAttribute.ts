@@ -6,7 +6,7 @@
 
 import { HTMLElement } from "../../../Types";
 
-export function updateSingleToggleAriaAttribute(toggleClass: string, updatedAriaLabel: string): void {
+export function updateSingleToggleAriaAttribute(toggleClass: string): void {
     const toggle: HTMLElement = document.querySelector(`.${toggleClass}`) as HTMLElement;
 
     if( !toggle) {
@@ -18,17 +18,15 @@ export function updateSingleToggleAriaAttribute(toggleClass: string, updatedAria
         throw new Error("Toggle element does not have aria-pressed attribute")
     }
 
-    function togglePressed(ariaLabel: string): void {
+    function togglePressed(): void {
         toggle.setAttribute('aria-pressed', 'true');
-        toggle.setAttribute('aria-label', ariaLabel);
     }
 
-    function toggleUnpressed(ariaLabel: string): void {
+    function toggleUnpressed(): void {
         toggle.setAttribute('aria-pressed', 'false');
-        toggle.setAttribute('aria-label', ariaLabel);
     }
 
     (currentAriaPressedState === 'false') ?
-        togglePressed(updatedAriaLabel) :
-        toggleUnpressed(updatedAriaLabel)
+        togglePressed() :
+        toggleUnpressed()
 }

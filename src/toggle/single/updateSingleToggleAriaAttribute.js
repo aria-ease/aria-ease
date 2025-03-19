@@ -3,7 +3,7 @@
  * @param {string} toggleClass The class of all the toggle element
  * @param {string} updatedAriaLabel The aria label to be updated to toggle element
  */
-export function updateSingleToggleAriaAttribute(toggleClass, updatedAriaLabel) {
+export function updateSingleToggleAriaAttribute(toggleClass) {
     var toggle = document.querySelector(".".concat(toggleClass));
     if (!toggle) {
         throw new Error('Invalid toggle class provided.');
@@ -12,15 +12,13 @@ export function updateSingleToggleAriaAttribute(toggleClass, updatedAriaLabel) {
     if (!currentAriaPressedState) {
         throw new Error("Toggle element does not have aria-pressed attribute");
     }
-    function togglePressed(ariaLabel) {
+    function togglePressed() {
         toggle.setAttribute('aria-pressed', 'true');
-        toggle.setAttribute('aria-label', ariaLabel);
     }
-    function toggleUnpressed(ariaLabel) {
+    function toggleUnpressed() {
         toggle.setAttribute('aria-pressed', 'false');
-        toggle.setAttribute('aria-label', ariaLabel);
     }
     (currentAriaPressedState === 'false') ?
-        togglePressed(updatedAriaLabel) :
-        toggleUnpressed(updatedAriaLabel);
+        togglePressed() :
+        toggleUnpressed();
 }

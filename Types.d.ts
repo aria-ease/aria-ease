@@ -23,8 +23,6 @@ interface RadioStates {
   
 interface ToggleStates {
     pressed: boolean;
-    pressedAriaLabel: string;
-    unpressedAriaLabel: string;
 }
 
 export {
