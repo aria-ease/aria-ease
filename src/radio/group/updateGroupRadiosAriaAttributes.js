@@ -18,6 +18,5 @@ export function updateGroupRadiosAriaAttributes(radioStates, radiosClass, curren
                 radio.setAttribute("aria-checked", 'false');
             }
         }
-        radio.setAttribute("aria-label", radioStates[index].checked ? radioStates[index].checkedAriaLabel : radioStates[index].uncheckedAriaLabel);
     });
 }

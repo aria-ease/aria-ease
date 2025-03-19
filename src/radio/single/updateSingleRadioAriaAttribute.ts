@@ -18,17 +18,17 @@ export function updateSingleRadioAriaAttribute(radioClass: string, updatedAriaLa
         throw new Error("Radio element does not have aria-checked attribute")
     }
 
-    function radioChecked(ariaLabel: string): void {
+    function radioChecked(): void {
         radio.setAttribute('aria-checked', 'true');
-        radio.setAttribute('aria-label', ariaLabel);
+
     }
 
-    function radioUnchecked(ariaLabel: string): void {
+    function radioUnchecked(): void {
         radio.setAttribute('aria-checked', 'false');
-        radio.setAttribute('aria-label', ariaLabel);
+
     }
 
     (currentAriaCheckedState === 'false') ?
-        radioChecked(updatedAriaLabel) :
-        radioUnchecked(updatedAriaLabel)
+        radioChecked() :
+        radioUnchecked()
 }

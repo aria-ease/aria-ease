@@ -17,8 +17,6 @@ interface CheckboxStates {
   
 interface RadioStates {
     checked: boolean;
-    checkedAriaLabel: string;
-    uncheckedAriaLabel: string;
 }
   
 interface ToggleStates {

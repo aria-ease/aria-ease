@@ -12,15 +12,13 @@ export function updateSingleRadioAriaAttribute(radioClass, updatedAriaLabel) {
     if (!currentAriaCheckedState) {
         throw new Error("Radio element does not have aria-checked attribute");
     }
-    function radioChecked(ariaLabel) {
+    function radioChecked() {
         radio.setAttribute('aria-checked', 'true');
-        radio.setAttribute('aria-label', ariaLabel);
     }
-    function radioUnchecked(ariaLabel) {
+    function radioUnchecked() {
         radio.setAttribute('aria-checked', 'false');
-        radio.setAttribute('aria-label', ariaLabel);
     }
     (currentAriaCheckedState === 'false') ?
-        radioChecked(updatedAriaLabel) :
-        radioUnchecked(updatedAriaLabel);
+        radioChecked() :
+        radioUnchecked();
 }

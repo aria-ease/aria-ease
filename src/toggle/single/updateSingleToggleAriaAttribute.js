@@ -1,5 +1,5 @@
 /**
- * Adds screen reader accessibility to a single toggle element. Updates the aria attributes of the toggle element. Toggle element must possess the following aria attributes; aria-pressed and aria-label.
+ * Adds screen reader accessibility to a single toggle element. Updates the aria attribute of the toggle element. Toggle element must possess the aria-pressed attribute.
  * @param {string} toggleClass The class of all the toggle element
  */
 export function updateSingleToggleAriaAttribute(toggleClass) {
