@@ -3,7 +3,7 @@
  * @param {string} radioClass The class of the radio button
  * @param {string} updatedAriaLabel The aria label to be updated to button element
  */
-export function updateSingleRadioAriaAttribute(radioClass, updatedAriaLabel) {
+export function updateSingleRadioAriaAttribute(radioClass) {
     var radio = document.querySelector(".".concat(radioClass));
     if (!radio) {
         throw new Error('Invalid radio button class provided.');
@@ -12,15 +12,13 @@ export function updateSingleRadioAriaAttribute(radioClass, updatedAriaLabel) {
     if (!currentAriaCheckedState) {
         throw new Error("Radio element does not have aria-checked attribute");
     }
-    function radioChecked(ariaLabel) {
+    function radioChecked() {
         radio.setAttribute('aria-checked', 'true');
-        radio.setAttribute('aria-label', ariaLabel);
     }
-    function radioUnchecked(ariaLabel) {
+    function radioUnchecked() {
         radio.setAttribute('aria-checked', 'false');
-        radio.setAttribute('aria-label', ariaLabel);
     }
     (currentAriaCheckedState === 'false') ?
-        radioChecked(updatedAriaLabel) :
-        radioUnchecked(updatedAriaLabel);
+        radioChecked() :
+        radioUnchecked();
 }

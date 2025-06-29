@@ -1,5 +1,5 @@
 /**
- * Adds screen reader accessibility to toggle buttons. Updates the aria attributes of the toggle buttons. Button must be button element with a role of button, and possess the following aria attributes; aria-pressed and aria-label.
+ * Adds screen reader accessibility to toggle buttons. Updates the aria attributes of the toggle buttons. Button must be button element with a role of button, and possess the aria-pressed attribute.
  * @param {ToggleStates[]} toggleStates Array of objects containing toggle buttons state information
  * @param {string} togglesClass The shared class of all the toggle buttons
  * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle button
@@ -17,7 +17,6 @@ export function updateGroupTogglesAriaAttributes(toggleStates: ToggleStates[], t
     allToggles.forEach((toggle, index) => {
       if (index === currentPressedToggleIndex) {
         toggle.setAttribute("aria-pressed", toggleStates[index].pressed ? 'true' : 'false');
-        toggle.setAttribute("aria-label", toggleStates[index].pressed ? toggleStates[index].pressedAriaLabel : toggleStates[index].unpressedAriaLabel);
       }
     });
 }

@@ -132,7 +132,7 @@ const BlockExample = () => {
 export default BlockExample;
 ```
 
-[Check out more features/functionality in the docs](https://ariaease.xyz/docs)
+[Check out more features/functionality in the docs](https://ariaease.web.app/docs)
 
 [Start contributing on GitHub](https://github.com/aria-ease/aria-ease)
 
