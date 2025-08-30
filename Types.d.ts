@@ -1,6 +1,6 @@
 declare global {
-    type HTMLElement = Element;
-    type NodeListOf<HTMLElement> = Iterable<HTMLElement>;
+  type HTMLElement = Element;
+  type NodeListOf<HTMLElement> = Iterable<HTMLElement>;
 }
 
 interface AccordionStates {
