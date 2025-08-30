@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "tsup ./index.ts --watch",
     "build": "tsup ./index.ts --format esm,cjs --dts --treeshake --sourcemap",
-    "test": "vitest run -- --config ./vitest.config.mts",
+    "test": "vitest run --reporter verbose -- --config ./vitest.config.mts",
     "bench": "node --loader ts-node/esm benchmarks/sample.bench.ts",
     "lint": "eslint src --ext .ts",
     "prepublishOnly": "npm run test && npm run build"

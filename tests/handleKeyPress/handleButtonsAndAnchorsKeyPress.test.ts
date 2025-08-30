@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
 import { handleKeyPress } from '../../src/utils/handleKeyPress/handleKeyPress';
 
-describe('handleKeyPress', () => {
+describe('handleKeyPress - buttons and anchor key interaction and navigation', () => {
   let items: HTMLElement[];
   let nodeList: NodeListOf<HTMLElement>;
   let focusMock: ReturnType<typeof vi.fn>;
