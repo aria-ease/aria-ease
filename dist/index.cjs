@@ -79,6 +79,9 @@ function moveFocus(elementItems, currentIndex, direction) {
     var nextIndex = (currentIndex + direction + len) % len;
     elementItems.item(nextIndex).focus();
 }
+function isClickableButNotSemantic(el) {
+    return el.getAttribute("data-custom-click") !== null || el.getAttribute("data-custom-click") !== void 0;
+}
 function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, menuClosedStateAriaLabel) {
     var currentEl = elementItems.item(elementItemIndex);
     switch(event.key){
@@ -121,7 +124,7 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
         case "Enter":
         case " ":
             {
-                if (isNativeButton(currentEl) || isLink(currentEl)) {
+                if (!isNativeButton(currentEl) && !isLink(currentEl) && isClickableButNotSemantic(currentEl)) {
                     event.preventDefault();
                     currentEl.click();
                 }
@@ -131,21 +134,29 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
 }
 // src/block/src/makeBlockAccessible/makeBlockAccessible.ts
 var eventListenersAdded = /* @__PURE__ */ new Set();
-function makeBlockAccessible(blockId, blockItemsClass) {
+function makeBlockAccessible(blockId, blockElementsClass) {
+    var noBlockDiv = function() {
+        throw new Error("Invalid block main div id provided.");
+    };
+    var noBlockItems = function() {
+        throw new Error("Invalid block items shared class provided.");
+    };
     var blockDiv = document.querySelector("#".concat(blockId));
     if (!blockDiv) {
-        throw new Error("Invalid block main div id provided.");
+        return noBlockDiv;
     }
-    var blockItems = blockDiv.querySelectorAll(".".concat(blockItemsClass));
+    var blockItems = blockDiv.querySelectorAll(".".concat(blockElementsClass));
     if (!blockItems) {
-        throw new Error("Invalid block items shared class provided.");
+        return noBlockItems;
     }
-    blockItems.forEach(function(blockItem, blockItemIndex) {
+    blockItems.forEach(function(blockItem) {
         if (!eventListenersAdded.has(blockItem)) {
-            eventListenersAdded.add(blockItem);
             blockItem.addEventListener("keydown", function(event) {
-                return handleKeyPress(event, blockItems, blockItemIndex);
+                var items = blockDiv.querySelectorAll(".".concat(blockElementsClass));
+                var index = Array.prototype.indexOf.call(items, blockItem);
+                handleKeyPress(event, items, index);
             });
+            eventListenersAdded.add(blockItem);
         }
     });
     return function cleanUpBlockEventListeners() {

@@ -12,7 +12,7 @@
     "test": "vitest run --reporter verbose -- --config ./vitest.config.mts",
     "bench": "node --loader ts-node/esm benchmarks/sample.bench.ts",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "npm run test && npm run build"
+    "prepublishOnly": "tsc && npm run test && npm run build"
   },
   "repository": {
     "type": "git",

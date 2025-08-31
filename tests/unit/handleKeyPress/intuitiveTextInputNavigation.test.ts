@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
-import { handleKeyPress } from '../../src/utils/handleKeyPress/handleKeyPress';
+import { handleKeyPress } from '../../../src/utils/handleKeyPress/handleKeyPress';
 
 describe('handleKeyPress - text input key interaction and navigation', () => {
   let items: HTMLElement[];
@@ -22,7 +22,6 @@ describe('handleKeyPress - text input key interaction and navigation', () => {
 
     focusMock = vi.fn();
     items[0].focus = focusMock;
-    items[1].focus = focusMock;
     items[2].focus = focusMock;
 
     nodeList = {

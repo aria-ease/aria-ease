@@ -16,9 +16,9 @@ declare module 'aria-ease' {
   /**
     * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.
     * @param {string} blockId - The id of the block container.
-    * @param {string} blockItemsClass - The class of the individual block items.
+    * @param {string} blockElementsClass - The shared class of the elements that are children of the block
   */
-    function makeBlockAccessible(blockId: string, blockItemsClass: string): void;
+    function makeBlockAccessible(blockId: string, blockElementsClass: string): void;
 
 
   /**

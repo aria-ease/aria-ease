@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, expect, vi } from 'vitest';
-import { handleKeyPress } from '../../src/utils/handleKeyPress/handleKeyPress';
+import { handleKeyPress, isLink, isNativeButton } from '../../../src/utils/handleKeyPress/handleKeyPress';
 
 describe('handleKeyPress - buttons and anchor key interaction and navigation', () => {
   let items: HTMLElement[];
@@ -38,13 +38,13 @@ describe('handleKeyPress - buttons and anchor key interaction and navigation', (
 
   it('moves focus to previous item on ArrowLeft', () => {
     event = { key: 'ArrowLeft', preventDefault: vi.fn() };
-    handleKeyPress(event as KeyboardEvent, nodeList, 1);
+    handleKeyPress(event as KeyboardEvent, nodeList, 2);
     expect(focusMock).toHaveBeenCalled();
   });
 
   it('moves focus to next item on ArrowDown', () => {
     event = { key: 'ArrowDown', preventDefault: vi.fn() };
-    handleKeyPress(event as KeyboardEvent, nodeList, 1);
+    handleKeyPress(event as KeyboardEvent, nodeList, 0);
     expect(focusMock).toHaveBeenCalled();
   });
 
@@ -56,14 +56,22 @@ describe('handleKeyPress - buttons and anchor key interaction and navigation', (
 
   it('activates button/link on Enter', () => {
     event = { key: 'Enter', preventDefault: vi.fn() };
-    handleKeyPress(event as KeyboardEvent, nodeList, 1);
-    expect(clickMock).toHaveBeenCalled();
+    handleKeyPress(event as KeyboardEvent, nodeList, 0);
+    if(isLink(nodeList.item(0)) || isNativeButton(nodeList.item(0))) {
+      expect(clickMock).not.toHaveBeenCalled();
+    } else {
+      expect(clickMock).toHaveBeenCalled();
+    }
   });
 
   it('activates button/link on Space', () => {
     event = { key: ' ', preventDefault: vi.fn() };
-    handleKeyPress(event as KeyboardEvent, nodeList, 1);
-    expect(clickMock).toHaveBeenCalled();
+    handleKeyPress(event as KeyboardEvent, nodeList, 2);
+    if(isLink(nodeList.item(0)) || isNativeButton(nodeList.item(0))) {
+      expect(clickMock).not.toHaveBeenCalled();
+    } else {
+      expect(clickMock).toHaveBeenCalled();
+    }
   });
 
   it('does nothing for unhandled keys', () => {

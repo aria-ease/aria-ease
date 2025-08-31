@@ -39,10 +39,10 @@ declare namespace index$5 {
 
 /**
  * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.
- * @param {string} blockId The id of the block
- * @param {string} blockItemsClass The shared class of the items that are children of thes block
+ * @param {string} blockId The id of the block container
+ * @param {string} blockElementsClass The shared class of the elements that are children of the block
 */
-declare function makeBlockAccessible(blockId: string, blockItemsClass: string): () => void;
+declare function makeBlockAccessible(blockId: string, blockElementsClass: string): () => void;
 
 declare const index$4_makeBlockAccessible: typeof makeBlockAccessible;
 declare namespace index$4 {
