@@ -71,27 +71,21 @@ declare namespace index$3 {
   export { index$3_updateGroupCheckboxesAriaAttributes as updateGroupCheckboxesAriaAttributes, index$3_updateSingleCheckboxAriaAttributes as updateSingleCheckboxAriaAttributes };
 }
 
-declare function cleanUpMenuEventListeners(menuId: string, menuItemsClass: string): void;
+declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId, openLabel, closeLabel }: {
+    menuId: string;
+    menuItemsClass: string;
+    triggerId: string;
+    openLabel: string;
+    closeLabel: string;
+}): {
+    openMenu: () => void;
+    closeMenu: () => void;
+    cleanup: () => void;
+};
 
-/**
- * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first item of the menu has focus when menu appears.
- * @param {string} menuId The id of the menu
- * @param {string} menuItemsClass The shared class of the items that are children of the menu
-*/
-declare function makeMenuAccessible(menuId: string, menuItemsClass: string): void;
-
-/**
- * Adds screen reader accessibility to menus. Updates the aria attributes of the menu trigger button. Trigger button element must possess the following aria attributes; aria-expanded and aria-label.
- * @param {string} triggerId The id of the trigger button that toggles the menu
- * @param {string} ariaLabel The aria label to be updated to trigger element
- */
-declare function updateMenuTriggerAriaAttributes(triggerId: string, ariaLabel: string): void;
-
-declare const index$2_cleanUpMenuEventListeners: typeof cleanUpMenuEventListeners;
 declare const index$2_makeMenuAccessible: typeof makeMenuAccessible;
-declare const index$2_updateMenuTriggerAriaAttributes: typeof updateMenuTriggerAriaAttributes;
 declare namespace index$2 {
-  export { index$2_cleanUpMenuEventListeners as cleanUpMenuEventListeners, index$2_makeMenuAccessible as makeMenuAccessible, index$2_updateMenuTriggerAriaAttributes as updateMenuTriggerAriaAttributes };
+  export { index$2_makeMenuAccessible as makeMenuAccessible };
 }
 
 /**

@@ -1,5 +1,3 @@
-import { cleanUpMenuEventListeners } from "./src/cleanUpMenuEventListeners/cleanUpMenuEventListeners";
-import { makeMenuAccessible } from "./src/makeMenuAccessible/makeMenuAccessible";
-import { updateMenuTriggerAriaAttributes } from "./src/updateMenuTriggerAriaAttributes/updateMenuTriggerAriaAttributes";
+import { makeMenuAccessible } from "./src/makeMenuAccessible/makeMenuAccessible"
 
-export { cleanUpMenuEventListeners, makeMenuAccessible, updateMenuTriggerAriaAttributes }
+export { makeMenuAccessible }

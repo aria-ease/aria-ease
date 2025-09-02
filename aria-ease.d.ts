@@ -18,23 +18,7 @@ declare module 'aria-ease' {
     * @param {string} blockId - The id of the block container.
     * @param {string} blockElementsClass - The shared class of the elements that are children of the block
   */
-    function makeBlockAccessible(blockId: string, blockElementsClass: string): void;
-
-
-  /**
-    * Updates the aria attributes of the menu trigger button. Trigger button element must possess the following aria attributes; aria-expanded and aria-label.
-    * @param {string} triggerId The id of the trigger button that toggles the menu.
-    * @param {string} ariaLabel The aria-label to be updated.
-  */
-  function updateMenuTriggerAriaAttributes(triggerId: string, ariaLabel: string): void;
-
-
-  /**
-    * Cleans up the event listeners that were added to childen items of the menu, to prevent memory leak.
-    * @param {string} menuId The id of the menu
-    * @param {string} menuItemsClass The class of the items that are children of the menu
-  */
-  function cleanUpMenuEventListeners(menuId: string, menuItemsClass: string): void;
+  function makeBlockAccessible(blockId: string, blockElementsClass: string): void;
 
 
   /**
@@ -98,8 +82,6 @@ declare module 'aria-ease' {
   export { 
     makeMenuAccessible, 
     makeBlockAccessible, 
-    updateMenuTriggerAriaAttributes, 
-    cleanUpMenuEventListeners, 
     updateAccordionTriggerAriaAttributes, 
     updateSingleCheckboxAriaAttribute,
     updateGroupCheckboxesAriaAttributes,

@@ -1,4 +1,3 @@
-import { updateMenuTriggerAriaAttributes } from "../../menu";
 function isTextInput(el) {
     if (el.tagName !== 'INPUT')
         return false;
@@ -28,7 +27,8 @@ function handleMenuEscapeKeyPress(menuElement, menuTriggerButton, menuClosedStat
     if (!menuTriggerButtonId) {
         throw new Error("Menu trigger button does not have id attribute");
     }
-    updateMenuTriggerAriaAttributes(menuTriggerButtonId, menuClosedStateAriaLabel);
+    menuTriggerButton.setAttribute("aria-expanded", "false");
+    menuTriggerButton.setAttribute("aria-label", menuClosedStateAriaLabel);
 }
 export function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, menuClosedStateAriaLabel) {
     var currentEl = elementItems.item(elementItemIndex);

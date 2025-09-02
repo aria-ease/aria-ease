@@ -1,10 +1,10 @@
-import { describe, it, beforeEach, expect, afterEach } from 'vitest';
-import { makeBlockAccessible } from '../../../src/block/src/makeBlockAccessible/makeBlockAccessible';
-import { HTMLElement, NodeListOfHTMLElement } from '../../../Types';
-import { handleKeyPress } from '../../../src/utils/handleKeyPress/handleKeyPress';
+import { describe, it, beforeEach, expect, afterEach } from "vitest";
+import { makeBlockAccessible } from "../../../src/block/src/makeBlockAccessible/makeBlockAccessible";
+import { HTMLElement, NodeListOfHTMLElement } from "../../../Types";
+import { handleKeyPress } from "../../../src/utils/handleKeyPress/handleKeyPress";
 
 
-describe('makeBlockAccessible - multi region keyboard navigation', () => {
+describe("makeBlockAccessible - multi region keyboard navigation", () => {
   let cleanup: () => void;
 
   beforeEach(() => {
@@ -27,12 +27,12 @@ describe('makeBlockAccessible - multi region keyboard navigation', () => {
         </footer>
       </div>
     `;
-    cleanup = makeBlockAccessible('body', 'shared-class');
+    cleanup = makeBlockAccessible("body", "shared-class");
   });
 
-  it('navigates through all shared-class elements in all regions with ArrowDown', () => {
-    const allInteractiveElements = Array.from(document.querySelectorAll('.shared-class')) as NodeListOfHTMLElement;
-    const elementItems = document.querySelectorAll('.shared-class') as NodeListOfHTMLElement<HTMLElement>;
+  it("navigates through all shared-class elements in all regions with ArrowDown", () => {
+    const allInteractiveElements = Array.from(document.querySelectorAll(".shared-class")) as NodeListOfHTMLElement;
+    const elementItems = document.querySelectorAll(".shared-class") as NodeListOfHTMLElement<HTMLElement>;
 
     // Focus the first interactive element
     allInteractiveElements[0].focus();
@@ -40,9 +40,9 @@ describe('makeBlockAccessible - multi region keyboard navigation', () => {
     for (let i = 0; i < allInteractiveElements.length; i++) {
         const current = allInteractiveElements[i];
         const next = allInteractiveElements[(i + 1) % allInteractiveElements.length];
-        const event = new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true });
+        const event = new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true });
         
-        if(current.tagName === 'INPUT' && (current as HTMLInputElement).type === 'text' && current.id === 'header-input') {
+        if(current.tagName === "INPUT" && (current as HTMLInputElement).type === "text" && current.id === "header-input") {
             // Case 1: Caret NOT at end, ArrowDown should NOT move focus
             current.selectionStart = 2; // Not at end
             handleKeyPress(event as KeyboardEvent, elementItems, i);
@@ -60,9 +60,9 @@ describe('makeBlockAccessible - multi region keyboard navigation', () => {
     }
   });
 
-  it('navigates through all shared-class elements in all regions with ArrowRight', () => {
-    const allInteractiveElements = Array.from(document.querySelectorAll('.shared-class')) as NodeListOfHTMLElement;
-    const elementItems = document.querySelectorAll('.shared-class') as NodeListOfHTMLElement<HTMLElement>;
+  it("navigates through all shared-class elements in all regions with ArrowRight", () => {
+    const allInteractiveElements = Array.from(document.querySelectorAll(".shared-class")) as NodeListOfHTMLElement;
+    const elementItems = document.querySelectorAll(".shared-class") as NodeListOfHTMLElement<HTMLElement>;
 
     // Focus the first interactive element
     allInteractiveElements[0].focus();
@@ -70,9 +70,9 @@ describe('makeBlockAccessible - multi region keyboard navigation', () => {
     for (let i = 0; i < allInteractiveElements.length; i++) {
         const current = allInteractiveElements[i];
         const next = allInteractiveElements[(i + 1) % allInteractiveElements.length];
-        const event = new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true });
+        const event = new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true });
 
-        if(current.tagName === 'INPUT' && (current as HTMLInputElement).type === 'text' && current.id === 'header-input') {
+        if(current.tagName === "INPUT" && (current as HTMLInputElement).type === "text" && current.id === "header-input") {
             // Case 1: Caret NOT at end, ArrowRight should NOT move focus
             current.selectionStart = 2; // Not at end
             handleKeyPress(event as KeyboardEvent, elementItems, i);
@@ -89,9 +89,9 @@ describe('makeBlockAccessible - multi region keyboard navigation', () => {
     }
   });
 
-  it('navigates through all shared-class elements in all regions with ArrowUp', () => {
-    const allInteractiveElements = Array.from(document.querySelectorAll('.shared-class')) as NodeListOfHTMLElement;
-    const elementItems = document.querySelectorAll('.shared-class') as NodeListOfHTMLElement<HTMLElement>;
+  it("navigates through all shared-class elements in all regions with ArrowUp", () => {
+    const allInteractiveElements = Array.from(document.querySelectorAll(".shared-class")) as NodeListOfHTMLElement;
+    const elementItems = document.querySelectorAll(".shared-class") as NodeListOfHTMLElement<HTMLElement>;
 
     // Focus the last interactive element
     allInteractiveElements[allInteractiveElements.length - 1].focus();
@@ -99,10 +99,10 @@ describe('makeBlockAccessible - multi region keyboard navigation', () => {
     for (let i = allInteractiveElements.length - 1; i >= 0; i--) {
         const current = allInteractiveElements[i];
         const prev = allInteractiveElements[(i - 1 + allInteractiveElements.length) % allInteractiveElements.length];
-        const event = new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true });
+        const event = new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true });
 
         
-        if(current.tagName === 'INPUT' && (current as HTMLInputElement).type === 'text' && current.id === 'header-input') {
+        if(current.tagName === "INPUT" && (current as HTMLInputElement).type === "text" && current.id === "header-input") {
             // Case 1: Caret NOT at end, ArrowUp should NOT move focus
             current.selectionStart = 2; // Not at end
             handleKeyPress(event as KeyboardEvent, elementItems, i);
@@ -119,9 +119,9 @@ describe('makeBlockAccessible - multi region keyboard navigation', () => {
     }
   });
 
-  it('navigates through all shared-class elements in all regions with ArrowLeft', () => {
-    const allInteractiveElements = Array.from(document.querySelectorAll('.shared-class')) as NodeListOfHTMLElement;
-    const elementItems = document.querySelectorAll('.shared-class') as NodeListOfHTMLElement<HTMLElement>;
+  it("navigates through all shared-class elements in all regions with ArrowLeft", () => {
+    const allInteractiveElements = Array.from(document.querySelectorAll(".shared-class")) as NodeListOfHTMLElement;
+    const elementItems = document.querySelectorAll(".shared-class") as NodeListOfHTMLElement<HTMLElement>;
 
     // Focus the last interactive element
     allInteractiveElements[allInteractiveElements.length - 1].focus();
@@ -129,9 +129,9 @@ describe('makeBlockAccessible - multi region keyboard navigation', () => {
     for (let i = allInteractiveElements.length - 1; i >= 0; i--) {
         const current = allInteractiveElements[i];
         const prev = allInteractiveElements[(i - 1 + allInteractiveElements.length) % allInteractiveElements.length];
-        const event = new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true });
+        const event = new KeyboardEvent("keydown", { key: "ArrowLeft", bubbles: true });
         
-        if(current.tagName === 'INPUT' && (current as HTMLInputElement).type === 'text' && current.id === 'header-input') {
+        if(current.tagName === "INPUT" && (current as HTMLInputElement).type === "text" && current.id === "header-input") {
             // Case 1: Caret NOT at end, ArrowLeft should NOT move focus
             current.selectionStart = 2; // Not at end
             handleKeyPress(event as KeyboardEvent, elementItems, i);
@@ -151,6 +151,6 @@ describe('makeBlockAccessible - multi region keyboard navigation', () => {
 
   afterEach(() => {
     cleanup();
-    document.body.innerHTML = '';
+    document.body.innerHTML = "";
   });
 });

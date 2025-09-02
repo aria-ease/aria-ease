@@ -1,5 +1,4 @@
 import { NodeListOfHTMLElement, HTMLElement } from "../../../Types";
-import { updateMenuTriggerAriaAttributes } from "../../menu";
 
 
 function isTextInput(el: HTMLElement): boolean {
@@ -36,7 +35,8 @@ function handleMenuEscapeKeyPress(menuElement: HTMLElement, menuTriggerButton: H
     if (!menuTriggerButtonId) {
         throw new Error("Menu trigger button does not have id attribute");
     }
-    updateMenuTriggerAriaAttributes(menuTriggerButtonId, menuClosedStateAriaLabel);
+    menuTriggerButton.setAttribute("aria-expanded", "false");
+    menuTriggerButton.setAttribute("aria-label", menuClosedStateAriaLabel);
 }
 
 export function handleKeyPress(
