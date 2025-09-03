@@ -20,7 +20,7 @@ describe("makeMenuAccessible - open/close menu, focuses first interactive item o
   it("opens menu, sets aria, and focuses first item", () => {
     const menu = makeMenuAccessible({
       menuId: "menu-div",
-      menuItemsClass: "profile-menu-items",
+      menuElementsClass: "profile-menu-items",
       triggerId: "display-button",
       openLabel: "Open profile menu",
       closeLabel: "Close profile menu"
@@ -35,7 +35,7 @@ describe("makeMenuAccessible - open/close menu, focuses first interactive item o
   it("closes menu, sets aria, and focuses trigger", () => {
     const menu = makeMenuAccessible({
       menuId: "menu-div",
-      menuItemsClass: "profile-menu-items",
+      menuElementsClass: "profile-menu-items",
       triggerId: "display-button",
       openLabel: "Open profile menu",
       closeLabel: "Close profile menu"

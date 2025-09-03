@@ -14,8 +14,31 @@ __export(accordion_exports, {
     }
 });
 // src/accordion/src/updateAccordionTriggerAriaAttributes/updateAccordionTriggerAriaAttributes.ts
-function updateAccordionTriggerAriaAttributes(accordionStates, accordionsClass, currentClickedTriggerIndex) {
-    console.log("Accordion updateAccordionTriggerAriaAttributes initiated");
+function updateAccordionTriggerAriaAttributes(accordionId, accordionElementsClass, accordionStates, currentClickedTriggerIndex) {
+    var accordionDiv = document.querySelector("#".concat(accordionId));
+    if (!accordionDiv) {
+        throw new Error("Invalid accordion main div id provided.");
+    }
+    var accordionItems = Array.from(accordionDiv.querySelectorAll(".".concat(accordionElementsClass)));
+    if (accordionItems.length === 0) {
+        throw new Error("Invalid accordion items shared class provided.");
+    }
+    if (accordionItems.length !== accordionStates.length) {
+        throw new Error("Accordion state/DOM length mismatch: found ".concat(accordionItems.length, " triggers, but got ").concat(accordionStates.length, " state objects."));
+    }
+    accordionItems.forEach(function(accordionItem, index) {
+        var state = accordionStates[index];
+        var expanded = accordionItem.getAttribute("aria-expanded");
+        var label = accordionItem.getAttribute("aria-label");
+        var shouldBeExpanded = index === currentClickedTriggerIndex ? state.display ? "true" : "false" : "false";
+        var shouldBeLabel = state.display ? state.openedAriaLabel : state.closedAriaLabel;
+        if (expanded !== shouldBeExpanded) {
+            accordionItem.setAttribute("aria-expanded", shouldBeExpanded);
+        }
+        if (label !== shouldBeLabel) {
+            accordionItem.setAttribute("aria-label", shouldBeLabel);
+        }
+    });
 }
 // src/block/index.ts
 var block_exports = {};
@@ -125,19 +148,13 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
 // src/block/src/makeBlockAccessible/makeBlockAccessible.ts
 var eventListenersMap = /* @__PURE__ */ new Map();
 function makeBlockAccessible(blockId, blockElementsClass) {
-    var noBlockDiv = function() {
-        throw new Error("Invalid block main div id provided.");
-    };
-    var noBlockItems = function() {
-        throw new Error("Invalid block items shared class provided.");
-    };
     var blockDiv = document.querySelector("#".concat(blockId));
     if (!blockDiv) {
-        return noBlockDiv;
+        throw new Error("Invalid block main div id provided.");
     }
     var blockItems = blockDiv.querySelectorAll(".".concat(blockElementsClass));
     if (!blockItems) {
-        return noBlockItems;
+        throw new Error("Invalid block items shared class provided.");
     }
     blockItems.forEach(function(blockItem) {
         if (!eventListenersMap.has(blockItem)) {
@@ -190,7 +207,7 @@ __export(menu_exports, {
 });
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
 function makeMenuAccessible(param) {
-    var menuId = param.menuId, menuItemsClass = param.menuItemsClass, triggerId = param.triggerId, openLabel = param.openLabel, closeLabel = param.closeLabel;
+    var menuId = param.menuId, menuElementsClass = param.menuElementsClass, triggerId = param.triggerId, openLabel = param.openLabel, closeLabel = param.closeLabel;
     var menuDiv = document.querySelector("#".concat(menuId));
     if (!menuDiv) throw new Error("Invalid menu div id provided");
     var triggerButton = document.querySelector("#".concat(triggerId));
@@ -202,24 +219,24 @@ function makeMenuAccessible(param) {
         triggerButton.setAttribute("aria-label", label);
     }
     function addListeners() {
-        var menuItems = menuDiv.querySelectorAll(".".concat(menuItemsClass));
-        menuItems.forEach(function(item, idx) {
-            if (!handlerMap.has(item)) {
+        var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
+        menuItems.forEach(function(menuItem, index) {
+            if (!handlerMap.has(menuItem)) {
                 var handler = function(event) {
-                    return handleKeyPress(event, menuItems, idx, menuDiv, triggerButton, menuClosedStateAriaLabel);
+                    return handleKeyPress(event, menuItems, index, menuDiv, triggerButton, menuClosedStateAriaLabel);
                 };
-                item.addEventListener("keydown", handler);
-                handlerMap.set(item, handler);
+                menuItem.addEventListener("keydown", handler);
+                handlerMap.set(menuItem, handler);
             }
         });
     }
     function removeListeners() {
-        var menuItems = menuDiv.querySelectorAll(".".concat(menuItemsClass));
-        menuItems.forEach(function(item) {
-            var handler = handlerMap.get(item);
+        var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
+        menuItems.forEach(function(menuItem) {
+            var handler = handlerMap.get(menuItem);
             if (handler) {
-                item.removeEventListener("keydown", handler);
-                handlerMap.delete(item);
+                menuItem.removeEventListener("keydown", handler);
+                handlerMap.delete(menuItem);
             }
         });
     }
@@ -227,7 +244,7 @@ function makeMenuAccessible(param) {
         menuDiv.style.display = "block";
         setAria(true, closeLabel);
         addListeners();
-        var menuItems = menuDiv.querySelectorAll(".".concat(menuItemsClass));
+        var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
         if (menuItems.length > 0) menuItems[0].focus();
     }
     function closeMenu() {

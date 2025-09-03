@@ -8,9 +8,12 @@ declare module 'aria-ease' {
   /**
     * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first item of the menu has focus when menu appears.
     * @param {string} menuId - The id of the menu.
-    * @param {string} menuItemsClass - The class of the items that are children of the menu.
+    * @param {string} menuElementsClass - The class of the items that are children of the menu.
+    * @param {string} triggerId - The id of the button that triggers the menu.
+    * @param {string} openLabel - The aria label of the menu trigger button when it is open.
+    * @param {string} closeLabel - The aria label of the menu trigger button when it is closed.
   */
-  function makeMenuAccessible(menuId: string, menuItemsClass: string): void;
+  function makeMenuAccessible(menuId: string, menuElementsClass: string, triggerId: string, openLabel: string, closeLabel: string): void;
 
   
   /**

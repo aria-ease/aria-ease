@@ -1,10 +1,14 @@
 /**
- * Consolidated menu accessibility utility for robust, scalable, and ergonomic menu keyboard support.
- * Usage: see example below.
- */
+  * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first interactive item of the menu has focus when menu open.
+  * @param {string} menuId - The id of the menu.
+  * @param {string} menuElementsClass - The class of the items that are children of the menu.
+  * @param {string} triggerId - The id of the button that triggers the menu.
+  * @param {string} openLabel - The aria label of the menu trigger button when it is open, e.g, Open profile menu.
+  * @param {string} closeLabel - The aria label of the menu trigger button when it is closed, e.g Close profile menu.
+*/
 import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
 export function makeMenuAccessible(_a) {
-    var menuId = _a.menuId, menuItemsClass = _a.menuItemsClass, triggerId = _a.triggerId, openLabel = _a.openLabel, closeLabel = _a.closeLabel;
+    var menuId = _a.menuId, menuElementsClass = _a.menuElementsClass, triggerId = _a.triggerId, openLabel = _a.openLabel, closeLabel = _a.closeLabel;
     var menuDiv = document.querySelector("#".concat(menuId));
     if (!menuDiv)
         throw new Error("Invalid menu div id provided");
@@ -12,29 +16,28 @@ export function makeMenuAccessible(_a) {
     if (!triggerButton)
         throw new Error("Invalid trigger button id provided");
     var menuClosedStateAriaLabel = closeLabel;
-    // Store handler references for cleanup
     var handlerMap = new Map();
     function setAria(isOpen, label) {
         triggerButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
         triggerButton.setAttribute("aria-label", label);
     }
     function addListeners() {
-        var menuItems = menuDiv.querySelectorAll(".".concat(menuItemsClass));
-        menuItems.forEach(function (item, idx) {
-            if (!handlerMap.has(item)) {
-                var handler = function (event) { return handleKeyPress(event, menuItems, idx, menuDiv, triggerButton, menuClosedStateAriaLabel); };
-                item.addEventListener("keydown", handler);
-                handlerMap.set(item, handler);
+        var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
+        menuItems.forEach(function (menuItem, index) {
+            if (!handlerMap.has(menuItem)) {
+                var handler = function (event) { return handleKeyPress(event, menuItems, index, menuDiv, triggerButton, menuClosedStateAriaLabel); };
+                menuItem.addEventListener("keydown", handler);
+                handlerMap.set(menuItem, handler);
             }
         });
     }
     function removeListeners() {
-        var menuItems = menuDiv.querySelectorAll(".".concat(menuItemsClass));
-        menuItems.forEach(function (item) {
-            var handler = handlerMap.get(item);
+        var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
+        menuItems.forEach(function (menuItem) {
+            var handler = handlerMap.get(menuItem);
             if (handler) {
-                item.removeEventListener("keydown", handler);
-                handlerMap.delete(item);
+                menuItem.removeEventListener("keydown", handler);
+                handlerMap.delete(menuItem);
             }
         });
     }
@@ -42,8 +45,7 @@ export function makeMenuAccessible(_a) {
         menuDiv.style.display = "block";
         setAria(true, closeLabel);
         addListeners();
-        // Focus first interactive item
-        var menuItems = menuDiv.querySelectorAll(".".concat(menuItemsClass));
+        var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
         if (menuItems.length > 0)
             menuItems[0].focus();
     }
@@ -53,7 +55,6 @@ export function makeMenuAccessible(_a) {
         setAria(false, openLabel);
         triggerButton.focus();
     }
-    // Cleanup for React/unmount
     function cleanup() {
         removeListeners();
     }

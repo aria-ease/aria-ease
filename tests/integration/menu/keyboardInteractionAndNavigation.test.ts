@@ -17,7 +17,7 @@ describe("makeMenuAccessible - menu accessibility integration. keyboard interact
     `;
     menu = makeMenuAccessible({
       menuId: "menu-div",
-      menuItemsClass: "profile-menu-items",
+      menuElementsClass: "profile-menu-items",
       triggerId: "display-button",
       openLabel: "Open profile menu",
       closeLabel: "Close profile menu"

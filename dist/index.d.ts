@@ -25,12 +25,13 @@ interface ToggleStates {
 
 /**
  * Adds screen reader accessibility to accordions. Updates the aria attributes of the accordion trigger button. Trigger button element must possess the following aria attributes; aria-expanded and aria-label.
- * @param {AccordionStates[]} accordionStates Array of objects containing accordions state information
- * @param {string} accordionsClass The shared class of all the accordion triggers
- * @param {number} currentClickedTriggerIndex Index of the currently clicked accordion trigger
+ * @param {AccordionStates[]} accordionStates Array of objects containing accordions state information.
+ * @param {string} accordionId The id of the accordion container.
+ * @param {string} accordionElementsClass The shared class of all the accordion triggers.
+ * @param {number} currentClickedTriggerIndex Index of the currently clicked accordion trigger within the accordion div container.
  */
 
-declare function updateAccordionTriggerAriaAttributes(accordionStates: AccordionStates[], accordionsClass: string, currentClickedTriggerIndex: number): void;
+declare function updateAccordionTriggerAriaAttributes(accordionId: string, accordionElementsClass: string, accordionStates: AccordionStates[], currentClickedTriggerIndex: number): void;
 
 declare const index$5_updateAccordionTriggerAriaAttributes: typeof updateAccordionTriggerAriaAttributes;
 declare namespace index$5 {
@@ -39,8 +40,8 @@ declare namespace index$5 {
 
 /**
  * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.
- * @param {string} blockId The id of the block container
- * @param {string} blockElementsClass The shared class of the elements that are children of the block
+ * @param {string} blockId The id of the block container.
+ * @param {string} blockElementsClass The shared class of the elements that are children of the block.
 */
 declare function makeBlockAccessible(blockId: string, blockElementsClass: string): () => void;
 
@@ -71,9 +72,17 @@ declare namespace index$3 {
   export { index$3_updateGroupCheckboxesAriaAttributes as updateGroupCheckboxesAriaAttributes, index$3_updateSingleCheckboxAriaAttributes as updateSingleCheckboxAriaAttributes };
 }
 
-declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId, openLabel, closeLabel }: {
+/**
+  * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first interactive item of the menu has focus when menu open.
+  * @param {string} menuId - The id of the menu.
+  * @param {string} menuElementsClass - The class of the items that are children of the menu.
+  * @param {string} triggerId - The id of the button that triggers the menu.
+  * @param {string} openLabel - The aria label of the menu trigger button when it is open, e.g, Open profile menu.
+  * @param {string} closeLabel - The aria label of the menu trigger button when it is closed, e.g Close profile menu.
+*/
+declare function makeMenuAccessible({ menuId, menuElementsClass, triggerId, openLabel, closeLabel }: {
     menuId: string;
-    menuItemsClass: string;
+    menuElementsClass: string;
     triggerId: string;
     openLabel: string;
     closeLabel: string;
