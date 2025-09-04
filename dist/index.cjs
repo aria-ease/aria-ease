@@ -14,12 +14,12 @@ __export(accordion_exports, {
     }
 });
 // src/accordion/src/updateAccordionTriggerAriaAttributes/updateAccordionTriggerAriaAttributes.ts
-function updateAccordionTriggerAriaAttributes(accordionId, accordionElementsClass, accordionStates, currentClickedTriggerIndex) {
+function updateAccordionTriggerAriaAttributes(accordionId, accordionTriggersClass, accordionStates, clickedTriggerIndex) {
     var accordionDiv = document.querySelector("#".concat(accordionId));
     if (!accordionDiv) {
         throw new Error("Invalid accordion main div id provided.");
     }
-    var accordionItems = Array.from(accordionDiv.querySelectorAll(".".concat(accordionElementsClass)));
+    var accordionItems = Array.from(accordionDiv.querySelectorAll(".".concat(accordionTriggersClass)));
     if (accordionItems.length === 0) {
         throw new Error("Invalid accordion items shared class provided.");
     }
@@ -29,14 +29,9 @@ function updateAccordionTriggerAriaAttributes(accordionId, accordionElementsClas
     accordionItems.forEach(function(accordionItem, index) {
         var state = accordionStates[index];
         var expanded = accordionItem.getAttribute("aria-expanded");
-        var label = accordionItem.getAttribute("aria-label");
-        var shouldBeExpanded = index === currentClickedTriggerIndex ? state.display ? "true" : "false" : "false";
-        var shouldBeLabel = state.display ? state.openedAriaLabel : state.closedAriaLabel;
-        if (expanded !== shouldBeExpanded) {
+        var shouldBeExpanded = index === clickedTriggerIndex ? state.display ? "true" : "false" : "false";
+        if (expanded && expanded !== shouldBeExpanded) {
             accordionItem.setAttribute("aria-expanded", shouldBeExpanded);
-        }
-        if (label !== shouldBeLabel) {
-            accordionItem.setAttribute("aria-label", shouldBeLabel);
         }
     });
 }
@@ -80,16 +75,15 @@ function moveFocus(elementItems, currentIndex, direction) {
 function isClickableButNotSemantic(el) {
     return el.getAttribute("data-custom-click") !== null || el.getAttribute("data-custom-click") !== void 0;
 }
-function handleMenuEscapeKeyPress(menuElement, menuTriggerButton, menuClosedStateAriaLabel) {
+function handleMenuEscapeKeyPress(menuElement, menuTriggerButton) {
     menuElement.style.display = "none";
     var menuTriggerButtonId = menuTriggerButton.getAttribute("id");
     if (!menuTriggerButtonId) {
         throw new Error("Menu trigger button does not have id attribute");
     }
     menuTriggerButton.setAttribute("aria-expanded", "false");
-    menuTriggerButton.setAttribute("aria-label", menuClosedStateAriaLabel);
 }
-function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, menuClosedStateAriaLabel) {
+function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton) {
     var currentEl = elementItems.item(elementItemIndex);
     switch(event.key){
         case "ArrowUp":
@@ -99,8 +93,8 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
                     event.preventDefault();
                     moveFocus(elementItems, elementItemIndex, -1);
                 } else if (isTextInput(currentEl) || isTextArea(currentEl)) {
-                    var selectionStart = currentEl.selectionStart;
-                    if (selectionStart === 0) {
+                    var cursorStart = currentEl.selectionStart;
+                    if (cursorStart === 0) {
                         event.preventDefault();
                         moveFocus(elementItems, elementItemIndex, -1);
                     }
@@ -115,8 +109,8 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
                     moveFocus(elementItems, elementItemIndex, 1);
                 } else if (isTextInput(currentEl) || isTextArea(currentEl)) {
                     var value = currentEl.value;
-                    var selectionStart1 = currentEl.selectionStart;
-                    if (selectionStart1 === value.length) {
+                    var cursorEnd = currentEl.selectionStart;
+                    if (cursorEnd === value.length) {
                         event.preventDefault();
                         moveFocus(elementItems, elementItemIndex, 1);
                     }
@@ -126,9 +120,9 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
         case "Escape":
             {
                 event.preventDefault();
-                if (menuElementDiv && triggerButton && menuClosedStateAriaLabel) {
+                if (menuElementDiv && triggerButton) {
                     if (getComputedStyle(menuElementDiv).display === "block") {
-                        handleMenuEscapeKeyPress(menuElementDiv, triggerButton, menuClosedStateAriaLabel);
+                        handleMenuEscapeKeyPress(menuElementDiv, triggerButton);
                     }
                     triggerButton.focus();
                 }
@@ -183,20 +177,25 @@ function makeBlockAccessible(blockId, blockElementsClass) {
 // src/checkbox/index.ts
 var checkbox_exports = {};
 __export(checkbox_exports, {
-    updateGroupCheckboxesAriaAttributes: function() {
-        return updateGroupCheckboxesAriaAttributes;
-    },
-    updateSingleCheckboxAriaAttributes: function() {
-        return updateSingleCheckboxAriaAttributes;
+    updateCheckboxAriaAttributes: function() {
+        return updateCheckboxAriaAttributes;
     }
 });
-// src/checkbox/src/single-checkbox/updateSingleCheckboxAriaAttributes/updateSingleCheckboxAriaAttributes.ts
-function updateSingleCheckboxAriaAttributes(checkboxClass, updatedAriaLabel) {
-    console.log("Checkbox updateSingleCheckboxAriaAttributes initiated");
-}
-// src/checkbox/src/group-checkbox/updateGroupCheckboxesAriaAttributes/updateGroupCheckboxesAriaAttributes.ts
-function updateGroupCheckboxesAriaAttributes(checkboxStates, checkboxesClass, currentPressedCheckboxIndex) {
-    console.log("Checkbox updateGroupCheckboxesAriaAttributes initiated");
+// src/checkbox/src/updateCheckboxAriaAttributes/updateCheckboxAriaAttributes.ts
+function updateCheckboxAriaAttributes(checkboxId, checkboxesClass, checkboxStates, currentPressedCheckboxIndex) {
+    var checkboxDiv = document.querySelector("#".concat(checkboxId));
+    if (!checkboxDiv) {
+        throw new Error("Invalid checkbox main div id provided.");
+    }
+    var checkboxItems = Array.from(document.querySelectorAll(".".concat(checkboxesClass)));
+    if (checkboxItems.length === 0) {
+        throw new Error("Invalid checkboxes shared class provided.");
+    }
+    checkboxItems.forEach(function(checkbox, index) {
+        if (index === currentPressedCheckboxIndex) {
+            checkbox.setAttribute("aria-checked", checkboxStates[index].checked ? "true" : "false");
+        }
+    });
 }
 // src/menu/index.ts
 var menu_exports = {};
@@ -207,23 +206,21 @@ __export(menu_exports, {
 });
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
 function makeMenuAccessible(param) {
-    var menuId = param.menuId, menuElementsClass = param.menuElementsClass, triggerId = param.triggerId, openLabel = param.openLabel, closeLabel = param.closeLabel;
+    var menuId = param.menuId, menuElementsClass = param.menuElementsClass, triggerId = param.triggerId;
     var menuDiv = document.querySelector("#".concat(menuId));
     if (!menuDiv) throw new Error("Invalid menu div id provided");
     var triggerButton = document.querySelector("#".concat(triggerId));
     if (!triggerButton) throw new Error("Invalid trigger button id provided");
-    var menuClosedStateAriaLabel = closeLabel;
     var handlerMap = /* @__PURE__ */ new Map();
-    function setAria(isOpen, label) {
+    function setAria(isOpen) {
         triggerButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
-        triggerButton.setAttribute("aria-label", label);
     }
     function addListeners() {
         var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
         menuItems.forEach(function(menuItem, index) {
             if (!handlerMap.has(menuItem)) {
                 var handler = function(event) {
-                    return handleKeyPress(event, menuItems, index, menuDiv, triggerButton, menuClosedStateAriaLabel);
+                    return handleKeyPress(event, menuItems, index, menuDiv, triggerButton);
                 };
                 menuItem.addEventListener("keydown", handler);
                 handlerMap.set(menuItem, handler);
@@ -242,7 +239,7 @@ function makeMenuAccessible(param) {
     }
     function openMenu() {
         menuDiv.style.display = "block";
-        setAria(true, closeLabel);
+        setAria(true);
         addListeners();
         var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
         if (menuItems.length > 0) menuItems[0].focus();
@@ -250,7 +247,7 @@ function makeMenuAccessible(param) {
     function closeMenu() {
         removeListeners();
         menuDiv.style.display = "none";
-        setAria(false, openLabel);
+        setAria(false);
         triggerButton.focus();
     }
     function cleanup() {
@@ -265,38 +262,54 @@ function makeMenuAccessible(param) {
 // src/radio/index.ts
 var radio_exports = {};
 __export(radio_exports, {
-    updateGroupRadiosAriaAttributes: function() {
-        return updateGroupRadiosAriaAttributes;
-    },
-    updateSingleRadioAriaAttributes: function() {
-        return updateSingleRadioAriaAttributes;
+    updateRadioAriaAttributes: function() {
+        return updateRadioAriaAttributes;
     }
 });
-// src/radio/src/single-radio/updateSingleRadioAriaAttributes.ts
-function updateSingleRadioAriaAttributes(radioClass) {
-    console.log("Radio updateSingleRadioAriaAttributes initiated");
-}
-// src/radio/src/group-radio/updateGroupRadiosAriaAttributes.ts
-function updateGroupRadiosAriaAttributes(radioStates, radiosClass, currentPressedRadioIndex) {
-    console.log("Radio updateGroupRadiosAriaAttributes initiated");
+// src/radio/src/updateRadioAriaAttributes/updateRadioAriaAttributes.ts
+function updateRadioAriaAttributes(radioId, radiosClass, radioStates, currentPressedRadioIndex) {
+    var radioDiv = document.querySelector("#".concat(radioId));
+    if (!radioDiv) {
+        throw new Error("Invalid radio main div id provided.");
+    }
+    var radioItems = Array.from(radioDiv.querySelectorAll(".".concat(radiosClass)));
+    if (radioItems.length === 0) {
+        throw new Error("Invalid radios shared class provided.");
+    }
+    radioItems.forEach(function(radioItem, index) {
+        var state = radioStates[index];
+        var checked = radioItem.getAttribute("aria-checked");
+        var shouldBeChecked = index === currentPressedRadioIndex ? state.checked ? "true" : "false" : "false";
+        if (checked && checked !== shouldBeChecked) {
+            radioItem.setAttribute("aria-checked", shouldBeChecked);
+        }
+    });
 }
 // src/toggle/index.ts
 var toggle_exports = {};
 __export(toggle_exports, {
-    updateGroupTogglesAriaAttributes: function() {
-        return updateGroupTogglesAriaAttributes;
-    },
-    updateSingleToggleAriaAttributes: function() {
-        return updateSingleToggleAriaAttributes;
+    updateToggleAriaAttribute: function() {
+        return updateToggleAriaAttribute;
     }
 });
-// src/toggle/src/single-toggle/updateSingleToggleAriaAttributes.ts
-function updateSingleToggleAriaAttributes(toggleClass) {
-    console.log("Toggle updateSingleToggleAriaAttributes initiated");
-}
-// src/toggle/src/group-toggle/updateGroupTogglesAriaAttributes.ts
-function updateGroupTogglesAriaAttributes(toggleStates, togglesClass, currentPressedToggleIndex) {
-    console.log("Toggle updateGroupTogglesAriaAttributes initiated");
+// src/toggle/src/updateToggleAriaAttribute/updateToggleAriaAttribute.ts
+function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, currentPressedToggleIndex) {
+    var toggleDiv = document.querySelector("#".concat(toggleId));
+    if (!toggleDiv) {
+        throw new Error("Invalid toggle main div id provided.");
+    }
+    var toggleItems = Array.from(toggleDiv.querySelectorAll(".".concat(togglesClass)));
+    if (toggleItems.length === 0) {
+        throw new Error("Invalid toggles shared class provided.");
+    }
+    if (toggleItems.length !== toggleStates.length) {
+        throw new Error("Toggle state/DOM length mismatch: found ".concat(toggleItems.length, " triggers, but got ").concat(toggleStates.length, " state objects."));
+    }
+    toggleItems.forEach(function(toggle, index) {
+        if (index === currentPressedToggleIndex) {
+            toggle.setAttribute("aria-pressed", toggleStates[index].pressed ? "true" : "false");
+        }
+    });
 }
 exports.Accordion = accordion_exports;
 exports.Block = block_exports;

@@ -5,14 +5,10 @@ declare global {
 
 interface AccordionStates {
     display: boolean;
-    openedAriaLabel: string;
-    closedAriaLabel: string;
 }
 
 interface CheckboxStates {
     checked: boolean;
-    checkedAriaLabel: string;
-    uncheckedAriaLabel: string;
 }
   
 interface RadioStates {

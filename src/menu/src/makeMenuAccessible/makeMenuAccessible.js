@@ -3,29 +3,25 @@
   * @param {string} menuId - The id of the menu.
   * @param {string} menuElementsClass - The class of the items that are children of the menu.
   * @param {string} triggerId - The id of the button that triggers the menu.
-  * @param {string} openLabel - The aria label of the menu trigger button when it is open, e.g, Open profile menu.
-  * @param {string} closeLabel - The aria label of the menu trigger button when it is closed, e.g Close profile menu.
 */
 import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
 export function makeMenuAccessible(_a) {
-    var menuId = _a.menuId, menuElementsClass = _a.menuElementsClass, triggerId = _a.triggerId, openLabel = _a.openLabel, closeLabel = _a.closeLabel;
+    var menuId = _a.menuId, menuElementsClass = _a.menuElementsClass, triggerId = _a.triggerId;
     var menuDiv = document.querySelector("#".concat(menuId));
     if (!menuDiv)
         throw new Error("Invalid menu div id provided");
     var triggerButton = document.querySelector("#".concat(triggerId));
     if (!triggerButton)
         throw new Error("Invalid trigger button id provided");
-    var menuClosedStateAriaLabel = closeLabel;
     var handlerMap = new Map();
-    function setAria(isOpen, label) {
+    function setAria(isOpen) {
         triggerButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
-        triggerButton.setAttribute("aria-label", label);
     }
     function addListeners() {
         var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
         menuItems.forEach(function (menuItem, index) {
             if (!handlerMap.has(menuItem)) {
-                var handler = function (event) { return handleKeyPress(event, menuItems, index, menuDiv, triggerButton, menuClosedStateAriaLabel); };
+                var handler = function (event) { return handleKeyPress(event, menuItems, index, menuDiv, triggerButton); };
                 menuItem.addEventListener("keydown", handler);
                 handlerMap.set(menuItem, handler);
             }
@@ -43,7 +39,7 @@ export function makeMenuAccessible(_a) {
     }
     function openMenu() {
         menuDiv.style.display = "block";
-        setAria(true, closeLabel);
+        setAria(true);
         addListeners();
         var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
         if (menuItems.length > 0)
@@ -52,7 +48,7 @@ export function makeMenuAccessible(_a) {
     function closeMenu() {
         removeListeners();
         menuDiv.style.display = "none";
-        setAria(false, openLabel);
+        setAria(false);
         triggerButton.focus();
     }
     function cleanup() {

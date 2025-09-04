@@ -8,7 +8,7 @@ describe("makeMenuAccessible - menu accessibility integration. keyboard interact
 
   beforeEach(() => {
     document.body.innerHTML = `
-      <button id="display-button" aria-label="Open profile menu" aria-expanded="false"></button>
+      <button id="display-button" aria-label="Profile menu" aria-expanded="false"></button>
       <div id="menu-div" style="display:none">
         <button class="profile-menu-items">One</button>
         <button class="profile-menu-items">Two</button>
@@ -18,9 +18,7 @@ describe("makeMenuAccessible - menu accessibility integration. keyboard interact
     menu = makeMenuAccessible({
       menuId: "menu-div",
       menuElementsClass: "profile-menu-items",
-      triggerId: "display-button",
-      openLabel: "Open profile menu",
-      closeLabel: "Close profile menu"
+      triggerId: "display-button"
     });
   });
 

@@ -1,3 +1,2 @@
-import { updateSingleToggleAriaAttributes } from "./src/single-toggle/updateSingleToggleAriaAttributes";
-import { updateGroupTogglesAriaAttributes } from "./src/group-toggle/updateGroupTogglesAriaAttributes";
-export { updateSingleToggleAriaAttributes, updateGroupTogglesAriaAttributes };
+import { updateToggleAriaAttribute } from "./src/updateToggleAriaAttribute/updateToggleAriaAttribute";
+export { updateToggleAriaAttribute };

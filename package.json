@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
   "main": "dist/index.cjs",
   "type": "module",
@@ -12,7 +12,7 @@
     "test": "vitest run --reporter verbose -- --config ./vitest.config.mts",
     "bench": "node --loader ts-node/esm benchmarks/sample.bench.ts",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "tsc && npm run test && npm run build"
+    "prepublishOnly": "tsc && npm run lint && npm run test && npm run build"
   },
   "repository": {
     "type": "git",

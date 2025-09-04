@@ -1,3 +1,2 @@
-import { updateSingleRadioAriaAttributes } from "./src/single-radio/updateSingleRadioAriaAttributes";
-import { updateGroupRadiosAriaAttributes } from "./src/group-radio/updateGroupRadiosAriaAttributes";
-export { updateSingleRadioAriaAttributes, updateGroupRadiosAriaAttributes };
+import { updateRadioAriaAttributes } from "./src/updateRadioAriaAttributes/updateRadioAriaAttributes";
+export { updateRadioAriaAttributes };

@@ -21,14 +21,11 @@ describe("makeMenuAccessible - open/close menu, focuses first interactive item o
     const menu = makeMenuAccessible({
       menuId: "menu-div",
       menuElementsClass: "profile-menu-items",
-      triggerId: "display-button",
-      openLabel: "Open profile menu",
-      closeLabel: "Close profile menu"
+      triggerId: "display-button"
     });
     menu.openMenu();
     expect(menuDiv.style.display).toBe("block");
     expect(triggerButton.getAttribute("aria-expanded")).toBe("true");
-    expect(triggerButton.getAttribute("aria-label")).toBe("Close profile menu");
     expect(document.activeElement).toBe(menuDiv.querySelector(".profile-menu-items"));
   });
 
@@ -36,15 +33,12 @@ describe("makeMenuAccessible - open/close menu, focuses first interactive item o
     const menu = makeMenuAccessible({
       menuId: "menu-div",
       menuElementsClass: "profile-menu-items",
-      triggerId: "display-button",
-      openLabel: "Open profile menu",
-      closeLabel: "Close profile menu"
+      triggerId: "display-button"
     });
     menu.openMenu();
     menu.closeMenu();
     expect(menuDiv.style.display).toBe("none");
     expect(triggerButton.getAttribute("aria-expanded")).toBe("false");
-    expect(triggerButton.getAttribute("aria-label")).toBe("Open profile menu");
     expect(document.activeElement).toBe(triggerButton);
   });
 });

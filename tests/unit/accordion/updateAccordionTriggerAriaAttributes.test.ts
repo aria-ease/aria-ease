@@ -9,7 +9,6 @@ function createAccordionDOM({ id, triggerClass, count }: { id: string; triggerCl
     const btn = document.createElement('button');
     btn.className = triggerClass;
     btn.setAttribute('aria-expanded', 'false');
-    btn.setAttribute('aria-label', 'Closed');
     container.appendChild(btn);
   }
   document.body.appendChild(container);
@@ -30,23 +29,20 @@ describe('updateAccordionTriggerAriaAttributes', () => {
   it('updates only the clicked trigger to expanded and correct label', () => {
     container = createAccordionDOM({ id: ACCORDION_ID, triggerClass: TRIGGER_CLASS, count: 3 });
     const states: AccordionStates[] = [
-      { display: false, openedAriaLabel: 'Open 1', closedAriaLabel: 'Closed 1' },
-      { display: true, openedAriaLabel: 'Open 2', closedAriaLabel: 'Closed 2' },
-      { display: false, openedAriaLabel: 'Open 3', closedAriaLabel: 'Closed 3' },
+      { display: false },
+      { display: true },
+      { display: false },
     ];
     updateAccordionTriggerAriaAttributes(ACCORDION_ID, TRIGGER_CLASS, states, 1);
     const triggers = container.querySelectorAll('button');
     expect(triggers[0].getAttribute('aria-expanded')).toBe('false');
-    expect(triggers[0].getAttribute('aria-label')).toBe('Closed 1');
     expect(triggers[1].getAttribute('aria-expanded')).toBe('true');
-    expect(triggers[1].getAttribute('aria-label')).toBe('Open 2');
     expect(triggers[2].getAttribute('aria-expanded')).toBe('false');
-    expect(triggers[2].getAttribute('aria-label')).toBe('Closed 3');
   });
 
   it('throws if accordion container is missing', () => {
     const states: AccordionStates[] = [
-      { display: false, openedAriaLabel: 'Open', closedAriaLabel: 'Closed' },
+      { display: false },
     ];
     expect(() => updateAccordionTriggerAriaAttributes('missing-id', TRIGGER_CLASS, states, 0)).toThrow();
   });
@@ -54,8 +50,8 @@ describe('updateAccordionTriggerAriaAttributes', () => {
   it('throws if triggers are missing', () => {
     container = createAccordionDOM({ id: ACCORDION_ID, triggerClass: 'wrong-class', count: 2 });
     const states: AccordionStates[] = [
-      { display: false, openedAriaLabel: 'Open', closedAriaLabel: 'Closed' },
-      { display: false, openedAriaLabel: 'Open', closedAriaLabel: 'Closed' },
+      { display: false },
+      { display: false },
     ];
     expect(() => updateAccordionTriggerAriaAttributes(ACCORDION_ID, TRIGGER_CLASS, states, 0)).toThrow();
   });
@@ -63,9 +59,9 @@ describe('updateAccordionTriggerAriaAttributes', () => {
   it('throws if state/DOM length mismatch', () => {
     container = createAccordionDOM({ id: ACCORDION_ID, triggerClass: TRIGGER_CLASS, count: 2 });
     const states: AccordionStates[] = [
-      { display: false, openedAriaLabel: 'Open', closedAriaLabel: 'Closed' },
-      { display: false, openedAriaLabel: 'Open', closedAriaLabel: 'Closed' },
-      { display: false, openedAriaLabel: 'Open', closedAriaLabel: 'Closed' },
+      { display: false },
+      { display: false },
+      { display: false },
     ];
     expect(() => updateAccordionTriggerAriaAttributes(ACCORDION_ID, TRIGGER_CLASS, states, 0)).toThrow();
   });
@@ -74,12 +70,10 @@ describe('updateAccordionTriggerAriaAttributes', () => {
     container = createAccordionDOM({ id: ACCORDION_ID, triggerClass: TRIGGER_CLASS, count: 1 });
     const btn = container.querySelector('button')!;
     btn.setAttribute('aria-expanded', 'true');
-    btn.setAttribute('aria-label', 'Open');
     const states: AccordionStates[] = [
-      { display: true, openedAriaLabel: 'Open', closedAriaLabel: 'Closed' },
+      { display: true },
     ];
     updateAccordionTriggerAriaAttributes(ACCORDION_ID, TRIGGER_CLASS, states, 0);
     expect(btn.getAttribute('aria-expanded')).toBe('true');
-    expect(btn.getAttribute('aria-label')).toBe('Open');
   });
 });

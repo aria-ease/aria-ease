@@ -29,14 +29,13 @@ function isClickableButNotSemantic(el: HTMLElement): boolean {
     return el.getAttribute("data-custom-click") !== null || el.getAttribute("data-custom-click") !== undefined;
 }
 
-function handleMenuEscapeKeyPress(menuElement: HTMLElement, menuTriggerButton: HTMLElement, menuClosedStateAriaLabel: string) {
+function handleMenuEscapeKeyPress(menuElement: HTMLElement, menuTriggerButton: HTMLElement) {
     menuElement.style.display = 'none';
     const menuTriggerButtonId = menuTriggerButton.getAttribute('id');
     if (!menuTriggerButtonId) {
         throw new Error("Menu trigger button does not have id attribute");
     }
     menuTriggerButton.setAttribute("aria-expanded", "false");
-    menuTriggerButton.setAttribute("aria-label", menuClosedStateAriaLabel);
 }
 
 export function handleKeyPress(
@@ -44,8 +43,7 @@ export function handleKeyPress(
     elementItems: NodeListOfHTMLElement,
     elementItemIndex: number,
     menuElementDiv?: HTMLElement,
-    triggerButton?: HTMLElement,
-    menuClosedStateAriaLabel?: string
+    triggerButton?: HTMLElement
 ): void {
     const currentEl = elementItems.item(elementItemIndex);
     switch (event.key) {
@@ -55,8 +53,8 @@ export function handleKeyPress(
                 event.preventDefault();
                 moveFocus(elementItems, elementItemIndex, -1);
             } else if (isTextInput(currentEl) || isTextArea(currentEl)) {
-                const selectionStart = (currentEl as HTMLInputElement | HTMLTextAreaElement).selectionStart;
-                if (selectionStart === 0) {
+                const cursorStart = (currentEl as HTMLInputElement | HTMLTextAreaElement).selectionStart;
+                if (cursorStart === 0) {
                     event.preventDefault();
                     moveFocus(elementItems, elementItemIndex, -1);
                 }
@@ -70,8 +68,8 @@ export function handleKeyPress(
                 moveFocus(elementItems, elementItemIndex, 1);
             } else if (isTextInput(currentEl) || isTextArea(currentEl)) {
                 const value = (currentEl as HTMLInputElement | HTMLTextAreaElement).value;
-                const selectionStart = (currentEl as HTMLInputElement | HTMLTextAreaElement).selectionStart;
-                if (selectionStart === value.length) {
+                const cursorEnd = (currentEl as HTMLInputElement | HTMLTextAreaElement).selectionStart;
+                if (cursorEnd === value.length) {
                     event.preventDefault();
                     moveFocus(elementItems, elementItemIndex, 1);
                 }
@@ -80,9 +78,9 @@ export function handleKeyPress(
         }
         case 'Escape': {
             event.preventDefault();
-            if (menuElementDiv && triggerButton && menuClosedStateAriaLabel) {
+            if (menuElementDiv && triggerButton) {
                 if (getComputedStyle(menuElementDiv).display === 'block') {
-                    handleMenuEscapeKeyPress(menuElementDiv, triggerButton, menuClosedStateAriaLabel);
+                    handleMenuEscapeKeyPress(menuElementDiv, triggerButton);
                 }
                 triggerButton.focus();
             }

@@ -1,4 +1,3 @@
-import { updateSingleCheckboxAriaAttributes } from "./src/single-checkbox/updateSingleCheckboxAriaAttributes/updateSingleCheckboxAriaAttributes";
-import { updateGroupCheckboxesAriaAttributes } from "./src/group-checkbox/updateGroupCheckboxesAriaAttributes/updateGroupCheckboxesAriaAttributes";
+import { updateCheckboxAriaAttributes } from "./src/updateCheckboxAriaAttributes/updateCheckboxAriaAttributes";
 
-export { updateSingleCheckboxAriaAttributes, updateGroupCheckboxesAriaAttributes }
+export { updateCheckboxAriaAttributes }

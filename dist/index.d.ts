@@ -5,14 +5,10 @@ declare global {
 
 interface AccordionStates {
     display: boolean;
-    openedAriaLabel: string;
-    closedAriaLabel: string;
 }
 
 interface CheckboxStates {
     checked: boolean;
-    checkedAriaLabel: string;
-    uncheckedAriaLabel: string;
 }
   
 interface RadioStates {
@@ -24,14 +20,14 @@ interface ToggleStates {
 }
 
 /**
- * Adds screen reader accessibility to accordions. Updates the aria attributes of the accordion trigger button. Trigger button element must possess the following aria attributes; aria-expanded and aria-label.
+ * Adds screen reader accessibility to accordions. Updates the aria attributes of the accordion trigger button. Trigger button element must possess the following aria attributes; aria-expanded, aria-controls, aria-label (for only non-text triggers).
+ * @param {string} accordionId The id of the accordion triggers parent container.
+ * @param {string} accordionTriggersClass The shared class of all the accordion triggers.
  * @param {AccordionStates[]} accordionStates Array of objects containing accordions state information.
- * @param {string} accordionId The id of the accordion container.
- * @param {string} accordionElementsClass The shared class of all the accordion triggers.
- * @param {number} currentClickedTriggerIndex Index of the currently clicked accordion trigger within the accordion div container.
- */
+ * @param {number} clickedTriggerIndex Index of the currently clicked accordion trigger within the accordion div container.
+*/
 
-declare function updateAccordionTriggerAriaAttributes(accordionId: string, accordionElementsClass: string, accordionStates: AccordionStates[], currentClickedTriggerIndex: number): void;
+declare function updateAccordionTriggerAriaAttributes(accordionId: string, accordionTriggersClass: string, accordionStates: AccordionStates[], clickedTriggerIndex: number): void;
 
 declare const index$5_updateAccordionTriggerAriaAttributes: typeof updateAccordionTriggerAriaAttributes;
 declare namespace index$5 {
@@ -51,25 +47,18 @@ declare namespace index$4 {
 }
 
 /**
- * Adds screen reader accessibility to a single checkbox. Updates the aria attributes of the checkbox. Checkbox element must possess the following aria attributes; aria-checked and aria-label.
- * @param {string} checkboxClass The shared class of all the checkboxes
- * @param {string} updatedAriaLabel The aria label to be updated to checkbox element
- */
-declare function updateSingleCheckboxAriaAttributes(checkboxClass: string, updatedAriaLabel: string): void;
-
-/**
  * Adds screen reader accessibility to multiple checkboxes. Updates the aria attributes of the checkboxes. Checkbox elements must possess the following aria attributes; aria-checked and aria-label.
- * @param {CheckboxStates[]} checkboxStates Array of objects containing checkboxes state information
- * @param {string} checkboxesClass The shared class of all the checkboxes
- * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox
+ * @param {string} checkboxId The id of the checkbox parent container.
+ * @param {string} checkboxesClass The shared class of all the checkboxes.
+ * @param {CheckboxStates[]} checkboxStates Array of objects containing checkboxes state information.
+ * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox.
  */
 
-declare function updateGroupCheckboxesAriaAttributes(checkboxStates: CheckboxStates[], checkboxesClass: string, currentPressedCheckboxIndex: number): void;
+declare function updateCheckboxAriaAttributes(checkboxId: string, checkboxesClass: string, checkboxStates: CheckboxStates[], currentPressedCheckboxIndex: number): void;
 
-declare const index$3_updateGroupCheckboxesAriaAttributes: typeof updateGroupCheckboxesAriaAttributes;
-declare const index$3_updateSingleCheckboxAriaAttributes: typeof updateSingleCheckboxAriaAttributes;
+declare const index$3_updateCheckboxAriaAttributes: typeof updateCheckboxAriaAttributes;
 declare namespace index$3 {
-  export { index$3_updateGroupCheckboxesAriaAttributes as updateGroupCheckboxesAriaAttributes, index$3_updateSingleCheckboxAriaAttributes as updateSingleCheckboxAriaAttributes };
+  export { index$3_updateCheckboxAriaAttributes as updateCheckboxAriaAttributes };
 }
 
 /**
@@ -77,15 +66,11 @@ declare namespace index$3 {
   * @param {string} menuId - The id of the menu.
   * @param {string} menuElementsClass - The class of the items that are children of the menu.
   * @param {string} triggerId - The id of the button that triggers the menu.
-  * @param {string} openLabel - The aria label of the menu trigger button when it is open, e.g, Open profile menu.
-  * @param {string} closeLabel - The aria label of the menu trigger button when it is closed, e.g Close profile menu.
 */
-declare function makeMenuAccessible({ menuId, menuElementsClass, triggerId, openLabel, closeLabel }: {
+declare function makeMenuAccessible({ menuId, menuElementsClass, triggerId }: {
     menuId: string;
     menuElementsClass: string;
     triggerId: string;
-    openLabel: string;
-    closeLabel: string;
 }): {
     openMenu: () => void;
     closeMenu: () => void;
@@ -98,46 +83,33 @@ declare namespace index$2 {
 }
 
 /**
- * Adds screen reader accessibility to single radio button. Updates the aria attribute of the radio button. Radio element must possess the following aria attributes; aria-checked and aria-label.
- * @param {string} radioClass The class of the radio button
- * @param {string} updatedAriaLabel The aria label to be updated to button element
- */
-declare function updateSingleRadioAriaAttributes(radioClass: string): void;
-
-/**
  * Adds screen reader accessibility to multiple radio buttons. Updates the aria attributes of the radio buttons. Radio elements must possess the following aria attributes; aria-checked and aria-label.
- * @param {RadioStates[]} radioStates Array of objects containing radio buttons state information
- * @param {string} radiosClass The shared class of all the radio buttons
- * @param {number} currentPressedRadioIndex Index of the currently checked or unchecked radio button
+ * @param {string} radioId The id of the radio parent container.
+ * @param {string} radiosClass The shared class of all the radios.
+ * @param {RadioStates[]} radioStates Array of objects containing radio buttons state information.
+ * @param {number} currentPressedRadioIndex Index of the currently checked or unchecked radio button.
  */
 
-declare function updateGroupRadiosAriaAttributes(radioStates: RadioStates[], radiosClass: string, currentPressedRadioIndex: number): void;
+declare function updateRadioAriaAttributes(radioId: string, radiosClass: string, radioStates: RadioStates[], currentPressedRadioIndex: number): void;
 
-declare const index$1_updateGroupRadiosAriaAttributes: typeof updateGroupRadiosAriaAttributes;
-declare const index$1_updateSingleRadioAriaAttributes: typeof updateSingleRadioAriaAttributes;
+declare const index$1_updateRadioAriaAttributes: typeof updateRadioAriaAttributes;
 declare namespace index$1 {
-  export { index$1_updateGroupRadiosAriaAttributes as updateGroupRadiosAriaAttributes, index$1_updateSingleRadioAriaAttributes as updateSingleRadioAriaAttributes };
+  export { index$1_updateRadioAriaAttributes as updateRadioAriaAttributes };
 }
 
 /**
- * Adds screen reader accessibility to a single toggle element. Updates the aria attribute of the toggle element. Toggle element must possess the aria-pressed attribute.
- * @param {string} toggleClass The class of all the toggle element
- */
-declare function updateSingleToggleAriaAttributes(toggleClass: string): void;
+ * Adds screen reader accessibility to toggle buttons. Updates the aria attributes of the toggle buttons. Button must be a semantic button element or a non-semantic element with a role of button, and possess the aria-pressed attribute.
+ * @param {string} toggleId The id of the toggle buttons parent container.
+ * @param {string} togglesClass The shared class of all the toggle buttons.
+ * @param {ToggleStates[]} toggleStates Array of objects containing toggle buttons state information.
+ * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle button.
+*/
 
-/**
- * Adds screen reader accessibility to toggle buttons. Updates the aria attributes of the toggle buttons. Button must be button element with a role of button, and possess the aria-pressed attribute.
- * @param {ToggleStates[]} toggleStates Array of objects containing toggle buttons state information
- * @param {string} togglesClass The shared class of all the toggle buttons
- * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle button
- */
+declare function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void;
 
-declare function updateGroupTogglesAriaAttributes(toggleStates: ToggleStates[], togglesClass: string, currentPressedToggleIndex: number): void;
-
-declare const index_updateGroupTogglesAriaAttributes: typeof updateGroupTogglesAriaAttributes;
-declare const index_updateSingleToggleAriaAttributes: typeof updateSingleToggleAriaAttributes;
+declare const index_updateToggleAriaAttribute: typeof updateToggleAriaAttribute;
 declare namespace index {
-  export { index_updateGroupTogglesAriaAttributes as updateGroupTogglesAriaAttributes, index_updateSingleToggleAriaAttributes as updateSingleToggleAriaAttributes };
+  export { index_updateToggleAriaAttribute as updateToggleAriaAttribute };
 }
 
 export { index$5 as Accordion, index$4 as Block, index$3 as Checkbox, index$2 as Menu, index$1 as Radio, index as Toggle };
