@@ -1,0 +1,36 @@
+/**
+ * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.
+ * @param {string} blockId The id of the block container.
+ * @param {string} blockElementsClass The shared class of the elements that are children of the block.
+*/
+import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
+var eventListenersMap = new Map();
+export function makeBlockAccessible(blockId, blockElementsClass) {
+    var blockDiv = document.querySelector("#".concat(blockId));
+    if (!blockDiv) {
+        throw new Error("Invalid block main div id provided.");
+    }
+    var blockItems = blockDiv.querySelectorAll(".".concat(blockElementsClass));
+    if (!blockItems) {
+        throw new Error("Invalid block items shared class provided.");
+    }
+    blockItems.forEach(function (blockItem) {
+        if (!eventListenersMap.has(blockItem)) {
+            blockItem.addEventListener("keydown", function (event) {
+                var items = blockDiv.querySelectorAll(".".concat(blockElementsClass));
+                var index = Array.prototype.indexOf.call(items, blockItem);
+                handleKeyPress(event, items, index);
+                var handler = function (event) { return handleKeyPress(event, items, index); };
+                eventListenersMap.set(blockItem, handler);
+            });
+        }
+    });
+    return function cleanUpBlockEventListeners() {
+        blockItems.forEach(function (blockItem, blockItemIndex) {
+            if (eventListenersMap.has(blockItem)) {
+                blockItem.removeEventListener("keydown", function (event) { return handleKeyPress(event, blockItems, blockItemIndex); });
+                eventListenersMap.delete(blockItem);
+            }
+        });
+    };
+}

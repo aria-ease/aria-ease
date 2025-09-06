@@ -1,10 +1,18 @@
 {
   "name": "aria-ease",
-  "version": "1.6.2",
+  "version": "2.0.2",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
-  "main": "index.js",
+  "main": "dist/index.cjs",
+  "type": "module",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "tsup ./index.ts --watch",
+    "build": "tsup ./index.ts --format esm,cjs --dts --treeshake --sourcemap",
+    "test": "vitest run --reporter verbose -- --config ./vitest.config.mts",
+    "bench": "node --loader ts-node/esm benchmarks/sample.bench.ts",
+    "lint": "eslint src --ext .ts",
+    "prepublishOnly": "tsc && npm run lint && npm run test && npm run build"
   },
   "repository": {
     "type": "git",
@@ -26,5 +34,28 @@
     "url": "https://github.com/aria-ease/aria-ease/issues"
   },
   "homepage": "https://ariaease.web.app/docs",
-  "types": "./aria-ease.d.ts"
+  "devDependencies": {
+    "@swc/core": "^1.13.5",
+    "@testing-library/dom": "^10.4.1",
+    "benchmark": "^2.1.4",
+    "eslint": "^9.34.0",
+    "jsdom": "^26.1.0",
+    "prettier": "^3.6.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2",
+    "vitest": "^3.2.4"
+  },
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "typescript-eslint": "^8.41.0"
+  }
 }

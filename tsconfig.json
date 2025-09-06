@@ -12,6 +12,7 @@
       "moduleResolution": "node",
       "declaration": false
     },
-    "include": ["src"]
+    "include": ["src", "tests", "benchmarks"],
+    "exclude": ["node_modules", "tests", "benchmarks"]
   }
   
