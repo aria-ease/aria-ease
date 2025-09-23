@@ -8,7 +8,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "tsup ./index.ts --watch",
-    "build": "tsup ./index.ts --format esm,cjs --dts --treeshake --sourcemap",
+    "build": "tsup ./index.ts ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/radio/index.ts ./src/toggle/index.ts --format esm,cjs --dts --treeshake --sourcemap --outDir dist",
     "test": "vitest run --reporter verbose -- --config ./vitest.config.mts",
     "bench": "node --loader ts-node/esm benchmarks/sample.bench.ts",
     "lint": "eslint src --ext .ts",
@@ -50,6 +50,30 @@
     ".": {
       "import": "./dist/index.js",
       "require": "./dist/index.cjs"
+    },
+    "./accordion": {
+      "import": "./dist/src/accordion/index.js",
+      "require": "./dist/src/accordion/index.cjs"
+    },
+    "./block": {
+      "import": "./dist/src/block/index.js",
+      "require": "./dist/src/block/index.cjs"
+    },
+    "./checkbox": {
+      "import": "./dist/src/checkbox/index.js",
+      "require": "./dist/src/checkbox/index.cjs"
+    },
+    "./menu": {
+      "import": "./dist/src/menu/index.js",
+      "require": "./dist/src/menu/index.cjs"
+    },
+    "./radio": {
+      "import": "./dist/src/radio/index.js",
+      "require": "./dist/src/radio/index.cjs"
+    },
+    "./toggle": {
+      "import": "./dist/src/toggle/index.js",
+      "require": "./dist/src/toggle/index.cjs"
     }
   },
   "files": [

@@ -1,0 +1,1 @@
+{"version":3,"sources":["/Users/macx/aria-ease/package/dist/src/accordion/index.js"],"names":["updateAccordionTriggerAriaAttributes"],"mappings":"AAAA,SAASA,oCAAoC,QAAQ,0BAA0B,CAC/E,iCAAiC","sourcesContent":["export { updateAccordionTriggerAriaAttributes } from '../../chunk-MEA5U2G4.js';\n//# sourceMappingURL=index.js.map\n"]}

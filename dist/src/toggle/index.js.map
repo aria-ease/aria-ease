@@ -1,0 +1,1 @@
+{"version":3,"sources":["/Users/macx/aria-ease/package/dist/src/toggle/index.js"],"names":["updateToggleAriaAttribute"],"mappings":"AAAA,SAASA,yBAAyB,QAAQ,0BAA0B,CACpE,iCAAiC","sourcesContent":["export { updateToggleAriaAttribute } from '../../chunk-FBQ5LF2T.js';\n//# sourceMappingURL=index.js.map\n"]}
