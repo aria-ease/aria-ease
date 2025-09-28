@@ -1,3 +1,1 @@
-import { makeMenuAccessible } from "./src/makeMenuAccessible/makeMenuAccessible"
-
-export { makeMenuAccessible }
+export * from "./src/makeMenuAccessible/makeMenuAccessible"

@@ -1,0 +1,1 @@
+{"version":3,"sources":["/Users/macx/aria-ease/package/dist/src/checkbox/index.js"],"names":["updateCheckboxAriaAttributes"],"mappings":"AAAA,SAASA,4BAA4B,QAAQ,0BAA0B,CACvE,iCAAiC","sourcesContent":["export { updateCheckboxAriaAttributes } from '../../chunk-KGYGCX67.js';\n//# sourceMappingURL=index.js.map\n"]}

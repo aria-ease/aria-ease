@@ -4,7 +4,7 @@
  * @param {string} checkboxesClass The shared class of all the checkboxes.
  * @param {CheckboxStates[]} checkboxStates Array of objects containing checkboxes state information.
  * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox.
- */
+*/
 export function updateCheckboxAriaAttributes(checkboxId, checkboxesClass, checkboxStates, currentPressedCheckboxIndex) {
     var checkboxDiv = document.querySelector("#".concat(checkboxId));
     if (!checkboxDiv) {

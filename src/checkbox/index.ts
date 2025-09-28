@@ -1,3 +1,1 @@
-import { updateCheckboxAriaAttributes } from "./src/updateCheckboxAriaAttributes/updateCheckboxAriaAttributes";
-
-export { updateCheckboxAriaAttributes }
+export * from "./src/updateCheckboxAriaAttributes/updateCheckboxAriaAttributes";

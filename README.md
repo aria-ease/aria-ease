@@ -19,7 +19,7 @@ Add accessibility to menu: menu can be a dropdown, combo box, slide navigation m
 #### Usage
 
 ```javascript
-import { Menu } from "aria-ease";
+import * as Menu from "aria-ease/menu";
 
 useEffect(() => {
   menuRef.current = Menu.makeMenuAccessible({
@@ -29,8 +29,7 @@ useEffect(() => {
   });
 }, []);
 
-const toggleMenuDisplay = (event) => {
-  event.preventDefault();
+const toggleMenuDisplay = () => {
   const menuDiv = document.querySelector("#menu-div");
   if (getComputedStyle(menuDiv).display === "none") {
     menuRef.current.openMenu();

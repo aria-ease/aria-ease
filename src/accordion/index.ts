@@ -1,3 +1,1 @@
-import { updateAccordionTriggerAriaAttributes } from "./src/updateAccordionTriggerAriaAttributes/updateAccordionTriggerAriaAttributes";
-
-export { updateAccordionTriggerAriaAttributes }
+export * from "./src/updateAccordionTriggerAriaAttributes/updateAccordionTriggerAriaAttributes";

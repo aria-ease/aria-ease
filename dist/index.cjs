@@ -1,18 +1,4 @@
 'use strict';
-var __defProp = Object.defineProperty;
-var __export = function(target, all) {
-    for(var name in all)__defProp(target, name, {
-        get: all[name],
-        enumerable: true
-    });
-};
-// src/accordion/index.ts
-var accordion_exports = {};
-__export(accordion_exports, {
-    updateAccordionTriggerAriaAttributes: function() {
-        return updateAccordionTriggerAriaAttributes;
-    }
-});
 // src/accordion/src/updateAccordionTriggerAriaAttributes/updateAccordionTriggerAriaAttributes.ts
 function updateAccordionTriggerAriaAttributes(accordionId, accordionTriggersClass, accordionStates, clickedTriggerIndex) {
     var accordionDiv = document.querySelector("#".concat(accordionId));
@@ -35,13 +21,6 @@ function updateAccordionTriggerAriaAttributes(accordionId, accordionTriggersClas
         }
     });
 }
-// src/block/index.ts
-var block_exports = {};
-__export(block_exports, {
-    makeBlockAccessible: function() {
-        return makeBlockAccessible;
-    }
-});
 // src/utils/handleKeyPress/handleKeyPress.ts
 function isTextInput(el) {
     if (el.tagName !== "INPUT") return false;
@@ -174,13 +153,6 @@ function makeBlockAccessible(blockId, blockElementsClass) {
         });
     };
 }
-// src/checkbox/index.ts
-var checkbox_exports = {};
-__export(checkbox_exports, {
-    updateCheckboxAriaAttributes: function() {
-        return updateCheckboxAriaAttributes;
-    }
-});
 // src/checkbox/src/updateCheckboxAriaAttributes/updateCheckboxAriaAttributes.ts
 function updateCheckboxAriaAttributes(checkboxId, checkboxesClass, checkboxStates, currentPressedCheckboxIndex) {
     var checkboxDiv = document.querySelector("#".concat(checkboxId));
@@ -197,13 +169,6 @@ function updateCheckboxAriaAttributes(checkboxId, checkboxesClass, checkboxState
         }
     });
 }
-// src/menu/index.ts
-var menu_exports = {};
-__export(menu_exports, {
-    makeMenuAccessible: function() {
-        return makeMenuAccessible;
-    }
-});
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
 function makeMenuAccessible(param) {
     var menuId = param.menuId, menuElementsClass = param.menuElementsClass, triggerId = param.triggerId;
@@ -259,13 +224,6 @@ function makeMenuAccessible(param) {
         cleanup: cleanup
     };
 }
-// src/radio/index.ts
-var radio_exports = {};
-__export(radio_exports, {
-    updateRadioAriaAttributes: function() {
-        return updateRadioAriaAttributes;
-    }
-});
 // src/radio/src/updateRadioAriaAttributes/updateRadioAriaAttributes.ts
 function updateRadioAriaAttributes(radioId, radiosClass, radioStates, currentPressedRadioIndex) {
     var radioDiv = document.querySelector("#".concat(radioId));
@@ -285,13 +243,6 @@ function updateRadioAriaAttributes(radioId, radiosClass, radioStates, currentPre
         }
     });
 }
-// src/toggle/index.ts
-var toggle_exports = {};
-__export(toggle_exports, {
-    updateToggleAriaAttribute: function() {
-        return updateToggleAriaAttribute;
-    }
-});
 // src/toggle/src/updateToggleAriaAttribute/updateToggleAriaAttribute.ts
 function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, currentPressedToggleIndex) {
     var toggleDiv = document.querySelector("#".concat(toggleId));
@@ -311,10 +262,10 @@ function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, current
         }
     });
 }
-exports.Accordion = accordion_exports;
-exports.Block = block_exports;
-exports.Checkbox = checkbox_exports;
-exports.Menu = menu_exports;
-exports.Radio = radio_exports;
-exports.Toggle = toggle_exports; //# sourceMappingURL=index.cjs.map
+exports.makeBlockAccessible = makeBlockAccessible;
+exports.makeMenuAccessible = makeMenuAccessible;
+exports.updateAccordionTriggerAriaAttributes = updateAccordionTriggerAriaAttributes;
+exports.updateCheckboxAriaAttributes = updateCheckboxAriaAttributes;
+exports.updateRadioAriaAttributes = updateRadioAriaAttributes;
+exports.updateToggleAriaAttribute = updateToggleAriaAttribute; //# sourceMappingURL=index.cjs.map
 //# sourceMappingURL=index.cjs.map

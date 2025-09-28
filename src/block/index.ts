@@ -1,3 +1,1 @@
-import { makeBlockAccessible } from "./src/makeBlockAccessible/makeBlockAccessible";
-
-export { makeBlockAccessible }
+export * from "./src/makeBlockAccessible/makeBlockAccessible";

@@ -25,7 +25,7 @@ declare module 'aria-ease' {
 
 
   /**
-   * Adds screen reader accessibility to accordions. Updates the aria attributes of the accordion trigger button. Trigger button element must possess the following aria attributes; aria-expanded, aria-controls, aria-label (for only non-text triggers).
+   * Adds screen reader accessibility to accordions. Updates the aria attributes of the accordion trigger button. Trigger button element must possess the following aria attributes; aria-expanded, aria-controls. The aria-label is optional for only non-text triggers.
    * @param {string} accordionId The id of the accordion triggers parent container.
    * @param {string} accordionTriggersClass The shared class of all the accordion triggers.
    * @param {AccordionStates[]} accordionStates Array of objects containing accordions state information.
@@ -39,7 +39,7 @@ declare module 'aria-ease' {
    * @param {string} checkboxesClass The shared class of all the checkboxes.
    * @param {CheckboxStates[]} checkboxStates Array of objects containing checkboxes state information.
    * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox.
-  */
+   */
   function updateCheckboxAriaAttributes(checkboxId: string, checkboxesClass: string, checkboxStates: CheckboxStates[], currentPressedCheckboxIndex: number): void
 
   /**
@@ -52,21 +52,11 @@ declare module 'aria-ease' {
   function updateRadioAriaAttributes(radioId: string, radiosClass: string, radioStates: RadioStates[], currentPressedRadioIndex: number): void
 
   /**
-   * Adds screen reader accessibility to toggle buttons. Updates the aria attributes of the toggle buttons. Button must be a semantic button element or a non-semantic element with a role of button, and possess the aria-pressed attribute.
+   * Adds screen reader accessibility to toggle buttons. Updates the aria attributes of the toggle buttons. Button must be a semantic button element or a non-semantic element with a role of button, and possess the aria-pressed attribute. The aria-label is optional for only non-text triggers.
    * @param {string} toggleId The id of the toggle buttons parent container.
    * @param {string} togglesClass The shared class of all the toggle buttons.
    * @param {ToggleStates[]} toggleStates Array of objects containing toggle buttons state information.
    * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle button.
   */
  function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void
-
-
-  export { 
-    makeMenuAccessible, 
-    makeBlockAccessible, 
-    updateAccordionTriggerAriaAttributes, 
-    updateCheckboxAriaAttributes,
-    updateRadioAriaAttributes, 
-    updateToggleAriaAttribute
-  }
 }
