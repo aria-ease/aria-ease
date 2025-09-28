@@ -26,7 +26,7 @@ jobs:
       # Clone the docs repo
       - name: Clone docs repo
         run: |
-          git clone https://github.com/YOUR-USERNAME/my-lib-docs.git ../docs
+          git clone https://github.com/aria-ease/aria-ease-website.git
           cp CHANGELOG.md ../docs/src/CHANGELOG.md
           cd ../docs
           git config --global user.email "bot@example.com"
