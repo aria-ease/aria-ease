@@ -33,4 +33,4 @@ jobs:
           git config --global user.name "release-bot"
           git add src/CHANGELOG.md
           git commit -m "chore: sync changelog from library"
-          git push https://x-access-token:${{ secrets.DOCS_REPO_TOKEN }}@github.com/YOUR-USERNAME/my-lib-docs.git HEAD:main
+          git push https://x-access-token:${{ secrets.DOCS_REPO_TOKEN }}@github.com/aria-ease/aria-ease-website.git HEAD:main
