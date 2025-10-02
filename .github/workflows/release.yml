@@ -23,7 +23,7 @@ jobs:
         run: |
           cp CHANGELOG.md aria-ease-website/CHANGELOG.md
 
-      # Commit and push to docs repo
+      # Commit and push changes to docs repo
       - name: Commit and push changelog to docs repo
         run: |
           cd aria-ease-website
