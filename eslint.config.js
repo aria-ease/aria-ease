@@ -4,6 +4,11 @@ import tseslint from "typescript-eslint";
 
 export default [
   {
+    ignores: [
+      "src/utils/audit/audit.js"
+    ]
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.browser,

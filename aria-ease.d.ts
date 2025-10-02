@@ -13,7 +13,7 @@ declare module 'aria-ease' {
     * @param {string} openLabel - The aria label of the menu trigger button when it is open.
     * @param {string} closeLabel - The aria label of the menu trigger button when it is closed.
   */
-  function makeMenuAccessible(menuId: string, menuElementsClass: string, triggerId: string, openLabel: string, closeLabel: string): void;
+  function makeMenuAccessible(menuId: string, menuElementsClass: string, triggerId: string): void;
 
   
   /**
@@ -59,4 +59,6 @@ declare module 'aria-ease' {
    * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle button.
   */
  function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void
+
+ function runAudit(): void;
 }
