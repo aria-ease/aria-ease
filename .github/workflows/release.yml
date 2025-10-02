@@ -18,7 +18,7 @@ jobs:
       # Copy CHANGELOG.md to docs repo
       - name: Copy changelog
         run: |
-          cp CHANGELOG.md aria-ease-website/CHANGELOG.md'
+          cp CHANGELOG.md aria-ease-website/CHANGELOG.md
 
       # Commit and push to docs repo
       - name: Commit and push changelog to docs repo
