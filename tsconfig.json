@@ -8,11 +8,15 @@
       "allowSyntheticDefaultImports": true,
       "strict": true,
       "forceConsistentCasingInFileNames": true,
-      "module": "es2015",
+      "module": "es2020",
       "moduleResolution": "node",
-      "declaration": false
+      "declaration": true,
+      "baseUrl": ".",
+      "paths": {
+        "aria-ease/audit": ["dist/src/utils/audit/audit.d.ts"]
+      }
     },
-    "include": ["src", "tests", "benchmarks"],
+    "include": ["src", "tests", "benchmarks", "bin/audit-cli.ts"],
     "exclude": ["node_modules", "tests", "benchmarks"]
   }
   
