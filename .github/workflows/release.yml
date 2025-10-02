@@ -14,10 +14,18 @@ jobs:
       - name: Clone docs repo
         run: |
           git clone https://github.com/aria-ease/aria-ease-website.git
-          cp CHANGELOG.md ../docs/src/CHANGELOG.md
-          cd ../docs
-          git config --global user.email "bot@example.com"
-          git config --global user.name "release-bot"
-          git add src/CHANGELOG.md
-          git commit -m "chore: sync changelog from library"
+        
+      # Copy CHANGELOG.md to docs repo
+      - name: Copy changelog
+        run: |
+          cp CHANGELOG.md aria-ease-website/CHANGELOG.md'
+
+      # Commit and push to docs repo
+      - name: Commit and push changelog to docs repo
+        run: |
+          cd aria-ease-website
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git commit -m "chore: update changelog from library repo"
           git push https://x-access-token:${{ secrets.DOCS_REPO_TOKEN }}@github.com/aria-ease/aria-ease-website.git HEAD:main
