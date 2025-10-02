@@ -2,27 +2,14 @@ name: Release and Update Docs
 
 on:
   push:
-    tags:
-      - "v*.*.*"   # e.g. v1.2.3
+    branches: [main]
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      # Generate changelog using standard-version or semantic-release
-      - name: Generate changelog
-        run: npx standard-version --release-as minor
-
-      - name: Commit changelog
-        run: |
-          git config --global user.email "bot@example.com"
-          git config --global user.name "release-bot"
-          git add CHANGELOG.md
-          git commit -m "chore: update changelog [skip ci]" || echo "No changes"
-          git push origin HEAD:main
-
+      
       # Clone the docs repo
       - name: Clone docs repo
         run: |
