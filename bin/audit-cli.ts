@@ -33,6 +33,12 @@ program.command('audit')
   if(opts.url) urls.push(opts.url);
   if(config.urls && Array.isArray(config.urls)) urls.push(...config.urls);
 
+  const format: string = (config.output && (config.output as { format?: string }).format) || opts.format;
+  if(!['json', 'csv'].includes(format)) {
+    console.log(chalk.red('❌ Invalid format. Use "json" or "csv".'));
+    process.exit(1);
+  }
+
   if(urls.length === 0) {
     console.log(chalk.red('❌ No URLs provided. Use --url option or add "urls" in ariaease.config.js'));
     process.exit(1);
@@ -58,12 +64,14 @@ program.command('audit')
     process.exit(1);
   }
 
-  const formatted = formatResults(allResults, opts.format);
+  const formatted = formatResults(allResults, format);
 
-  await fs.ensureDir(opts.out);
+  const out = (config.output && (config.output as { out?: string }).out) || opts.out;
+
+  await fs.ensureDir(out);
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const fileName = `ariaease-report-${timestamp}.${opts.format}`;
-  const filePath = path.join(opts.out, fileName);
+  const fileName = `ariaease-report-${timestamp}.${format}`;
+  const filePath = path.join(out, fileName);
 
   await fs.writeFile(filePath, formatted, 'utf-8');
   console.log(chalk.magentaBright(`📁 Report saved to ${filePath}`));
