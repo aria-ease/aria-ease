@@ -487,7 +487,7 @@ var program = new import_commander.Command();
 program.name("aria-ease").description("Run accessibility audits").version("2.0.4");
 program.command("audit").description("Run accessibility audit").option("-u, --url <url>", "Single URL to audit").option("-f, --format <format>", "Output format for the audit report: json | csv", "csv").option("-o, --out <path>", "Directory to save the audit report", "./accessibility-reports").action(function(opts) {
     return _async_to_generator(function() {
-        var _urls, configPath, config, _tmp, urls, allResults, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, url, result, err1, err, hasResults, formatted, timestamp, fileName, filePath;
+        var _urls, configPath, config, _tmp, urls, format, allResults, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, url, result, err1, err, hasResults, formatted, out, timestamp, fileName, filePath;
         return _ts_generator(this, function(_state) {
             switch(_state.label){
                 case 0:
@@ -538,6 +538,14 @@ program.command("audit").description("Run accessibility audit").option("-u, --ur
                     urls = [];
                     if (opts.url) urls.push(opts.url);
                     if (config.urls && Array.isArray(config.urls)) (_urls = urls).push.apply(_urls, _to_consumable_array(config.urls));
+                    format = config.output && config.output.format || opts.format;
+                    if (![
+                        "json",
+                        "csv"
+                    ].includes(format)) {
+                        console.log(import_chalk.default.red('\u274C Invalid format. Use "json" or "csv".'));
+                        process.exit(1);
+                    }
                     if (urls.length === 0) {
                         console.log(import_chalk.default.red('\u274C No URLs provided. Use --url option or add "urls" in ariaease.config.js'));
                         process.exit(1);
@@ -631,16 +639,17 @@ program.command("audit").description("Run accessibility audit").option("-u, --ur
                         console.log(import_chalk.default.red("\u274C No audit report generated"));
                         process.exit(1);
                     }
-                    formatted = formatResults(allResults, opts.format);
+                    formatted = formatResults(allResults, format);
+                    out = config.output && config.output.out || opts.out;
                     return [
                         4,
-                        import_fs_extra.default.ensureDir(opts.out)
+                        import_fs_extra.default.ensureDir(out)
                     ];
                 case 17:
                     _state.sent();
                     timestamp = /* @__PURE__ */ new Date().toISOString().replace(/[:.]/g, "-");
-                    fileName = "ariaease-report-".concat(timestamp, ".").concat(opts.format);
-                    filePath = import_path.default.join(opts.out, fileName);
+                    fileName = "ariaease-report-".concat(timestamp, ".").concat(format);
+                    filePath = import_path.default.join(out, fileName);
                     return [
                         4,
                         import_fs_extra.default.writeFile(filePath, formatted, "utf-8")

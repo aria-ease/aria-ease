@@ -13,7 +13,8 @@
     "bench": "node --loader ts-node/esm benchmarks/sample.bench.ts",
     "lint": "eslint src --ext .ts",
     "prepublishOnly": "tsc && npm run lint && npm run test && npm run build",
-    "release": "standard-version"
+    "release": "standard-version",
+    "release:patch": "standard-version --release-as patch"
   },
   "repository": {
     "type": "git",
