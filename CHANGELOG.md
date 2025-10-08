@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.1.1](https://github.com/aria-ease/aria-ease/compare/v2.1.0...v2.1.1) (2025-10-08)
+
+
+### Bug Fixes
+
+* fixed audit cli not checking for ariaease.config.js format and out options ([2b33393](https://github.com/aria-ease/aria-ease/commit/2b333937354997a6f17362d52529fdc300617c5a))
+
 ## 2.1.0 (2025-10-02)
 
 
