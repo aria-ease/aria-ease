@@ -12,34 +12,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      # Clone the docs repo
-      - name: Clone docs repo
-        run: |
-          git clone https://github.com/aria-ease/aria-ease-website.git
-        
-      # Copy CHANGELOG.md to docs repo
-      - name: Copy changelog
-        run: |
-          cp CHANGELOG.md aria-ease-website/CHANGELOG.md
 
-      # Commit and push changes to docs repo
-      - name: Create branch, commit and push changelog (docs repo)
-        env:
-          DOCS_TOKEN: ${{ secrets.DOCS_REPO_TOKEN }}
-        run: |
-          cd aria-ease-website
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          BRANCH="update-changelog-${GITHUB_SHA::8}"
-          echo "BRANCH=$BRANCH" >> $GITHUB_ENV
-          git checkout -b "$BRANCH"
-          git add CHANGELOG.md
-          if ! git diff --cached --quiet; then
-            git commit -m "docs: update changelog from library repo"
-          else
-            echo "No changes to commit"
-          fi
+      - name: Clone docs repo
+        run: git clone https://github.com/aria-ease/aria-ease-website.git
+
+      - name: Copy changelog
+        run: cp CHANGELOG.md aria-ease-website/CHANGELOG.md
 
       - name: Create Pull Request for changelog update
         uses: peter-evans/create-pull-request@v5
