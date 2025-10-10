@@ -17,7 +17,7 @@ jobs:
         run: git clone https://github.com/aria-ease/aria-ease-website.git
 
       - name: Copy changelog
-        run: cp CHANGELOG.md aria-ease-website/CHANGELOG.md
+        run: cp CHANGELOG.md aria-ease-website/public/CHANGELOG.md
 
       - name: Create Pull Request for changelog update
         uses: peter-evans/create-pull-request@v5
