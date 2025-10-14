@@ -5,6 +5,9 @@ function _array_like_to_array(arr, len) {
     for(var i = 0, arr2 = new Array(len); i < len; i++)arr2[i] = arr[i];
     return arr2;
 }
+function _array_with_holes(arr) {
+    if (Array.isArray(arr)) return arr;
+}
 function _array_without_holes(arr) {
     if (Array.isArray(arr)) return _array_like_to_array(arr);
 }
@@ -81,8 +84,38 @@ function _interop_require_wildcard(obj, nodeInterop) {
 function _iterable_to_array(iter) {
     if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
 }
+function _iterable_to_array_limit(arr, i) {
+    var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
+    if (_i == null) return;
+    var _arr = [];
+    var _n = true;
+    var _d = false;
+    var _s, _e;
+    try {
+        for(_i = _i.call(arr); !(_n = (_s = _i.next()).done); _n = true){
+            _arr.push(_s.value);
+            if (i && _arr.length === i) break;
+        }
+    } catch (err) {
+        _d = true;
+        _e = err;
+    } finally{
+        try {
+            if (!_n && _i["return"] != null) _i["return"]();
+        } finally{
+            if (_d) throw _e;
+        }
+    }
+    return _arr;
+}
+function _non_iterable_rest() {
+    throw new TypeError("Invalid attempt to destructure non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
 function _non_iterable_spread() {
     throw new TypeError("Invalid attempt to spread non-iterable instance.\\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+}
+function _sliced_to_array(arr, i) {
+    return _array_with_holes(arr) || _iterable_to_array_limit(arr, i) || _unsupported_iterable_to_array(arr, i) || _non_iterable_rest();
 }
 function _to_consumable_array(arr) {
     return _array_without_holes(arr) || _iterable_to_array(arr) || _unsupported_iterable_to_array(arr) || _non_iterable_spread();
@@ -462,6 +495,8 @@ function formatResults(allResults, format) {
             }), null, 2);
         case "csv":
             return toCSV(allResults);
+        case "html":
+            return toHTML(allResults);
         default:
             return "";
     }
@@ -475,19 +510,116 @@ function toCSV(allResults) {
         if (result) {
             result.violations.forEach(function(v) {
                 v.nodes.forEach(function(n) {
-                    rows.push('"'.concat(url, '","').concat(v.id, '","').concat(v.impact, '","').concat(v.description, '","').concat(n.target, '","').concat(n.failureSummary, '"'));
+                    var _n_failureSummary;
+                    rows.push(escapeCSV(url) + "," + escapeCSV(v.id) + "," + escapeCSV(v.impact) + "," + escapeCSV(v.description) + "," + escapeCSV(Array.isArray(n.target) ? n.target.join("; ") : String(n.target)) + "," + escapeCSV((_n_failureSummary = n.failureSummary) !== null && _n_failureSummary !== void 0 ? _n_failureSummary : ""));
                 });
             });
         }
     });
     return rows.join("\n");
 }
+function escapeCSV(value) {
+    var s = String(value !== null && value !== void 0 ? value : "");
+    return '"'.concat(s.replace(/"/g, '""'), '"');
+}
+function toHTML(allResults) {
+    var summary = {
+        pagesAudited: 0,
+        pagesWithViolations: 0,
+        totalViolations: 0,
+        distinctRules: /* @__PURE__ */ new Set(),
+        impactCounts: /* @__PURE__ */ new Map()
+    };
+    allResults.forEach(function(param) {
+        var result = param.result;
+        if (!result) return;
+        summary.pagesAudited++;
+        var pageViolations = result.violations.reduce(function(acc, v) {
+            var nodesCount = (v.nodes || []).length;
+            if (nodesCount > 0) {
+                summary.distinctRules.add(v.id);
+                summary.totalViolations += nodesCount;
+                acc += nodesCount;
+                var _v_impact;
+                var impact = String((_v_impact = v.impact) !== null && _v_impact !== void 0 ? _v_impact : "unknown");
+                summary.impactCounts.set(impact, (summary.impactCounts.get(impact) || 0) + nodesCount);
+            }
+            return acc;
+        }, 0);
+        if (pageViolations > 0) summary.pagesWithViolations++;
+    });
+    var rows = [];
+    allResults.forEach(function(param) {
+        var url = param.url, result = param.result;
+        if (!result) return;
+        result.violations.forEach(function(v) {
+            v.nodes.forEach(function(n) {
+                var target = Array.isArray(n.target) ? n.target.join("; ") : String(n.target);
+                var _v_impact, _v_impact1, _v_description, _n_failureSummary;
+                rows.push('\n          <tr>\n            <td class="nowrap">'.concat(escapeHTML(url), '</td>\n            <td class="nowrap">').concat(escapeHTML(v.id), '</td>\n            <td class="impact ').concat(escapeClass(String((_v_impact = v.impact) !== null && _v_impact !== void 0 ? _v_impact : "unknown")), '">').concat(escapeHTML(String((_v_impact1 = v.impact) !== null && _v_impact1 !== void 0 ? _v_impact1 : "")), '</td>\n            <td class="desc">').concat(escapeHTML((_v_description = v.description) !== null && _v_description !== void 0 ? _v_description : ""), '</td>\n            <td class="target"><code>').concat(escapeHTML(target), '</code></td>\n            <td class="fail">').concat(escapeHTML((_n_failureSummary = n.failureSummary) !== null && _n_failureSummary !== void 0 ? _n_failureSummary : "").split(/\r?\n/).join("<br/>"), "</td>\n          </tr>\n        "));
+            });
+        });
+    });
+    var impactSummary = Array.from(summary.impactCounts.entries()).map(function(param) {
+        var _param = _sliced_to_array(param, 2), impact = _param[0], count = _param[1];
+        return '<li><strong class="impact '.concat(escapeClass(impact), '">').concat(escapeHTML(impact), "</strong>: ").concat(count, "</li>");
+    }).join("\n");
+    var d = /* @__PURE__ */ new Date();
+    var pad = function(n) {
+        return String(n).padStart(2, "0");
+    };
+    var reportDateTime = "".concat(pad(d.getDate()), "-").concat(pad(d.getMonth() + 1), "-").concat(d.getFullYear(), " ").concat(pad(d.getHours()), ":").concat(pad(d.getMinutes()), ":").concat(pad(d.getSeconds()));
+    var headerSummary = '\n    <section class="summary">\n      <h2>Report summary</h2>\n      <ul>\n        <li><strong>Date:</strong> '.concat(reportDateTime, "</li>\n        <li><strong>Pages audited:</strong> ").concat(summary.pagesAudited, "</li>\n        <li><strong>Pages with violations:</strong> ").concat(summary.pagesWithViolations, "</li>\n        <li><strong>Total violations:</strong> ").concat(summary.totalViolations, "</li>\n        <li><strong>Distinct rules:</strong> ").concat(summary.distinctRules.size, '</li>\n      </ul>\n      <div class="impact-summary">\n        <h3>By impact</h3>\n        <ul class="summary-list">\n          ').concat(impactSummary || "<li>None</li>", "\n        </ul>\n      </div>\n    </section>\n  ").trim();
+    var html = '\n    <!DOCTYPE html>\n    <html lang="en">\n      <head>\n        <meta charset="utf-8"/>\n        <title>Aria-Ease Accessibility Audit Report</title>\n        <meta name="viewport" content="width=device-width, initial-scale=1"/>\n        <style>\n          :root{\n            --bg:#ffffff; --muted:#6b7280; --border:#e6e9ee;\n            --impact-critical: red; --impact-moderate:#fff4dd; --impact-serious:rgb(255, 123, 0);\n          }\n          body{font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); color:#111827; padding:24px; line-height:1.4}\n          h1{margin:0 0 8px}\n          .summary{background:#f8fafc;border:1px solid var(--border);padding:12px 16px;border-radius:8px;margin-bottom:18px}\n          .summary ul{margin:6px 0 0 0;padding:0 18px}\n          .impact-summary h3{margin:12px 0 6px}\n          table{width:100%; border-collapse:collapse; margin-top:12px}\n          th,td{border:1px solid var(--border); padding:10px; text-align:left; vertical-align:top}\n          th{background:#f3f4f6; font-weight:600; position:sticky; top:0; z-index:1}\n          .nowrap{white-space:nowrap}\n          .target code{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace; white-space:pre-wrap}\n          .desc{max-width:380px}\n          tr:nth-child(even){background:#fbfbfb}\n          td.fail{color:#7b1e1e}\n          .impact.critical{background:var(--impact-critical); font-weight:600}\n          .impact.moderate{background:var(--impact-moderate); font-weight:600}\n          .impact.serious{background:var(--impact-serious); font-weight:600}\n          @media (max-width:900px){\n            .desc{max-width:200px}\n            table, thead, tbody, th, td, tr{display:block}\n            thead{display:none}\n            tr{margin-bottom:10px; border: 1px solid var(--border);}\n            td{border:1px solid var(--border); padding:6px}\n            td::before{font-weight:600; display:inline-block; width:120px}\n          }\n          .summary-list strong,\n          .summary-list li {\n            padding: 2px 4px;\n          }\n        </style>\n      </head>\n      <body>\n        <h1>Aria-Ease Accessibility Audit Report</h1>\n        '.concat(headerSummary, "\n        <table>\n          <thead>\n            <tr>\n              <th>URL</th><th>Rule</th><th>Impact</th><th>Description</th><th>Target</th><th>FailureSummary</th>\n            </tr>\n          </thead>\n          <tbody>\n            ").concat(rows.join("\n") || '<tr><td colspan="6"><em>No violations found.</em></td></tr>', "\n          </tbody>\n        </table>\n      </body>\n    </html>\n  ").trim();
+    return html;
+}
+function escapeHTML(str) {
+    return String(str !== null && str !== void 0 ? str : "").replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;").replaceAll('"', "&quot;").replaceAll("'", "&#39;");
+}
+function escapeClass(s) {
+    return String(s !== null && s !== void 0 ? s : "").toLowerCase().replace(/[^a-z0-9]+/g, "-");
+}
 // bin/audit-cli.ts
 var program = new import_commander.Command();
-program.name("aria-ease").description("Run accessibility audits").version("2.0.4");
-program.command("audit").description("Run accessibility audit").option("-u, --url <url>", "Single URL to audit").option("-f, --format <format>", "Output format for the audit report: json | csv", "csv").option("-o, --out <path>", "Directory to save the audit report", "./accessibility-reports").action(function(opts) {
+program.name("aria-ease").description("Run accessibility tests and audits").version("2.1.1");
+program.command("audit").description("Run axe-core powered accessibility audit on webpages").option("-u, --url <url>", "Single URL to audit").option("-f, --format <format>", "Output format for the audit report: json | csv | html", "all").option("-o, --out <path>", "Directory to save the audit report", "./accessibility-reports/audit").action(function(opts) {
     return _async_to_generator(function() {
-        var _urls, configPath, config, _tmp, urls, format, allResults, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, url, result, err1, err, hasResults, formatted, out, timestamp, fileName, filePath;
+        var _urls, _opts_audit, _config_audit, _config_audit1, _opts_audit1, configPath, config, _tmp, urls, format, allResults, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, url, result, err1, err, hasResults;
+        function createReport(format2) {
+            return _async_to_generator(function() {
+                var _config_audit, formatted, out, d, pad, timestamp, fileName, filePath;
+                return _ts_generator(this, function(_state) {
+                    switch(_state.label){
+                        case 0:
+                            formatted = formatResults(allResults, format2);
+                            out = ((_config_audit = config.audit) === null || _config_audit === void 0 ? void 0 : _config_audit.output) && config.audit.output.out || opts.audit.out;
+                            return [
+                                4,
+                                import_fs_extra.default.ensureDir(out)
+                            ];
+                        case 1:
+                            _state.sent();
+                            d = /* @__PURE__ */ new Date();
+                            pad = function(n) {
+                                return String(n).padStart(2, "0");
+                            };
+                            timestamp = "".concat(pad(d.getDate()), "-").concat(pad(d.getMonth() + 1), "-").concat(d.getFullYear(), " ").concat(pad(d.getHours()), ":").concat(pad(d.getMinutes()), ":").concat(pad(d.getSeconds()));
+                            fileName = "ariaease-report-".concat(timestamp, ".").concat(format2);
+                            filePath = import_path.default.join(out, fileName);
+                            return [
+                                4,
+                                import_fs_extra.default.writeFile(filePath, formatted, "utf-8")
+                            ];
+                        case 2:
+                            _state.sent();
+                            console.log(import_chalk.default.magentaBright("\uD83D\uDCC1 Report saved to ".concat(filePath)));
+                            return [
+                                2
+                            ];
+                    }
+                });
+            })();
+        }
         return _ts_generator(this, function(_state) {
             switch(_state.label){
                 case 0:
@@ -536,14 +668,16 @@ program.command("audit").description("Run accessibility audit").option("-u, --ur
                     _state.label = 6;
                 case 6:
                     urls = [];
-                    if (opts.url) urls.push(opts.url);
-                    if (config.urls && Array.isArray(config.urls)) (_urls = urls).push.apply(_urls, _to_consumable_array(config.urls));
-                    format = config.output && config.output.format || opts.format;
+                    if ((_opts_audit = opts.audit) === null || _opts_audit === void 0 ? void 0 : _opts_audit.url) urls.push(opts.audit.url);
+                    if (((_config_audit = config.audit) === null || _config_audit === void 0 ? void 0 : _config_audit.urls) && Array.isArray(config.audit.urls)) (_urls = urls).push.apply(_urls, _to_consumable_array(config.audit.urls));
+                    format = ((_config_audit1 = config.audit) === null || _config_audit1 === void 0 ? void 0 : _config_audit1.output) && config.audit.output.format || ((_opts_audit1 = opts.audit) === null || _opts_audit1 === void 0 ? void 0 : _opts_audit1.format);
                     if (![
                         "json",
-                        "csv"
+                        "csv",
+                        "html",
+                        "all"
                     ].includes(format)) {
-                        console.log(import_chalk.default.red('\u274C Invalid format. Use "json" or "csv".'));
+                        console.log(import_chalk.default.red('\u274C Invalid format. Use "json", "csv", "html" or "all".'));
                         process.exit(1);
                     }
                     if (urls.length === 0) {
@@ -639,24 +773,21 @@ program.command("audit").description("Run accessibility audit").option("-u, --ur
                         console.log(import_chalk.default.red("\u274C No audit report generated"));
                         process.exit(1);
                     }
-                    formatted = formatResults(allResults, format);
-                    out = config.output && config.output.out || opts.out;
-                    return [
-                        4,
-                        import_fs_extra.default.ensureDir(out)
-                    ];
-                case 17:
-                    _state.sent();
-                    timestamp = /* @__PURE__ */ new Date().toISOString().replace(/[:.]/g, "-");
-                    fileName = "ariaease-report-".concat(timestamp, ".").concat(format);
-                    filePath = import_path.default.join(out, fileName);
-                    return [
-                        4,
-                        import_fs_extra.default.writeFile(filePath, formatted, "utf-8")
-                    ];
-                case 18:
-                    _state.sent();
-                    console.log(import_chalk.default.magentaBright("\uD83D\uDCC1 Report saved to ".concat(filePath)));
+                    if ([
+                        "json",
+                        "csv",
+                        "html"
+                    ].includes(format)) {
+                        createReport(format);
+                    } else if (format === "all") {
+                        [
+                            "json",
+                            "csv",
+                            "html"
+                        ].map(function(format2) {
+                            createReport(format2);
+                        });
+                    }
                     console.log(import_chalk.default.green("\n\uD83C\uDF89 All audits completed."));
                     return [
                         2
@@ -664,6 +795,9 @@ program.command("audit").description("Run accessibility audit").option("-u, --ur
             }
         });
     })();
+});
+program.command("test").description("Run core a11y accessibility standard tests on UI components").option("-f, --format <format>", "Output format for the test report: json | csv | html", "html").option("-o, --out <path>", "Directory to save the test report", "./accessibility-reports/test").action(function() {
+    console.log("Coming soon");
 });
 program.command("help").description("Display help information").action(function() {
     program.outputHelp();

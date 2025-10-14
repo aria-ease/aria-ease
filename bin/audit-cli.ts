@@ -10,13 +10,13 @@ import { formatResults } from "src/utils/audit/formatters";
 
 const program = new Command();
 
-program.name('aria-ease').description('Run accessibility audits').version('2.0.4');
+program.name('aria-ease').description('Run accessibility tests and audits').version('2.1.1');
 
 program.command('audit')
-.description('Run accessibility audit')
+.description('Run axe-core powered accessibility audit on webpages')
 .option('-u, --url <url>', 'Single URL to audit')
-.option('-f, --format <format>', 'Output format for the audit report: json | csv', 'csv')
-.option('-o, --out <path>', 'Directory to save the audit report', './accessibility-reports')
+.option('-f, --format <format>', 'Output format for the audit report: json | csv | html', 'all')
+.option('-o, --out <path>', 'Directory to save the audit report', './accessibility-reports/audit')
 .action(async (opts) => {
   console.log(chalk.cyanBright('🚀 Starting accessibility audit...\n'));
 
@@ -30,12 +30,12 @@ program.command('audit')
   }
 
   const urls: string[] = [];
-  if(opts.url) urls.push(opts.url);
-  if(config.urls && Array.isArray(config.urls)) urls.push(...config.urls);
+  if(opts.audit?.url) urls.push(opts.audit.url);
+  if(config.audit?.urls && Array.isArray(config.audit.urls)) urls.push(...config.audit.urls);
 
-  const format: string = (config.output && (config.output as { format?: string }).format) || opts.format;
-  if(!['json', 'csv'].includes(format)) {
-    console.log(chalk.red('❌ Invalid format. Use "json" or "csv".'));
+  const format: string = (config.audit?.output && (config.audit.output as { format?: string }).format) || opts.audit?.format;
+  if(!['json', 'csv', 'html', 'all'].includes(format)) {
+    console.log(chalk.red('❌ Invalid format. Use "json", "csv", "html" or "all".'));
     process.exit(1);
   }
 
@@ -64,19 +64,39 @@ program.command('audit')
     process.exit(1);
   }
 
-  const formatted = formatResults(allResults, format);
+  async function createReport(format: string) {
+    const formatted = formatResults(allResults, format);
 
-  const out = (config.output && (config.output as { out?: string }).out) || opts.out;
+    const out = (config.audit?.output && (config.audit.output as { out?: string }).out) || opts.audit.out;
 
-  await fs.ensureDir(out);
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const fileName = `ariaease-report-${timestamp}.${format}`;
-  const filePath = path.join(out, fileName);
+    await fs.ensureDir(out);
+    const d = new Date();
+    const pad = (n: number) => String(n).padStart(2, '0');
+    const timestamp = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    const fileName = `ariaease-report-${timestamp}.${format}`;
+    const filePath = path.join(out, fileName);
 
-  await fs.writeFile(filePath, formatted, 'utf-8');
-  console.log(chalk.magentaBright(`📁 Report saved to ${filePath}`));
+    await fs.writeFile(filePath, formatted, 'utf-8');
+    console.log(chalk.magentaBright(`📁 Report saved to ${filePath}`));
+  }
+
+  if(['json', 'csv', 'html'].includes(format)) {
+    createReport(format);
+  } else if(format === 'all') {
+    ['json', 'csv', 'html'].map((format) => {
+      createReport(format);
+    })
+  }
 
   console.log(chalk.green('\n🎉 All audits completed.'));
+})
+
+program.command('test')
+.description('Run core a11y accessibility standard tests on UI components')
+.option('-f, --format <format>', 'Output format for the test report: json | csv | html', 'html')
+.option('-o, --out <path>', 'Directory to save the test report', './accessibility-reports/test')
+.action(() => {
+  console.log('Coming soon')
 })
 
 program.command('help')

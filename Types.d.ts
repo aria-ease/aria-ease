@@ -23,10 +23,15 @@ interface ToggleStates {
     pressed: boolean;
 }
 
-interface AriaEaseConfig {
+interface AriaEaseConfigAudit {
     urls?: [],
     rules?: object,
     output?: object
+}
+
+interface AriaEaseConfig {
+    audit?: AriaEaseConfigAudit,
+    test?: unknown //change to correct type later
 }
 
 
