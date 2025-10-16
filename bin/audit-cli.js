@@ -39,6 +39,13 @@ function _async_to_generator(fn) {
         });
     };
 }
+function _instanceof(left, right) {
+    if (right != null && typeof Symbol !== "undefined" && right[Symbol.hasInstance]) {
+        return !!right[Symbol.hasInstance](left);
+    } else {
+        return left instanceof right;
+    }
+}
 function _iterable_to_array(iter) {
     if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter);
 }
@@ -214,6 +221,13 @@ function _async_to_generator1(fn) {
         });
     };
 }
+function _instanceof1(left, right) {
+    if (right != null && typeof Symbol !== "undefined" && right[Symbol.hasInstance]) {
+        return !!right[Symbol.hasInstance](left);
+    } else {
+        return _instanceof(left, right);
+    }
+}
 function _ts_generator1(thisArg, body) {
     var f, y, t, _ = {
         label: 0,
@@ -311,6 +325,12 @@ function runAudit(url) {
         return _ts_generator1(this, function(_state) {
             switch(_state.label){
                 case 0:
+                    _state.trys.push([
+                        0,
+                        6,
+                        ,
+                        7
+                    ]);
                     return [
                         4,
                         chromium.launch({
@@ -339,14 +359,6 @@ function runAudit(url) {
                     ];
                 case 4:
                     _state.sent();
-                    _state.label = 5;
-                case 5:
-                    _state.trys.push([
-                        5,
-                        7,
-                        ,
-                        8
-                    ]);
                     axe = new AxeBuilder({
                         page: page
                     });
@@ -354,26 +366,39 @@ function runAudit(url) {
                         4,
                         axe.analyze()
                     ];
-                case 6:
+                case 5:
                     axeResults = _state.sent();
                     return [
                         2,
                         axeResults
                     ];
-                case 7:
+                case 6:
                     error = _state.sent();
-                    console.log(error);
+                    if (_instanceof1(error, Error) && error.message.includes("Executable doesn't exist")) {
+                        console.error("\n\u274C Playwright browsers not found!\n");
+                        console.log("\uD83D\uDCE6 First-time setup required:");
+                        console.log("   Run: npx playwright install chromium\n");
+                        console.log("\uD83D\uDCA1 This downloads the browser needed for auditing (~200MB)");
+                        console.log("   You only need to do this once.\n");
+                        process.exit(1);
+                    }
                     return [
                         3,
-                        8
+                        7
                     ];
-                case 8:
+                case 7:
+                    if (!browser) return [
+                        3,
+                        9
+                    ];
                     return [
                         4,
                         browser.close()
                     ];
-                case 9:
+                case 8:
                     _state.sent();
+                    _state.label = 9;
+                case 9:
                     return [
                         2
                     ];
@@ -567,7 +592,7 @@ program.command("audit").description("Run axe-core powered accessibility audit o
                         6
                     ];
                 case 5:
-                    console.log(chalk.yellow("\u2139\uFE0F  No ariaease.config.js found at project root, using default configurations."));
+                    console.log(chalk.yellow("\u2139\uFE0F  No ariaease.config.js found at project root, using CLI configurations."));
                     _state.label = 6;
                 case 6:
                     urls = [];

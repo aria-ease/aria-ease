@@ -98,6 +98,14 @@
     "playwright": "^1.55.1",
     "typescript-eslint": "^8.41.0"
   },
+  "peerDependencies": {
+    "playwright": "^1.55.1"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    }
+  },
   "bin": {
     "aria-ease": "./bin/audit-cli.js"
   }

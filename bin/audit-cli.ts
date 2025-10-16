@@ -26,7 +26,7 @@ program.command('audit')
     config = (await import(configPath)).default || (await import(configPath));
     console.log(chalk.green('✅ Loaded config from ariaease.config.js\n'));
   } else {
-    console.log(chalk.yellow('ℹ️  No ariaease.config.js found at project root, using default configurations.'));
+    console.log(chalk.yellow('ℹ️  No ariaease.config.js found at project root, using CLI configurations.'));
   }
 
   const urls: string[] = [];

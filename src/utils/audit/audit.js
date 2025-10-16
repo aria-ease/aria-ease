@@ -41,7 +41,9 @@ export function runAudit(url) {
         var browser, context, page, axe, axeResults, error_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0: return [4 /*yield*/, chromium.launch({ headless: true })];
+                case 0:
+                    _a.trys.push([0, 6, , 7]);
+                    return [4 /*yield*/, chromium.launch({ headless: true })];
                 case 1:
                     browser = _a.sent();
                     return [4 /*yield*/, browser.newContext()];
@@ -53,22 +55,29 @@ export function runAudit(url) {
                     return [4 /*yield*/, page.goto(url, { waitUntil: 'networkidle' })];
                 case 4:
                     _a.sent();
-                    _a.label = 5;
-                case 5:
-                    _a.trys.push([5, 7, , 8]);
                     axe = new AxeBuilder({ page: page });
                     return [4 /*yield*/, axe.analyze()];
-                case 6:
+                case 5:
                     axeResults = _a.sent();
                     return [2 /*return*/, axeResults];
-                case 7:
+                case 6:
                     error_1 = _a.sent();
-                    console.log(error_1);
-                    return [3 /*break*/, 8];
-                case 8: return [4 /*yield*/, browser.close()];
-                case 9:
+                    if (error_1 instanceof Error && error_1.message.includes("Executable doesn't exist")) {
+                        console.error('\n❌ Playwright browsers not found!\n');
+                        console.log('📦 First-time setup required:');
+                        console.log('   Run: npx playwright install chromium\n');
+                        console.log('💡 This downloads the browser needed for auditing (~200MB)');
+                        console.log('   You only need to do this once.\n');
+                        process.exit(1);
+                    }
+                    return [3 /*break*/, 7];
+                case 7:
+                    if (!browser) return [3 /*break*/, 9];
+                    return [4 /*yield*/, browser.close()];
+                case 8:
                     _a.sent();
-                    return [2 /*return*/];
+                    _a.label = 9;
+                case 9: return [2 /*return*/];
             }
         });
     });
