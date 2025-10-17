@@ -75,9 +75,17 @@ export function runAudit(url) {
                             console.log('   Make sure your server is running before auditing URL');
                             console.log('   Run: npm run dev # or your start command');
                         }
-                        process.exit(1);
+                        else if (error_1.message.includes("page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL")) {
+                            console.error('\n❌ Cannot audit invalid URL\n');
+                        }
+                        else {
+                            console.error('❌ Audit error:', error_1.message);
+                            console.log('   Make sure you provide a valid URL');
+                        }
                     }
-                    console.error('Error during audit:', error_1);
+                    else {
+                        console.error('❌ Audit error (non-Error):', String(error_1));
+                    }
                     throw error_1;
                 case 7:
                     if (!browser) return [3 /*break*/, 9];

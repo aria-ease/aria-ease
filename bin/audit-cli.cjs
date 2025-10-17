@@ -478,10 +478,15 @@ function runAudit(url) {
                             console.error("\n\u274C Server Not Running!\n");
                             console.log("   Make sure your server is running before auditing URL");
                             console.log("   Run: npm run dev # or your start command");
+                        } else if (error.message.includes("page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL")) {
+                            console.error("\n\u274C Cannot audit invalid URL\n");
+                        } else {
+                            console.error("\u274C Audit error:", error.message);
+                            console.log("   Make sure you provide a valid URL");
                         }
-                        process.exit(1);
+                    } else {
+                        console.error("\u274C Audit error (non-Error):", String(error));
                     }
-                    console.error("Error during audit:", error);
                     throw error;
                 case 7:
                     if (!browser) return [
@@ -617,7 +622,7 @@ var program = new import_commander.Command();
 program.name("aria-ease").description("Run accessibility tests and audits").version("2.1.1");
 program.command("audit").description("Run axe-core powered accessibility audit on webpages").option("-u, --url <url>", "Single URL to audit").option("-f, --format <format>", "Output format for the audit report: json | csv | html", "all").option("-o, --out <path>", "Directory to save the audit report", "./accessibility-reports/audit").action(function(opts) {
     return _async_to_generator(function() {
-        var _urls, _opts_audit, _config_audit, _config_audit1, _opts_audit1, configPath, config, _tmp, urls, format, allResults, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, url, result, error, err, hasResults;
+        var _urls, _opts_audit, _config_audit, _config_audit1, _opts_audit1, configPath, config, _tmp, urls, format, allResults, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, url, result, error, err, hasResults, auditedCount;
         function createReport(format2) {
             return _async_to_generator(function() {
                 var _config_audit, formatted, out, d, pad, timestamp, fileName, filePath;
@@ -805,24 +810,54 @@ program.command("audit").description("Run axe-core powered accessibility audit o
                         return r.result && r.result.violations && r.result.violations.length > 0;
                     });
                     if (!hasResults) {
-                        console.log(import_chalk.default.red("\u274C No audit report generated"));
-                        process.exit(1);
+                        auditedCount = allResults.filter(function(r) {
+                            return r.result;
+                        }).length;
+                        if (auditedCount === 0) {
+                            console.log(import_chalk.default.red("\u274C No pages were successfully audited."));
+                            process.exit(1);
+                        }
+                        console.log(import_chalk.default.green("\n\uD83C\uDF89 Great news! No accessibility violations found!"));
+                        console.log(import_chalk.default.gray("   Audited ".concat(auditedCount, " page").concat(auditedCount > 1 ? "s" : "", " successfully.\n")));
+                        process.exit(0);
                     }
-                    if ([
+                    if (![
                         "json",
                         "csv",
                         "html"
-                    ].includes(format)) {
-                        createReport(format);
-                    } else if (format === "all") {
-                        [
+                    ].includes(format)) return [
+                        3,
+                        18
+                    ];
+                    return [
+                        4,
+                        createReport(format)
+                    ];
+                case 17:
+                    _state.sent();
+                    return [
+                        3,
+                        20
+                    ];
+                case 18:
+                    if (!(format === "all")) return [
+                        3,
+                        20
+                    ];
+                    return [
+                        4,
+                        Promise.all([
                             "json",
                             "csv",
                             "html"
                         ].map(function(format2) {
-                            createReport(format2);
-                        });
-                    }
+                            return createReport(format2);
+                        }))
+                    ];
+                case 19:
+                    _state.sent();
+                    _state.label = 20;
+                case 20:
                     console.log(import_chalk.default.green("\n\uD83C\uDF89 All audits completed."));
                     return [
                         2

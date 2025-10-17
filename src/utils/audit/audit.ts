@@ -23,12 +23,17 @@ export async function runAudit(url: string) {
                 console.log('   You only need to do this once.\n');
             } else if(error.message.includes("page.goto: net::ERR_CONNECTION_REFUSED")) {
                 console.error('\n❌ Server Not Running!\n');
-                console.log('   Make sure your server is running before auditing URL')
+                console.log('   Make sure your server is running before auditing URL');
                 console.log('   Run: npm run dev # or your start command');
+            } else if(error.message.includes("page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL")) {
+                console.error('\n❌ Cannot audit invalid URL\n')
+            } else {
+                console.error('❌ Audit error:', error.message);
+                console.log('   Make sure you provide a valid URL');
             }
-            process.exit(1);
+        } else {
+            console.error('❌ Audit error (non-Error):', String(error));
         }
-        console.error('Error during audit:', error);
         throw error;
     } finally {
         if(browser) await browser.close(); 

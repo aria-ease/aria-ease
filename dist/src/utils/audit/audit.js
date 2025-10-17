@@ -194,10 +194,15 @@ function runAudit(url) {
                             console.error("\n\u274C Server Not Running!\n");
                             console.log("   Make sure your server is running before auditing URL");
                             console.log("   Run: npm run dev # or your start command");
+                        } else if (error.message.includes("page.goto: Protocol error (Page.navigate): Cannot navigate to invalid URL")) {
+                            console.error("\n\u274C Cannot audit invalid URL\n");
+                        } else {
+                            console.error("\u274C Audit error:", error.message);
+                            console.log("   Make sure you provide a valid URL");
                         }
-                        process.exit(1);
+                    } else {
+                        console.error("\u274C Audit error (non-Error):", String(error));
                     }
-                    console.error("Error during audit:", error);
                     throw error;
                 case 7:
                     if (!browser) return [

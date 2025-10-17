@@ -60,8 +60,14 @@ program.command('audit')
 
   const hasResults = allResults.some(r => r.result && r.result.violations && r.result.violations.length > 0);
   if (!hasResults) {
-    console.log(chalk.red('❌ No audit report generated'));
-    process.exit(1);
+    const auditedCount = allResults.filter(r => r.result).length;
+    if (auditedCount === 0) {
+      console.log(chalk.red('❌ No pages were successfully audited.'));
+      process.exit(1);
+    }
+    console.log(chalk.green('\n🎉 Great news! No accessibility violations found!'));
+    console.log(chalk.gray(`   Audited ${auditedCount} page${auditedCount > 1 ? 's' : ''} successfully.\n`));
+    process.exit(0);
   }
 
   async function createReport(format: string) {
@@ -81,11 +87,9 @@ program.command('audit')
   }
 
   if(['json', 'csv', 'html'].includes(format)) {
-    createReport(format);
+    await createReport(format);
   } else if(format === 'all') {
-    ['json', 'csv', 'html'].map((format) => {
-      createReport(format);
-    })
+    await Promise.all(['json', 'csv', 'html'].map((format) => createReport(format)));
   }
 
   console.log(chalk.green('\n🎉 All audits completed.'));
