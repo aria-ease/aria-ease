@@ -39,7 +39,7 @@ const toggleMenuDisplay = () => {
 };
 ```
 
-[Check out more features/functionality in the docs](https://ariaease.web.app/docs)
+[Check out more features/functionality in the docs](https://ariaease.site/docs)
 
 [Start contributing on GitHub](https://github.com/aria-ease/aria-ease)
 

@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.2](https://github.com/aria-ease/aria-ease/compare/v2.2.1...v2.2.2) (2025-10-17)
+
+
+### Bug Fixes
+
+* added error handling for when audit url server is not running ([49c1189](https://github.com/aria-ease/aria-ease/commit/49c1189f9105010eb0a131ab7c3fe6ef9393437d))
+
+### [2.2.1](https://github.com/aria-ease/aria-ease/compare/v2.2.0...v2.2.1) (2025-10-16)
+
+
+### Bug Fixes
+
+* added playwright missing browsers error handling. made playwright a peer dependency ([996c765](https://github.com/aria-ease/aria-ease/commit/996c76557902dad1cd65b668c68d30c14fe31ee8))
+
+## [2.2.0](https://github.com/aria-ease/aria-ease/compare/v2.1.1...v2.2.0) (2025-10-14)
+
+
+### Features
+
+* added HTML format for audit report. added ALL format to export all format at once ([d39679f](https://github.com/aria-ease/aria-ease/commit/d39679f9b28a5e533c55437256fa3107ae7dfa84))
+
 ### [2.1.1](https://github.com/aria-ease/aria-ease/compare/v2.1.0...v2.1.1) (2025-10-08)
 
 

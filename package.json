@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "2.1.1",
+  "version": "2.2.2",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
   "main": "dist/index.cjs",
   "type": "module",
@@ -35,7 +35,7 @@
   "bugs": {
     "url": "https://github.com/aria-ease/aria-ease/issues"
   },
-  "homepage": "https://ariaease.web.app/docs",
+  "homepage": "https://ariaease.site/docs",
   "devDependencies": {
     "@swc/core": "^1.13.5",
     "@testing-library/dom": "^10.4.1",
@@ -97,6 +97,14 @@
     "path": "^0.12.7",
     "playwright": "^1.55.1",
     "typescript-eslint": "^8.41.0"
+  },
+  "peerDependencies": {
+    "playwright": "^1.55.1"
+  },
+  "peerDependenciesMeta": {
+    "playwright": {
+      "optional": true
+    }
   },
   "bin": {
     "aria-ease": "./bin/audit-cli.js"
