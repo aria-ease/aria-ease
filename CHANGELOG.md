@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.2.2](https://github.com/aria-ease/aria-ease/compare/v2.2.1...v2.2.2) (2025-10-17)
+
+
+### Bug Fixes
+
+* added error handling for when audit url server is not running ([49c1189](https://github.com/aria-ease/aria-ease/commit/49c1189f9105010eb0a131ab7c3fe6ef9393437d))
+
 ### [2.2.1](https://github.com/aria-ease/aria-ease/compare/v2.2.0...v2.2.1) (2025-10-16)
 
 
