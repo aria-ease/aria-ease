@@ -421,8 +421,8 @@ function runAudit(url) {
                     _state.trys.push([
                         0,
                         6,
-                        ,
-                        7
+                        7,
+                        10
                     ]);
                     return [
                         4,
@@ -467,18 +467,22 @@ function runAudit(url) {
                     ];
                 case 6:
                     error = _state.sent();
-                    if (_instanceof1(error, Error) && error.message.includes("Executable doesn't exist")) {
-                        console.error("\n\u274C Playwright browsers not found!\n");
-                        console.log("\uD83D\uDCE6 First-time setup required:");
-                        console.log("   Run: npx playwright install chromium\n");
-                        console.log("\uD83D\uDCA1 This downloads the browser needed for auditing (~200MB)");
-                        console.log("   You only need to do this once.\n");
+                    if (_instanceof1(error, Error)) {
+                        if (error.message.includes("Executable doesn't exist")) {
+                            console.error("\n\u274C Playwright browsers not found!\n");
+                            console.log("\uD83D\uDCE6 First-time setup required:");
+                            console.log("   Run: npx playwright install chromium\n");
+                            console.log("\uD83D\uDCA1 This downloads the browser needed for auditing (~200MB)");
+                            console.log("   You only need to do this once.\n");
+                        } else if (error.message.includes("page.goto: net::ERR_CONNECTION_REFUSED")) {
+                            console.error("\n\u274C Server Not Running!\n");
+                            console.log("   Make sure your server is running before auditing URL");
+                            console.log("   Run: npm run dev # or your start command");
+                        }
                         process.exit(1);
                     }
-                    return [
-                        3,
-                        7
-                    ];
+                    console.error("Error during audit:", error);
+                    throw error;
                 case 7:
                     if (!browser) return [
                         3,
@@ -492,6 +496,10 @@ function runAudit(url) {
                     _state.sent();
                     _state.label = 9;
                 case 9:
+                    return [
+                        7
+                    ];
+                case 10:
                     return [
                         2
                     ];
@@ -609,7 +617,7 @@ var program = new import_commander.Command();
 program.name("aria-ease").description("Run accessibility tests and audits").version("2.1.1");
 program.command("audit").description("Run axe-core powered accessibility audit on webpages").option("-u, --url <url>", "Single URL to audit").option("-f, --format <format>", "Output format for the audit report: json | csv | html", "all").option("-o, --out <path>", "Directory to save the audit report", "./accessibility-reports/audit").action(function(opts) {
     return _async_to_generator(function() {
-        var _urls, _opts_audit, _config_audit, _config_audit1, _opts_audit1, configPath, config, _tmp, urls, format, allResults, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, url, result, err1, err, hasResults;
+        var _urls, _opts_audit, _config_audit, _config_audit1, _opts_audit1, configPath, config, _tmp, urls, format, allResults, _iteratorNormalCompletion, _didIteratorError, _iteratorError, _iterator, _step, url, result, error, err, hasResults;
         function createReport(format2) {
             return _async_to_generator(function() {
                 var _config_audit, formatted, out, d, pad, timestamp, fileName, filePath;
@@ -752,8 +760,10 @@ program.command("audit").description("Run axe-core powered accessibility audit o
                         12
                     ];
                 case 11:
-                    err1 = _state.sent();
-                    console.log(import_chalk.default.red("❌ Failed auditing ".concat(url, ": ").concat(err1.message)));
+                    error = _state.sent();
+                    if (_instanceof(error, Error) && error.message) {
+                        console.log(import_chalk.default.red("❌ Failed auditing ".concat(url, ": ").concat(error.message)));
+                    }
                     return [
                         3,
                         12

@@ -137,8 +137,8 @@ function runAudit(url) {
                     _state.trys.push([
                         0,
                         6,
-                        ,
-                        7
+                        7,
+                        10
                     ]);
                     return [
                         4,
@@ -183,18 +183,22 @@ function runAudit(url) {
                     ];
                 case 6:
                     error = _state.sent();
-                    if (_instanceof(error, Error) && error.message.includes("Executable doesn't exist")) {
-                        console.error("\n\u274C Playwright browsers not found!\n");
-                        console.log("\uD83D\uDCE6 First-time setup required:");
-                        console.log("   Run: npx playwright install chromium\n");
-                        console.log("\uD83D\uDCA1 This downloads the browser needed for auditing (~200MB)");
-                        console.log("   You only need to do this once.\n");
+                    if (_instanceof(error, Error)) {
+                        if (error.message.includes("Executable doesn't exist")) {
+                            console.error("\n\u274C Playwright browsers not found!\n");
+                            console.log("\uD83D\uDCE6 First-time setup required:");
+                            console.log("   Run: npx playwright install chromium\n");
+                            console.log("\uD83D\uDCA1 This downloads the browser needed for auditing (~200MB)");
+                            console.log("   You only need to do this once.\n");
+                        } else if (error.message.includes("page.goto: net::ERR_CONNECTION_REFUSED")) {
+                            console.error("\n\u274C Server Not Running!\n");
+                            console.log("   Make sure your server is running before auditing URL");
+                            console.log("   Run: npm run dev # or your start command");
+                        }
                         process.exit(1);
                     }
-                    return [
-                        3,
-                        7
-                    ];
+                    console.error("Error during audit:", error);
+                    throw error;
                 case 7:
                     if (!browser) return [
                         3,
@@ -208,6 +212,10 @@ function runAudit(url) {
                     _state.sent();
                     _state.label = 9;
                 case 9:
+                    return [
+                        7
+                    ];
+                case 10:
                     return [
                         2
                     ];

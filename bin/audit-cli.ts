@@ -48,13 +48,13 @@ program.command('audit')
   for (const url of urls) {
     console.log(chalk.yellow(`🔎 Auditing: ${url}`));
     try {
-      const result = await runAudit(url);
+      const result: AxeResults = await runAudit(url);
       allResults.push({ url: url, result });
       console.log(chalk.green(`✅ Completed audit for ${url}\n`));
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (err: any) {
-      console.log(chalk.red(`❌ Failed auditing ${url}: ${err.message}`));
+    } catch (error: unknown) {
+      if(error instanceof Error && error.message) {
+        console.log(chalk.red(`❌ Failed auditing ${url}: ${error.message}`));
+      }
     }
   }
 

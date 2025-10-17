@@ -1,1 +1,1 @@
-export declare function runAudit(url: string): Promise<import("axe-core").AxeResults | undefined>;
+export declare function runAudit(url: string): Promise<import("axe-core").AxeResults>;

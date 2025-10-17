@@ -42,7 +42,7 @@ export function runAudit(url) {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    _a.trys.push([0, 6, , 7]);
+                    _a.trys.push([0, 6, 7, 10]);
                     return [4 /*yield*/, chromium.launch({ headless: true })];
                 case 1:
                     browser = _a.sent();
@@ -62,22 +62,31 @@ export function runAudit(url) {
                     return [2 /*return*/, axeResults];
                 case 6:
                     error_1 = _a.sent();
-                    if (error_1 instanceof Error && error_1.message.includes("Executable doesn't exist")) {
-                        console.error('\n❌ Playwright browsers not found!\n');
-                        console.log('📦 First-time setup required:');
-                        console.log('   Run: npx playwright install chromium\n');
-                        console.log('💡 This downloads the browser needed for auditing (~200MB)');
-                        console.log('   You only need to do this once.\n');
+                    if (error_1 instanceof Error) {
+                        if (error_1.message.includes("Executable doesn't exist")) {
+                            console.error('\n❌ Playwright browsers not found!\n');
+                            console.log('📦 First-time setup required:');
+                            console.log('   Run: npx playwright install chromium\n');
+                            console.log('💡 This downloads the browser needed for auditing (~200MB)');
+                            console.log('   You only need to do this once.\n');
+                        }
+                        else if (error_1.message.includes("page.goto: net::ERR_CONNECTION_REFUSED")) {
+                            console.error('\n❌ Server Not Running!\n');
+                            console.log('   Make sure your server is running before auditing URL');
+                            console.log('   Run: npm run dev # or your start command');
+                        }
                         process.exit(1);
                     }
-                    return [3 /*break*/, 7];
+                    console.error('Error during audit:', error_1);
+                    throw error_1;
                 case 7:
                     if (!browser) return [3 /*break*/, 9];
                     return [4 /*yield*/, browser.close()];
                 case 8:
                     _a.sent();
                     _a.label = 9;
-                case 9: return [2 /*return*/];
+                case 9: return [7 /*endfinally*/];
+                case 10: return [2 /*return*/];
             }
         });
     });
