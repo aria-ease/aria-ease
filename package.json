@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "2.2.3",
+  "version": "2.3.0",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
   "main": "dist/index.cjs",
   "type": "module",
@@ -34,8 +34,8 @@
     "Focus Management",
     "WCAG Guidelines",
     "Inclusive Design",
-    "WAI-ARIA", 
-    "disability", 
+    "WAI-ARIA",
+    "disability",
     "web-accessibility"
   ],
   "author": "Isaac Akinduyile",
@@ -114,8 +114,12 @@
     "playwright": "^1.40.0"
   },
   "peerDependenciesMeta": {
-    "@axe-core/playwright": { "optional": true },
-    "playwright": { "optional": true }
+    "@axe-core/playwright": {
+      "optional": true
+    },
+    "playwright": {
+      "optional": true
+    }
   },
   "bin": {
     "aria-ease": "./bin/cli.js"
