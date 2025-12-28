@@ -1,22 +1,22 @@
-import { NodeListOfHTMLElement, HTMLElement } from "../../../Types";
+import { NodeListOfHTMLElement } from "../../../Types";
 
 
 function isTextInput(el: HTMLElement): boolean {
-    if (el.tagName !== 'INPUT') return false;
+    if (el.tagName !== "INPUT") return false;
     const type = (el as HTMLInputElement).type;
-    return ['text', 'email', 'password', 'tel', 'number'].includes(type);
+    return ["text", "email", "password", "tel", "number"].includes(type);
 }
 
 function isTextArea(el: HTMLElement): boolean {
-    return el.tagName === 'TEXTAREA';
+    return el.tagName === "TEXTAREA";
 }
 
 export function isNativeButton(el: HTMLElement): boolean {
-    return el.tagName === 'BUTTON' || (el.tagName === 'INPUT' && ['button', 'submit', 'reset'].includes((el as HTMLInputElement).type));
+    return el.tagName === "BUTTON" || (el.tagName === "INPUT" && ["button", "submit", "reset"].includes((el as HTMLInputElement).type));
 }
 
 export function isLink(el: HTMLElement): boolean {
-    return el.tagName === 'A';
+    return el.tagName === "A";
 }
 
 function moveFocus(elementItems: NodeListOfHTMLElement, currentIndex: number, direction: -1 | 1) {
@@ -26,29 +26,54 @@ function moveFocus(elementItems: NodeListOfHTMLElement, currentIndex: number, di
 }
 
 function isClickableButNotSemantic(el: HTMLElement): boolean {
-    return el.getAttribute("data-custom-click") !== null || el.getAttribute("data-custom-click") !== undefined;
+    return el.getAttribute("data-custom-click") !== null && el.getAttribute("data-custom-click") !== undefined;
 }
 
 function handleMenuEscapeKeyPress(menuElement: HTMLElement, menuTriggerButton: HTMLElement) {
-    menuElement.style.display = 'none';
-    const menuTriggerButtonId = menuTriggerButton.getAttribute('id');
+    menuElement.style.display = "none";
+    const menuTriggerButtonId = menuTriggerButton.getAttribute("id");
     if (!menuTriggerButtonId) {
-        throw new Error("Menu trigger button does not have id attribute");
+        console.error("[aria-ease] Menu trigger button must have an id attribute to properly set aria attributes.");
+        return;
     }
     menuTriggerButton.setAttribute("aria-expanded", "false");
 }
+
+function hasSubmenu(menuItem: HTMLElement): boolean {
+    return menuItem.getAttribute("aria-haspopup") === "true" || menuItem.getAttribute("aria-haspopup") === "menu";
+}
+
+function getSubmenuId(menuItem: HTMLElement): string | null {
+    return menuItem.getAttribute("aria-controls");
+}
+
 
 export function handleKeyPress(
     event: KeyboardEvent,
     elementItems: NodeListOfHTMLElement,
     elementItemIndex: number,
     menuElementDiv?: HTMLElement,
-    triggerButton?: HTMLElement
+    triggerButton?: HTMLElement,
+    openSubmenu?: (submenuId: string) => void,
+    closeSubmenu?: () => void
 ): void {
     const currentEl = elementItems.item(elementItemIndex);
     switch (event.key) {
-        case 'ArrowUp':
-        case 'ArrowLeft': {
+        case "ArrowUp":
+        case "ArrowLeft": {
+            if(event.key === "ArrowLeft" && menuElementDiv && closeSubmenu) {
+                const labelledBy = menuElementDiv.getAttribute("aria-labelledby");
+                if (labelledBy) {
+                    const parentTrigger = document.getElementById(labelledBy);
+                    if (parentTrigger && parentTrigger.getAttribute("role") === "menuitem") {
+                        event.preventDefault();
+                        closeSubmenu();
+                        parentTrigger.focus();
+                        return;
+                    }
+                }
+            }
+
             if (!isTextInput(currentEl) && !isTextArea(currentEl)) {
                 event.preventDefault();
                 moveFocus(elementItems, elementItemIndex, -1);
@@ -61,8 +86,17 @@ export function handleKeyPress(
             }
             break;
         }
-        case 'ArrowDown':
-        case 'ArrowRight': {
+        case "ArrowDown":
+        case "ArrowRight": {
+            if(event.key === "ArrowRight" && hasSubmenu(currentEl) && openSubmenu) {
+                event.preventDefault();
+                const submenuId = getSubmenuId(currentEl);
+                if (submenuId) {
+                    openSubmenu(submenuId);
+                    return;
+                }
+            }
+            
             if (!isTextInput(currentEl) && !isTextArea(currentEl)) {
                 event.preventDefault();
                 moveFocus(elementItems, elementItemIndex, 1);
@@ -76,19 +110,22 @@ export function handleKeyPress(
             }
             break;
         }
-        case 'Escape': {
+        case "Escape": {
             event.preventDefault();
             if (menuElementDiv && triggerButton) {
-                if (getComputedStyle(menuElementDiv).display === 'block') {
+                if (getComputedStyle(menuElementDiv).display === "block") {
                     handleMenuEscapeKeyPress(menuElementDiv, triggerButton);
                 }
                 triggerButton.focus();
             }
             break;
         }
-        case 'Enter':
-        case ' ': {
-            if (!isNativeButton(currentEl) && !isLink(currentEl) && isClickableButNotSemantic(currentEl)) {
+        case "Enter":
+        case " ": {
+            if (!isNativeButton(currentEl) && !isLink(currentEl) && isClickableButNotSemantic(currentEl)) { 
+                event.preventDefault();
+                currentEl.click();
+            } else if (isNativeButton(currentEl)) {
                 event.preventDefault();
                 currentEl.click();
             }

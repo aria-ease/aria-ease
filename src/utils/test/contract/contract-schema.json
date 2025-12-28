@@ -1,0 +1,109 @@
+{
+    "$schema": "https://json-schema.org/draft-07/schema#",
+    "title": "Components Accessibility Contract Schema",
+    "type": "object",
+    "required": ["meta", "selectors", "static", "dynamic"],
+    "additionalProperties": false,
+
+    "properties": {
+        "meta": {
+            "type": "object",
+            "required": ["id", "version", "description", "source", "W3CName"],
+            "properties": {
+                "id": { "type": "string" },
+                "version": { "type": "string" },
+                "description": { "type": "string" },
+                "source": {
+                    "type": "object",
+                    "properties": {
+                        "apg": { "type": "string" },
+                        "wcag": { "type": "array" }
+                    }
+                },
+                "W3CName": { "type": "string" }
+            }
+        },
+
+        "selectors": { 
+            "type": "object",
+            "description": "",
+            "properties": {
+                "menu": { "type": "string" },
+                "trigger": { "type": "string" },
+                "container": { "type": "string" },
+                "items": { "type": "string" },
+                "submenuTrigger": { "type": "string" },
+                "submenu": { "type": "string" },
+                "focusable": { "type": "string" },
+                "relative": { "type": "string" }
+            } 
+        },
+
+        "observables": { 
+            "type": "object",
+            "required": ["observable", "target"],
+            "description": "",
+            "properties": {
+                "observable": { "type": "string" },
+                "target": { "type": "string" },
+                "relative": { "type": "string" }
+            }  
+        },
+
+        "static": { 
+            "type": "array",
+            "description": "",
+            "required": ["assertions"],
+            "properties": {
+                "assertions": {
+                    "type": "array",
+                    "required": ["target", "assertion", "failureMessage"],
+                    "properties": {
+                        "target": { "type": "string" },
+                        "assertion": { "type": "string" },
+                        "attribute": { "type": "string" },
+                        "expectedValue": { "type": "string" },
+                        "failureMessage": { "type": "string" }
+                    }
+                }
+            } 
+        },
+
+        "dynamic": { 
+            "type": "array",
+            "description": "",
+            "required": ["description", "prerequisite", "action", "assertions"],
+            "properties": {
+                "description": { "type": "string" },
+                "prerequisite": {
+                    "type": "array",
+                    "required": ["type", "target"],
+                    "properties": {
+                        "type": { "type": "string" },
+                        "target": { "type": "string" },
+                        "state": { "type": "string" }
+                    }
+                },
+                "action": {
+                    "type": "array",
+                    "required": ["type", "target"],
+                    "properties": {
+                        "type": { "type": "string" },
+                        "target": { "type": "string" }
+                    }
+                },
+                "assertions": {
+                    "type": "array",
+                    "required": ["target", "assertion", "failureMessage"],
+                    "properties": {
+                        "target": { "type": "string" },
+                        "assertion": { "type": "string" },
+                        "attribute": { "type": "string" },
+                        "expectedValue": { "type": "string" },
+                        "failureMessage": { "type": "string" }
+                    }
+                }
+            } 
+        }
+    }
+}

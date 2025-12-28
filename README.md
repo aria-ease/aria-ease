@@ -2,62 +2,419 @@
 
 Out of the box accessibility utility package to develop production ready applications.
 
-## Install
+[![npm version](https://img.shields.io/npm/v/aria-ease.svg)](https://www.npmjs.com/package/aria-ease)
+[![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
+[![Bundle Size](https://img.shields.io/bundlephobia/minzip/aria-ease)](https://bundlephobia.com/package/aria-ease)
+[![npm downloads](https://img.shields.io/npm/dm/aria-ease.svg)](https://www.npmjs.com/package/aria-ease)
 
-`npm i aria-ease`
+## ✨ Features
 
-`yarn add aria-ease`
+- 🎯 **Tree-shakable** - Import only what you need (1.4KB - 3.7KB per component)
+- ♿ **WCAG Compliant** - Follows WAI-ARIA best practices
+- ⌨️ **Keyboard Navigation** - Full keyboard support out of the box
+- 🧪 **Contract Testing** - Built-in accessibility testing framework
+- 🎭 **Framework Agnostic** - Works with React, Vue, vanilla JS, etc.
+- 🔍 **CLI Audit Tool** - Automated accessibility testing for your sites
+- 📦 **TypeScript Support** - Full type definitions included
 
-## Features
+## 📦 Installation
 
-Don't spend hours wrestling with accessibility code. Aria-Ease provides pre-built functions that help you integrate accessibility seamlessly into your development workflow. It simplifies the process of adding essential accessibility features (e.g. assistive capability, keyboard navigation, focus management) to common UI components like menus, accordions, checkboxes, e.t.c. This allows you to focus on building great user experiences for everyone.
+```bash
+npm i aria-ease
+# or
+yarn add aria-ease
+# or
+pnpm add aria-ease
+```
 
-The package currently has support for 6 components: accordions, blocks, checkboxes, menus, radios, toggle butttons.
+## 🚀 Quick Start
 
-Add accessibility to menu: menu can be a dropdown, combo box, slide navigation menu, e.t.c. Basically any component that toggles display and has a list of interactive children items. The function creates a focus trap within the menu and focus can be navigated using the arrow keys. The escape key also closes the menu and returns the focus back to the trigger.
+### Automated Accessibility Audits (CLI)
 
-#### Usage
+Run automated accessibility audits on your website with one command:
+
+```bash
+npx aria-ease audit --url https://yoursite.com
+```
+
+This generates comprehensive reports in JSON, CSV, and HTML formats showing all accessibility violations detected by axe-core.
+
+**Create a config file** for multiple pages and custom settings:
 
 ```javascript
-import * as Menu from "aria-ease/menu";
-
-useEffect(() => {
-  menuRef.current = Menu.makeMenuAccessible({
-    menuId: "menu-div",
-    menuElementsClass: "profile-menu-items",
-    triggerId: "display-button",
-  });
-}, []);
-
-const toggleMenuDisplay = () => {
-  const menuDiv = document.querySelector("#menu-div");
-  if (getComputedStyle(menuDiv).display === "none") {
-    menuRef.current.openMenu();
-  } else {
-    menuRef.current.closeMenu();
+// ariaease.config.js (or .mjs, .cjs, .json, .ts)
+export default {
+  audit: {
+    urls: [
+      "https://yoursite.com",
+      "https://yoursite.com/about",
+      "https://yoursite.com/contact",
+    ],
+    output: {
+      format: "html", // 'json' | 'csv' | 'html' | 'all'
+      out: "./accessibility-reports",
+    }
   }
 };
 ```
 
-[Check out more features/functionality in the docs](https://ariaease.site/docs)
+Then run:
 
-[Start contributing on GitHub](https://github.com/aria-ease/aria-ease)
+```bash
+npx aria-ease audit
+```
 
-Find a bug? Head on over to [issue page](https://github.com/aria-ease/aria-ease/issues) and open one. We're excited to receive pull requests.
+**Supported config formats:**
+- `ariaease.config.js` (ES modules)
+- `ariaease.config.mjs` (ES modules explicit)
+- `ariaease.config.cjs` (CommonJS)
+- `ariaease.config.json` (JSON)
+- `ariaease.config.ts` (TypeScript - experimental)
 
-Aria-ease is open-source software by [Isaac Victor](https://isaacvictordev.web.app/)
+The CLI will automatically find and load your config file, with validation to catch errors early.
 
-### P.S. Don't Forget About Focus Styling!
+**Perfect for CI/CD pipelines** to catch accessibility issues before production!
 
-While Aria-Ease significantly aids in making your web applications more accessible, it's essential to remember that visual cues play a crucial role in accessibility. This is especially true for keyboard navigation, where focus styling indicates which element is currently selectable or active.
+---
 
-Without clear focus styling, users who rely on keyboard navigation may find it challenging to determine which part of the page they are interacting with. Therefore, we strongly encourage you to implement distinct focus styles for interactive elements on your web pages.
+## 📚 Component API
 
-Here's a simple CSS example to enhance focus visibility:
+### 🍔 Menu (Dropdowns, Combo Boxes, Navigation)
+
+Creates accessible menus with focus trapping and keyboard navigation. Works for dropdowns, combo boxes, navigation menus - any component that toggles display with interactive items.
+
+**Features:**
+
+- Arrow key navigation
+- Escape key closes menu and restores focus
+- Focus trap within menu
+- Submenu support
+
+```javascript
+import * as Menu from "aria-ease/menu";
+
+// React Example
+useEffect(() => {
+  const menuInstance = Menu.makeMenuAccessible({
+    menuId: "dropdown-menu",
+    menuItemsClass: "menu-item",
+    triggerId: "menu-button",
+  });
+
+  return () => menuInstance.cleanup(); // Clean up on unmount
+}, []);
+
+// Vanilla JS Example
+const menu = Menu.makeMenuAccessible({
+  menuId: "dropdown-menu",
+  menuItemsClass: "menu-item",
+  triggerId: "menu-button",
+});
+
+// Programmatically control
+menu.openMenu();
+menu.closeMenu();
+
+// If you dynamically add/remove menu items, refresh the cache
+menu.refresh(); 
+```
+
+**Required HTML structure:**
+
+```html
+<button id="menu-button" aria-expanded="false" aria-controls="dropdown-menu">
+  Menu
+</button>
+<div id="dropdown-menu" style="display: none;">
+  <a href="#" class="menu-item">Item 1</a>
+  <a href="#" class="menu-item">Item 2</a>
+  <button class="menu-item">Item 3</button>
+</div>
+```
+
+---
+
+### 🪗 Accordion
+
+Updates `aria-expanded` attributes for accordion panels.
+
+```javascript
+import { updateAccordionTriggerAriaAttributes } from "aria-ease/accordion";
+
+const accordionStates = [
+  { expanded: true },
+  { expanded: false },
+  { expanded: false },
+];
+
+// Call when accordion state changes
+updateAccordionTriggerAriaAttributes(
+  "accordion-container", // Container ID
+  "accordion-trigger", // Shared class for triggers
+  accordionStates, // State array
+  0 // Index of trigger that changed
+);
+```
+
+**HTML structure:**
+
+```html
+<div id="accordion-container">
+  <button
+    class="accordion-trigger"
+    aria-expanded="false"
+    aria-controls="panel-1"
+  >
+    Section 1
+  </button>
+  <div id="panel-1">Content 1</div>
+
+  <button
+    class="accordion-trigger"
+    aria-expanded="false"
+    aria-controls="panel-2"
+  >
+    Section 2
+  </button>
+  <div id="panel-2">Content 2</div>
+</div>
+```
+
+---
+
+### ✅ Checkbox
+
+Updates `aria-checked` attributes for custom checkboxes.
+
+```javascript
+import { updateCheckboxAriaAttributes } from "aria-ease/checkbox";
+
+const checkboxStates = [
+  { checked: true },
+  { checked: false },
+  { checked: true },
+];
+
+// Call when checkbox is toggled
+function handleCheckboxClick(index) {
+  checkboxStates[index].checked = !checkboxStates[index].checked;
+
+  updateCheckboxAriaAttributes(
+    "checkbox-group",
+    "custom-checkbox",
+    checkboxStates,
+    index
+  );
+}
+```
+
+**HTML structure:**
+
+```html
+<div id="checkbox-group">
+  <div
+    class="custom-checkbox"
+    role="checkbox"
+    aria-checked="false"
+    aria-label="Option 1"
+  ></div>
+  <div
+    class="custom-checkbox"
+    role="checkbox"
+    aria-checked="false"
+    aria-label="Option 2"
+  ></div>
+</div>
+```
+
+---
+
+### 🔘 Radio Button
+
+Updates `aria-checked` attributes for custom radio buttons.
+
+```javascript
+import { updateRadioAriaAttributes } from "aria-ease/radio";
+
+const radioStates = [{ checked: true }, { checked: false }, { checked: false }];
+
+function handleRadioSelect(index) {
+  // Uncheck all, check selected
+  radioStates.forEach((state, i) => {
+    state.checked = i === index;
+  });
+
+  updateRadioAriaAttributes("radio-group", "custom-radio", radioStates);
+}
+```
+
+---
+
+### 🔀 Toggle Button
+
+Updates `aria-pressed` attributes for toggle buttons.
+
+```javascript
+import { updateToggleAriaAttribute } from "aria-ease/toggle";
+
+const toggleStates = [{ pressed: false }, { pressed: true }];
+
+function handleToggle(index) {
+  toggleStates[index].pressed = !toggleStates[index].pressed;
+
+  updateToggleAriaAttribute("toggle-container", "toggle-btn", toggleStates);
+}
+```
+
+---
+
+### 🧱 Block (Generic Focusable Groups)
+
+Makes groups of elements keyboard navigable with arrow keys. Perfect for custom controls, toolbars, or any grouped interactive elements.
+
+```javascript
+import { makeBlockAccessible } from "aria-ease/block";
+
+const blockInstance = makeBlockAccessible({
+  blockId: "toolbar",
+  blockItemsClass: "tool-button",
+});
+
+// Clean up when done
+blockInstance.cleanup();
+```
+
+---
+
+## 🧪 Testing Your Components
+
+Aria-Ease includes a built-in testing framework for automated accessibility validation:
+
+```javascript
+import { testUiComponent } from "aria-ease/test";
+
+// In your test file (Vitest, Jest, etc.)
+test("menu is accessible", async () => {
+  const { container } = render(<MyMenu />);
+
+  // Runs axe-core + contract tests
+  const result = await testUiComponent(
+    "menu",
+    container,
+    "http://localhost:3000" // Optional: full E2E with Playwright
+  );
+
+  expect(result.violations).toHaveLength(0);
+});
+```
+
+---
+
+## 📦 Bundle Size
+
+Aria-Ease is designed to be lightweight and tree-shakable:
+
+| Import                       | Size (ESM)            |
+| ---------------------------- | --------------------- |
+| `aria-ease/accordion`        | ~1.5KB                |
+| `aria-ease/checkbox`         | ~1.6KB                |
+| `aria-ease/radio`            | ~1.6KB                |
+| `aria-ease/toggle`           | ~1.4KB                |
+| `aria-ease/menu`             | ~3.7KB                |
+| `aria-ease/block`            | ~1.7KB                |
+| Full bundle (all components) | ~416KB (uncompressed) |
+
+**💡 Tip:** Always import individual components for optimal bundle size:
+
+```javascript
+// ✅ Good - only imports menu code (~3.7KB)
+import { makeMenuAccessible } from "aria-ease/menu";
+
+// ❌ Avoid - imports everything (~416KB)
+import { makeMenuAccessible } from "aria-ease";
+```
+
+---
+
+## ⚠️ Important: React StrictMode
+
+If using React StrictMode, be aware it intentionally calls effects twice in development. This can cause issues with imperative DOM manipulation. Either:
+
+1. Remove `<React.StrictMode>` in development, or
+2. Use proper cleanup functions:
+
+```javascript
+useEffect(() => {
+  const instance = makeMenuAccessible({...});
+  return () => instance.cleanup(); // Prevents double-initialization
+}, []);
+```
+
+---
+
+## 🎨 Focus Styling
+
+Aria-Ease handles ARIA attributes and keyboard navigation, but **you must provide visible focus styles**:
 
 ```css
 :focus {
-  outline: 2px solid rgba(0, 91, 211, 1); /* Blue outline for high contrast */
-  outline-offset: 1px;
+  outline: 2px solid rgba(0, 91, 211, 1);
+  outline-offset: 2px;
+}
+
+/* Or custom styles */
+.menu-item:focus {
+  background: #e3f2fd;
+  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
 }
 ```
+
+Without visible focus indicators, keyboard users cannot tell which element is active.
+
+---
+
+## 🌐 Browser Support
+
+Aria-Ease supports all modern browsers:
+
+| Browser | Minimum Version |
+|---------|----------------|
+| Chrome  | Last 2 versions |
+| Firefox | Last 2 versions |
+| Safari  | Last 2 versions |
+| Edge    | Last 2 versions |
+
+**Not supported:** Internet Explorer 11 and below
+
+**Requirements:**
+- ES6+ support
+- `querySelector` and `querySelectorAll`
+- `addEventListener` and `removeEventListener`
+- Modern event handling (`KeyboardEvent`, `FocusEvent`)
+
+For older browser support, use a polyfill service or transpile with appropriate targets.
+
+---
+
+## 📖 More Resources
+
+- [Full Documentation](https://ariaease.site/docs)
+- [GitHub Repository](https://github.com/aria-ease/aria-ease)
+- [Report Issues](https://github.com/aria-ease/aria-ease/issues)
+- [Contributing Guide](https://github.com/aria-ease/aria-ease/blob/main/CONTRIBUTION-GUIDELINES.md)
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! See our [contribution guidelines](CONTRIBUTION-GUIDELINES.md) to get started.
+
+---
+
+## 📄 License
+
+ISC License - see [LICENSE](LICENSE) file for details.
+
+---
+
+**Created by [Isaac Victor](https://isaacvictordev.web.app/)**

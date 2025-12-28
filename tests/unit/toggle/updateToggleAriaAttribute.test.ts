@@ -40,21 +40,24 @@ describe('updateToggleAriaAttribute', () => {
     expect(toggles[2].getAttribute('aria-pressed')).toBe('false');
   });
 
-  it('throws if toggle container is missing', () => {
+  it('handles missing toggle container gracefully', () => {
     const states: ToggleStates[] = [ { pressed: false } ];
-    expect(() => updateToggleAriaAttribute('missing-id', TOGGLE_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateToggleAriaAttribute('missing-id', TOGGLE_CLASS, states, 0)).not.toThrow();
   });
 
-  it('throws if toggles are missing', () => {
+  it('handles missing toggles gracefully', () => {
     container = createToggleDOM({ id: TOGGLE_ID, toggleClass: 'wrong-class', count: 2 });
     const states: ToggleStates[] = [ { pressed: false }, { pressed: false } ];
-    expect(() => updateToggleAriaAttribute(TOGGLE_ID, TOGGLE_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateToggleAriaAttribute(TOGGLE_ID, TOGGLE_CLASS, states, 0)).not.toThrow();
   });
 
-  it('throws if state/DOM length mismatch', () => {
+  it('handles state/DOM length mismatch gracefully', () => {
     container = createToggleDOM({ id: TOGGLE_ID, toggleClass: TOGGLE_CLASS, count: 2 });
     const states: ToggleStates[] = [ { pressed: false }, { pressed: false }, { pressed: false } ];
-    expect(() => updateToggleAriaAttribute(TOGGLE_ID, TOGGLE_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateToggleAriaAttribute(TOGGLE_ID, TOGGLE_CLASS, states, 0)).not.toThrow();
   });
 
   it('does not update aria-pressed if already correct', () => {

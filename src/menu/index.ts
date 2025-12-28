@@ -1,1 +1,1 @@
-export * from "./src/makeMenuAccessible/makeMenuAccessible"
+export * from "./src/makeMenuAccessible/makeMenuAccessible";

@@ -6,20 +6,27 @@
  * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle button.
 */
 export function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, currentPressedToggleIndex) {
-    var toggleDiv = document.querySelector("#".concat(toggleId));
+    const toggleDiv = document.querySelector(`#${toggleId}`);
     if (!toggleDiv) {
-        throw new Error("Invalid toggle main div id provided.");
+        console.error(`[aria-ease] Element with id="${toggleId}" not found. Make sure the toggle element exists before calling updateToggleAriaAttribute.`);
+        return;
     }
-    var toggleItems = Array.from(toggleDiv.querySelectorAll(".".concat(togglesClass)));
+    const toggleItems = Array.from(toggleDiv.querySelectorAll(`.${togglesClass}`));
     if (toggleItems.length === 0) {
-        throw new Error('Invalid toggles shared class provided.');
+        console.error(`[aria-ease] Element with class="${togglesClass}" not found. Make sure the toggle items exist before calling updateToggleAriaAttribute.`);
+        return;
     }
     if (toggleItems.length !== toggleStates.length) {
-        throw new Error("Toggle state/DOM length mismatch: found ".concat(toggleItems.length, " triggers, but got ").concat(toggleStates.length, " state objects."));
+        console.error(`[aria-ease] Toggle state/DOM length mismatch: found ${toggleItems.length} triggers, but got ${toggleStates.length} state objects.'`);
+        return;
     }
-    toggleItems.forEach(function (toggle, index) {
+    toggleItems.forEach((toggle, index) => {
         if (index === currentPressedToggleIndex) {
-            toggle.setAttribute("aria-pressed", toggleStates[index].pressed ? 'true' : 'false');
+            const pressed = toggle.getAttribute("aria-pressed");
+            const shouldBePressed = toggleStates[index].pressed ? 'true' : 'false';
+            if (pressed && pressed !== shouldBePressed) {
+                toggle.setAttribute("aria-pressed", shouldBePressed);
+            }
         }
     });
 }

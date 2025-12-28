@@ -2,26 +2,24 @@
  * Declares the module 'aria-ease' and includes type information and JSDoc comments.
  */
 
-import { AccordionStates, CheckboxStates, RadioStates, ToggleStates } from "./Types";
+import { AccordionStates, CheckboxStates, RadioStates, ToggleStates, JestAxeResult } from "./Types";
 
 declare module 'aria-ease' {
   /**
     * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first item of the menu has focus when menu appears.
     * @param {string} menuId - The id of the menu.
-    * @param {string} menuElementsClass - The class of the items that are children of the menu.
+    * @param {string} menuItemsClass - The class of the items that are children of the menu.
     * @param {string} triggerId - The id of the button that triggers the menu.
-    * @param {string} openLabel - The aria label of the menu trigger button when it is open.
-    * @param {string} closeLabel - The aria label of the menu trigger button when it is closed.
   */
-  function makeMenuAccessible(menuId: string, menuElementsClass: string, triggerId: string): void;
+  function makeMenuAccessible(menuId: string, menuItemsClass: string, triggerId: string): void;
 
   
   /**
     * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.
     * @param {string} blockId - The id of the block container.
-    * @param {string} blockElementsClass - The shared class of the elements that are children of the block
+    * @param {string} blockItemsClass - The shared class of the elements that are children of the block
   */
-  function makeBlockAccessible(blockId: string, blockElementsClass: string): void;
+  function makeBlockAccessible(blockId: string, blockItemsClass: string): void;
 
 
   /**
@@ -60,5 +58,9 @@ declare module 'aria-ease' {
   */
  function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void
 
- function runAudit(): void;
+  /**
+   * Runs static and interactions accessibility test on UI components. 
+   * @param {HTMLElement} component The UI component to be tested
+  */
+  function testUiComponent(component: HTMLElement): Promise<JestAxeResult>
 }

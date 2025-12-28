@@ -1,22 +1,24 @@
 {
     "compilerOptions": {
-      "target": "es5",
+      "target": "esnext",
       "lib": ["dom", "dom.iterable", "esnext"],
       "allowJs": true,
+      "resolveJsonModule": true,
       "skipLibCheck": true,
-      "esModuleInterop": false,
+      "esModuleInterop": true,
       "allowSyntheticDefaultImports": true,
       "strict": true,
       "forceConsistentCasingInFileNames": true,
-      "module": "es2020",
+      "module": "esnext",
       "moduleResolution": "node",
       "declaration": true,
+      "declarationMap": true,
       "baseUrl": ".",
       "paths": {
-        "aria-ease/audit": ["dist/src/utils/audit/audit.d.ts"]
+        "aria-ease/test": ["dist/src/utils/test/test.d.ts"],
       }
     },
-    "include": ["src", "tests", "benchmarks", "bin/audit-cli.ts"],
-    "exclude": ["node_modules", "tests", "benchmarks"]
+    "include": ["src", "bin/cli.ts"],
+    "exclude": ["node_modules", "tests", "benchmarks", "dist"]
   }
   

@@ -1,1 +1,1 @@
-export * from "./src/updateRadioAriaAttributes/updateRadioAriaAttributes"
+export * from "./src/updateRadioAriaAttributes/updateRadioAriaAttributes";

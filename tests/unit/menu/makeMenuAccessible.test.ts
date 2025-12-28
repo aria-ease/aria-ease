@@ -20,7 +20,7 @@ describe("makeMenuAccessible - open/close menu, focuses first interactive item o
   it("opens menu, sets aria, and focuses first item", () => {
     const menu = makeMenuAccessible({
       menuId: "menu-div",
-      menuElementsClass: "profile-menu-items",
+      menuItemsClass: "profile-menu-items",
       triggerId: "display-button"
     });
     menu.openMenu();
@@ -32,7 +32,7 @@ describe("makeMenuAccessible - open/close menu, focuses first interactive item o
   it("closes menu, sets aria, and focuses trigger", () => {
     const menu = makeMenuAccessible({
       menuId: "menu-div",
-      menuElementsClass: "profile-menu-items",
+      menuItemsClass: "profile-menu-items",
       triggerId: "display-button"
     });
     menu.openMenu();

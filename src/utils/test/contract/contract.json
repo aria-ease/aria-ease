@@ -1,0 +1,6 @@
+{
+    "menu": {
+        "path": "./contracts/MenuContract.json",
+        "component": "menu"
+    }
+}

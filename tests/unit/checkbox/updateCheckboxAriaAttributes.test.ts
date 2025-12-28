@@ -40,18 +40,20 @@ describe('updateCheckboxAriaAttributes', () => {
     expect(checkboxes[2].getAttribute('aria-checked')).toBe('false');
   });
 
-  it('throws if checkbox container is missing', () => {
+  it('handles missing checkbox container gracefully', () => {
     const states: CheckboxStates[] = [ { checked: false } ];
-    expect(() => updateCheckboxAriaAttributes('missing-id', CHECKBOX_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateCheckboxAriaAttributes('missing-id', CHECKBOX_CLASS, states, 0)).not.toThrow();
   });
 
-  it('throws if checkboxes are missing', () => {
+  it('handles missing checkboxes gracefully', () => {
     container = createCheckboxDOM({ id: CHECKBOX_ID, checkboxClass: 'wrong-class', count: 2 });
     const states: CheckboxStates[] = [
       { checked: false },
       { checked: false },
     ];
-    expect(() => updateCheckboxAriaAttributes(CHECKBOX_ID, CHECKBOX_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateCheckboxAriaAttributes(CHECKBOX_ID, CHECKBOX_CLASS, states, 0)).not.toThrow();
   });
 
   it('does not update aria-checked if already correct', () => {
