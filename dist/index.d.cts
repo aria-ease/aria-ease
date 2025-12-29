@@ -35,7 +35,9 @@ declare function updateAccordionTriggerAriaAttributes(accordionId: string, accor
  * @param {string} blockId The id of the block container.
  * @param {string} blockItemsClass The shared class of the elements that are children of the block.
 */
-declare function makeBlockAccessible(blockId: string, blockItemsClass: string): () => void;
+declare function makeBlockAccessible(blockId: string, blockItemsClass: string): {
+    cleanup: () => void;
+};
 
 /**
  * Adds screen reader accessibility to multiple checkboxes. Updates the aria attributes of the checkboxes. Checkbox elements must possess the following aria attributes; aria-checked and aria-label.

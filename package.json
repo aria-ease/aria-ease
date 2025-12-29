@@ -66,26 +66,32 @@
       "require": "./dist/index.cjs"
     },
     "./accordion": {
+      "types": "./dist/src/accordion/index.d.ts",
       "import": "./dist/src/accordion/index.js",
       "require": "./dist/src/accordion/index.cjs"
     },
     "./block": {
+      "types": "./dist/src/block/index.d.ts",
       "import": "./dist/src/block/index.js",
       "require": "./dist/src/block/index.cjs"
     },
     "./checkbox": {
+      "types": "./dist/src/checkbox/index.d.ts",
       "import": "./dist/src/checkbox/index.js",
       "require": "./dist/src/checkbox/index.cjs"
     },
     "./menu": {
+      "types": "./dist/src/menu/index.d.ts",
       "import": "./dist/src/menu/index.js",
       "require": "./dist/src/menu/index.cjs"
     },
     "./radio": {
+      "types": "./dist/src/radio/index.d.ts",
       "import": "./dist/src/radio/index.js",
       "require": "./dist/src/radio/index.cjs"
     },
     "./toggle": {
+      "types": "./dist/src/toggle/index.d.ts",
       "import": "./dist/src/toggle/index.js",
       "require": "./dist/src/toggle/index.cjs"
     },

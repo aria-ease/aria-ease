@@ -9816,14 +9816,14 @@ function makeBlockAccessible(blockId, blockItemsClass) {
   const blockDiv = document.querySelector(`#${blockId}`);
   if (!blockDiv) {
     console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);
-    return function cleanUpBlockEventListeners() {
-    };
+    return { cleanup: () => {
+    } };
   }
   const blockItems = blockDiv.querySelectorAll(`.${blockItemsClass}`);
   if (!blockItems || blockItems.length === 0) {
     console.error(`[aria-ease] Element with class="${blockItemsClass}" not found. Make sure the block items exist before calling makeBlockAccessible.`);
-    return function cleanUpBlockEventListeners() {
-    };
+    return { cleanup: () => {
+    } };
   }
   blockItems.forEach((blockItem) => {
     if (!eventListenersMap.has(blockItem)) {
@@ -9836,7 +9836,7 @@ function makeBlockAccessible(blockId, blockItemsClass) {
       eventListenersMap.set(blockItem, handler);
     }
   });
-  return function cleanUpBlockEventListeners() {
+  function cleanup() {
     blockItems.forEach((blockItem) => {
       const handler = eventListenersMap.get(blockItem);
       if (handler) {
@@ -9844,7 +9844,9 @@ function makeBlockAccessible(blockId, blockItemsClass) {
         eventListenersMap.delete(blockItem);
       }
     });
-  };
+  }
+  ;
+  return { cleanup };
 }
 
 // src/checkbox/src/updateCheckboxAriaAttributes/updateCheckboxAriaAttributes.ts

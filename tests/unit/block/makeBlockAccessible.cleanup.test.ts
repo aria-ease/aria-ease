@@ -13,12 +13,12 @@ describe("makeBlockAccessible - cleanup and memory management", () => {
   });
 
   it("returns a cleanup function", () => {
-    const cleanup = makeBlockAccessible("block-container", "block-items");
+    const { cleanup } = makeBlockAccessible("block-container", "block-items");
     expect(typeof cleanup).toBe("function");
   });
 
   it("removes event listeners on cleanup", () => {
-    const cleanup = makeBlockAccessible("block-container", "block-items");
+    const { cleanup } = makeBlockAccessible("block-container", "block-items");
     const items = document.querySelectorAll(".block-items");
     const firstItem = items[0] as HTMLElement;
 
@@ -32,11 +32,11 @@ describe("makeBlockAccessible - cleanup and memory management", () => {
   });
 
   it("allows re-initialization after cleanup", () => {
-    const cleanup1 = makeBlockAccessible("block-container", "block-items");
+    const { cleanup: cleanup1 } = makeBlockAccessible("block-container", "block-items");
     cleanup1();
 
     // Should be able to reinitialize without errors
-    const cleanup2 = makeBlockAccessible("block-container", "block-items");
+    const { cleanup: cleanup2 } = makeBlockAccessible("block-container", "block-items");
     expect(typeof cleanup2).toBe("function");
     cleanup2();
   });
@@ -49,7 +49,7 @@ describe("makeBlockAccessible - cleanup and memory management", () => {
 
   it("handles dynamic item addition with re-initialization", () => {
     const container = document.getElementById("block-container")!;
-    let cleanup = makeBlockAccessible("block-container", "block-items");
+    let { cleanup } = makeBlockAccessible("block-container", "block-items");
     
     let items = container.querySelectorAll(".block-items");
     expect(items.length).toBe(3);
@@ -64,7 +64,7 @@ describe("makeBlockAccessible - cleanup and memory management", () => {
     container.appendChild(newItem);
     
     // Re-initialize
-    cleanup = makeBlockAccessible("block-container", "block-items");
+    ({ cleanup } = makeBlockAccessible("block-container", "block-items"));
     items = container.querySelectorAll(".block-items");
     expect(items.length).toBe(4);
     
@@ -72,7 +72,7 @@ describe("makeBlockAccessible - cleanup and memory management", () => {
   });
 
   it("handles cleanup when called multiple times", () => {
-    const cleanup = makeBlockAccessible("block-container", "block-items");
+    const { cleanup } = makeBlockAccessible("block-container", "block-items");
     
     // Multiple cleanup calls shouldn't cause errors
     expect(() => {

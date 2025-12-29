@@ -13,13 +13,13 @@ export function makeBlockAccessible(blockId: string, blockItemsClass: string) {
   const blockDiv: HTMLElement = document.querySelector(`#${blockId}`) as HTMLElement
   if(!blockDiv) {
     console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);
-    return function cleanUpBlockEventListeners(): void {};
+    return { cleanup: () => {} };
   }
 
   const blockItems: NodeListOfHTMLElement = blockDiv.querySelectorAll(`.${blockItemsClass}`);
   if(!blockItems || blockItems.length === 0) {
     console.error(`[aria-ease] Element with class="${blockItemsClass}" not found. Make sure the block items exist before calling makeBlockAccessible.`);
-    return function cleanUpBlockEventListeners(): void {};
+    return { cleanup: () => {} };
   }
 
   blockItems.forEach((blockItem: HTMLElement): void => {
@@ -34,7 +34,7 @@ export function makeBlockAccessible(blockId: string, blockItemsClass: string) {
     }
   });
 
-  return function cleanUpBlockEventListeners(): void {
+  function cleanup(): void {
     blockItems.forEach((blockItem: HTMLElement): void => {
       const handler = eventListenersMap.get(blockItem);
       if (handler) {
@@ -43,4 +43,6 @@ export function makeBlockAccessible(blockId: string, blockItemsClass: string) {
       }
     });
   };
+
+  return { cleanup }
 }

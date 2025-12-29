@@ -3,6 +3,8 @@
  * @param {string} blockId The id of the block container.
  * @param {string} blockItemsClass The shared class of the elements that are children of the block.
 */
-declare function makeBlockAccessible(blockId: string, blockItemsClass: string): () => void;
+declare function makeBlockAccessible(blockId: string, blockItemsClass: string): {
+    cleanup: () => void;
+};
 
 export { makeBlockAccessible };

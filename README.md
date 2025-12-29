@@ -53,8 +53,8 @@ export default {
     output: {
       format: "html", // 'json' | 'csv' | 'html' | 'all'
       out: "./accessibility-reports",
-    }
-  }
+    },
+  },
 };
 ```
 
@@ -65,6 +65,7 @@ npx aria-ease audit
 ```
 
 **Supported config formats:**
+
 - `ariaease.config.js` (ES modules)
 - `ariaease.config.mjs` (ES modules explicit)
 - `ariaease.config.cjs` (CommonJS)
@@ -79,9 +80,9 @@ The CLI will automatically find and load your config file, with validation to ca
 
 ## 📚 Component API
 
-### 🍔 Menu (Dropdowns, Combo Boxes, Navigation)
+### 🍔 Menu (Dropdowns)
 
-Creates accessible menus with focus trapping and keyboard navigation. Works for dropdowns, combo boxes, navigation menus - any component that toggles display with interactive items.
+Creates accessible menus with focus trapping and keyboard navigation. Works for dropdowns that toggles display with interactive items.
 
 **Features:**
 
@@ -95,14 +96,19 @@ import * as Menu from "aria-ease/menu";
 
 // React Example
 useEffect(() => {
-  const menuInstance = Menu.makeMenuAccessible({
-    menuId: "dropdown-menu",
-    menuItemsClass: "menu-item",
-    triggerId: "menu-button",
+  menuRef.current = Menu.makeMenuAccessible({
+    menuId: "menu-div",
+    menuItemsClass: "profile-menu-items",
+    triggerId: "display-button",
   });
 
-  return () => menuInstance.cleanup(); // Clean up on unmount
+  return () => menuRef.current.cleanup(); // Clean up on unmount
 }, []);
+
+// Programmatically control
+menuRef.current.openMenu(); // Open the menu
+menuRef.current.closeMenu(); // Close the menu
+menuRef.current.refresh(); // Refresh the cache after dynamically adding/removing a menu item
 
 // Vanilla JS Example
 const menu = Menu.makeMenuAccessible({
@@ -116,21 +122,35 @@ menu.openMenu();
 menu.closeMenu();
 
 // If you dynamically add/remove menu items, refresh the cache
-menu.refresh(); 
+menu.refresh();
 ```
 
 **Required HTML structure:**
 
 ```html
-<button id="menu-button" aria-expanded="false" aria-controls="dropdown-menu">
+<button
+  id="menu-button"
+  aria-expanded="false"
+  aria-controls="dropdown-menu"
+  aria-haspopup="true"
+>
   Menu
 </button>
-<div id="dropdown-menu" style="display: none;">
-  <a href="#" class="menu-item">Item 1</a>
-  <a href="#" class="menu-item">Item 2</a>
-  <button class="menu-item">Item 3</button>
+<div
+  id="dropdown-menu"
+  style="display: none;"
+  aria-labelledby="menu-button"
+  role="menu"
+>
+  <a role="menuitem" href="#" class="menu-item">Item 1</a>
+  <a role="menuitem" href="#" class="menu-item">Item 2</a>
+  <button role="menuitem" class="menu-item">Item 3</button>
 </div>
 ```
+
+## 🎮 Live Demo
+
+- [Menu Component](https://codesandbox.io/p/sandbox/szsclq) - Dropdown with keyboard navigation
 
 ---
 
@@ -281,7 +301,7 @@ const blockInstance = makeBlockAccessible({
 });
 
 // Clean up when done
-blockInstance.cleanup();
+blockInstance.current.cleanup();
 ```
 
 ---
@@ -329,6 +349,8 @@ Aria-Ease is designed to be lightweight and tree-shakable:
 ```javascript
 // ✅ Good - only imports menu code (~3.7KB)
 import { makeMenuAccessible } from "aria-ease/menu";
+//or
+import * as Block from "aria-ease/block";
 
 // ❌ Avoid - imports everything (~416KB)
 import { makeMenuAccessible } from "aria-ease";
@@ -345,8 +367,8 @@ If using React StrictMode, be aware it intentionally calls effects twice in deve
 
 ```javascript
 useEffect(() => {
-  const instance = makeMenuAccessible({...});
-  return () => instance.cleanup(); // Prevents double-initialization
+  menuRef.current = Menu.makeMenuAccessible({...});
+  return () => menuRef.current.cleanup(); // Prevents double-initialization
 }, []);
 ```
 
@@ -378,7 +400,7 @@ Without visible focus indicators, keyboard users cannot tell which element is ac
 Aria-Ease supports all modern browsers:
 
 | Browser | Minimum Version |
-|---------|----------------|
+| ------- | --------------- |
 | Chrome  | Last 2 versions |
 | Firefox | Last 2 versions |
 | Safari  | Last 2 versions |
@@ -387,6 +409,7 @@ Aria-Ease supports all modern browsers:
 **Not supported:** Internet Explorer 11 and below
 
 **Requirements:**
+
 - ES6+ support
 - `querySelector` and `querySelectorAll`
 - `addEventListener` and `removeEventListener`
@@ -417,4 +440,4 @@ ISC License - see [LICENSE](LICENSE) file for details.
 
 ---
 
-**Created by [Isaac Victor](https://isaacvictordev.web.app/)**
+**Created by [Isaac Victor](https://github.com/Scriptkidd98)**
