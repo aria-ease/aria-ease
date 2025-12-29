@@ -1,4 +1,4 @@
-import { A as AccordionStates } from '../../Types.d-p85gN5m_.cjs';
+import { A as AccordionStates } from '../Types.d-BbztRe-S.cjs';
 
 /**
  * Adds screen reader accessibility to accordions. Updates the aria attributes of the accordion trigger button. Trigger button element must possess the following aria attributes; aria-expanded, aria-controls, aria-label (for only non-text triggers).

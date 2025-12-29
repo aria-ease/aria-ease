@@ -6,18 +6,32 @@
  * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox.
 */
 export function updateCheckboxAriaAttributes(checkboxId, checkboxesClass, checkboxStates, currentPressedCheckboxIndex) {
-    var checkboxDiv = document.querySelector("#".concat(checkboxId));
+    const checkboxDiv = document.querySelector(`#${checkboxId}`);
     if (!checkboxDiv) {
-        throw new Error("Invalid checkbox main div id provided.");
+        console.error(`[aria-ease] Invalid checkbox main div id provided. No checkbox div with id '${checkboxDiv} found.'`);
+        return;
     }
-    var checkboxItems = Array.from(document.querySelectorAll(".".concat(checkboxesClass)));
+    const checkboxItems = Array.from(document.querySelectorAll(`.${checkboxesClass}`));
     if (checkboxItems.length === 0) {
-        throw new Error('Invalid checkboxes shared class provided.');
+        console.error(`[aria-ease] Element with class="${checkboxesClass}" not found. Make sure the checkbox items exist before calling updateCheckboxAriaAttributes.`);
+        return;
     }
     ;
-    checkboxItems.forEach(function (checkbox, index) {
+    if (checkboxStates.length === 0) {
+        console.error(`[aria-ease] Checkbox states array is empty. Make sure the checkboxStates array is populated before calling updateCheckboxAriaAttributes.`);
+        return;
+    }
+    if (currentPressedCheckboxIndex < 0 || currentPressedCheckboxIndex >= checkboxStates.length) {
+        console.error(`[aria-ease] Checkbox index ${currentPressedCheckboxIndex} is out of bounds for states array of length ${checkboxStates.length}.`);
+        return;
+    }
+    checkboxItems.forEach((checkbox, index) => {
         if (index === currentPressedCheckboxIndex) {
-            checkbox.setAttribute("aria-checked", checkboxStates[index].checked ? 'true' : 'false');
+            const checked = checkbox.getAttribute("aria-checked");
+            const shouldBeChecked = checkboxStates[index].checked ? 'true' : 'false';
+            if (checked && checked !== shouldBeChecked) {
+                checkbox.setAttribute("aria-checked", shouldBeChecked);
+            }
         }
     });
 }

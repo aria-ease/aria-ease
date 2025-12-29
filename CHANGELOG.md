@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/aria-ease/aria-ease/compare/v2.3.0...v2.4.0) (2025-12-29)
+
+
+### Bug Fixes
+
+* updated makeBlockAccessible API ([8a6a25c](https://github.com/aria-ease/aria-ease/commit/8a6a25c01f7eb0b0665147603b00e9478be35706))
+
+## [2.3.0](https://github.com/aria-ease/aria-ease/compare/v2.2.3...v2.3.0) (2025-12-28)
+
+
+### Features
+
+* add contract testing suite and test utilities ([85b74e6](https://github.com/aria-ease/aria-ease/commit/85b74e636a5f7914d4403e753cb7332024fe98eb))
+
+### [2.2.3](https://github.com/aria-ease/aria-ease/compare/v2.2.2...v2.2.3) (2025-10-17)
+
+
+### Bug Fixes
+
+* fixed terminal not returning to new prompt after audit. fixed error handling for no violation found ([a59c48c](https://github.com/aria-ease/aria-ease/commit/a59c48cd8d0be1e39c49a09e62e644eb51aa991b))
+
 ### [2.2.2](https://github.com/aria-ease/aria-ease/compare/v2.2.1...v2.2.2) (2025-10-17)
 
 

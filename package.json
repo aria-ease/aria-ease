@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "2.2.2",
+  "version": "2.4.0",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
   "main": "dist/index.cjs",
   "type": "module",
@@ -8,13 +8,18 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "tsup ./index.ts --watch",
-    "build": "tsup ./index.ts ./src/utils/audit/audit.ts ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/radio/index.ts ./src/toggle/index.ts --format esm,cjs --dts --treeshake --sourcemap --outDir dist && tsup ./bin/audit-cli.ts --format esm,cjs --dts --sourcemap --outDir bin",
     "test": "vitest run --reporter verbose -- --config ./vitest.config.mts",
     "bench": "node --loader ts-node/esm benchmarks/sample.bench.ts",
     "lint": "eslint src --ext .ts",
     "prepublishOnly": "tsc && npm run lint && npm run test && npm run build",
     "release": "standard-version",
-    "release:patch": "standard-version --release-as patch"
+    "release:patch": "standard-version --release-as patch",
+    "build:core": "tsup ./index.ts --format esm,cjs --dts --sourcemap --outDir dist",
+    "build:modules": "tsup ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/radio/index.ts ./src/toggle/index.ts --format esm,cjs --dts --treeshake --sourcemap --outDir dist/src",
+    "build:test": "tsup ./src/utils/test/index.ts --format esm,cjs --dts --treeshake --sourcemap --external jest-axe --external @testing-library/react --outDir dist/src/utils/test",
+    "build:cli": "tsup ./bin/cli.ts --format esm,cjs --dts --sourcemap --outDir bin --external commander --external chalk",
+    "build:contracts": "mkdir -p ./dist/src/utils/test && cp -r ./src/utils/test/contract/contracts ./dist/src/utils/test/",
+    "build": "npm run build:core && npm run build:modules && npm run build:test && npm run build:cli && npm run build:contracts"
   },
   "repository": {
     "type": "git",
@@ -28,7 +33,10 @@
     "Keyboard Navigation",
     "Focus Management",
     "WCAG Guidelines",
-    "Inclusive Design"
+    "Inclusive Design",
+    "WAI-ARIA",
+    "disability",
+    "web-accessibility"
   ],
   "author": "Isaac Akinduyile",
   "license": "ISC",
@@ -40,6 +48,7 @@
     "@swc/core": "^1.13.5",
     "@testing-library/dom": "^10.4.1",
     "@types/fs-extra": "^11.0.4",
+    "@types/jest-axe": "^3.5.9",
     "benchmark": "^2.1.4",
     "eslint": "^9.34.0",
     "jsdom": "^26.1.0",
@@ -47,7 +56,8 @@
     "standard-version": "^9.5.0",
     "tsup": "^8.5.0",
     "typescript": "^5.9.2",
-    "vitest": "^3.2.4"
+    "vite": "^7.2.6",
+    "vitest": "^4.0.15"
   },
   "sideEffects": false,
   "exports": {
@@ -56,33 +66,39 @@
       "require": "./dist/index.cjs"
     },
     "./accordion": {
+      "types": "./dist/src/accordion/index.d.ts",
       "import": "./dist/src/accordion/index.js",
       "require": "./dist/src/accordion/index.cjs"
     },
     "./block": {
+      "types": "./dist/src/block/index.d.ts",
       "import": "./dist/src/block/index.js",
       "require": "./dist/src/block/index.cjs"
     },
     "./checkbox": {
+      "types": "./dist/src/checkbox/index.d.ts",
       "import": "./dist/src/checkbox/index.js",
       "require": "./dist/src/checkbox/index.cjs"
     },
     "./menu": {
+      "types": "./dist/src/menu/index.d.ts",
       "import": "./dist/src/menu/index.js",
       "require": "./dist/src/menu/index.cjs"
     },
     "./radio": {
+      "types": "./dist/src/radio/index.d.ts",
       "import": "./dist/src/radio/index.js",
       "require": "./dist/src/radio/index.cjs"
     },
     "./toggle": {
+      "types": "./dist/src/toggle/index.d.ts",
       "import": "./dist/src/toggle/index.js",
       "require": "./dist/src/toggle/index.cjs"
     },
-    "./audit": {
-      "import": "./dist/src/utils/audit/audit.js",
-      "require": "./dist/src/utils/audit/audit.cjs",
-      "types": "./dist/src/utils/audit/audit.d.ts"
+    "./test": {
+      "types": "./dist/src/utils/test/index.d.ts",
+      "import": "./dist/src/utils/test/index.js",
+      "require": "./dist/src/utils/test/index.cjs"
     }
   },
   "files": [
@@ -91,22 +107,27 @@
   ],
   "dependencies": {
     "@axe-core/playwright": "^4.10.2",
+    "@testing-library/react": "^16.3.0",
     "chalk": "^5.6.2",
     "commander": "^14.0.1",
     "fs-extra": "^11.3.2",
-    "path": "^0.12.7",
+    "jest-axe": "^10.0.0",
     "playwright": "^1.55.1",
     "typescript-eslint": "^8.41.0"
   },
   "peerDependencies": {
-    "playwright": "^1.55.1"
+    "@axe-core/playwright": "^4.10.2",
+    "playwright": "^1.40.0"
   },
   "peerDependenciesMeta": {
+    "@axe-core/playwright": {
+      "optional": true
+    },
     "playwright": {
       "optional": true
     }
   },
   "bin": {
-    "aria-ease": "./bin/audit-cli.js"
+    "aria-ease": "./bin/cli.js"
   }
 }

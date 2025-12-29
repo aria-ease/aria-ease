@@ -7,3 +7,4 @@
 */
 import { CheckboxStates } from "../../../../Types";
 export declare function updateCheckboxAriaAttributes(checkboxId: string, checkboxesClass: string, checkboxStates: CheckboxStates[], currentPressedCheckboxIndex: number): void;
+//# sourceMappingURL=updateCheckboxAriaAttributes.d.ts.map

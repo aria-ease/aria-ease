@@ -1,11 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 
-type AxeResults = Awaited<ReturnType<AxeBuilder["analyze"]>>;
-
-declare global {
-  type HTMLElement = Element;
-  type NodeListOf<HTMLElement> = Iterable<HTMLElement>;
-}
+type AxeResult = Awaited<ReturnType<AxeBuilder["analyze"]>>;
 
 interface AccordionStates {
     display: boolean;
@@ -24,24 +19,110 @@ interface ToggleStates {
 }
 
 interface AriaEaseConfigAudit {
-    urls?: [],
-    rules?: object,
-    output?: object
+    urls?: [];
+    rules?: object;
+    output?: object;
+}
+
+interface AriaEaseConfigTest {
+    components: AriaEaseConfigTestComponent[];
+}
+
+interface AriaEaseConfigTestComponent {
+    name: string;
+    path: string;
 }
 
 interface AriaEaseConfig {
-    audit?: AriaEaseConfigAudit,
-    test?: unknown //change to correct type later
+    audit?: AriaEaseConfigAudit;
+    test?: AriaEaseConfigTest
 }
 
+interface JestAxeResult {
+    violations: unknown[];
+    raw: unknown;
+    contract: unknown;
+}
+
+interface Selector {
+    trigger: string;
+    menu: string;
+    items: string;
+    relative: string;
+    container: string;
+    items: string;
+    focusable: string;
+    submenuTrigger: string;
+    submenu: string;
+}
+
+interface Prerequisite {
+    type: string;
+    target: string;
+    state?: string;
+    value?: string;
+    attribute?: string;
+    relative?: string;
+}
+
+interface ComponentContract {
+    selectors: Selector;
+    static: Array<{
+        assertions: Array<{
+            target: string;
+            attribute: string;
+            expectedValue: string;
+            failureMessage: string;
+        }>;
+    }>;
+    dynamic: Array<{
+        description: string;
+        requiresBrowser?: boolean;
+        prerequisite: Array<Prerequisite>;
+        action: Array<{
+            type: string;
+            target: string;
+            key?: string;
+        }>;
+        assertions: Array<{
+            target: string;
+            assertion: string;
+            attribute?: string;
+            expectedValue?: string;
+            failureMessage?: string;
+        }>;
+    }>;
+}
+
+interface Contract {
+    [key: string]: {
+        path: string;
+        component: string;
+    }
+}
+
+interface FailureReport {
+  severity: 'critical' | 'major' | 'minor';
+  message: string;
+  expected: string;
+  actual: string;
+  recommendation?: string;
+  wcagReference?: string;
+}
 
 export {
-    HTMLElement,
-    NodeListOfHTMLElement,
     AccordionStates,
     CheckboxStates,
     RadioStates,
     ToggleStates,
     AriaEaseConfig,
-    AxeResults
+    AxeResult,
+    JestAxeResult,
+    Contract,
+    ComponentContract,
+    Selector,
+    Prerequisite,
+    FailureReport
 };
+
+export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;

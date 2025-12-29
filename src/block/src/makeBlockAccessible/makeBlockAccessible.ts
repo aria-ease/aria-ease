@@ -1,46 +1,48 @@
 /** 
  * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.
  * @param {string} blockId The id of the block container.
- * @param {string} blockElementsClass The shared class of the elements that are children of the block.
+ * @param {string} blockItemsClass The shared class of the elements that are children of the block.
 */
 
-import { HTMLElement, NodeListOfHTMLElement } from "../../../../Types"
+import { NodeListOfHTMLElement } from "../../../../Types"
 import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
 
 const eventListenersMap = new Map<HTMLElement, (event: KeyboardEvent) => void>();
 
-export function makeBlockAccessible(blockId: string, blockElementsClass: string) {
+export function makeBlockAccessible(blockId: string, blockItemsClass: string) {
   const blockDiv: HTMLElement = document.querySelector(`#${blockId}`) as HTMLElement
   if(!blockDiv) {
-    throw new Error("Invalid block main div id provided.")
+    console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);
+    return { cleanup: () => {} };
   }
 
-  const blockItems: NodeListOfHTMLElement = blockDiv.querySelectorAll(`.${blockElementsClass}`);
-  if(!blockItems) {
-    throw new Error("Invalid block items shared class provided.")
+  const blockItems: NodeListOfHTMLElement = blockDiv.querySelectorAll(`.${blockItemsClass}`);
+  if(!blockItems || blockItems.length === 0) {
+    console.error(`[aria-ease] Element with class="${blockItemsClass}" not found. Make sure the block items exist before calling makeBlockAccessible.`);
+    return { cleanup: () => {} };
   }
 
   blockItems.forEach((blockItem: HTMLElement): void => {
     if (!eventListenersMap.has(blockItem)) {
-      blockItem.addEventListener("keydown", (event: KeyboardEvent) => {
-        const items = blockDiv.querySelectorAll(`.${blockElementsClass}`) as NodeListOf<HTMLElement>;
+      const handler = (event: KeyboardEvent) => {
+        const items = blockDiv.querySelectorAll(`.${blockItemsClass}`) as NodeListOf<HTMLElement>;
         const index = Array.prototype.indexOf.call(items, blockItem);
         handleKeyPress(event, items, index);
-        const handler = (event: KeyboardEvent) => handleKeyPress(event, items, index);
-        eventListenersMap.set(blockItem, handler);
-      });
-      
+      };
+      blockItem.addEventListener("keydown", handler);
+      eventListenersMap.set(blockItem, handler);
     }
   });
 
-
-
-  return function cleanUpBlockEventListeners(): void {
-    blockItems.forEach((blockItem: HTMLElement, blockItemIndex: number): void => {
-      if (eventListenersMap.has(blockItem)) {
-        blockItem.removeEventListener("keydown", (event: KeyboardEvent) => handleKeyPress(event, blockItems, blockItemIndex));
+  function cleanup(): void {
+    blockItems.forEach((blockItem: HTMLElement): void => {
+      const handler = eventListenersMap.get(blockItem);
+      if (handler) {
+        blockItem.removeEventListener("keydown", handler);
         eventListenersMap.delete(blockItem);
       }
     });
   };
+
+  return { cleanup }
 }

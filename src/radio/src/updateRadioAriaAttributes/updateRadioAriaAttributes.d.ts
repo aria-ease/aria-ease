@@ -7,3 +7,4 @@
  */
 import { RadioStates } from "../../../../Types";
 export declare function updateRadioAriaAttributes(radioId: string, radiosClass: string, radioStates: RadioStates[], currentPressedRadioIndex: number): void;
+//# sourceMappingURL=updateRadioAriaAttributes.d.ts.map

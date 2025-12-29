@@ -1,36 +1,79 @@
 /**
   * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first interactive item of the menu has focus when menu open.
   * @param {string} menuId - The id of the menu.
-  * @param {string} menuElementsClass - The class of the items that are children of the menu.
+  * @param {string} menuItemsClass - The class of the items that are children of the menu.
   * @param {string} triggerId - The id of the button that triggers the menu.
 */
 import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
-export function makeMenuAccessible(_a) {
-    var menuId = _a.menuId, menuElementsClass = _a.menuElementsClass, triggerId = _a.triggerId;
-    var menuDiv = document.querySelector("#".concat(menuId));
-    if (!menuDiv)
-        throw new Error("Invalid menu div id provided");
-    var triggerButton = document.querySelector("#".concat(triggerId));
-    if (!triggerButton)
-        throw new Error("Invalid trigger button id provided");
-    var handlerMap = new Map();
+export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
+    const menuDiv = document.querySelector(`#${menuId}`);
+    if (!menuDiv) {
+        console.error(`[aria-ease] Element with id="${menuId}" not found. Make sure the menu element exists before calling makeMenuAccessible.`);
+        return { openMenu: () => { }, closeMenu: () => { }, cleanup: () => { } };
+    }
+    const triggerButton = document.querySelector(`#${triggerId}`);
+    if (!triggerButton) {
+        console.error(`[aria-ease] Element with id="${triggerId}" not found. Make sure the trigger button element exists before calling makeMenuAccessible.`);
+        return { openMenu: () => { }, closeMenu: () => { }, cleanup: () => { } };
+    }
+    const handlerMap = new Map();
+    const submenuInstances = new Map();
+    let cachedItems = null;
+    function getItems() {
+        if (!cachedItems) {
+            cachedItems = menuDiv.querySelectorAll(`:scope > .${menuItemsClass}`);
+        }
+        return cachedItems;
+    }
     function setAria(isOpen) {
         triggerButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
     }
+    function openSubmenu(submenuId) {
+        let submenuInstance = submenuInstances.get(submenuId);
+        if (!submenuInstance) {
+            const submenuTrigger = menuDiv.querySelector(`[aria-controls="${submenuId}"]`);
+            if (!submenuTrigger) {
+                console.error(`[aria-ease] Submenu trigger with aria-controls="${submenuId}" not found in menu "${menuId}".`);
+                return;
+            }
+            // Ensure the trigger has an ID for proper ARIA references
+            if (!submenuTrigger.id) {
+                const generatedId = `trigger-${submenuId}`;
+                submenuTrigger.id = generatedId;
+                console.warn(`[aria-ease] Submenu trigger for "${submenuId}" had no ID. Auto-generated ID: "${generatedId}".`);
+            }
+            // Verify the submenu element exists before creating instance
+            const submenuElement = document.querySelector(`#${submenuId}`);
+            if (!submenuElement) {
+                console.error(`[aria-ease] Submenu element with id="${submenuId}" not found. Cannot create submenu instance.`);
+                return;
+            }
+            submenuInstance = makeMenuAccessible({
+                menuId: submenuId,
+                menuItemsClass: menuItemsClass,
+                triggerId: submenuTrigger.id
+            });
+            submenuInstances.set(submenuId, submenuInstance);
+        }
+        submenuInstance.openMenu();
+    }
+    function closeSubmenu() {
+        closeMenu();
+    }
     function addListeners() {
-        var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
-        menuItems.forEach(function (menuItem, index) {
+        const menuItems = getItems();
+        menuItems.forEach((menuItem, index) => {
             if (!handlerMap.has(menuItem)) {
-                var handler = function (event) { return handleKeyPress(event, menuItems, index, menuDiv, triggerButton); };
+                const handler = (event) => handleKeyPress(event, menuItems, index, menuDiv, triggerButton, openSubmenu, closeSubmenu);
                 menuItem.addEventListener("keydown", handler);
                 handlerMap.set(menuItem, handler);
             }
         });
     }
     function removeListeners() {
-        var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
-        menuItems.forEach(function (menuItem) {
-            var handler = handlerMap.get(menuItem);
+        const menuItems = getItems();
+        menuItems.forEach((menuItem) => {
+            const handler = handlerMap.get(menuItem);
             if (handler) {
                 menuItem.removeEventListener("keydown", handler);
                 handlerMap.delete(menuItem);
@@ -41,7 +84,7 @@ export function makeMenuAccessible(_a) {
         menuDiv.style.display = "block";
         setAria(true);
         addListeners();
-        var menuItems = menuDiv.querySelectorAll(".".concat(menuElementsClass));
+        const menuItems = getItems();
         if (menuItems.length > 0)
             menuItems[0].focus();
     }
@@ -53,6 +96,14 @@ export function makeMenuAccessible(_a) {
     }
     function cleanup() {
         removeListeners();
+        // Close menu and reset ARIA attributes
+        menuDiv.style.display = "none";
+        setAria(false);
+        submenuInstances.forEach(instance => instance.cleanup());
+        submenuInstances.clear();
     }
-    return { openMenu: openMenu, closeMenu: closeMenu, cleanup: cleanup };
+    function refresh() {
+        cachedItems = null;
+    }
+    return { openMenu, closeMenu, cleanup, refresh };
 }

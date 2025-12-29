@@ -1,0 +1,343 @@
+{
+    "meta": {
+        "id": "aria-ease.menu",
+        "version": "1.0.0",
+        "description": "ARIA Menu interaction contract. Validates the ARIA and interaction contract for a custom menu component. This contract does not cover native HTML menu-adjacent components.",
+        "source": {
+            "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/menubar/",
+            "wcag": ["2.2 AA"]
+        },
+        "W3CName": "Menu"
+    },
+
+    "selectors": {
+        "trigger": "[data-test-id=menu-trigger]",
+        "container": "[role=menu]",
+        "items": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
+        "submenuTrigger": "[role=menuitem][aria-haspopup=true], [role=menuitemradio][aria-haspopup=true], [role=menuitemcheckbox][aria-haspopup=true]",
+        "submenu": "[role=menu][aria-labelledby]",
+        "focusable": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
+        "relative": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]"
+    },
+
+    "observables": {
+        "observable": "focus | visible | attribute | role",
+        "target": "trigger | relative | menu",
+        "relative": "first | last | next | previous"
+    },
+
+    "static": [
+        {
+            "assertions": [
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-haspopup",
+                    "expectedValue": "true | menu",
+                    "failureMessage": "Menu trigger button doesn't conform to the ARIA Menu Button pattern as specified in APG 1.2. Menu button trigger should have 'aria-popup=true' attribute. This helps assistive technology to identify the button as one that toggles a panel div display."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "true | false",
+                    "failureMessage": "Menu trigger button doesn't conform to the ARIA Menu Button pattern as specified in APG 1.2. Menu trigger button should have 'aria-popup=true' attribute. This helps assistive technology to keep track of the open or close state of the menu panel div that the button controls."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-controls",
+                    "failureMessage": "Menu trigger button doesn't conform to the ARIA Menu Button pattern as specified in APG 1.2. Menu trigger button should have 'aria-controls' attribute that points to the id of the menu panel div it controls with 'role=menu'. This helps assistive technology to identify the menu panel div that the button controls."
+                },
+                {
+                    "target": "container",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-labelledby | aria-label",
+                    "failureMessage": "Menu container doesn't conform to the ARIA Menu pattern as specified in APG 1.2. Menu container should have 'aria-labelledby' attribute that points to the id of the trigger button that controls it, or 'aria-label' that describes the purpose of the container."
+                }
+            ]
+        }
+    ],
+
+    "dynamic": [
+        {
+            "description": "Clicking the trigger opens the menu, updates ARIA state, and focuses the first interactive item in the menu.",
+            "action": [
+                { "type": "click", "target": "trigger" }
+            ],
+            "assertions": [
+                {
+                    "target": "container",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "Container should be visible after clicking the trigger."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "true",
+                    "failureMessage": "Trigger's aria-expanded attribute should be true after clicking the trigger on a closed menu."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "First interactive item in the menu should have focus after clicking the trigger on a closed menu."
+                }
+            ]
+        },
+        {
+            "description": "Clicking the trigger again closes the menu and returns focus to trigger.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "click", "target": "trigger" }
+            ],
+            "assertions": [
+                {
+                    "target": "container",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Container should not be visible after clicking the trigger twice."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Trigger's aria-expanded attribute should be false after closing menu."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveFocus",
+                    "failureMessage": "Trigger should have focus after closing the menu."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Enter key on trigger opens the menu and focuses first item.",
+            "action": [
+                { "type": "keypress", "target": "trigger", "key": "Enter" }
+            ],
+            "assertions": [
+                {
+                    "target": "container",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "Container should be visible after pressing Enter on trigger."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "true",
+                    "failureMessage": "Trigger's aria-expanded should be true after pressing Enter."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "First menu item should have focus after pressing Enter."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Space key on trigger opens the menu and focuses first item.",
+            "action": [
+                { "type": "keypress", "target": "trigger", "key": "Space" }
+            ],
+            "assertions": [
+                {
+                    "target": "container",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "Container should be visible after pressing Space on trigger."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "true",
+                    "failureMessage": "Trigger's aria-expanded should be true after pressing Space."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "First menu item should have focus after pressing Space."
+                }
+            ]
+        },
+        {
+            "description": "Arrow Down key moves focus to next menu item.",
+            "requiresBrowser": true,
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowDown" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "second",
+                    "failureMessage": "Second menu item should have focus after pressing Arrow Down."
+                }
+            ]
+        },
+        {
+            "description": "Arrow Up key moves focus to previous menu item.",
+            "requiresBrowser": true,
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowDown" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowUp" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "First menu item should have focus after Arrow Down then Arrow Up."
+                }
+            ]
+        },
+        {
+            "description": "Arrow Right key moves focus to next menu item.",
+            "requiresBrowser": true,
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowRight" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "second",
+                    "failureMessage": "Second menu item should have focus after pressing Arrow Right."
+                }
+            ]
+        },
+        {
+            "description": "Arrow Left key moves focus to previous menu item.",
+            "requiresBrowser": true,
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowRight" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowLeft" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "First menu item should have focus after Arrow Right then Arrow Left."
+                }
+            ]
+        },
+        {
+            "description": "Escape key closes the menu and returns focus to trigger.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "focusable", "key": "Escape" }
+            ],
+            "assertions": [
+                {
+                    "target": "container",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Container should close after pressing Escape."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Trigger's aria-expanded should be false after Escape."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveFocus",
+                    "failureMessage": "Trigger should have focus after pressing Escape."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Enter on trigger when menu is open closes the menu.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "trigger", "key": "Enter" }
+            ],
+            "assertions": [
+                {
+                    "target": "container",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Container should close after pressing Enter on trigger when menu is open."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Trigger's aria-expanded should be false after pressing Enter on open menu."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Space on trigger when menu is open closes the menu.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "trigger", "key": "Space" }
+            ],
+            "assertions": [
+                {
+                    "target": "container",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Container should close after pressing Space on trigger when menu is open."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Trigger's aria-expanded should be false after pressing Space on open menu."
+                }
+            ]
+        },
+        {
+            "description": "Clicking outside the menu closes it and returns focus to trigger.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "click", "target": "document" }
+            ],
+            "assertions": [
+                {
+                    "target": "container",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Container should close after clicking outside."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Trigger's aria-expanded should be false after clicking outside."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveFocus",
+                    "failureMessage": "Trigger should have focus after clicking outside."
+                }
+            ]
+        },
+        {
+            "description": "Right arrow on menuitem with submenu opens the submenu",
+            "requiresBrowser": true,
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "submenuTrigger", "key": "ArrowRight" }
+            ],
+            "assertions": [
+                {
+                    "target": "submenu",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "Submenu should open when Right arrow pressed on item with submenu"
+                }
+            ]
+        }
+    ]
+}

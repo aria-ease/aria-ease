@@ -40,15 +40,17 @@ describe('updateRadioAriaAttributes', () => {
     expect(radios[2].getAttribute('aria-checked')).toBe('false');
   });
 
-  it('throws if radio container is missing', () => {
+  it('handles missing radio container gracefully', () => {
     const states: RadioStates[] = [ { checked: false } ];
-    expect(() => updateRadioAriaAttributes('missing-id', RADIO_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateRadioAriaAttributes('missing-id', RADIO_CLASS, states, 0)).not.toThrow();
   });
 
-  it('throws if radios are missing', () => {
+  it('handles missing radios gracefully', () => {
     container = createRadioDOM({ id: RADIO_ID, radioClass: 'wrong-class', count: 2 });
     const states: RadioStates[] = [ { checked: false }, { checked: false } ];
-    expect(() => updateRadioAriaAttributes(RADIO_ID, RADIO_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateRadioAriaAttributes(RADIO_ID, RADIO_CLASS, states, 0)).not.toThrow();
   });
 
   it('does not update aria-checked if already correct', () => {

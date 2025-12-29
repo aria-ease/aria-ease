@@ -6,21 +6,24 @@
  * @param {number} clickedTriggerIndex Index of the currently clicked accordion trigger within the accordion div container.
 */
 export function updateAccordionTriggerAriaAttributes(accordionId, accordionTriggersClass, accordionStates, clickedTriggerIndex) {
-    var accordionDiv = document.querySelector("#".concat(accordionId));
+    const accordionDiv = document.querySelector(`#${accordionId}`);
     if (!accordionDiv) {
-        throw new Error("Invalid accordion main div id provided.");
+        console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion element exists before calling updateAccordionTriggerAriaAttributes.`);
+        return;
     }
-    var accordionItems = Array.from(accordionDiv.querySelectorAll(".".concat(accordionTriggersClass)));
+    const accordionItems = Array.from(accordionDiv.querySelectorAll(`.${accordionTriggersClass}`));
     if (accordionItems.length === 0) {
-        throw new Error("Invalid accordion items shared class provided.");
+        console.error(`[aria-ease] Element with class="${accordionTriggersClass}" not found. Make sure the accordion items exist before calling updateAccordionTriggerAriaAttributes.`);
+        return;
     }
     if (accordionItems.length !== accordionStates.length) {
-        throw new Error("Accordion state/DOM length mismatch: found ".concat(accordionItems.length, " triggers, but got ").concat(accordionStates.length, " state objects."));
+        console.error(`[aria-ease] Accordion state/DOM length mismatch: found ${accordionItems.length} triggers, but got ${accordionStates.length} state objects.'`);
+        return;
     }
-    accordionItems.forEach(function (accordionItem, index) {
-        var state = accordionStates[index];
-        var expanded = accordionItem.getAttribute("aria-expanded");
-        var shouldBeExpanded = index === clickedTriggerIndex ? (state.display ? "true" : "false") : "false";
+    accordionItems.forEach((accordionItem, index) => {
+        const state = accordionStates[index];
+        const expanded = accordionItem.getAttribute("aria-expanded");
+        const shouldBeExpanded = index === clickedTriggerIndex ? (state.display ? "true" : "false") : "false";
         if (expanded && expanded !== shouldBeExpanded) {
             accordionItem.setAttribute("aria-expanded", shouldBeExpanded);
         }

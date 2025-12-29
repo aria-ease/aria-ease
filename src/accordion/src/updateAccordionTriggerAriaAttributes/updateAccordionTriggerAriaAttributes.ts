@@ -6,21 +6,24 @@
  * @param {number} clickedTriggerIndex Index of the currently clicked accordion trigger within the accordion div container.
 */
 
-import { HTMLElement, AccordionStates } from "../../../../Types";
+import { AccordionStates } from "../../../../Types";
 
 export function updateAccordionTriggerAriaAttributes(accordionId: string, accordionTriggersClass: string, accordionStates: AccordionStates[], clickedTriggerIndex: number): void {
     const accordionDiv: HTMLElement | null = document.querySelector(`#${accordionId}`);
     if (!accordionDiv) {
-        throw new Error("Invalid accordion main div id provided.");
+        console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion element exists before calling updateAccordionTriggerAriaAttributes.`);  
+        return;
     }
 
     const accordionItems: HTMLElement[] = Array.from(accordionDiv.querySelectorAll(`.${accordionTriggersClass}`));
     if (accordionItems.length === 0) {
-        throw new Error("Invalid accordion items shared class provided.");
+        console.error(`[aria-ease] Element with class="${accordionTriggersClass}" not found. Make sure the accordion items exist before calling updateAccordionTriggerAriaAttributes.`);
+        return;
     }
 
     if (accordionItems.length !== accordionStates.length) {
-        throw new Error(`Accordion state/DOM length mismatch: found ${accordionItems.length} triggers, but got ${accordionStates.length} state objects.`);
+        console.error(`[aria-ease] Accordion state/DOM length mismatch: found ${accordionItems.length} triggers, but got ${accordionStates.length} state objects.'`);
+        return;
     }
 
     accordionItems.forEach((accordionItem: HTMLElement, index: number) => {

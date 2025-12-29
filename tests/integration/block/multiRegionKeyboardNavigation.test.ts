@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, expect, afterEach } from "vitest";
 import { makeBlockAccessible } from "../../../src/block/src/makeBlockAccessible/makeBlockAccessible";
-import { HTMLElement, NodeListOfHTMLElement } from "../../../Types";
+import { NodeListOfHTMLElement } from "../../../Types";
 import { handleKeyPress } from "../../../src/utils/handleKeyPress/handleKeyPress";
 
 
@@ -27,7 +27,7 @@ describe("makeBlockAccessible - multi region keyboard navigation", () => {
         </footer>
       </div>
     `;
-    cleanup = makeBlockAccessible("body", "shared-class");
+    ({ cleanup } = makeBlockAccessible("body", "shared-class"));
   });
 
   it("navigates through all shared-class elements in all regions with ArrowDown", () => {

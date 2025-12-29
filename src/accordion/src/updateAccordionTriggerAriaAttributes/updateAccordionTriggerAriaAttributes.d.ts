@@ -7,3 +7,4 @@
 */
 import { AccordionStates } from "../../../../Types";
 export declare function updateAccordionTriggerAriaAttributes(accordionId: string, accordionTriggersClass: string, accordionStates: AccordionStates[], clickedTriggerIndex: number): void;
+//# sourceMappingURL=updateAccordionTriggerAriaAttributes.d.ts.map

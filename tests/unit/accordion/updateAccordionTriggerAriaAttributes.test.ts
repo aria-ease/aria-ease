@@ -40,30 +40,33 @@ describe('updateAccordionTriggerAriaAttributes', () => {
     expect(triggers[2].getAttribute('aria-expanded')).toBe('false');
   });
 
-  it('throws if accordion container is missing', () => {
+  it('handles missing accordion container gracefully', () => {
     const states: AccordionStates[] = [
       { display: false },
     ];
-    expect(() => updateAccordionTriggerAriaAttributes('missing-id', TRIGGER_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateAccordionTriggerAriaAttributes('missing-id', TRIGGER_CLASS, states, 0)).not.toThrow();
   });
 
-  it('throws if triggers are missing', () => {
+  it('handles missing triggers gracefully', () => {
     container = createAccordionDOM({ id: ACCORDION_ID, triggerClass: 'wrong-class', count: 2 });
     const states: AccordionStates[] = [
       { display: false },
       { display: false },
     ];
-    expect(() => updateAccordionTriggerAriaAttributes(ACCORDION_ID, TRIGGER_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateAccordionTriggerAriaAttributes(ACCORDION_ID, TRIGGER_CLASS, states, 0)).not.toThrow();
   });
 
-  it('throws if state/DOM length mismatch', () => {
+  it('handles state/DOM length mismatch gracefully', () => {
     container = createAccordionDOM({ id: ACCORDION_ID, triggerClass: TRIGGER_CLASS, count: 2 });
     const states: AccordionStates[] = [
       { display: false },
       { display: false },
       { display: false },
     ];
-    expect(() => updateAccordionTriggerAriaAttributes(ACCORDION_ID, TRIGGER_CLASS, states, 0)).toThrow();
+    // Should not throw, just log error
+    expect(() => updateAccordionTriggerAriaAttributes(ACCORDION_ID, TRIGGER_CLASS, states, 0)).not.toThrow();
   });
 
   it('does not update attributes if already correct', () => {

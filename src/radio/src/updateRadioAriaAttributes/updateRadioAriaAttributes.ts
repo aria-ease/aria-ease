@@ -6,25 +6,37 @@
  * @param {number} currentPressedRadioIndex Index of the currently checked or unchecked radio button.
  */
 
-import { HTMLElement, RadioStates } from "../../../../Types";
+import { RadioStates } from "../../../../Types";
 
 export function updateRadioAriaAttributes(radioId: string, radiosClass: string, radioStates: RadioStates[], currentPressedRadioIndex: number): void {
     const radioDiv: HTMLElement | null = document.querySelector(`#${radioId}`);
     if (!radioDiv) {
-        throw new Error("Invalid radio main div id provided.");
+      console.error(`[aria-ease] Element with id="${radioId}" not found. Make sure the radio element exists before calling updateRadioAriaAttributes.`);
+      return;
     }
     
     const radioItems: HTMLElement[] = Array.from(radioDiv.querySelectorAll(`.${radiosClass}`));
     if(radioItems.length === 0) {
-      throw new Error('Invalid radios shared class provided.');
+      console.error(`[aria-ease] Element with class="${radiosClass}" not found. Make sure the radio items exist before calling updateRadioAriaAttributes.`);
+      return;
+    }
+
+    if (radioStates.length === 0) {
+      console.error(`[aria-ease] Radio states array is empty. Make sure the radioStates array is populated before calling updateRadioAriaAttributes.`);
+      return;
+    }
+
+    if (currentPressedRadioIndex < 0 || currentPressedRadioIndex >= radioStates.length) {
+      console.error(`[aria-ease] Radio index ${currentPressedRadioIndex} is out of bounds for states array of length ${radioStates.length}.`);
+      return;
     }
 
     radioItems.forEach((radioItem: HTMLElement, index: number) => {
-        const state = radioStates[index];
-        const checked = radioItem.getAttribute("aria-checked");
-        const shouldBeChecked = index === currentPressedRadioIndex ? (state.checked ? "true" : "false") : "false";
-        if (checked && checked !== shouldBeChecked) {
-            radioItem.setAttribute("aria-checked", shouldBeChecked);
-        }
+      const state = radioStates[index];
+      const checked = radioItem.getAttribute("aria-checked");
+      const shouldBeChecked = index === currentPressedRadioIndex ? (state.checked ? "true" : "false") : "false";
+      if (checked && checked !== shouldBeChecked) {
+        radioItem.setAttribute("aria-checked", shouldBeChecked);
+      }
     });
 }

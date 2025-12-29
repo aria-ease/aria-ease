@@ -7,3 +7,4 @@
 */
 import { ToggleStates } from "../../../../Types";
 export declare function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void;
+//# sourceMappingURL=updateToggleAriaAttribute.d.ts.map
