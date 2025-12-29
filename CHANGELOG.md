@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.4.0](https://github.com/aria-ease/aria-ease/compare/v2.3.0...v2.4.0) (2025-12-29)
+
+
+### Bug Fixes
+
+* updated makeBlockAccessible API ([8a6a25c](https://github.com/aria-ease/aria-ease/commit/8a6a25c01f7eb0b0665147603b00e9478be35706))
+
 ## [2.3.0](https://github.com/aria-ease/aria-ease/compare/v2.2.3...v2.3.0) (2025-12-28)
 
 
