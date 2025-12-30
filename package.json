@@ -14,6 +14,8 @@
     "prepublishOnly": "tsc && npm run lint && npm run test && npm run build",
     "release": "standard-version",
     "release:patch": "standard-version --release-as patch",
+    "release:minor": "standard-version --release-as minor",
+    "release:major": "standard-version --release-as major",
     "build:core": "tsup ./index.ts --format esm,cjs --dts --sourcemap --outDir dist",
     "build:modules": "tsup ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/radio/index.ts ./src/toggle/index.ts --format esm,cjs --dts --treeshake --sourcemap --outDir dist/src",
     "build:test": "tsup ./src/utils/test/index.ts --format esm,cjs --dts --treeshake --sourcemap --external jest-axe --external @testing-library/react --outDir dist/src/utils/test",

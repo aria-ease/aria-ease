@@ -22,6 +22,8 @@ interface AriaEaseConfigAudit {
     urls?: [];
     rules?: object;
     output?: object;
+    timeout?: number;
+    waitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
 }
 
 interface AriaEaseConfigTest {

@@ -23,6 +23,15 @@ export default {
       out: './accessibility-reports/audit'
     },
 
+    // Optional: Page load timeout in milliseconds (default: 60000)
+    // Increase this if your pages take longer to load
+    // timeout: 90000,
+
+    // Optional: Wait strategy for page load (default: 'domcontentloaded')
+    // Options: 'load' | 'domcontentloaded' | 'networkidle'
+    // Use 'domcontentloaded' for faster audits, 'networkidle' for SPA apps
+    // waitUntil: 'domcontentloaded',
+
     // Optional: Custom axe-core rules (advanced)
     // rules: {
     //   'color-contrast': { enabled: true },
