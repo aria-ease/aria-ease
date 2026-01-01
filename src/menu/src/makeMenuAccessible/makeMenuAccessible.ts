@@ -22,16 +22,64 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuI
     return { openMenu: () => {}, closeMenu: () => {}, cleanup: () => {} };
   }
 
-
   const handlerMap = new Map<HTMLElement, (event: KeyboardEvent) => void>();
   const submenuInstances = new Map<string, ReturnType<typeof makeMenuAccessible>>();
 
   let cachedItems: NodeListOfHTMLElement | null = null;
+  let filteredItems: HTMLElement[] | null = null;
+  
   function getItems() {
     if (!cachedItems) {
-      cachedItems = menuDiv.querySelectorAll(`:scope > .${menuItemsClass}`) as NodeListOfHTMLElement;
+      cachedItems = menuDiv.querySelectorAll(`.${menuItemsClass}`) as NodeListOfHTMLElement;
     }
     return cachedItems;
+  }
+
+  function getFilteredItems(): HTMLElement[] {
+    if (!filteredItems) {
+      const allItems = getItems();
+      filteredItems = [];
+      
+      for (let i = 0; i < allItems.length; i++) {
+        const item = allItems.item(i);
+        const isNested = isItemInNestedSubmenu(item);
+        
+        if (!isNested) {
+          if (!item.hasAttribute('tabindex')) {
+            item.setAttribute('tabindex', '-1');
+          }
+          filteredItems.push(item);
+        }
+      }
+    }
+    return filteredItems;
+  }
+
+  function toNodeListLike(items: HTMLElement[]): NodeListOfHTMLElement {
+    const nodeListLike = {
+      length: items.length,
+      item: (index: number) => items[index],
+      forEach: (callback: (item: HTMLElement, index: number) => void) => {
+        items.forEach(callback);
+      },
+      [Symbol.iterator]: function* () {
+        for (const item of items) {
+          yield item;
+        }
+      }
+    };
+    return nodeListLike as NodeListOfHTMLElement;
+  }
+
+  function isItemInNestedSubmenu(item: HTMLElement): boolean {
+    let parent = item.parentElement;
+    while (parent && parent !== menuDiv) {
+      if (parent.getAttribute('role') === 'menu') {
+        return true;
+      }
+      parent = parent.parentElement;
+    }
+    return false;
   }
 
   function setAria(isOpen: boolean) {
@@ -47,14 +95,12 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuI
         return;
       }
 
-      // Ensure the trigger has an ID for proper ARIA references
       if (!submenuTrigger.id) {
         const generatedId = `trigger-${submenuId}`;
         submenuTrigger.id = generatedId;
         console.warn(`[aria-ease] Submenu trigger for "${submenuId}" had no ID. Auto-generated ID: "${generatedId}".`);
       }
 
-      // Verify the submenu element exists before creating instance
       const submenuElement = document.querySelector(`#${submenuId}`);
       if (!submenuElement) {
         console.error(`[aria-ease] Submenu element with id="${submenuId}" not found. Cannot create submenu instance.`);
@@ -77,12 +123,14 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuI
   }
 
   function addListeners() {
-    const menuItems = getItems();
-    menuItems.forEach((menuItem: HTMLElement, index: number) => {
+    const items = getFilteredItems();
+    const nodeListLike = toNodeListLike(items);
+    
+    items.forEach((menuItem: HTMLElement, index: number) => {
       if (!handlerMap.has(menuItem)) {
         const handler = (event: KeyboardEvent) => handleKeyPress(
           event, 
-          menuItems, 
+          nodeListLike, 
           index, 
           menuDiv, 
           triggerButton,
@@ -96,8 +144,8 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuI
   }
 
   function removeListeners() {
-    const menuItems = getItems();
-    menuItems.forEach((menuItem: HTMLElement) => {
+    const items = getFilteredItems();
+    items.forEach((menuItem: HTMLElement) => {
       const handler = handlerMap.get(menuItem);
       if (handler) {
         menuItem.removeEventListener("keydown", handler);
@@ -109,10 +157,12 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuI
   function openMenu() {
     menuDiv.style.display = "block";
     setAria(true);
+    const items = getFilteredItems();
     addListeners();
-  
-    const menuItems = getItems();
-    if (menuItems.length > 0) menuItems[0].focus();
+    
+    if (items.length > 0) {
+      items[0].focus();
+    }
   }
 
   function closeMenu() {
@@ -124,17 +174,15 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuI
 
   function cleanup() {
     removeListeners();
-    
-    // Close menu and reset ARIA attributes
     menuDiv.style.display = "none";
     setAria(false);
-    
     submenuInstances.forEach(instance => instance.cleanup());
     submenuInstances.clear();
   }
 
   function refresh() {
     cachedItems = null;
+    filteredItems = null;
   }
 
   return { openMenu, closeMenu, cleanup, refresh };

@@ -19,11 +19,54 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     const handlerMap = new Map();
     const submenuInstances = new Map();
     let cachedItems = null;
+    let filteredItems = null;
     function getItems() {
         if (!cachedItems) {
-            cachedItems = menuDiv.querySelectorAll(`:scope > .${menuItemsClass}`);
+            cachedItems = menuDiv.querySelectorAll(`.${menuItemsClass}`);
         }
         return cachedItems;
+    }
+    function getFilteredItems() {
+        if (!filteredItems) {
+            const allItems = getItems();
+            filteredItems = [];
+            for (let i = 0; i < allItems.length; i++) {
+                const item = allItems.item(i);
+                const isNested = isItemInNestedSubmenu(item);
+                if (!isNested) {
+                    if (!item.hasAttribute('tabindex')) {
+                        item.setAttribute('tabindex', '-1');
+                    }
+                    filteredItems.push(item);
+                }
+            }
+        }
+        return filteredItems;
+    }
+    function toNodeListLike(items) {
+        const nodeListLike = {
+            length: items.length,
+            item: (index) => items[index],
+            forEach: (callback) => {
+                items.forEach(callback);
+            },
+            [Symbol.iterator]: function* () {
+                for (const item of items) {
+                    yield item;
+                }
+            }
+        };
+        return nodeListLike;
+    }
+    function isItemInNestedSubmenu(item) {
+        let parent = item.parentElement;
+        while (parent && parent !== menuDiv) {
+            if (parent.getAttribute('role') === 'menu') {
+                return true;
+            }
+            parent = parent.parentElement;
+        }
+        return false;
     }
     function setAria(isOpen) {
         triggerButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
@@ -36,13 +79,11 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
                 console.error(`[aria-ease] Submenu trigger with aria-controls="${submenuId}" not found in menu "${menuId}".`);
                 return;
             }
-            // Ensure the trigger has an ID for proper ARIA references
             if (!submenuTrigger.id) {
                 const generatedId = `trigger-${submenuId}`;
                 submenuTrigger.id = generatedId;
                 console.warn(`[aria-ease] Submenu trigger for "${submenuId}" had no ID. Auto-generated ID: "${generatedId}".`);
             }
-            // Verify the submenu element exists before creating instance
             const submenuElement = document.querySelector(`#${submenuId}`);
             if (!submenuElement) {
                 console.error(`[aria-ease] Submenu element with id="${submenuId}" not found. Cannot create submenu instance.`);
@@ -61,18 +102,19 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
         closeMenu();
     }
     function addListeners() {
-        const menuItems = getItems();
-        menuItems.forEach((menuItem, index) => {
+        const items = getFilteredItems();
+        const nodeListLike = toNodeListLike(items);
+        items.forEach((menuItem, index) => {
             if (!handlerMap.has(menuItem)) {
-                const handler = (event) => handleKeyPress(event, menuItems, index, menuDiv, triggerButton, openSubmenu, closeSubmenu);
+                const handler = (event) => handleKeyPress(event, nodeListLike, index, menuDiv, triggerButton, openSubmenu, closeSubmenu);
                 menuItem.addEventListener("keydown", handler);
                 handlerMap.set(menuItem, handler);
             }
         });
     }
     function removeListeners() {
-        const menuItems = getItems();
-        menuItems.forEach((menuItem) => {
+        const items = getFilteredItems();
+        items.forEach((menuItem) => {
             const handler = handlerMap.get(menuItem);
             if (handler) {
                 menuItem.removeEventListener("keydown", handler);
@@ -83,10 +125,12 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     function openMenu() {
         menuDiv.style.display = "block";
         setAria(true);
+        const items = getFilteredItems();
         addListeners();
-        const menuItems = getItems();
-        if (menuItems.length > 0)
-            menuItems[0].focus();
+        // Only focus first item if items exist and on desktop
+        if (items.length > 0) {
+            items[0].focus();
+        }
     }
     function closeMenu() {
         removeListeners();
@@ -96,7 +140,6 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }
     function cleanup() {
         removeListeners();
-        // Close menu and reset ARIA attributes
         menuDiv.style.display = "none";
         setAria(false);
         submenuInstances.forEach(instance => instance.cleanup());
@@ -104,6 +147,7 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }
     function refresh() {
         cachedItems = null;
+        filteredItems = null;
     }
     return { openMenu, closeMenu, cleanup, refresh };
 }
