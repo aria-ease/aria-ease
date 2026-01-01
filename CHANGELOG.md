@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.7.0](https://github.com/aria-ease/aria-ease/compare/v2.6.0...v2.7.0) (2026-01-01)
+
+
+### Bug Fixes
+
+* fixed menu utility function not detecting nested menus ([e8e912a](https://github.com/aria-ease/aria-ease/commit/e8e912a74c869639b87e80f40c73aceec1fcd35c))
+
 ## [2.6.0](https://github.com/aria-ease/aria-ease/compare/v2.5.0...v2.6.0) (2025-12-30)
 
 ## [2.5.0](https://github.com/aria-ease/aria-ease/compare/v2.4.0...v2.5.0) (2025-12-30)
