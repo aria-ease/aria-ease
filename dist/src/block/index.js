@@ -1,4 +1,4 @@
-import { handleKeyPress } from '../chunk-MNMWQWXH.js';
+import { handleKeyPress } from '../chunk-DF4OR64G.js';
 
 // src/block/src/makeBlockAccessible/makeBlockAccessible.ts
 var eventListenersMap = /* @__PURE__ */ new Map();

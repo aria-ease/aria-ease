@@ -127,7 +127,6 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
         setAria(true);
         const items = getFilteredItems();
         addListeners();
-        // Only focus first item if items exist and on desktop
         if (items.length > 0) {
             items[0].focus();
         }

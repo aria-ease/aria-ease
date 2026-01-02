@@ -29,7 +29,7 @@ function isClickableButNotSemantic(el: HTMLElement): boolean {
     return el.getAttribute("data-custom-click") !== null && el.getAttribute("data-custom-click") !== undefined;
 }
 
-function handleMenuEscapeKeyPress(menuElement: HTMLElement, menuTriggerButton: HTMLElement) {
+function handleMenuClose(menuElement: HTMLElement, menuTriggerButton: HTMLElement) {
     menuElement.style.display = "none";
     const menuTriggerButtonId = menuTriggerButton.getAttribute("id");
     if (!menuTriggerButtonId) {
@@ -114,7 +114,7 @@ export function handleKeyPress(
             event.preventDefault();
             if (menuElementDiv && triggerButton) {
                 if (getComputedStyle(menuElementDiv).display === "block") {
-                    handleMenuEscapeKeyPress(menuElementDiv, triggerButton);
+                    handleMenuClose(menuElementDiv, triggerButton);
                 }
                 triggerButton.focus();
             }
@@ -129,6 +129,12 @@ export function handleKeyPress(
                 event.preventDefault();
                 currentEl.click();
             }
+            break;
+        }
+        case "Tab": {
+            if (menuElementDiv && triggerButton && (!event.shiftKey || event.shiftKey)) {
+                handleMenuClose(menuElementDiv, triggerButton);
+            } 
             break;
         }
         default:

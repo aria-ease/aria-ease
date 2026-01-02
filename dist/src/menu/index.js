@@ -1,4 +1,4 @@
-import { handleKeyPress } from '../chunk-MNMWQWXH.js';
+import { handleKeyPress } from '../chunk-DF4OR64G.js';
 
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
 function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {

@@ -21,7 +21,7 @@ function moveFocus(elementItems, currentIndex, direction) {
 function isClickableButNotSemantic(el) {
     return el.getAttribute("data-custom-click") !== null && el.getAttribute("data-custom-click") !== undefined;
 }
-function handleMenuEscapeKeyPress(menuElement, menuTriggerButton) {
+function handleMenuClose(menuElement, menuTriggerButton) {
     menuElement.style.display = "none";
     const menuTriggerButtonId = menuTriggerButton.getAttribute("id");
     if (!menuTriggerButtonId) {
@@ -94,7 +94,7 @@ export function handleKeyPress(event, elementItems, elementItemIndex, menuElemen
             event.preventDefault();
             if (menuElementDiv && triggerButton) {
                 if (getComputedStyle(menuElementDiv).display === "block") {
-                    handleMenuEscapeKeyPress(menuElementDiv, triggerButton);
+                    handleMenuClose(menuElementDiv, triggerButton);
                 }
                 triggerButton.focus();
             }
@@ -109,6 +109,12 @@ export function handleKeyPress(event, elementItems, elementItemIndex, menuElemen
             else if (isNativeButton(currentEl)) {
                 event.preventDefault();
                 currentEl.click();
+            }
+            break;
+        }
+        case "Tab": {
+            if (menuElementDiv && triggerButton && (!event.shiftKey || event.shiftKey)) {
+                handleMenuClose(menuElementDiv, triggerButton);
             }
             break;
         }
