@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.8.0](https://github.com/aria-ease/aria-ease/compare/v2.7.0...v2.8.0) (2026-01-02)
+
+
+### Bug Fixes
+
+* Tab/Shift+Tab not closing menu ([dc41a01](https://github.com/aria-ease/aria-ease/commit/dc41a01e35e7d25f2b746a767adb4aec2ca1a417))
+
 ## [2.7.0](https://github.com/aria-ease/aria-ease/compare/v2.6.0...v2.7.0) (2026-01-01)
 
 ### Bug Fixes
