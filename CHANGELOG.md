@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.8.1](https://github.com/aria-ease/aria-ease/compare/v2.8.0...v2.8.1) (2026-01-06)
+
+
+### Bug Fixes
+
+* added missing Tab and Shift+Tab assertions to menu contract ([dc886a1](https://github.com/aria-ease/aria-ease/commit/dc886a1c5e961a3277228100b830ed585b7c9b69))
+
 ## [2.8.0](https://github.com/aria-ease/aria-ease/compare/v2.7.0...v2.8.0) (2026-01-02)
 
 
