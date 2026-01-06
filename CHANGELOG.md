@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.8.2](https://github.com/aria-ease/aria-ease/compare/v2.8.1...v2.8.2) (2026-01-06)
+
+
+### Bug Fixes
+
+* reduced library size by excluding external dependencies ([5da6b8f](https://github.com/aria-ease/aria-ease/commit/5da6b8f14aa3db1cfcb9497e79906a7bb0a48f2a))
+
 ### [2.8.1](https://github.com/aria-ease/aria-ease/compare/v2.8.0...v2.8.1) (2026-01-06)
 
 
