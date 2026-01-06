@@ -127,5 +127,3 @@ function makeBlockAccessible(blockId, blockItemsClass) {
 }
 
 exports.makeBlockAccessible = makeBlockAccessible;
-//# sourceMappingURL=index.cjs.map
-//# sourceMappingURL=index.cjs.map

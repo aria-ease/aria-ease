@@ -29,5 +29,3 @@ function updateRadioAriaAttributes(radioId, radiosClass, radioStates, currentPre
 }
 
 export { updateRadioAriaAttributes };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

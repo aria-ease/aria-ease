@@ -1,4 +1,4 @@
-import { handleKeyPress } from '../chunk-TGBGR36Z.js';
+import { handleKeyPress } from '../chunk-TBJ6MIC7.js';
 
 // src/block/src/makeBlockAccessible/makeBlockAccessible.ts
 function makeBlockAccessible(blockId, blockItemsClass) {
@@ -49,5 +49,3 @@ function makeBlockAccessible(blockId, blockItemsClass) {
 }
 
 export { makeBlockAccessible };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

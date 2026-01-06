@@ -3,11 +3,6 @@
  * @param {string} blockId The id of the block container.
  * @param {string} blockItemsClass The shared class of the elements that are children of the block.
 */
-export declare function makeBlockAccessible(blockId: string, blockItemsClass: string): {
-    cleanup: () => void;
-    refresh?: undefined;
-} | {
-    cleanup: () => void;
-    refresh: () => void;
-};
+import { AccessibilityInstance } from "Types";
+export declare function makeBlockAccessible(blockId: string, blockItemsClass: string): AccessibilityInstance;
 //# sourceMappingURL=makeBlockAccessible.d.ts.map

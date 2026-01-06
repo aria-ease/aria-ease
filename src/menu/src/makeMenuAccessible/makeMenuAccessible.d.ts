@@ -4,19 +4,10 @@
   * @param {string} menuItemsClass - The class of the items that are children of the menu.
   * @param {string} triggerId - The id of the button that triggers the menu.
 */
+import { AccessibilityInstance } from "Types";
 export declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {
     menuId: string;
     menuItemsClass: string;
     triggerId: string;
-}): {
-    openMenu: () => void;
-    closeMenu: () => void;
-    cleanup: () => void;
-    refresh?: undefined;
-} | {
-    openMenu: () => void;
-    closeMenu: () => void;
-    cleanup: () => void;
-    refresh: () => void;
-};
+}): AccessibilityInstance;
 //# sourceMappingURL=makeMenuAccessible.d.ts.map

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { loadConfig } from "../../../bin/configLoader.js";
+import { loadConfig } from "../../../src/utils/cli/configLoader.js";
 import path from "path";
 import fs from "fs-extra";
 import os from "os";

@@ -38,7 +38,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
 
     await page.goto(url, { waitUntil: "networkidle" });
     
-    await page.waitForSelector(componentContract.selectors.trigger, { timeout: 5000 });
+    await page.waitForSelector(componentContract.selectors.trigger, { timeout: 30000 });
 
     async function resolveRelativeTarget(selector: string, relative: string) {
       const items = await page.locator(selector).all();

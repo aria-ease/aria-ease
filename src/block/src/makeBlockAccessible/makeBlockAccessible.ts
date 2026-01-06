@@ -4,11 +4,11 @@
  * @param {string} blockItemsClass The shared class of the elements that are children of the block.
 */
 
-import { NodeListOfHTMLElement } from "../../../../Types"
+import { NodeListOfHTMLElement, AccessibilityInstance } from "Types"
 import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
 
 
-export function makeBlockAccessible(blockId: string, blockItemsClass: string) {
+export function makeBlockAccessible(blockId: string, blockItemsClass: string): AccessibilityInstance {
   const blockDiv: HTMLElement = document.querySelector(`#${blockId}`) as HTMLElement
   if(!blockDiv) {
     console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);

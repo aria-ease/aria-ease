@@ -6,10 +6,10 @@
 */
 
 import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
-import { NodeListOfHTMLElement } from "Types";
+import { NodeListOfHTMLElement, AccessibilityInstance } from "Types";
 
 
-export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuId: string; menuItemsClass: string; triggerId: string;}) {
+export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuId: string; menuItemsClass: string; triggerId: string;}): AccessibilityInstance {
   const menuDiv = document.querySelector(`#${menuId}`) as HTMLElement;
   if (!menuDiv) {
     console.error(`[aria-ease] Element with id="${menuId}" not found. Make sure the menu element exists before calling makeMenuAccessible.`);

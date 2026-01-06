@@ -1,4 +1,4 @@
-import { handleKeyPress } from '../chunk-TGBGR36Z.js';
+import { handleKeyPress } from '../chunk-TBJ6MIC7.js';
 
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
 function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
@@ -169,5 +169,3 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
 }
 
 export { makeMenuAccessible };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

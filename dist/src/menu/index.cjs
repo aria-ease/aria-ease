@@ -289,5 +289,3 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
 }
 
 exports.makeMenuAccessible = makeMenuAccessible;
-//# sourceMappingURL=index.cjs.map
-//# sourceMappingURL=index.cjs.map

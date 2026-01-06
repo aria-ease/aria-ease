@@ -1,23 +1,16 @@
+import { a as AccessibilityInstance } from '../Types.d-w1KLKLcA.js';
+
 /**
   * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first interactive item of the menu has focus when menu open.
   * @param {string} menuId - The id of the menu.
   * @param {string} menuItemsClass - The class of the items that are children of the menu.
   * @param {string} triggerId - The id of the button that triggers the menu.
 */
+
 declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {
     menuId: string;
     menuItemsClass: string;
     triggerId: string;
-}): {
-    openMenu: () => void;
-    closeMenu: () => void;
-    cleanup: () => void;
-    refresh?: undefined;
-} | {
-    openMenu: () => void;
-    closeMenu: () => void;
-    cleanup: () => void;
-    refresh: () => void;
-};
+}): AccessibilityInstance;
 
 export { makeMenuAccessible };

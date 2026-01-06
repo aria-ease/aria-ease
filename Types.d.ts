@@ -115,7 +115,8 @@ interface FailureReport {
 interface AccessibilityInstance {
   cleanup: () => void;
   refresh?: () => void;
-  // ... other methods
+  openMenu?: () => void;
+  closeMenu?: () => void;
 }
 
 export {

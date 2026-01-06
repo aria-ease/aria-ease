@@ -23,7 +23,7 @@ export async function runContractTestsPlaywright(componentName, url) {
         const context = await browser.newContext();
         const page = await context.newPage();
         await page.goto(url, { waitUntil: "networkidle" });
-        await page.waitForSelector(componentContract.selectors.trigger, { timeout: 5000 });
+        await page.waitForSelector(componentContract.selectors.trigger, { timeout: 30000 });
         async function resolveRelativeTarget(selector, relative) {
             const items = await page.locator(selector).all();
             switch (relative) {
