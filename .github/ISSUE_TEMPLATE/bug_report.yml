@@ -1,0 +1,154 @@
+name: 🐛 Bug Report
+description: Report a bug or unexpected behavior in aria-ease
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the information below to help us diagnose and fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: When I call makeMenuAccessible, the menu doesn't open on click...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Install aria-ease version 2.8.0
+        2. Call makeMenuAccessible with...
+        3. Click the menu button
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen
+      placeholder: The menu should open and focus the first item
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened
+      placeholder: The menu doesn't open and I see this error in console...
+    validations:
+      required: true
+
+  - type: textarea
+    id: code
+    attributes:
+      label: Code Sample
+      description: A minimal code example that reproduces the issue
+      render: javascript
+      placeholder: |
+        import * as Menu from 'aria-ease/menu';
+        
+        const menu = Menu.makeMenuAccessible({
+          menuId: "dropdown",
+          menuItemsClass: "menu-item",
+          triggerId: "menu-btn"
+        });
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: aria-ease Version
+      description: What version of aria-ease are you using?
+      placeholder: "2.8.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which component is affected?
+      options:
+        - Menu
+        - Block
+        - Accordion
+        - Checkbox
+        - Radio
+        - Toggle
+        - CLI Audit Tool
+        - Test Utilities
+        - Other/Multiple
+    validations:
+      required: true
+
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Browser(s)
+      description: Which browser(s) can you reproduce this in?
+      multiple: true
+      options:
+        - Chrome
+        - Firefox
+        - Safari
+        - Edge
+        - Opera
+        - Mobile Safari
+        - Mobile Chrome
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: framework
+    attributes:
+      label: Framework (if any)
+      description: Are you using React, Vue, vanilla JS, etc?
+      placeholder: "React 18.2.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Please provide relevant environment details
+      value: |
+        - OS: [e.g. macOS 14, Windows 11, Ubuntu 22.04]
+        - Node version: [e.g. 20.10.0]
+        - Package manager: [npm, yarn, pnpm]
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, screenshots, or information about the problem
+      placeholder: This only happens when the menu is inside a modal...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify the following before submitting
+      options:
+        - label: I have searched existing issues to ensure this isn't a duplicate
+          required: true
+        - label: I have tested with the latest version of aria-ease
+          required: true
+        - label: I have included a code sample or repository link that reproduces the issue
+          required: false

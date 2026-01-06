@@ -5,6 +5,10 @@
 */
 declare function makeBlockAccessible(blockId: string, blockItemsClass: string): {
     cleanup: () => void;
+    refresh?: undefined;
+} | {
+    cleanup: () => void;
+    refresh: () => void;
 };
 
 export { makeBlockAccessible };

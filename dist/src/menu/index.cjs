@@ -138,7 +138,14 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }, cleanup: () => {
     } };
   }
-  const handlerMap = /* @__PURE__ */ new Map();
+  if (!/^[\w-]+$/.test(menuId)) {
+    console.error("[aria-ease] Invalid menuId: must be alphanumeric");
+    return { openMenu: () => {
+    }, closeMenu: () => {
+    }, cleanup: () => {
+    } };
+  }
+  const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
   let filteredItems = null;
@@ -257,7 +264,7 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     setAria(true);
     const items = getFilteredItems();
     addListeners();
-    if (items.length > 0) {
+    if (items && items.length > 0) {
       items[0].focus();
     }
   }

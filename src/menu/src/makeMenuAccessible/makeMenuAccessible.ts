@@ -22,8 +22,16 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuI
     return { openMenu: () => {}, closeMenu: () => {}, cleanup: () => {} };
   }
 
-  const handlerMap = new Map<HTMLElement, (event: KeyboardEvent) => void>();
-  const submenuInstances = new Map<string, ReturnType<typeof makeMenuAccessible>>();
+  if (!/^[\w-]+$/.test(menuId)) {
+    console.error("[aria-ease] Invalid menuId: must be alphanumeric");
+    return { openMenu: () => {}, closeMenu: () => {}, cleanup: () => {} }; 
+  }
+
+  /* const handlerMap = new Map<HTMLElement, (event: KeyboardEvent) => void>();
+  const submenuInstances = new Map<string, ReturnType<typeof makeMenuAccessible>>(); */
+
+  const handlerMap = new WeakMap(); // Auto garbage collection
+  const submenuInstances = new Map();
 
   let cachedItems: NodeListOfHTMLElement | null = null;
   let filteredItems: HTMLElement[] | null = null;
@@ -160,7 +168,7 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {menuI
     const items = getFilteredItems();
     addListeners();
     
-    if (items.length > 0) {
+    if (items && items.length > 0) {
       items[0].focus();
     }
   }

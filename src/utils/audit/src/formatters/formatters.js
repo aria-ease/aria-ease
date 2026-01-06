@@ -1,3 +1,9 @@
+/**
+ * Formats audit results into the specified output format.
+ * @param {Array} allResults Array of audit results containing URL and axe results.
+ * @param {string} format Output format: 'json', 'csv', or 'html'.
+ * @returns {string} Formatted results as a string.
+ */
 export function formatResults(allResults, format) {
     switch (format) {
         case 'json':
@@ -19,7 +25,11 @@ export function formatResults(allResults, format) {
             return '';
     }
 }
-function toCSV(allResults) {
+/**
+ * Converts audit results to CSV format.
+ * @param {Array} allResults Array of audit results.
+ * @returns {string} CSV formatted string.
+ */ function toCSV(allResults) {
     const rows = ['URL,Rule,Impact,Description,Target,FailureSummary'];
     allResults.forEach(({ url, result }) => {
         if (result) {

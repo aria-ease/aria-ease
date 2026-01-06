@@ -59,7 +59,9 @@
     "tsup": "^8.5.0",
     "typescript": "^5.9.2",
     "vite": "^7.2.6",
-    "vitest": "^4.0.15"
+    "vitest": "^4.0.15",
+    "@testing-library/react": "^16.3.0",
+    "jest-axe": "^10.0.0"
   },
   "sideEffects": false,
   "exports": {
@@ -105,17 +107,16 @@
   },
   "files": [
     "dist",
-    "bin"
+    "README.md",
+    "LICENSE"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@axe-core/playwright": "^4.10.2",
-    "@testing-library/react": "^16.3.0",
     "chalk": "^5.6.2",
     "commander": "^14.0.1",
-    "fs-extra": "^11.3.2",
-    "jest-axe": "^10.0.0",
-    "playwright": "^1.55.1",
-    "typescript-eslint": "^8.41.0"
+    "fs-extra": "^11.3.2"
   },
   "peerDependencies": {
     "@axe-core/playwright": "^4.10.2",

@@ -4,18 +4,25 @@
  * @param {string} blockItemsClass The shared class of the elements that are children of the block.
 */
 import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
-const eventListenersMap = new Map();
 export function makeBlockAccessible(blockId, blockItemsClass) {
     const blockDiv = document.querySelector(`#${blockId}`);
     if (!blockDiv) {
         console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);
         return { cleanup: () => { } };
     }
-    const blockItems = blockDiv.querySelectorAll(`.${blockItemsClass}`);
+    let cachedItems = null;
+    function getItems() {
+        if (!cachedItems) {
+            cachedItems = blockDiv.querySelectorAll(`.${blockItemsClass}`);
+        }
+        return cachedItems;
+    }
+    const blockItems = getItems();
     if (!blockItems || blockItems.length === 0) {
         console.error(`[aria-ease] Element with class="${blockItemsClass}" not found. Make sure the block items exist before calling makeBlockAccessible.`);
         return { cleanup: () => { } };
     }
+    const eventListenersMap = new Map();
     blockItems.forEach((blockItem) => {
         if (!eventListenersMap.has(blockItem)) {
             const handler = (event) => {
@@ -36,6 +43,8 @@ export function makeBlockAccessible(blockId, blockItemsClass) {
             }
         });
     }
-    ;
-    return { cleanup };
+    function refresh() {
+        cachedItems = null;
+    }
+    return { cleanup, refresh };
 }

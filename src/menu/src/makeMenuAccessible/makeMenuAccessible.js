@@ -16,7 +16,13 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
         console.error(`[aria-ease] Element with id="${triggerId}" not found. Make sure the trigger button element exists before calling makeMenuAccessible.`);
         return { openMenu: () => { }, closeMenu: () => { }, cleanup: () => { } };
     }
-    const handlerMap = new Map();
+    if (!/^[\w-]+$/.test(menuId)) {
+        console.error("[aria-ease] Invalid menuId: must be alphanumeric");
+        return { openMenu: () => { }, closeMenu: () => { }, cleanup: () => { } };
+    }
+    /* const handlerMap = new Map<HTMLElement, (event: KeyboardEvent) => void>();
+    const submenuInstances = new Map<string, ReturnType<typeof makeMenuAccessible>>(); */
+    const handlerMap = new WeakMap(); // Auto garbage collection
     const submenuInstances = new Map();
     let cachedItems = null;
     let filteredItems = null;
@@ -127,7 +133,7 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
         setAria(true);
         const items = getFilteredItems();
         addListeners();
-        if (items.length > 0) {
+        if (items && items.length > 0) {
             items[0].focus();
         }
     }

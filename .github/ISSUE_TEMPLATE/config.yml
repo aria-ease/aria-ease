@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 💬 Ask a Question
+    url: https://github.com/aria-ease/aria-ease/discussions
+    about: Ask questions and discuss ideas with the community
+  - name: 🌐 Visit Documentation
+    url: https://ariaease.site/docs
+    about: Read the full documentation, guides, and examples
+  - name: 🔒 Report a Security Vulnerability
+    url: https://github.com/aria-ease/aria-ease/security/advisories/new
+    about: Please report security issues responsibly

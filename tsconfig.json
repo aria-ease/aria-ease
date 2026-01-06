@@ -8,6 +8,10 @@
       "esModuleInterop": true,
       "allowSyntheticDefaultImports": true,
       "strict": true,
+      /* "noUncheckedIndexedAccess": true,
+      "noUnusedLocals": true,
+      "noUnusedParameters": true,
+      "exactOptionalPropertyTypes": true, */
       "forceConsistentCasingInFileNames": true,
       "module": "esnext",
       "moduleResolution": "node",
@@ -15,7 +19,7 @@
       "declarationMap": true,
       "baseUrl": ".",
       "paths": {
-        "aria-ease/test": ["dist/src/utils/test/test.d.ts"],
+        "aria-ease/test": ["dist/src/utils/test/index.d.ts"],
       }
     },
     "include": ["src", "bin/cli.ts"],

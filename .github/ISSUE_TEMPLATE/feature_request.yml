@@ -1,0 +1,125 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for aria-ease
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a feature! Please provide as much detail as possible to help us understand your request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: What problem does this feature solve? Is your feature request related to a problem?
+      placeholder: I'm always frustrated when I need to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: How would you like this feature to work?
+      placeholder: |
+        Add a new component called `makeDialogAccessible` that:
+        - Traps focus within the dialog
+        - Closes on Escape key
+        - Returns focus to trigger on close
+    validations:
+      required: true
+
+  - type: textarea
+    id: api
+    attributes:
+      label: Proposed API (if applicable)
+      description: What would the API look like?
+      render: javascript
+      placeholder: |
+        const dialog = Dialog.makeDialogAccessible({
+          dialogId: "my-dialog",
+          triggerId: "open-dialog-btn",
+          closeOnEscape: true
+        });
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: What alternative solutions or features have you considered?
+      placeholder: I considered using a third-party library, but...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Feature Type
+      description: What type of feature is this?
+      options:
+        - New component
+        - Enhancement to existing component
+        - CLI improvement
+        - Testing utility
+        - Documentation
+        - Performance improvement
+        - Developer experience
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority (your opinion)
+      description: How important is this feature to you?
+      options:
+        - Critical - Blocking my use of the library
+        - High - Would significantly improve my workflow
+        - Medium - Nice to have
+        - Low - Small quality-of-life improvement
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Describe a specific scenario where this feature would be useful
+      placeholder: When building a shopping cart modal that needs to be fully accessible...
+    validations:
+      required: false
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Examples from Other Libraries
+      description: Are there examples of this feature in other libraries? Please provide links or references.
+      placeholder: |
+        - Headless UI implements this as...
+        - Radix UI handles this by...
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other context, mockups, or information about the feature request
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to ensure this isn't a duplicate
+          required: true
+        - label: I have checked the documentation to see if this feature already exists
+          required: true
+        - label: I would be willing to contribute this feature (if you need help, we can guide you!)
+          required: false

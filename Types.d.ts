@@ -112,6 +112,12 @@ interface FailureReport {
   wcagReference?: string;
 }
 
+interface AccessibilityInstance {
+  cleanup: () => void;
+  refresh?: () => void;
+  // ... other methods
+}
+
 export {
     AccordionStates,
     CheckboxStates,
@@ -124,7 +130,8 @@ export {
     ComponentContract,
     Selector,
     Prerequisite,
-    FailureReport
+    FailureReport,
+    AccessibilityInstance
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;
