@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.8.3](https://github.com/aria-ease/aria-ease/compare/v2.8.2...v2.8.3) (2026-01-07)
+
+
+### Bug Fixes
+
+* fixed menu component contract test failing when submenu not found ([13a8cff](https://github.com/aria-ease/aria-ease/commit/13a8cffd382ab773f356dcab8359ac050404a887))
+
 ### [2.8.2](https://github.com/aria-ease/aria-ease/compare/v2.8.1...v2.8.2) (2026-01-06)
 
 
