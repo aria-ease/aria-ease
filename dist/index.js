@@ -13171,7 +13171,7 @@ async function testUiComponent(componentName, component, url) {
   let contract;
   if (url) {
     console.log(`\u{1F3AD} Running Playwright E2E tests on ${url}`);
-    const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-YNHMLHQ2.js");
+    const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-7O2T4JES.js");
     contract = await runContractTestsPlaywright(componentName, url);
   } else {
     console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);

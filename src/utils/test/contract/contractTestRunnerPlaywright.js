@@ -22,8 +22,12 @@ export async function runContractTestsPlaywright(componentName, url) {
         browser = await chromium.launch({ headless: true });
         const context = await browser.newContext();
         const page = await context.newPage();
-        await page.goto(url, { waitUntil: "networkidle" });
-        await page.waitForSelector(componentContract.selectors.trigger, { timeout: 30000 });
+        // Navigate with more reliable settings and longer timeout
+        await page.goto(url, {
+            waitUntil: "domcontentloaded",
+            timeout: 60000
+        });
+        await page.waitForSelector(componentContract.selectors.trigger, { timeout: 60000 });
         async function resolveRelativeTarget(selector, relative) {
             const items = await page.locator(selector).all();
             switch (relative) {

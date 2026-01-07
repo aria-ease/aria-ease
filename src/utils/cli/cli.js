@@ -3,9 +3,6 @@ import { Command } from "commander";
 import chalk from "chalk";
 import path from "path";
 import fs from "fs-extra";
-import { runAudit } from "../audit/src/audit/audit.js";
-import { formatResults } from "../audit/src/formatters/formatters.js";
-import { runTest } from "../test/index.js";
 import { loadConfig } from "./configLoader.js";
 const program = new Command();
 program.name('aria-ease').description('Run accessibility tests and audits').version('2.2.3');
@@ -16,6 +13,9 @@ program.command('audit')
     .option('-o, --out <path>', 'Directory to save the audit report', './accessibility-reports/audit')
     .action(async (opts) => {
     console.log(chalk.cyanBright('🚀 Starting accessibility audit...\n'));
+    // Dynamically import audit dependencies
+    const { runAudit } = await import("../audit/src/audit/audit.js");
+    const { formatResults } = await import("../audit/src/formatters/formatters.js");
     // Load config with robust discovery and validation
     const { config, configPath, errors } = await loadConfig(process.cwd());
     if (configPath) {
@@ -95,7 +95,8 @@ program.command('audit')
 });
 program.command('test')
     .description('Run core a11y accessibility standard tests on UI components')
-    .action(() => {
+    .action(async () => {
+    const { runTest } = await import("../test/index.js");
     runTest();
 });
 program.command('help')

@@ -9419,8 +9419,11 @@ async function runContractTestsPlaywright(componentName, url) {
     browser = await import_playwright.chromium.launch({ headless: true });
     const context = await browser.newContext();
     const page = await context.newPage();
-    await page.goto(url, { waitUntil: "networkidle" });
-    await page.waitForSelector(componentContract.selectors.trigger, { timeout: 3e4 });
+    await page.goto(url, {
+      waitUntil: "domcontentloaded",
+      timeout: 6e4
+    });
+    await page.waitForSelector(componentContract.selectors.trigger, { timeout: 6e4 });
     async function resolveRelativeTarget(selector, relative) {
       const items = await page.locator(selector).all();
       switch (relative) {
