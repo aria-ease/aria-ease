@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.8.4](https://github.com/aria-ease/aria-ease/compare/v2.8.3...v2.8.4) (2026-01-08)
+
+
+### Bug Fixes
+
+* fixed bin folder not publishing with rest of build ([6614b55](https://github.com/aria-ease/aria-ease/commit/6614b55836c57ed3eb6bd903266cbb4012a55349))
+
 ### [2.8.3](https://github.com/aria-ease/aria-ease/compare/v2.8.2...v2.8.3) (2026-01-07)
 
 
