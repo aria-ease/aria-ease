@@ -36,7 +36,6 @@ export async function runContractTestsPlaywright(componentName: string, url: str
     const context = await browser.newContext();
     const page: Page = await context.newPage();
 
-    // Navigate with more reliable settings and longer timeout
     await page.goto(url, { 
       waitUntil: "domcontentloaded",
       timeout: 60000 
@@ -185,7 +184,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             const elementCount = await target.count();
             if (elementCount === 0) {
               reporter.reportTest(dynamicTest, 'skip', `Skipping test - ${act.target} element not found (optional submenu test)`);
-              break; // Skip this entire test if the target doesn't exist
+              break;
             }
             
             await target.press(keyValue);

@@ -9545,6 +9545,11 @@ async function runContractTestsPlaywright(componentName, url) {
               continue;
             }
             const target = page.locator(keypressSelector).first();
+            const elementCount = await target.count();
+            if (elementCount === 0) {
+              reporter.reportTest(dynamicTest, "skip", `Skipping test - ${act.target} element not found (optional submenu test)`);
+              break;
+            }
             await target.press(keyValue);
           }
         }
