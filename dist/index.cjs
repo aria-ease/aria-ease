@@ -41,6 +41,10 @@ var init_contract = __esm({
       menu: {
         path: "./contracts/MenuContract.json",
         component: "menu"
+      },
+      combobox: {
+        path: "./contracts/ComboboxContract.json",
+        component: "combobox"
       }
     };
   }
@@ -9423,7 +9427,11 @@ async function runContractTestsPlaywright(componentName, url) {
       waitUntil: "domcontentloaded",
       timeout: 6e4
     });
-    await page.waitForSelector(componentContract.selectors.trigger, { timeout: 6e4 });
+    const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
+    if (!mainSelector) {
+      throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
+    }
+    await page.waitForSelector(mainSelector, { timeout: 6e4 });
     async function resolveRelativeTarget(selector, relative) {
       const items = await page.locator(selector).all();
       switch (relative) {
@@ -9494,17 +9502,61 @@ async function runContractTestsPlaywright(componentName, url) {
     for (const dynamicTest of componentContract.dynamic || []) {
       const { action, assertions } = dynamicTest;
       const failuresBeforeTest = failures.length;
-      const containerElement = page.locator(componentContract.selectors.container).first();
-      const triggerElement = page.locator(componentContract.selectors.trigger).first();
-      const isContainerVisible = await containerElement.isVisible();
-      if (isContainerVisible) {
-        await triggerElement.click();
-        await page.waitForTimeout(50);
+      if (componentContract.selectors.listbox || componentContract.selectors.container) {
+        const popupSelector = componentContract.selectors.listbox || componentContract.selectors.container;
+        if (!popupSelector) continue;
+        const popupElement = page.locator(popupSelector).first();
+        const isPopupVisible = await popupElement.isVisible();
+        if (isPopupVisible) {
+          const closeSelector = componentContract.selectors.input || componentContract.selectors.trigger;
+          if (closeSelector) {
+            const closeElement = page.locator(closeSelector).first();
+            await closeElement.focus();
+            await page.keyboard.press("Escape");
+            await page.waitForTimeout(200);
+            if (componentContract.selectors.input) {
+              const inputElement = page.locator(componentContract.selectors.input).first();
+              await inputElement.clear();
+              await page.waitForTimeout(50);
+            }
+          }
+        }
       }
       for (const act of action) {
+        if (act.type === "focus") {
+          const focusSelector = componentContract.selectors[act.target];
+          if (!focusSelector) {
+            failures.push(`Selector for focus target ${act.target} not found.`);
+            continue;
+          }
+          await page.locator(focusSelector).first().focus();
+          await page.waitForTimeout(50);
+        }
+        if (act.type === "type" && act.value) {
+          const typeSelector = componentContract.selectors[act.target];
+          if (!typeSelector) {
+            failures.push(`Selector for type target ${act.target} not found.`);
+            continue;
+          }
+          await page.locator(typeSelector).first().fill(act.value);
+          await page.waitForTimeout(50);
+        }
         if (act.type === "click") {
           if (act.target === "document") {
             await page.mouse.click(10, 10);
+          } else if (act.target === "relative" && act.relativeTarget) {
+            const relativeSelector = componentContract.selectors.relative;
+            if (!relativeSelector) {
+              failures.push(`Relative selector not defined for click action.`);
+              continue;
+            }
+            const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
+            if (!relativeElement) {
+              failures.push(`Could not resolve relative target ${act.relativeTarget} for click.`);
+              continue;
+            }
+            await relativeElement.click();
+            await page.waitForTimeout(200);
           } else {
             const actionSelector = componentContract.selectors[act.target];
             if (!actionSelector) {
@@ -9553,6 +9605,30 @@ async function runContractTestsPlaywright(componentName, url) {
             await target.press(keyValue);
           }
         }
+        if (act.type === "hover") {
+          if (act.target === "relative" && act.relativeTarget) {
+            const relativeSelector = componentContract.selectors.relative;
+            if (!relativeSelector) {
+              failures.push(`Relative selector not defined for hover action.`);
+              continue;
+            }
+            const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
+            if (!relativeElement) {
+              failures.push(`Could not resolve relative target ${act.relativeTarget} for hover.`);
+              continue;
+            }
+            await relativeElement.hover();
+            await page.waitForTimeout(50);
+          } else {
+            const hoverSelector = componentContract.selectors[act.target];
+            if (!hoverSelector) {
+              failures.push(`Selector for hover target ${act.target} not found.`);
+              continue;
+            }
+            await page.locator(hoverSelector).first().hover();
+            await page.waitForTimeout(50);
+          }
+        }
         await page.waitForTimeout(100);
       }
       for (const assertion of assertions) {
@@ -9563,11 +9639,12 @@ async function runContractTestsPlaywright(componentName, url) {
             failures.push("Relative selector is not defined in the contract.");
             continue;
           }
-          if (!assertion.expectedValue) {
-            failures.push("Expected value for relative target is not defined.");
+          const relativeTargetValue = assertion.relativeTarget || assertion.expectedValue;
+          if (!relativeTargetValue) {
+            failures.push("Relative target or expected value is not defined.");
             continue;
           }
-          target = await resolveRelativeTarget(relativeSelector, assertion.expectedValue);
+          target = await resolveRelativeTarget(relativeSelector, relativeTargetValue);
         } else {
           const assertionSelector = componentContract.selectors[assertion.target];
           if (!assertionSelector) {
@@ -9598,10 +9675,36 @@ async function runContractTestsPlaywright(componentName, url) {
         }
         if (assertion.assertion === "toHaveAttribute" && assertion.attribute && assertion.expectedValue) {
           const attributeValue = await target.getAttribute(assertion.attribute);
-          if (attributeValue === assertion.expectedValue) {
+          if (assertion.expectedValue === "!empty") {
+            if (attributeValue && attributeValue.trim() !== "") {
+              passes.push(`${assertion.target} has non-empty "${assertion.attribute}". Test: "${dynamicTest.description}".`);
+            } else {
+              failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should not be empty, found "${attributeValue}".`);
+            }
+          } else if (attributeValue === assertion.expectedValue) {
             passes.push(`${assertion.target} has expected "${assertion.attribute}". Test: "${dynamicTest.description}".`);
           } else {
             failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should be "${assertion.expectedValue}", found "${attributeValue}".`);
+          }
+        }
+        if (assertion.assertion === "toHaveValue") {
+          const inputValue = await target.inputValue().catch(() => "");
+          if (assertion.expectedValue === "!empty") {
+            if (inputValue && inputValue.trim() !== "") {
+              passes.push(`${assertion.target} has non-empty value. Test: "${dynamicTest.description}".`);
+            } else {
+              failures.push(assertion.failureMessage + ` ${assertion.target} value should not be empty, found "${inputValue}".`);
+            }
+          } else if (assertion.expectedValue === "") {
+            if (inputValue === "") {
+              passes.push(`${assertion.target} has empty value. Test: "${dynamicTest.description}".`);
+            } else {
+              failures.push(assertion.failureMessage + ` ${assertion.target} value should be empty, found "${inputValue}".`);
+            }
+          } else if (inputValue === assertion.expectedValue) {
+            passes.push(`${assertion.target} has expected value. Test: "${dynamicTest.description}".`);
+          } else {
+            failures.push(assertion.failureMessage + ` ${assertion.target} value should be "${assertion.expectedValue}", found "${inputValue}".`);
           }
         }
         if (assertion.assertion === "toHaveFocus") {
@@ -9667,6 +9770,7 @@ var init_contractTestRunnerPlaywright = __esm({
 var index_exports = {};
 __export(index_exports, {
   makeBlockAccessible: () => makeBlockAccessible,
+  makeComboboxAccessible: () => makeComboboxAccessible,
   makeMenuAccessible: () => makeMenuAccessible,
   testUiComponent: () => testUiComponent,
   updateAccordionTriggerAriaAttributes: () => updateAccordionTriggerAriaAttributes,
@@ -10127,6 +10231,246 @@ function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, current
       }
     }
   });
+}
+
+// src/combobox/src/makeComboBoxAccessible.ts
+function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, config: config2 }) {
+  const comboboxInput = document.getElementById(`${comboboxInputId}`);
+  if (!comboboxInput) {
+    console.error(`[aria-ease] Element with id="${comboboxInputId}" not found. Make sure the combobox input element exists before calling makeComboboxAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const listBox = document.getElementById(`${listBoxId}`);
+  if (!listBox) {
+    console.error(`[aria-ease] Element with id="${listBoxId}" not found. Make sure the combobox listbox element exists before calling makeComboboxAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const listButton = comboboxButtonId ? document.getElementById(`${comboboxButtonId}`) : null;
+  let activeIndex = -1;
+  comboboxInput.setAttribute("role", "combobox");
+  comboboxInput.setAttribute("aria-autocomplete", "list");
+  comboboxInput.setAttribute("aria-controls", listBoxId);
+  comboboxInput.setAttribute("aria-expanded", "false");
+  comboboxInput.setAttribute("aria-haspopup", "listbox");
+  listBox.setAttribute("role", "listbox");
+  let cachedItems = null;
+  function getVisibleItems() {
+    if (!cachedItems) {
+      cachedItems = listBox.querySelectorAll(`.${listBoxItemsClass}`);
+    }
+    return Array.from(cachedItems).filter((item) => !item.hidden && item.style.display !== "none");
+  }
+  function isListboxOpen() {
+    return comboboxInput.getAttribute("aria-expanded") === "true";
+  }
+  function setActiveDescendant(index) {
+    const visibleItems = getVisibleItems();
+    visibleItems.forEach((item) => {
+      item.setAttribute("aria-selected", "false");
+    });
+    if (index >= 0 && index < visibleItems.length) {
+      const activeItem = visibleItems[index];
+      const itemId = activeItem.id || `${listBoxId}-option-${index}`;
+      if (!activeItem.id) {
+        activeItem.id = itemId;
+      }
+      activeItem.setAttribute("aria-selected", "true");
+      comboboxInput.setAttribute("aria-activedescendant", itemId);
+      activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      if (config2?.onActiveDescendantChange) {
+        try {
+          config2.onActiveDescendantChange(itemId, activeItem);
+        } catch (error) {
+          console.error("[aria-ease] Error in onActiveDescendantChange callback:", error);
+        }
+      }
+    } else {
+      comboboxInput.setAttribute("aria-activedescendant", "");
+    }
+    activeIndex = index;
+  }
+  function openListbox() {
+    comboboxInput.setAttribute("aria-expanded", "true");
+    if (config2?.onOpenChange) {
+      try {
+        config2.onOpenChange(true);
+      } catch (error) {
+        console.error("[aria-ease] Error in onOpenChange callback:", error);
+      }
+    }
+  }
+  function closeListbox() {
+    comboboxInput.setAttribute("aria-expanded", "false");
+    comboboxInput.setAttribute("aria-activedescendant", "");
+    activeIndex = -1;
+    const visibleItems = getVisibleItems();
+    visibleItems.forEach((item) => item.setAttribute("aria-selected", "false"));
+    if (config2?.onOpenChange) {
+      try {
+        config2.onOpenChange(false);
+      } catch (error) {
+        console.error("[aria-ease] Error in onOpenChange callback:", error);
+      }
+    }
+  }
+  function selectOption(item) {
+    const value = item.textContent?.trim() || "";
+    comboboxInput.value = value;
+    closeListbox();
+    if (config2?.onSelect) {
+      try {
+        config2.onSelect(item, value);
+      } catch (error) {
+        console.error("[aria-ease] Error in onSelect callback:", error);
+      }
+    }
+  }
+  function handleInputKeyDown(event) {
+    const visibleItems = getVisibleItems();
+    const isOpen = isListboxOpen();
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        if (!isOpen) {
+          openListbox();
+          return;
+        }
+        if (visibleItems.length === 0) return;
+        {
+          const newIndex = activeIndex >= visibleItems.length - 1 ? 0 : activeIndex + 1;
+          setActiveDescendant(newIndex);
+        }
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        if (!isOpen) return;
+        if (visibleItems.length > 0) {
+          const newIndex = activeIndex <= 0 ? visibleItems.length - 1 : activeIndex - 1;
+          setActiveDescendant(newIndex);
+        }
+        break;
+      case "Enter":
+        if (isOpen && activeIndex >= 0 && activeIndex < visibleItems.length) {
+          event.preventDefault();
+          selectOption(visibleItems[activeIndex]);
+        }
+        break;
+      case "Escape":
+        if (isOpen) {
+          event.preventDefault();
+          closeListbox();
+        } else if (comboboxInput.value) {
+          event.preventDefault();
+          comboboxInput.value = "";
+          if (config2?.onClear) {
+            try {
+              config2.onClear();
+            } catch (error) {
+              console.error("[aria-ease] Error in onClear callback:", error);
+            }
+          }
+        }
+        break;
+      case "Home":
+        if (isOpen && visibleItems.length > 0) {
+          event.preventDefault();
+          setActiveDescendant(0);
+        }
+        break;
+      case "End":
+        if (isOpen && visibleItems.length > 0) {
+          event.preventDefault();
+          setActiveDescendant(visibleItems.length - 1);
+        }
+        break;
+      case "Tab":
+        if (isOpen) {
+          closeListbox();
+        }
+        break;
+    }
+  }
+  function handleMouseMove(event) {
+    const target = event.target;
+    if (target.classList.contains(listBoxItemsClass)) {
+      const visibleItems = getVisibleItems();
+      const index = visibleItems.indexOf(target);
+      if (index >= 0) {
+        setActiveDescendant(index);
+      }
+    }
+  }
+  function handleMouseDown(event) {
+    const target = event.target;
+    if (target.classList.contains(listBoxItemsClass)) {
+      event.preventDefault();
+      selectOption(target);
+    }
+  }
+  function handleClickOutside(event) {
+    const target = event.target;
+    if (!comboboxInput.contains(target) && !listBox.contains(target) && (!listButton || !listButton.contains(target))) {
+      closeListbox();
+    }
+  }
+  function handleListButtonClick() {
+    if (isListboxOpen()) {
+      closeListbox();
+    } else {
+      openListbox();
+      comboboxInput.focus();
+    }
+  }
+  function handleListButtonKeyDown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      handleListButtonClick();
+    }
+  }
+  comboboxInput.addEventListener("keydown", handleInputKeyDown);
+  listBox.addEventListener("mousemove", handleMouseMove);
+  listBox.addEventListener("mousedown", handleMouseDown);
+  document.addEventListener("mousedown", handleClickOutside);
+  if (listButton) {
+    listButton.setAttribute("tabindex", "-1");
+    listButton.setAttribute("aria-label", "Toggle options");
+    listButton.addEventListener("click", handleListButtonClick);
+    listButton.addEventListener("keydown", handleListButtonKeyDown);
+  }
+  function initializeOptions() {
+    const items = listBox.querySelectorAll(`.${listBoxItemsClass}`);
+    if (items.length === 0) return;
+    items.forEach((item, index) => {
+      item.setAttribute("role", "option");
+      item.setAttribute("aria-selected", "false");
+      const currentId = item.getAttribute("id");
+      if (!currentId || currentId === "") {
+        const itemId = `${listBoxId}-option-${index}`;
+        item.id = itemId;
+        item.setAttribute("id", itemId);
+      }
+    });
+  }
+  initializeOptions();
+  function cleanup() {
+    comboboxInput.removeEventListener("keydown", handleInputKeyDown);
+    listBox.removeEventListener("mousemove", handleMouseMove);
+    listBox.removeEventListener("mousedown", handleMouseDown);
+    document.removeEventListener("mousedown", handleClickOutside);
+    if (listButton) {
+      listButton.removeEventListener("click", handleListButtonClick);
+      listButton.removeEventListener("keydown", handleListButtonKeyDown);
+    }
+  }
+  function refresh() {
+    cachedItems = null;
+    initializeOptions();
+    activeIndex = -1;
+    setActiveDescendant(-1);
+  }
+  return { cleanup, refresh };
 }
 
 // src/utils/test/src/test.ts
@@ -13457,7 +13801,12 @@ async function runContractTests(componentName, component) {
   const skipped = [];
   for (const test of componentContract.static[0].assertions) {
     if (test.target !== "relative") {
-      const target = component.querySelector(componentContract.selectors[test.target]);
+      const selector = componentContract.selectors[test.target];
+      if (!selector) {
+        failures.push(`Selector for target ${test.target} not found.`);
+        continue;
+      }
+      const target = component.querySelector(selector);
       if (!target) {
         failures.push(`Target ${test.target} not found.`);
         continue;
@@ -13515,13 +13864,17 @@ async function runContractTests(componentName, component) {
     }
     const { action, assertions } = dynamicTest;
     const failuresBeforeTest = failures.length;
-    const containerElement = component.querySelector(componentContract.selectors.container);
-    const triggerElement = component.querySelector(componentContract.selectors.trigger);
-    if (containerElement && triggerElement) {
-      const isContainerVisible = containerElement.style.display !== "none";
-      if (isContainerVisible) {
-        fireEvent.click(triggerElement);
-        await new Promise((resolve) => setTimeout(resolve, 50));
+    const containerSelector = componentContract.selectors.container;
+    const triggerSelector = componentContract.selectors.trigger;
+    if (containerSelector && triggerSelector) {
+      const containerElement = component.querySelector(containerSelector);
+      const triggerElement = component.querySelector(triggerSelector);
+      if (containerElement && triggerElement) {
+        const isContainerVisible = containerElement.style.display !== "none";
+        if (isContainerVisible) {
+          fireEvent.click(triggerElement);
+          await new Promise((resolve) => setTimeout(resolve, 50));
+        }
       }
     }
     const preActionExpectedTargets = /* @__PURE__ */ new Map();
@@ -13538,7 +13891,12 @@ async function runContractTests(componentName, component) {
         if (act.target === "document") {
           fireEvent.click(document.body);
         } else {
-          const target = component.querySelector(componentContract.selectors[act.target]);
+          const selector = componentContract.selectors[act.target];
+          if (!selector) {
+            failures.push(`Selector for action target ${act.target} not found.`);
+            continue;
+          }
+          const target = component.querySelector(selector);
           if (target instanceof HTMLElement) {
             target.focus();
             fireEvent.click(target);
@@ -13552,16 +13910,27 @@ async function runContractTests(componentName, component) {
         let target;
         if (act.target === "focusable" && ["Arrow Up", "Arrow Down", "Arrow Left", "Arrow Right", "Escape"].includes(act.key || "")) {
           const activeElement = document.activeElement;
-          const containerElement2 = component.querySelector(componentContract.selectors.container);
-          const focusableItems = containerElement2?.querySelectorAll(componentContract.selectors.focusable);
+          const containerSelector2 = componentContract.selectors.container;
+          const focusableSelector = componentContract.selectors.focusable;
+          if (!containerSelector2 || !focusableSelector) {
+            failures.push(`Container or focusable selector not found.`);
+            continue;
+          }
+          const containerElement = component.querySelector(containerSelector2);
+          const focusableItems = containerElement?.querySelectorAll(focusableSelector);
           if (focusableItems && focusableItems.length > 0) {
             const focusedItem = Array.from(focusableItems).find((item) => item === activeElement);
             target = focusedItem || focusableItems[0];
           } else {
-            target = containerElement2;
+            target = containerElement;
           }
         } else {
-          target = component.querySelector(componentContract.selectors[act.target]);
+          const selector = componentContract.selectors[act.target];
+          if (!selector) {
+            failures.push(`Selector for keypress target ${act.target} not found.`);
+            continue;
+          }
+          target = component.querySelector(selector);
         }
         if (target) {
           target.focus();
@@ -13603,7 +13972,12 @@ async function runContractTests(componentName, component) {
         }
         target = resolveRelativeTarget(component, relativeSelector, assertion.expectedValue);
       } else {
-        target = component.querySelector(componentContract.selectors[assertion.target]);
+        const selector = componentContract.selectors[assertion.target];
+        if (!selector) {
+          failures.push(`Selector for assertion target ${assertion.target} not found.`);
+          continue;
+        }
+        target = component.querySelector(selector);
       }
       if (!target) {
         failures.push(`Target ${assertion.target} not found.`);
@@ -13691,11 +14065,19 @@ async function testUiComponent(componentName, component, url) {
   }
   if (results.violations.length > 0) {
     const violationCount = results.violations.length;
+    const violationDetails = results.violations.map(
+      (v) => `
+  - ${v.id}: ${v.description}
+    Impact: ${v.impact}
+    Affected elements: ${v.nodes.length}
+    Help: ${v.helpUrl}`
+    ).join("\n");
     throw new Error(
       `
 \u274C ${violationCount} axe accessibility violation${violationCount > 1 ? "s" : ""} detected
+${violationDetails}
 
-\u{1F4CB} Check result.violations for details`
+\u{1F4CB} Full details available in result.violations`
     );
   }
   return result;
@@ -13727,6 +14109,7 @@ if (typeof window === "undefined") {
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   makeBlockAccessible,
+  makeComboboxAccessible,
   makeMenuAccessible,
   testUiComponent,
   updateAccordionTriggerAriaAttributes,

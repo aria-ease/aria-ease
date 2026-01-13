@@ -41,7 +41,16 @@ export async function runContractTestsPlaywright(componentName: string, url: str
       timeout: 60000 
     });
     
-    await page.waitForSelector(componentContract.selectors.trigger, { timeout: 60000 });
+    // Wait for the main component element (try trigger first, fall back to input or container)
+    const mainSelector = componentContract.selectors.trigger || 
+                        componentContract.selectors.input || 
+                        componentContract.selectors.container;
+    
+    if (!mainSelector) {
+      throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
+    }
+    
+    await page.waitForSelector(mainSelector, { timeout: 60000 });
 
     async function resolveRelativeTarget(selector: string, relative: string) {
       const items = await page.locator(selector).all();
@@ -124,18 +133,69 @@ export async function runContractTestsPlaywright(componentName: string, url: str
       const failuresBeforeTest = failures.length;
 
       // Reset component state before each test for proper isolation
-      const containerElement = page.locator(componentContract.selectors.container).first();
-      const triggerElement = page.locator(componentContract.selectors.trigger).first();
-      const isContainerVisible = await containerElement.isVisible();
-      if (isContainerVisible) {
-        await triggerElement.click(); // Close the component
-        await page.waitForTimeout(50); // Wait for state update
+      // For components with listbox/popup (menu, combobox), close if open
+      if (componentContract.selectors.listbox || componentContract.selectors.container) {
+        const popupSelector = componentContract.selectors.listbox || componentContract.selectors.container;
+        if (!popupSelector) continue;
+        const popupElement = page.locator(popupSelector).first();
+        const isPopupVisible = await popupElement.isVisible();
+        
+        if (isPopupVisible) {
+          // Try to close via Escape key on input/trigger for more reliable closing
+          const closeSelector = componentContract.selectors.input || componentContract.selectors.trigger;
+          if (closeSelector) {
+            const closeElement = page.locator(closeSelector).first();
+            await closeElement.focus();
+            await page.keyboard.press('Escape');
+            await page.waitForTimeout(200); // Wait for closing animation/state update
+            
+            // Clear any input value if it's a combobox
+            if (componentContract.selectors.input) {
+              const inputElement = page.locator(componentContract.selectors.input).first();
+              await inputElement.clear();
+              await page.waitForTimeout(50);
+            }
+          }
+        }
       }
 
       for (const act of action) {
+        if (act.type === "focus") {
+          const focusSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
+          if (!focusSelector) {
+            failures.push(`Selector for focus target ${act.target} not found.`);
+            continue;
+          }
+          await page.locator(focusSelector).first().focus();
+          await page.waitForTimeout(50);
+        }
+
+        if (act.type === "type" && act.value) {
+          const typeSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
+          if (!typeSelector) {
+            failures.push(`Selector for type target ${act.target} not found.`);
+            continue;
+          }
+          await page.locator(typeSelector).first().fill(act.value);
+          await page.waitForTimeout(50);
+        }
+
         if (act.type === "click") {
           if (act.target === "document") {
             await page.mouse.click(10, 10);
+          } else if (act.target === "relative" && act.relativeTarget) {
+            const relativeSelector = componentContract.selectors.relative;
+            if (!relativeSelector) {
+              failures.push(`Relative selector not defined for click action.`);
+              continue;
+            }
+            const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
+            if (!relativeElement) {
+              failures.push(`Could not resolve relative target ${act.relativeTarget} for click.`);
+              continue;
+            }
+            await relativeElement.click();
+            await page.waitForTimeout(200);
           } else {
             const actionSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
             if (!actionSelector) {
@@ -191,6 +251,31 @@ export async function runContractTestsPlaywright(componentName: string, url: str
           }
         }
 
+        if (act.type === "hover") {
+          if (act.target === "relative" && act.relativeTarget) {
+            const relativeSelector = componentContract.selectors.relative;
+            if (!relativeSelector) {
+              failures.push(`Relative selector not defined for hover action.`);
+              continue;
+            }
+            const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
+            if (!relativeElement) {
+              failures.push(`Could not resolve relative target ${act.relativeTarget} for hover.`);
+              continue;
+            }
+            await relativeElement.hover();
+            await page.waitForTimeout(50);
+          } else {
+            const hoverSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
+            if (!hoverSelector) {
+              failures.push(`Selector for hover target ${act.target} not found.`);
+              continue;
+            }
+            await page.locator(hoverSelector).first().hover();
+            await page.waitForTimeout(50);
+          }
+        }
+
         await page.waitForTimeout(100);
       }
 
@@ -204,11 +289,12 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             failures.push("Relative selector is not defined in the contract.");
             continue;
           }
-          if (!assertion.expectedValue) {
-            failures.push("Expected value for relative target is not defined.");
+          const relativeTargetValue = assertion.relativeTarget || assertion.expectedValue;
+          if (!relativeTargetValue) {
+            failures.push("Relative target or expected value is not defined.");
             continue;
           }
-          target = await resolveRelativeTarget(relativeSelector, assertion.expectedValue);
+          target = await resolveRelativeTarget(relativeSelector, relativeTargetValue);
         } else {
           const assertionSelector = componentContract.selectors[assertion.target as keyof typeof componentContract.selectors];
           if (!assertionSelector) {
@@ -244,10 +330,40 @@ export async function runContractTestsPlaywright(componentName: string, url: str
 
         if (assertion.assertion === "toHaveAttribute" && assertion.attribute && assertion.expectedValue) {
           const attributeValue = await target.getAttribute(assertion.attribute);
-          if (attributeValue === assertion.expectedValue) {
+          
+          // Handle special case: !empty means attribute should have any non-empty value
+          if (assertion.expectedValue === "!empty") {
+            if (attributeValue && attributeValue.trim() !== "") {
+              passes.push(`${assertion.target} has non-empty "${assertion.attribute}". Test: "${dynamicTest.description}".`);
+            } else {
+              failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should not be empty, found "${attributeValue}".`);
+            }
+          } else if (attributeValue === assertion.expectedValue) {
             passes.push(`${assertion.target} has expected "${assertion.attribute}". Test: "${dynamicTest.description}".`);
           } else {
             failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should be "${assertion.expectedValue}", found "${attributeValue}".`);
+          }
+        }
+
+        if (assertion.assertion === "toHaveValue") {
+          const inputValue = await target.inputValue().catch(() => "");
+          
+          if (assertion.expectedValue === "!empty") {
+            if (inputValue && inputValue.trim() !== "") {
+              passes.push(`${assertion.target} has non-empty value. Test: "${dynamicTest.description}".`);
+            } else {
+              failures.push(assertion.failureMessage + ` ${assertion.target} value should not be empty, found "${inputValue}".`);
+            }
+          } else if (assertion.expectedValue === "") {
+            if (inputValue === "") {
+              passes.push(`${assertion.target} has empty value. Test: "${dynamicTest.description}".`);
+            } else {
+              failures.push(assertion.failureMessage + ` ${assertion.target} value should be empty, found "${inputValue}".`);
+            }
+          } else if (inputValue === assertion.expectedValue) {
+            passes.push(`${assertion.target} has expected value. Test: "${dynamicTest.description}".`);
+          } else {
+            failures.push(assertion.failureMessage + ` ${assertion.target} value should be "${assertion.expectedValue}", found "${inputValue}".`);
           }
         }
 
@@ -304,5 +420,5 @@ export async function runContractTestsPlaywright(componentName: string, url: str
     if (browser) await browser.close();
   }
 
-  return { passes, failures };
+  return { passes, failures }
 }

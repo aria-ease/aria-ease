@@ -42,9 +42,14 @@ export async function testUiComponent(componentName: string, component: HTMLElem
     
     if (results.violations.length > 0) {
         const violationCount = results.violations.length;
+        const violationDetails = results.violations.map(v => 
+            `\n  - ${v.id}: ${v.description}\n    Impact: ${v.impact}\n    Affected elements: ${v.nodes.length}\n    Help: ${v.helpUrl}`
+        ).join('\n');
+        
         throw new Error(
-            `\n❌ ${violationCount} axe accessibility violation${violationCount > 1 ? 's' : ''} detected\n\n` +
-            `📋 Check result.violations for details`
+            `\n❌ ${violationCount} axe accessibility violation${violationCount > 1 ? 's' : ''} detected\n` +
+            `${violationDetails}\n\n` +
+            `📋 Full details available in result.violations`
         );
     }
     

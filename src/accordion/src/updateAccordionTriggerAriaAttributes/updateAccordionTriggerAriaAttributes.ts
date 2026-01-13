@@ -6,7 +6,7 @@
  * @param {number} clickedTriggerIndex Index of the currently clicked accordion trigger within the accordion div container.
 */
 
-import { AccordionStates } from "../../../../Types";
+import { AccordionStates } from "Types";
 
 export function updateAccordionTriggerAriaAttributes(accordionId: string, accordionTriggersClass: string, accordionStates: AccordionStates[], clickedTriggerIndex: number): void {
     const accordionDiv: HTMLElement | null = document.querySelector(`#${accordionId}`);

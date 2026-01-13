@@ -59,5 +59,5 @@ export function makeBlockAccessible(blockId: string, blockItemsClass: string): A
     cachedItems = null;
   }
 
-  return { cleanup, refresh };
+  return { cleanup, refresh }
 }

@@ -2,5 +2,9 @@
     "menu": {
         "path": "./contracts/MenuContract.json",
         "component": "menu"
+    },
+    "combobox": {
+        "path": "./contracts/ComboboxContract.json",
+        "component": "combobox"
     }
 }

@@ -16,12 +16,13 @@
     "release:patch": "standard-version --release-as patch",
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
+    "clean": "rm -rf dist bin",
     "build:core": "tsup ./index.ts --format esm,cjs --dts --outDir dist --external jest-axe --external @testing-library/react --external @axe-core/playwright --external playwright",
-    "build:modules": "tsup ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/radio/index.ts ./src/toggle/index.ts --format esm,cjs --dts --treeshake --outDir dist/src",
+    "build:modules": "tsup ./src/combobox/index.ts ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/radio/index.ts ./src/toggle/index.ts --format esm,cjs --dts --treeshake --outDir dist/src",
     "build:test": "tsup ./src/utils/test/index.ts --format esm,cjs --dts --treeshake --external jest-axe --external @testing-library/react --outDir dist/src/utils/test",
     "build:cli": "tsup ./src/utils/cli/cli.ts --format esm,cjs --dts --outDir bin --external commander --external chalk --external jest-axe --external @testing-library/react --external @axe-core/playwright --external playwright",
     "build:contracts": "mkdir -p ./dist/src/utils/test && cp -r ./src/utils/test/contract/contracts ./dist/src/utils/test/",
-    "build": "npm run build:core && npm run build:modules && npm run build:test && npm run build:cli && npm run build:contracts"
+    "build": "npm run clean && npm run build:core && npm run build:modules && npm run build:test && npm run build:cli && npm run build:contracts"
   },
   "repository": {
     "type": "git",
@@ -83,6 +84,11 @@
       "types": "./dist/src/checkbox/index.d.ts",
       "import": "./dist/src/checkbox/index.js",
       "require": "./dist/src/checkbox/index.cjs"
+    },
+    "./combobox": {
+      "types": "./dist/src/combobox/index.d.ts",
+      "import": "./dist/src/combobox/index.js",
+      "require": "./dist/src/combobox/index.cjs"
     },
     "./menu": {
       "types": "./dist/src/menu/index.d.ts",

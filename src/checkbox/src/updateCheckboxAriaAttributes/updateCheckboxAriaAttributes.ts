@@ -6,7 +6,7 @@
  * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox.
 */
 
-import { CheckboxStates } from "../../../../Types";
+import { CheckboxStates } from "Types";
 
 export function updateCheckboxAriaAttributes(checkboxId: string, checkboxesClass: string, checkboxStates: CheckboxStates[], currentPressedCheckboxIndex: number): void {
   const checkboxDiv: HTMLElement | null = document.querySelector(`#${checkboxId}`);

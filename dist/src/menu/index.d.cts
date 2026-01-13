@@ -1,4 +1,4 @@
-import { a as AccessibilityInstance } from '../Types.d-w1KLKLcA.cjs';
+import { a as AccessibilityInstance } from '../Types.d-uG0Hm1yK.cjs';
 
 /**
   * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first interactive item of the menu has focus when menu open.

@@ -27,6 +27,21 @@ interface AccessibilityInstance {
   closeMenu?: () => void;
 }
 
+interface ComboboxConfig {
+    comboboxInputId: string; 
+    comboboxButtonId?: string; 
+    listBoxId: string; 
+    listBoxItemsClass: string;
+    config?: config;
+}
+
+interface config {
+    onSelect?: (item: HTMLElement, value: string) => void;
+    onOpenChange?: (isOpen: boolean) => void;
+    onActiveDescendantChange?: (optionId: string, item: HTMLElement) => void;
+    onClear?: () => void;
+}
+
 /**
  * Adds screen reader accessibility to accordions. Updates the aria attributes of the accordion trigger button. Trigger button element must possess the following aria attributes; aria-expanded, aria-controls, aria-label (for only non-text triggers).
  * @param {string} accordionId The id of the accordion triggers parent container.
@@ -89,6 +104,17 @@ declare function updateRadioAriaAttributes(radioId: string, radiosClass: string,
 declare function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void;
 
 /**
+ * Makes a Combobox accessible by adding appropriate ARIA attributes, keyboard interactions and focus management.
+ * @param {string} comboboxInputId - The id of the combobox input element.
+ * @param {string} comboboxButtonId - The id of the button that toggles the listbox (optional).
+ * @param {string} listBoxId - The id of the listbox element.
+ * @param {string} listBoxItemsClass - The class of the items within the listbox.
+ * @param {ComboboxConfig} config - Configuration options for callbacks.
+ */
+
+declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, config }: ComboboxConfig): AccessibilityInstance;
+
+/**
     * Runs static and interactions accessibility test on UI components.
     * @param {HTMLElement} component The UI component to be tested
     * @param {string} url Optional URL to run full Playwright E2E tests (requires dev server running)
@@ -96,4 +122,4 @@ declare function updateToggleAriaAttribute(toggleId: string, togglesClass: strin
 
 declare function testUiComponent(componentName: string, component: HTMLElement, url?: string): Promise<JestAxeResult>;
 
-export { makeBlockAccessible, makeMenuAccessible, testUiComponent, updateAccordionTriggerAriaAttributes, updateCheckboxAriaAttributes, updateRadioAriaAttributes, updateToggleAriaAttribute };
+export { makeBlockAccessible, makeComboboxAccessible, makeMenuAccessible, testUiComponent, updateAccordionTriggerAriaAttributes, updateCheckboxAriaAttributes, updateRadioAriaAttributes, updateToggleAriaAttribute };

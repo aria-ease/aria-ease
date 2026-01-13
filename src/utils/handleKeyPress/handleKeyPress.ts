@@ -1,4 +1,4 @@
-import { NodeListOfHTMLElement } from "../../../Types";
+import { NodeListOfHTMLElement } from "Types";
 
 /**
  * Checks if an element is a text input field.

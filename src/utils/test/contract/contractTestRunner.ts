@@ -31,7 +31,12 @@ export async function runContractTests(componentName: string, component: HTMLEle
 
     for (const test of componentContract.static[0].assertions) {
         if(test.target !== "relative") {
-            const target = component.querySelector(componentContract.selectors[test.target as keyof Selector]) as HTMLElement;
+            const selector = componentContract.selectors[test.target as keyof Selector];
+            if (!selector) {
+                failures.push(`Selector for target ${test.target} not found.`);
+                continue;
+            }
+            const target = component.querySelector(selector) as HTMLElement;
 
             if (!target) {
                 failures.push(`Target ${test.target} not found.`);
@@ -102,14 +107,18 @@ export async function runContractTests(componentName: string, component: HTMLEle
 
         // Reset component state before each test for proper isolation
         // Uses generic "container" and "trigger" selectors
-        const containerElement = component.querySelector(componentContract.selectors.container) as HTMLElement;
-        const triggerElement = component.querySelector(componentContract.selectors.trigger) as HTMLElement;
-        if (containerElement && triggerElement) {
-            // Close container if it's open
-            const isContainerVisible = containerElement.style.display !== "none";
-            if (isContainerVisible) {
-                fireEvent.click(triggerElement); // Close the component
-                await new Promise(resolve => setTimeout(resolve, 50)); // Wait for state update
+        const containerSelector = componentContract.selectors.container;
+        const triggerSelector = componentContract.selectors.trigger;
+        if (containerSelector && triggerSelector) {
+            const containerElement = component.querySelector(containerSelector) as HTMLElement;
+            const triggerElement = component.querySelector(triggerSelector) as HTMLElement;
+            if (containerElement && triggerElement) {
+                // Close container if it's open
+                const isContainerVisible = containerElement.style.display !== "none";
+                if (isContainerVisible) {
+                    fireEvent.click(triggerElement); // Close the component
+                    await new Promise(resolve => setTimeout(resolve, 50)); // Wait for state update
+                }
             }
         }
 
@@ -131,7 +140,12 @@ export async function runContractTests(componentName: string, component: HTMLEle
                 if (act.target === "document") {
                     fireEvent.click(document.body);
                 } else {
-                    const target = component.querySelector(componentContract.selectors[act.target as keyof Selector]) as HTMLElement;
+                    const selector = componentContract.selectors[act.target as keyof Selector];
+                    if (!selector) {
+                        failures.push(`Selector for action target ${act.target} not found.`);
+                        continue;
+                    }
+                    const target = component.querySelector(selector) as HTMLElement;
 
                     if (target instanceof HTMLElement) {
                         target.focus();
@@ -150,8 +164,14 @@ export async function runContractTests(componentName: string, component: HTMLEle
                 // For navigation keys on focusable elements, fire on the currently focused element
                 if (act.target === "focusable" && ["Arrow Up", "Arrow Down", "Arrow Left", "Arrow Right", "Escape"].includes(act.key || "")) {
                     const activeElement = document.activeElement;
-                    const containerElement = component.querySelector(componentContract.selectors.container) as HTMLElement;
-                    const focusableItems = containerElement?.querySelectorAll(componentContract.selectors.focusable);
+                    const containerSelector = componentContract.selectors.container;
+                    const focusableSelector = componentContract.selectors.focusable;
+                    if (!containerSelector || !focusableSelector) {
+                        failures.push(`Container or focusable selector not found.`);
+                        continue;
+                    }
+                    const containerElement = component.querySelector(containerSelector) as HTMLElement;
+                    const focusableItems = containerElement?.querySelectorAll(focusableSelector);
                     
                     // Fire on currently focused item, or first item if none focused
                     if (focusableItems && focusableItems.length > 0) {
@@ -161,7 +181,12 @@ export async function runContractTests(componentName: string, component: HTMLEle
                         target = containerElement;
                     }
                 } else {
-                    target = component.querySelector(componentContract.selectors[act.target as keyof Selector]) as HTMLElement;
+                    const selector = componentContract.selectors[act.target as keyof Selector];
+                    if (!selector) {
+                        failures.push(`Selector for keypress target ${act.target} not found.`);
+                        continue;
+                    }
+                    target = component.querySelector(selector) as HTMLElement;
                 }
                 
                 if (target) {
@@ -215,7 +240,12 @@ export async function runContractTests(componentName: string, component: HTMLEle
                 // Resolve relative target based on POST-ACTION state
                 target = resolveRelativeTarget(component, relativeSelector, assertion.expectedValue);
             } else {
-                target = component.querySelector(componentContract.selectors[assertion.target as keyof Selector]) as HTMLElement;
+                const selector = componentContract.selectors[assertion.target as keyof Selector];
+                if (!selector) {
+                    failures.push(`Selector for assertion target ${assertion.target} not found.`);
+                    continue;
+                }
+                target = component.querySelector(selector) as HTMLElement;
             }
 
             if (!target) {
@@ -284,5 +314,5 @@ export async function runContractTests(componentName: string, component: HTMLEle
     // Final summary
     reporter.summary(failures);
 
-    return { passes, failures, };
+    return { passes, failures, }
 }

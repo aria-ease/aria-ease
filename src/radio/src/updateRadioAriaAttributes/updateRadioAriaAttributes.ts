@@ -6,7 +6,7 @@
  * @param {number} currentPressedRadioIndex Index of the currently checked or unchecked radio button.
  */
 
-import { RadioStates } from "../../../../Types";
+import { RadioStates } from "Types";
 
 export function updateRadioAriaAttributes(radioId: string, radiosClass: string, radioStates: RadioStates[], currentPressedRadioIndex: number): void {
     const radioDiv: HTMLElement | null = document.querySelector(`#${radioId}`);

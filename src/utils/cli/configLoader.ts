@@ -12,7 +12,7 @@ function validateConfig(config: unknown): { valid: boolean; errors: string[] } {
 
   if (!config || typeof config !== 'object') {
     errors.push('Config must be an object');
-    return { valid: false, errors };
+    return { valid: false, errors }
   }
 
   const cfg = config as Partial<AriaEaseConfig>;

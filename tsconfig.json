@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
       "target": "esnext",
-      "lib": ["dom", "dom.iterable", "esnext"],
+      "lib": ["dom", "dom.iterable", "esnext", "esnext.disposable"],
       "allowJs": true,
       "resolveJsonModule": true,
       "skipLibCheck": true,
@@ -17,6 +17,7 @@
       "moduleResolution": "node",
       "declaration": true,
       "declarationMap": true,
+      "noEmit": true,
       "baseUrl": ".",
       "paths": {
         "aria-ease/test": ["dist/src/utils/test/index.d.ts"],
@@ -25,4 +26,3 @@
     "include": ["src", "bin/cli.ts"],
     "exclude": ["node_modules", "tests", "benchmarks", "dist"]
   }
-  

@@ -4,4 +4,5 @@ export * from "./src/checkbox";
 export * from "./src/menu";
 export * from "./src/radio";
 export * from "./src/toggle";
+export * from "./src/combobox";
 export { testUiComponent } from "./src/utils/test";
