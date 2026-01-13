@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [2.9.0](https://github.com/aria-ease/aria-ease/compare/v2.8.4...v2.9.0) (2026-01-13)
+
+
+### Features
+
+* added combobox utility and contract test ([c23481b](https://github.com/aria-ease/aria-ease/commit/c23481b1a1aebec681353e472fd6482decba7edd))
+
 ### [2.8.4](https://github.com/aria-ease/aria-ease/compare/v2.8.3...v2.8.4) (2026-01-08)
 
 
