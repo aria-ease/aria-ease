@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [3.0.0](https://github.com/aria-ease/aria-ease/compare/v2.9.0...v3.0.0) (2026-01-14)
+
+
+### Features
+
+* **menu:** auto-initialize ARIA attributes in makeMenuAccessible ([5c7f8d5](https://github.com/aria-ease/aria-ease/commit/5c7f8d5e342f80cb225f43457d492832c18d0f95))
+
 ## [2.9.0](https://github.com/aria-ease/aria-ease/compare/v2.8.4...v2.9.0) (2026-01-13)
 
 
