@@ -10033,6 +10033,10 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }, cleanup: () => {
     } };
   }
+  triggerButton.setAttribute("aria-haspopup", "true");
+  triggerButton.setAttribute("aria-controls", menuId);
+  triggerButton.setAttribute("aria-expanded", "false");
+  menuDiv.setAttribute("role", "menu");
   const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
@@ -10162,6 +10166,13 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     setAria(false);
     triggerButton.focus();
   }
+  function intializeMenuItems() {
+    const items = getItems();
+    items.forEach((item) => {
+      item.setAttribute("role", "menuitem");
+    });
+  }
+  intializeMenuItems();
   function cleanup() {
     removeListeners();
     menuDiv.style.display = "none";

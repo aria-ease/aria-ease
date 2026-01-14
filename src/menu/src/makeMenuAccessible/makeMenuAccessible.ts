@@ -27,6 +27,12 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
     return { openMenu: () => {}, closeMenu: () => {}, cleanup: () => {} }; 
   }
 
+  triggerButton.setAttribute("aria-haspopup", "true");
+  triggerButton.setAttribute("aria-controls", menuId);
+  triggerButton.setAttribute("aria-expanded", "false");
+
+  menuDiv.setAttribute("role", "menu");
+
   /* const handlerMap = new Map<HTMLElement, (event: KeyboardEvent) => void>();
   const submenuInstances = new Map<string, ReturnType<typeof makeMenuAccessible>>(); */
 
@@ -179,6 +185,15 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
     setAria(false);
     triggerButton.focus();
   }
+
+  function intializeMenuItems() {
+    const items = getItems();
+    items.forEach((item: HTMLElement) => {
+      item.setAttribute("role", "menuitem");
+    });
+  }
+
+  intializeMenuItems();
 
   function cleanup() {
     removeListeners();

@@ -4,7 +4,7 @@
  * @param {string} blockItemsClass The shared class of the elements that are children of the block.
 */
 
-import { NodeListOfHTMLElement, AccessibilityInstance } from "Types"
+import { NodeListOfHTMLElement, AccessibilityInstance } from "Types";
 import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
 
 

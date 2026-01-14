@@ -81,7 +81,7 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-selected",
                     "expectedValue": "true | false",
-                    "failureMessage": "Each option should have 'aria-selected' attribute to indicate selection state."
+                    "failureMessage": "Each listbox option should have 'aria-selected' attribute to indicate selection state."
                 }
             ]
         }
@@ -105,7 +105,7 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "true",
-                    "failureMessage": "Input's aria-expanded should be true after pressing ArrowDown."
+                    "failureMessage": "Combobox input's aria-expanded should be true after pressing ArrowDown."
                 },
                 {
                     "target": "input",
@@ -117,7 +117,7 @@
             ]
         },
         {
-            "description": "Second ArrowDown press navigates to first option.",
+            "description": "Second ArrowDown press navigates to first listbox option.",
             "action": [
                 { "type": "focus", "target": "input" },
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },
@@ -129,7 +129,7 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-activedescendant",
                     "expectedValue": "!empty",
-                    "failureMessage": "Second ArrowDown should set first option as active descendant."
+                    "failureMessage": "Second ArrowDown should set first listbox option as active descendant."
                 },
                 {
                     "target": "relative",
@@ -137,12 +137,12 @@
                     "attribute": "aria-selected",
                     "expectedValue": "true",
                     "relativeTarget": "first",
-                    "failureMessage": "First option should have aria-selected=true after second ArrowDown."
+                    "failureMessage": "First listbox option should have aria-selected=true after second ArrowDown."
                 }
             ]
         },
         {
-            "description": "ArrowDown navigates to next option with wrapping.",
+            "description": "ArrowDown navigates to next listbox option with wrapping.",
             "action": [
                 { "type": "focus", "target": "input" },
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },
@@ -156,7 +156,7 @@
                     "attribute": "aria-selected",
                     "expectedValue": "true",
                     "relativeTarget": "second",
-                    "failureMessage": "Second option should be selected after third ArrowDown."
+                    "failureMessage": "Second listbox option should be selected after third ArrowDown."
                 }
             ]
         },
@@ -192,12 +192,12 @@
                     "attribute": "aria-selected",
                     "expectedValue": "true",
                     "relativeTarget": "first",
-                    "failureMessage": "First option should be selected after navigating down then up."
+                    "failureMessage": "First listbox option should be selected after navigating down then up."
                 }
             ]
         },
         {
-            "description": "Home key navigates to first option.",
+            "description": "Home key navigates to first listbox option.",
             "action": [
                 { "type": "focus", "target": "input" },
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },
@@ -211,12 +211,12 @@
                     "attribute": "aria-selected",
                     "expectedValue": "true",
                     "relativeTarget": "first",
-                    "failureMessage": "Home key should navigate to first option."
+                    "failureMessage": "Home key should navigate to first listbox option."
                 }
             ]
         },
         {
-            "description": "End key navigates to last option.",
+            "description": "End key navigates to last listbox option.",
             "action": [
                 { "type": "focus", "target": "input" },
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },
@@ -229,7 +229,7 @@
                     "attribute": "aria-selected",
                     "expectedValue": "true",
                     "relativeTarget": "last",
-                    "failureMessage": "End key should navigate to last option."
+                    "failureMessage": "End key should navigate to last listbox option."
                 }
             ]
         },
@@ -252,13 +252,13 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
-                    "failureMessage": "Input's aria-expanded should be false after selection."
+                    "failureMessage": "Combobox input's aria-expanded should be false after selection."
                 },
                 {
                     "target": "input",
                     "assertion": "toHaveValue",
                     "expectedValue": "!empty",
-                    "failureMessage": "Input should contain the selected option's text."
+                    "failureMessage": "Combobox input should contain the selected option's text."
                 }
             ]
         },
@@ -280,7 +280,7 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
-                    "failureMessage": "Input's aria-expanded should be false after Escape."
+                    "failureMessage": "Combobox input's aria-expanded should be false after Escape."
                 }
             ]
         },
@@ -296,7 +296,7 @@
                     "target": "input",
                     "assertion": "toHaveValue",
                     "expectedValue": "",
-                    "failureMessage": "Escape should clear input value when listbox is closed."
+                    "failureMessage": "Escape should clear Combobox input value when listbox is closed."
                 }
             ]
         },
@@ -335,18 +335,18 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
-                    "failureMessage": "Input's aria-expanded should be false after clicking option."
+                    "failureMessage": "Combobox input's aria-expanded should be false after clicking option."
                 },
                 {
                     "target": "input",
                     "assertion": "toHaveValue",
                     "expectedValue": "!empty",
-                    "failureMessage": "Input should contain the clicked option's text."
+                    "failureMessage": "Combobox input should contain the clicked option's text."
                 }
             ]
         },
         {
-            "description": "Mouse hover sets aria-selected on hovered option.",
+            "description": "Mouse hover sets aria-selected on hovered listbox option.",
             "requiresBrowser": true,
             "action": [
                 { "type": "focus", "target": "input" },
@@ -360,7 +360,7 @@
                     "attribute": "aria-selected",
                     "expectedValue": "true",
                     "relativeTarget": "second",
-                    "failureMessage": "Hovered option should have aria-selected=true."
+                    "failureMessage": "Hovered listbox option should have aria-selected=true."
                 }
             ]
         },
@@ -382,7 +382,7 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
-                    "failureMessage": "Input's aria-expanded should be false after clicking outside."
+                    "failureMessage": "Combobox input's aria-expanded should be false after clicking outside."
                 }
             ]
         },
@@ -402,12 +402,12 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "true",
-                    "failureMessage": "Input's aria-expanded should be true after clicking button."
+                    "failureMessage": "Combobox input's aria-expanded should be true after clicking button."
                 },
                 {
                     "target": "input",
                     "assertion": "toHaveFocus",
-                    "failureMessage": "Input should have focus after clicking toggle button."
+                    "failureMessage": "Combobox input should have focus after clicking toggle button."
                 }
             ]
         },
@@ -428,12 +428,12 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
-                    "failureMessage": "Input's aria-expanded should be false after toggling closed."
+                    "failureMessage": "Combobox input's aria-expanded should be false after toggling closed."
                 }
             ]
         },
         {
-            "description": "Navigation wraps from last to first option on ArrowDown.",
+            "description": "Navigation wraps from last to first listbox option on ArrowDown.",
             "action": [
                 { "type": "focus", "target": "input" },
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },
@@ -447,12 +447,12 @@
                     "attribute": "aria-selected",
                     "expectedValue": "true",
                     "relativeTarget": "first",
-                    "failureMessage": "Navigation should wrap from last to first option on ArrowDown."
+                    "failureMessage": "Navigation should wrap from last to first listbox option on ArrowDown."
                 }
             ]
         },
         {
-            "description": "Navigation wraps from first to last option on ArrowUp.",
+            "description": "Navigation wraps from first to last listbox option on ArrowUp.",
             "action": [
                 { "type": "focus", "target": "input" },
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },
@@ -466,7 +466,7 @@
                     "attribute": "aria-selected",
                     "expectedValue": "true",
                     "relativeTarget": "last",
-                    "failureMessage": "Navigation should wrap from first to last option on ArrowUp."
+                    "failureMessage": "Navigation should wrap from first to last listbox option on ArrowUp."
                 }
             ]
         }
