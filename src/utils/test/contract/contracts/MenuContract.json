@@ -34,14 +34,14 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-haspopup",
                     "expectedValue": "true | menu",
-                    "failureMessage": "Menu trigger button doesn't conform to the ARIA Menu Button pattern as specified in APG 1.2. Menu button trigger should have 'aria-popup=true' attribute. This helps assistive technology to identify the button as one that toggles a panel div display."
+                    "failureMessage": "Menu trigger button doesn't conform to the ARIA Menu Button pattern as specified in APG 1.2. Menu button trigger should have 'aria-haspopup=true | menu' attribute. This helps assistive technology to identify the button as one that toggles a panel div display."
                 },
                 {
                     "target": "trigger",
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "true | false",
-                    "failureMessage": "Menu trigger button doesn't conform to the ARIA Menu Button pattern as specified in APG 1.2. Menu trigger button should have 'aria-popup=true' attribute. This helps assistive technology to keep track of the open or close state of the menu panel div that the button controls."
+                    "failureMessage": "Menu trigger button doesn't conform to the ARIA Menu Button pattern as specified in APG 1.2. Menu trigger button should have 'aria-expanded=true | false' attribute. This helps assistive technology to keep track of the open or close state of the menu panel div that the button controls."
                 },
                 {
                     "target": "trigger",

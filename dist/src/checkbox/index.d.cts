@@ -1,4 +1,4 @@
-import { b as CheckboxStates } from '../Types.d-BjpUW0_M.cjs';
+import { C as CheckboxStates } from '../Types.d-uG0Hm1yK.cjs';
 
 /**
  * Adds screen reader accessibility to multiple checkboxes. Updates the aria attributes of the checkboxes. Checkbox elements must possess the following aria attributes; aria-checked and aria-label.

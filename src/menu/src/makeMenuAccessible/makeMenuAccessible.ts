@@ -59,8 +59,8 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
         const isNested = isItemInNestedSubmenu(item);
         
         if (!isNested) {
-          if (!item.hasAttribute('tabindex')) {
-            item.setAttribute('tabindex', '-1');
+          if (!item.hasAttribute("tabindex")) {
+            item.setAttribute("tabindex", "-1");
           }
           filteredItems.push(item);
         }
@@ -88,7 +88,7 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
   function isItemInNestedSubmenu(item: HTMLElement): boolean {
     let parent = item.parentElement;
     while (parent && parent !== menuDiv) {
-      if (parent.getAttribute('role') === 'menu') {
+      if (parent.getAttribute("role") === "menu") {
         return true;
       }
       parent = parent.parentElement;

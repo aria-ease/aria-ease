@@ -40,7 +40,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         if(!cachedItems) {
             cachedItems = listBox.querySelectorAll(`.${listBoxItemsClass}`) as NodeListOf<HTMLElement>;
         }
-        return Array.from(cachedItems).filter(item => !item.hidden && item.style.display !== 'none');
+        return Array.from(cachedItems).filter(item => !item.hidden && item.style.display !== "none");
     }
 
     function isListboxOpen(): boolean {
@@ -65,13 +65,13 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
             activeItem.setAttribute("aria-selected", "true");
             comboboxInput.setAttribute("aria-activedescendant", itemId);
             
-            activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
             
             if (config?.onActiveDescendantChange) {
                 try {
                     config.onActiveDescendantChange(itemId, activeItem);
                 } catch (error) {
-                    console.error('[aria-ease] Error in onActiveDescendantChange callback:', error);
+                    console.error("[aria-ease] Error in onActiveDescendantChange callback:", error);
                 }
             }
         } else {
@@ -87,7 +87,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
             try {
                 config.onOpenChange(true);
             } catch (error) {
-                console.error('[aria-ease] Error in onOpenChange callback:', error);
+                console.error("[aria-ease] Error in onOpenChange callback:", error);
             }
         }
     }
@@ -104,7 +104,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
             try {
                 config.onOpenChange(false);
             } catch (error) {
-                console.error('[aria-ease] Error in onOpenChange callback:', error);
+                console.error("[aria-ease] Error in onOpenChange callback:", error);
             }
         }
     }
@@ -118,7 +118,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
             try {
                 config.onSelect(item, value);
             } catch (error) {
-                console.error('[aria-ease] Error in onSelect callback:', error);
+                console.error("[aria-ease] Error in onSelect callback:", error);
             }
         }
     }
@@ -128,7 +128,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         const isOpen = isListboxOpen();
 
         switch(event.key) {
-            case 'ArrowDown':
+            case "ArrowDown":
                 event.preventDefault();
                 if (!isOpen) {
                     openListbox();
@@ -144,7 +144,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 
                 break;
 
-            case 'ArrowUp':
+            case "ArrowUp":
                 event.preventDefault();
                 if (!isOpen) return;
                 
@@ -154,14 +154,14 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 }
                 break;
 
-            case 'Enter':
+            case "Enter":
                 if (isOpen && activeIndex >= 0 && activeIndex < visibleItems.length) {
                     event.preventDefault();
                     selectOption(visibleItems[activeIndex]);
                 }
                 break;
 
-            case 'Escape':
+            case "Escape":
                 if (isOpen) {
                     event.preventDefault();
                     closeListbox();
@@ -172,27 +172,27 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                         try {
                             config.onClear();
                         } catch (error) {
-                            console.error('[aria-ease] Error in onClear callback:', error);
+                            console.error("[aria-ease] Error in onClear callback:", error);
                         }
                     }
                 }
                 break;
 
-            case 'Home':
+            case "Home":
                 if (isOpen && visibleItems.length > 0) {
                     event.preventDefault();
                     setActiveDescendant(0);
                 }
                 break;
 
-            case 'End':
+            case "End":
                 if (isOpen && visibleItems.length > 0) {
                     event.preventDefault();
                     setActiveDescendant(visibleItems.length - 1);
                 }
                 break;
 
-            case 'Tab':
+            case "Tab":
                 if (isOpen) {
                     closeListbox();
                 }
@@ -236,22 +236,22 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
     }
 
     function handleListButtonKeyDown(event: KeyboardEvent) {
-        if (event.key === 'Enter' || event.key === ' ') {
+        if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
             handleListButtonClick();
         }
     }
 
-    comboboxInput.addEventListener('keydown', handleInputKeyDown);
-    listBox.addEventListener('mousemove', handleMouseMove);
-    listBox.addEventListener('mousedown', handleMouseDown);
-    document.addEventListener('mousedown', handleClickOutside);
+    comboboxInput.addEventListener("keydown", handleInputKeyDown);
+    listBox.addEventListener("mousemove", handleMouseMove);
+    listBox.addEventListener("mousedown", handleMouseDown);
+    document.addEventListener("mousedown", handleClickOutside);
 
     if (listButton) {
-        listButton.setAttribute('tabindex', '-1');
-        listButton.setAttribute('aria-label', 'Toggle options');
-        listButton.addEventListener('click', handleListButtonClick);
-        listButton.addEventListener('keydown', handleListButtonKeyDown);
+        listButton.setAttribute("tabindex", "-1");
+        listButton.setAttribute("aria-label", "Toggle options");
+        listButton.addEventListener("click", handleListButtonClick);
+        listButton.addEventListener("keydown", handleListButtonKeyDown);
     }
 
     function initializeOptions() {
@@ -259,13 +259,13 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         if (items.length === 0) return; // Early return if no items
         
         items.forEach((item, index) => {
-            item.setAttribute('role', 'option');
-            item.setAttribute('aria-selected', 'false');
-            const currentId = item.getAttribute('id');
+            item.setAttribute("role", "option");
+            item.setAttribute("aria-selected", "false");
+            const currentId = item.getAttribute("id");
             if (!currentId || currentId === "") {
                 const itemId = `${listBoxId}-option-${index}`;
                 item.id = itemId; // Set property
-                item.setAttribute('id', itemId); // Also set attribute
+                item.setAttribute("id", itemId); // Also set attribute
             }
         });
     }
@@ -273,14 +273,14 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
     initializeOptions();
 
     function cleanup() {
-        comboboxInput.removeEventListener('keydown', handleInputKeyDown);
-        listBox.removeEventListener('mousemove', handleMouseMove);
-        listBox.removeEventListener('mousedown', handleMouseDown);
-        document.removeEventListener('mousedown', handleClickOutside);
+        comboboxInput.removeEventListener("keydown", handleInputKeyDown);
+        listBox.removeEventListener("mousemove", handleMouseMove);
+        listBox.removeEventListener("mousedown", handleMouseDown);
+        document.removeEventListener("mousedown", handleClickOutside);
         
         if (listButton) {
-            listButton.removeEventListener('click', handleListButtonClick);
-            listButton.removeEventListener('keydown', handleListButtonKeyDown);
+            listButton.removeEventListener("click", handleListButtonClick);
+            listButton.removeEventListener("keydown", handleListButtonKeyDown);
         }
     }
 
