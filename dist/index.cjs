@@ -23,6 +23,7 @@ var __copyProps = (to, from, except, desc) => {
   }
   return to;
 };
+var __reExport = (target, mod, secondTarget) => (__copyProps(target, mod, "default"), secondTarget && __copyProps(secondTarget, mod, "default"));
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
   // If the importer is in node compatibility mode or this is not an ESM
   // file that has been converted to a CommonJS file using a Babel-
@@ -9399,6 +9400,20 @@ ${"\u2550".repeat(60)}`);
   }
 });
 
+// node_modules/@playwright/test/index.mjs
+var test_exports = {};
+__export(test_exports, {
+  default: () => import_test.default
+});
+var import_test;
+var init_test = __esm({
+  "node_modules/@playwright/test/index.mjs"() {
+    "use strict";
+    __reExport(test_exports, require("playwright/test"));
+    import_test = __toESM(require("playwright/test"), 1);
+  }
+});
+
 // src/utils/test/contract/contractTestRunnerPlaywright.ts
 var contractTestRunnerPlaywright_exports = {};
 __export(contractTestRunnerPlaywright_exports, {
@@ -9432,6 +9447,18 @@ async function runContractTestsPlaywright(componentName, url) {
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
     await page.waitForSelector(mainSelector, { timeout: 6e4 });
+    if (componentName === "menu" && componentContract.selectors.trigger) {
+      await page.waitForFunction(
+        (selector) => {
+          const trigger = document.querySelector(selector);
+          return trigger && trigger.getAttribute("data-menu-initialized") === "true";
+        },
+        componentContract.selectors.trigger,
+        { timeout: 5e3 }
+      ).catch(() => {
+        console.warn("Menu initialization signal not detected, continuing with tests...");
+      });
+    }
     async function resolveRelativeTarget(selector, relative) {
       const items = await page.locator(selector).all();
       switch (relative) {
@@ -9556,7 +9583,7 @@ async function runContractTestsPlaywright(componentName, url) {
               continue;
             }
             await relativeElement.click();
-            await page.waitForTimeout(200);
+            await page.waitForTimeout(componentName === "menu" ? 500 : 200);
           } else {
             const actionSelector = componentContract.selectors[act.target];
             if (!actionSelector) {
@@ -9564,7 +9591,7 @@ async function runContractTestsPlaywright(componentName, url) {
               continue;
             }
             await page.locator(actionSelector).first().click();
-            await page.waitForTimeout(200);
+            await page.waitForTimeout(componentName === "menu" ? 500 : 200);
           }
         }
         if (act.type === "keypress" && act.key) {
@@ -9658,32 +9685,48 @@ async function runContractTestsPlaywright(componentName, url) {
           continue;
         }
         if (assertion.assertion === "toBeVisible") {
-          const isVisible = await target.isVisible();
-          if (isVisible) {
+          try {
+            await (0, test_exports.expect)(target).toBeVisible({ timeout: 3e3 });
             passes.push(`${assertion.target} is visible as expected. Test: "${dynamicTest.description}".`);
-          } else {
-            failures.push(`${assertion.failureMessage}`);
+          } catch {
+            const debugState = await page.evaluate((sel) => {
+              const el = sel ? document.querySelector(sel) : null;
+              if (!el) return "element not found";
+              const styles = window.getComputedStyle(el);
+              return `display:${styles.display}, visibility:${styles.visibility}, opacity:${styles.opacity}`;
+            }, componentContract.selectors[assertion.target] || "");
+            failures.push(`${assertion.failureMessage} (actual: ${debugState})`);
           }
         }
         if (assertion.assertion === "notToBeVisible") {
-          const isVisible = await target.isVisible();
-          if (!isVisible) {
+          try {
+            await (0, test_exports.expect)(target).toBeHidden({ timeout: 5e3 });
             passes.push(`${assertion.target} is not visible as expected. Test: "${dynamicTest.description}".`);
-          } else {
-            failures.push(assertion.failureMessage + ` ${assertion.target} is still visible.`);
+          } catch {
+            const debugState = await page.evaluate((sel) => {
+              const el = sel ? document.querySelector(sel) : null;
+              if (!el) return "element not found";
+              const styles = window.getComputedStyle(el);
+              return `display:${styles.display}, visibility:${styles.visibility}, opacity:${styles.opacity}`;
+            }, componentContract.selectors[assertion.target] || "");
+            failures.push(assertion.failureMessage + ` ${assertion.target} is still visible (actual: ${debugState}).`);
           }
         }
         if (assertion.assertion === "toHaveAttribute" && assertion.attribute && assertion.expectedValue) {
-          const attributeValue = await target.getAttribute(assertion.attribute);
-          if (assertion.expectedValue === "!empty") {
-            if (attributeValue && attributeValue.trim() !== "") {
-              passes.push(`${assertion.target} has non-empty "${assertion.attribute}". Test: "${dynamicTest.description}".`);
+          try {
+            if (assertion.expectedValue === "!empty") {
+              const attributeValue = await target.getAttribute(assertion.attribute);
+              if (attributeValue && attributeValue.trim() !== "") {
+                passes.push(`${assertion.target} has non-empty "${assertion.attribute}". Test: "${dynamicTest.description}".`);
+              } else {
+                failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should not be empty, found "${attributeValue}".`);
+              }
             } else {
-              failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should not be empty, found "${attributeValue}".`);
+              await (0, test_exports.expect)(target).toHaveAttribute(assertion.attribute, assertion.expectedValue, { timeout: 3e3 });
+              passes.push(`${assertion.target} has expected "${assertion.attribute}". Test: "${dynamicTest.description}".`);
             }
-          } else if (attributeValue === assertion.expectedValue) {
-            passes.push(`${assertion.target} has expected "${assertion.attribute}". Test: "${dynamicTest.description}".`);
-          } else {
+          } catch {
+            const attributeValue = await target.getAttribute(assertion.attribute);
             failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should be "${assertion.expectedValue}", found "${attributeValue}".`);
           }
         }
@@ -9708,10 +9751,10 @@ async function runContractTestsPlaywright(componentName, url) {
           }
         }
         if (assertion.assertion === "toHaveFocus") {
-          const hasFocus = await target.evaluate((el) => el === document.activeElement);
-          if (hasFocus) {
+          try {
+            await (0, test_exports.expect)(target).toBeFocused({ timeout: 5e3 });
             passes.push(`${assertion.target} has focus as expected. Test: "${dynamicTest.description}".`);
-          } else {
+          } catch {
             failures.push(`${assertion.failureMessage}`);
           }
         }
@@ -9759,6 +9802,7 @@ var init_contractTestRunnerPlaywright = __esm({
   "src/utils/test/contract/contractTestRunnerPlaywright.ts"() {
     "use strict";
     import_playwright = require("playwright");
+    init_test();
     import_fs = require("fs");
     init_contract();
     init_ContractReporter();
@@ -10037,6 +10081,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   triggerButton.setAttribute("aria-controls", menuId);
   triggerButton.setAttribute("aria-expanded", "false");
   menuDiv.setAttribute("role", "menu");
+  menuDiv.setAttribute("aria-labelledby", triggerId);
+  menuDiv.style.display = "none";
   const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
@@ -10172,9 +10218,41 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
       item.setAttribute("role", "menuitem");
     });
   }
+  function handleTriggerKeydown(event) {
+    const key = event.key;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
+      if (isExpanded) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    }
+  }
+  let isTransitioning = false;
+  function handleTriggerClick() {
+    if (isTransitioning) return;
+    const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
+    isTransitioning = true;
+    if (isExpanded) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+    setTimeout(() => {
+      isTransitioning = false;
+    }, 100);
+  }
   intializeMenuItems();
+  triggerButton.addEventListener("keydown", handleTriggerKeydown);
+  triggerButton.addEventListener("click", handleTriggerClick);
+  triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
+    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
+    triggerButton.removeEventListener("click", handleTriggerClick);
+    triggerButton.removeAttribute("data-menu-initialized");
     menuDiv.style.display = "none";
     setAria(false);
     submenuInstances.forEach((instance) => instance.cleanup());
@@ -10289,7 +10367,9 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
       }
       activeItem.setAttribute("aria-selected", "true");
       comboboxInput.setAttribute("aria-activedescendant", itemId);
-      activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      if (typeof activeItem.scrollIntoView === "function") {
+        activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
       if (config2?.onActiveDescendantChange) {
         try {
           config2.onActiveDescendantChange(itemId, activeItem);

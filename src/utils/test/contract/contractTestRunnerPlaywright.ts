@@ -1,4 +1,5 @@
 import { chromium, Browser, Page } from "playwright";
+import { expect } from "@playwright/test";
 import { readFileSync } from "fs";
 import contract from "./contract.json";
 import type { ComponentContract, Contract } from "Types";
@@ -42,15 +43,28 @@ export async function runContractTestsPlaywright(componentName: string, url: str
     });
     
     // Wait for the main component element (try trigger first, fall back to input or container)
-    const mainSelector = componentContract.selectors.trigger || 
-                        componentContract.selectors.input || 
-                        componentContract.selectors.container;
+    const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
     
     if (!mainSelector) {
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
     
     await page.waitForSelector(mainSelector, { timeout: 60000 });
+
+    // Additional wait for component initialization (for menu and combobox)
+    if (componentName === 'menu' && componentContract.selectors.trigger) {
+      await page.waitForFunction(
+        (selector) => {
+          const trigger = document.querySelector(selector);
+          return trigger && trigger.getAttribute('data-menu-initialized') === 'true';
+        },
+        componentContract.selectors.trigger,
+        { timeout: 5000 }
+      ).catch(() => {
+        // If timeout, continue anyway (for backward compatibility)
+        console.warn('Menu initialization signal not detected, continuing with tests...');
+      });
+    }
 
     async function resolveRelativeTarget(selector: string, relative: string) {
       const items = await page.locator(selector).all();
@@ -195,7 +209,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               continue;
             }
             await relativeElement.click();
-            await page.waitForTimeout(200);
+            await page.waitForTimeout(componentName === 'menu' ? 500 : 200);
           } else {
             const actionSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
             if (!actionSelector) {
@@ -203,7 +217,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               continue;
             }
             await page.locator(actionSelector).first().click();
-            await page.waitForTimeout(200);
+            await page.waitForTimeout(componentName === 'menu' ? 500 : 200);
           }
         }
 
@@ -309,38 +323,57 @@ export async function runContractTestsPlaywright(componentName: string, url: str
           continue;
         }
 
-        // Evaluate assertion
+        // Evaluate assertion with retry logic
         if (assertion.assertion === "toBeVisible") {
-          const isVisible = await target.isVisible();
-          if (isVisible) {
+          try {
+            await expect(target).toBeVisible({ timeout: 3000 });
             passes.push(`${assertion.target} is visible as expected. Test: "${dynamicTest.description}".`);
-          } else {
-            failures.push(`${assertion.failureMessage}`);
+          } catch {
+            // Debug: check actual state
+            const debugState = await page.evaluate((sel) => {
+              const el = sel ? document.querySelector(sel) : null;
+              if (!el) return 'element not found';
+              const styles = window.getComputedStyle(el);
+              return `display:${styles.display}, visibility:${styles.visibility}, opacity:${styles.opacity}`;
+            }, componentContract.selectors[assertion.target as keyof typeof componentContract.selectors] || '');
+            failures.push(`${assertion.failureMessage} (actual: ${debugState})`);
           }
         }
 
         if (assertion.assertion === "notToBeVisible") {
-          const isVisible = await target.isVisible();
-          if (!isVisible) {
+          try {
+            await expect(target).toBeHidden({ timeout: 5000 });
             passes.push(`${assertion.target} is not visible as expected. Test: "${dynamicTest.description}".`);
-          } else {
-            failures.push(assertion.failureMessage + ` ${assertion.target} is still visible.`);
+          } catch{
+            // Debug: check actual state
+            const debugState = await page.evaluate((sel) => {
+              const el = sel ? document.querySelector(sel) : null;
+              if (!el) return 'element not found';
+              const styles = window.getComputedStyle(el);
+              return `display:${styles.display}, visibility:${styles.visibility}, opacity:${styles.opacity}`;
+            }, componentContract.selectors[assertion.target as keyof typeof componentContract.selectors] || '');
+            failures.push(assertion.failureMessage + ` ${assertion.target} is still visible (actual: ${debugState}).`);
           }
         }
 
         if (assertion.assertion === "toHaveAttribute" && assertion.attribute && assertion.expectedValue) {
-          const attributeValue = await target.getAttribute(assertion.attribute);
-          
-          // Handle special case: !empty means attribute should have any non-empty value
-          if (assertion.expectedValue === "!empty") {
-            if (attributeValue && attributeValue.trim() !== "") {
-              passes.push(`${assertion.target} has non-empty "${assertion.attribute}". Test: "${dynamicTest.description}".`);
+          try {
+            // Handle special case: !empty means attribute should have any non-empty value
+            if (assertion.expectedValue === "!empty") {
+              // For !empty, check that attribute exists and is not empty
+              const attributeValue = await target.getAttribute(assertion.attribute);
+              if (attributeValue && attributeValue.trim() !== "") {
+                passes.push(`${assertion.target} has non-empty "${assertion.attribute}". Test: "${dynamicTest.description}".`);
+              } else {
+                failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should not be empty, found "${attributeValue}".`);
+              }
             } else {
-              failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should not be empty, found "${attributeValue}".`);
+              // Use Playwright's expect with retry for specific values
+              await expect(target).toHaveAttribute(assertion.attribute, assertion.expectedValue, { timeout: 3000 });
+              passes.push(`${assertion.target} has expected "${assertion.attribute}". Test: "${dynamicTest.description}".`);
             }
-          } else if (attributeValue === assertion.expectedValue) {
-            passes.push(`${assertion.target} has expected "${assertion.attribute}". Test: "${dynamicTest.description}".`);
-          } else {
+          } catch {
+            const attributeValue = await target.getAttribute(assertion.attribute);
             failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should be "${assertion.expectedValue}", found "${attributeValue}".`);
           }
         }
@@ -368,10 +401,10 @@ export async function runContractTestsPlaywright(componentName: string, url: str
         }
 
         if (assertion.assertion === "toHaveFocus") {
-          const hasFocus = await target.evaluate((el) => el === document.activeElement);
-          if (hasFocus) {
+          try {
+            await expect(target).toBeFocused({ timeout: 5000 });
             passes.push(`${assertion.target} has focus as expected. Test: "${dynamicTest.description}".`);
-          } else {
+          } catch {
             failures.push(`${assertion.failureMessage}`);
           }
         }

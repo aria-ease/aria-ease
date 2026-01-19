@@ -3,7 +3,7 @@ import {
   __commonJS,
   __toESM,
   contract_default
-} from "./chunk-57O4KFP4.js";
+} from "./chunk-IPJYOFRK.js";
 
 // node_modules/ansi-styles/index.js
 var require_ansi_styles = __commonJS({
@@ -9439,6 +9439,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   triggerButton.setAttribute("aria-controls", menuId);
   triggerButton.setAttribute("aria-expanded", "false");
   menuDiv.setAttribute("role", "menu");
+  menuDiv.setAttribute("aria-labelledby", triggerId);
+  menuDiv.style.display = "none";
   const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
@@ -9574,9 +9576,41 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
       item.setAttribute("role", "menuitem");
     });
   }
+  function handleTriggerKeydown(event) {
+    const key = event.key;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
+      if (isExpanded) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    }
+  }
+  let isTransitioning = false;
+  function handleTriggerClick() {
+    if (isTransitioning) return;
+    const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
+    isTransitioning = true;
+    if (isExpanded) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+    setTimeout(() => {
+      isTransitioning = false;
+    }, 100);
+  }
   intializeMenuItems();
+  triggerButton.addEventListener("keydown", handleTriggerKeydown);
+  triggerButton.addEventListener("click", handleTriggerClick);
+  triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
+    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
+    triggerButton.removeEventListener("click", handleTriggerClick);
+    triggerButton.removeAttribute("data-menu-initialized");
     menuDiv.style.display = "none";
     setAria(false);
     submenuInstances.forEach((instance) => instance.cleanup());
@@ -9691,7 +9725,9 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
       }
       activeItem.setAttribute("aria-selected", "true");
       comboboxInput.setAttribute("aria-activedescendant", itemId);
-      activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      if (typeof activeItem.scrollIntoView === "function") {
+        activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      }
       if (config2?.onActiveDescendantChange) {
         try {
           config2.onActiveDescendantChange(itemId, activeItem);
@@ -13452,7 +13488,7 @@ async function testUiComponent(componentName, component, url) {
   let contract;
   if (url) {
     console.log(`\u{1F3AD} Running Playwright E2E tests on ${url}`);
-    const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-LGXSV2ZS.js");
+    const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-7U2O33SR.js");
     contract = await runContractTestsPlaywright(componentName, url);
   } else {
     console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);

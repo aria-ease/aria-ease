@@ -29,6 +29,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   triggerButton.setAttribute("aria-controls", menuId);
   triggerButton.setAttribute("aria-expanded", "false");
   menuDiv.setAttribute("role", "menu");
+  menuDiv.setAttribute("aria-labelledby", triggerId);
+  menuDiv.style.display = "none";
   const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
@@ -164,9 +166,41 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
       item.setAttribute("role", "menuitem");
     });
   }
+  function handleTriggerKeydown(event) {
+    const key = event.key;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
+      if (isExpanded) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    }
+  }
+  let isTransitioning = false;
+  function handleTriggerClick() {
+    if (isTransitioning) return;
+    const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
+    isTransitioning = true;
+    if (isExpanded) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+    setTimeout(() => {
+      isTransitioning = false;
+    }, 100);
+  }
   intializeMenuItems();
+  triggerButton.addEventListener("keydown", handleTriggerKeydown);
+  triggerButton.addEventListener("click", handleTriggerClick);
+  triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
+    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
+    triggerButton.removeEventListener("click", handleTriggerClick);
+    triggerButton.removeAttribute("data-menu-initialized");
     menuDiv.style.display = "none";
     setAria(false);
     submenuInstances.forEach((instance) => instance.cleanup());

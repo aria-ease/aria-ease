@@ -65,7 +65,10 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
             activeItem.setAttribute("aria-selected", "true");
             comboboxInput.setAttribute("aria-activedescendant", itemId);
             
-            activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            // scrollIntoView may not be available in all environments (e.g., JSDOM)
+            if (typeof activeItem.scrollIntoView === 'function') {
+                activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
+            }
             
             if (config?.onActiveDescendantChange) {
                 try {
