@@ -1,0 +1,77 @@
+name: 📚 Documentation Issue
+description: Report an issue with documentation or request documentation improvements
+title: "[Docs]: "
+labels: ["documentation", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve our documentation! Clear docs make aria-ease accessible to everyone.
+
+  - type: dropdown
+    id: type
+    attributes:
+      label: Documentation Issue Type
+      description: What kind of documentation issue is this?
+      options:
+        - Missing documentation
+        - Incorrect/outdated information
+        - Unclear explanation
+        - Broken link
+        - Code example doesn't work
+        - Typo or grammar
+        - Missing API reference
+        - Needs more examples
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: page
+    attributes:
+      label: Documentation Page
+      description: Which page or section has the issue?
+      placeholder: "https://ariaease.site/docs (or README.md, API Reference, etc.)"
+    validations:
+      required: true
+
+  - type: textarea
+    id: issue
+    attributes:
+      label: What's the issue?
+      description: Describe the problem with the current documentation
+      placeholder: |
+        The example for makeMenuAccessible shows an object parameter but the actual API takes separate parameters...
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested Improvement
+      description: How should the documentation be changed or improved?
+      placeholder: |
+        Update the code example to show:
+        Block.makeBlockAccessible('id', 'class')
+        Instead of:
+        Block.makeBlockAccessible({ blockId: 'id', ... })
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Any other information, screenshots, or examples
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      options:
+        - label: I have searched existing issues to ensure this isn't a duplicate
+          required: true
+        - label: I would be willing to submit a PR to fix this (if you need help, we can guide you!)
+          required: false

@@ -2,14 +2,18 @@ import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "playwright";
 import type { AxeResult } from "Types";
 
-export async function runAudit(url: string) {
+export async function runAudit(url: string, options?: { timeout?: number; waitUntil?: 'load' | 'domcontentloaded' | 'networkidle' }) {
     let browser;
+    
+    // Default to 60s timeout and domcontentloaded for better reliability
+    const timeout = options?.timeout || 60000;
+    const waitUntil = options?.waitUntil || 'domcontentloaded';
 
     try{ 
         browser = await chromium.launch({ headless: true });
         const context = await browser.newContext();
         const page = await context.newPage();
-        await page.goto(url, { waitUntil: 'networkidle' });
+        await page.goto(url, { waitUntil, timeout });
         const axe = new AxeBuilder({ page });
         const axeResults: AxeResult = await axe.analyze();
         return axeResults;

@@ -22,6 +22,8 @@ interface AriaEaseConfigAudit {
     urls?: [];
     rules?: object;
     output?: object;
+    timeout?: number;
+    waitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
 }
 
 interface AriaEaseConfigTest {
@@ -45,15 +47,17 @@ interface JestAxeResult {
 }
 
 interface Selector {
-    trigger: string;
-    menu: string;
-    items: string;
-    relative: string;
-    container: string;
-    items: string;
-    focusable: string;
-    submenuTrigger: string;
-    submenu: string;
+    trigger?: string;
+    menu?: string;
+    items?: string;
+    relative?: string;
+    container?: string;
+    focusable?: string;
+    submenuTrigger?: string;
+    submenu?: string;
+    input?: string;
+    listbox?: string;
+    button?: string;
 }
 
 interface Prerequisite {
@@ -83,6 +87,8 @@ interface ComponentContract {
             type: string;
             target: string;
             key?: string;
+            value?: string;
+            relativeTarget?: string;
         }>;
         assertions: Array<{
             target: string;
@@ -90,6 +96,7 @@ interface ComponentContract {
             attribute?: string;
             expectedValue?: string;
             failureMessage?: string;
+            relativeTarget?: string;
         }>;
     }>;
 }
@@ -110,6 +117,28 @@ interface FailureReport {
   wcagReference?: string;
 }
 
+interface AccessibilityInstance {
+  cleanup: () => void;
+  refresh?: () => void;
+  openMenu?: () => void;
+  closeMenu?: () => void;
+}
+
+interface ComboboxConfig {
+    comboboxInputId: string; 
+    comboboxButtonId?: string; 
+    listBoxId: string; 
+    listBoxItemsClass: string;
+    config?: config;
+}
+
+interface config {
+    onSelect?: (item: HTMLElement, value: string) => void;
+    onOpenChange?: (isOpen: boolean) => void;
+    onActiveDescendantChange?: (optionId: string, item: HTMLElement) => void;
+    onClear?: () => void;
+}
+
 export {
     AccordionStates,
     CheckboxStates,
@@ -122,7 +151,9 @@ export {
     ComponentContract,
     Selector,
     Prerequisite,
-    FailureReport
+    FailureReport,
+    AccessibilityInstance,
+    ComboboxConfig
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;

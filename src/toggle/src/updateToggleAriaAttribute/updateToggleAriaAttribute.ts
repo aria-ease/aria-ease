@@ -6,7 +6,7 @@
  * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle button.
 */
 
-import { ToggleStates } from "../../../../Types";
+import { ToggleStates } from "Types";
 
 export function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void {
   const toggleDiv: HTMLElement | null = document.querySelector(`#${toggleId}`);

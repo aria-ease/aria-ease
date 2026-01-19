@@ -30,5 +30,3 @@ function updateCheckboxAriaAttributes(checkboxId, checkboxesClass, checkboxState
 }
 
 export { updateCheckboxAriaAttributes };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

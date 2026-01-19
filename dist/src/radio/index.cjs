@@ -31,5 +31,3 @@ function updateRadioAriaAttributes(radioId, radiosClass, radioStates, currentPre
 }
 
 exports.updateRadioAriaAttributes = updateRadioAriaAttributes;
-//# sourceMappingURL=index.cjs.map
-//# sourceMappingURL=index.cjs.map

@@ -1,35 +1,70 @@
-import { NodeListOfHTMLElement } from "../../../Types";
+import { NodeListOfHTMLElement } from "Types";
 
-
+/**
+ * Checks if an element is a text input field.
+ * @param {HTMLElement} el The element to check.
+ * @returns {boolean} True if the element is a text input (text, email, password, tel, number).
+ */
 function isTextInput(el: HTMLElement): boolean {
     if (el.tagName !== "INPUT") return false;
     const type = (el as HTMLInputElement).type;
     return ["text", "email", "password", "tel", "number"].includes(type);
 }
 
+/**
+ * Checks if an element is a textarea.
+ * @param {HTMLElement} el The element to check.
+ * @returns {boolean} True if the element is a textarea.
+ */
 function isTextArea(el: HTMLElement): boolean {
     return el.tagName === "TEXTAREA";
 }
 
+/**
+ * Checks if an element is a native button element.
+ * @param {HTMLElement} el The element to check.
+ * @returns {boolean} True if the element is a semantic button or input with button type.
+ */
 export function isNativeButton(el: HTMLElement): boolean {
     return el.tagName === "BUTTON" || (el.tagName === "INPUT" && ["button", "submit", "reset"].includes((el as HTMLInputElement).type));
 }
 
+/**
+ * Checks if an element is a link (anchor tag).
+ * @param {HTMLElement} el The element to check.
+ * @returns {boolean} True if the element is an anchor tag.
+ */
 export function isLink(el: HTMLElement): boolean {
     return el.tagName === "A";
 }
 
+/**
+ * Moves focus to the next or previous element in a circular manner.
+ * @param {NodeListOfHTMLElement} elementItems List of elements to navigate.
+ * @param {number} currentIndex The current focused element index.
+ * @param {-1 | 1} direction Direction to move focus (-1 for previous, 1 for next).
+ */
 function moveFocus(elementItems: NodeListOfHTMLElement, currentIndex: number, direction: -1 | 1) {
     const len = elementItems.length;
     const nextIndex = (currentIndex + direction + len) % len;
     elementItems.item(nextIndex).focus();
 }
 
+/**
+ * Checks if an element has a custom click handler indicated by data attribute.
+ * @param {HTMLElement} el The element to check.
+ * @returns {boolean} True if the element has a data-custom-click attribute.
+ */
 function isClickableButNotSemantic(el: HTMLElement): boolean {
     return el.getAttribute("data-custom-click") !== null && el.getAttribute("data-custom-click") !== undefined;
 }
 
-function handleMenuEscapeKeyPress(menuElement: HTMLElement, menuTriggerButton: HTMLElement) {
+/**
+ * Closes a menu and updates ARIA attributes.
+ * @param {HTMLElement} menuElement The menu element to close.
+ * @param {HTMLElement} menuTriggerButton The button that triggers the menu.
+ */
+function handleMenuClose(menuElement: HTMLElement, menuTriggerButton: HTMLElement) {
     menuElement.style.display = "none";
     const menuTriggerButtonId = menuTriggerButton.getAttribute("id");
     if (!menuTriggerButtonId) {
@@ -39,15 +74,35 @@ function handleMenuEscapeKeyPress(menuElement: HTMLElement, menuTriggerButton: H
     menuTriggerButton.setAttribute("aria-expanded", "false");
 }
 
+/**
+ * Checks if a menu item has a submenu.
+ * @param {HTMLElement} menuItem The menu item to check.
+ * @returns {boolean} True if the item has aria-haspopup attribute set.
+ */
 function hasSubmenu(menuItem: HTMLElement): boolean {
     return menuItem.getAttribute("aria-haspopup") === "true" || menuItem.getAttribute("aria-haspopup") === "menu";
 }
 
+/**
+ * Gets the submenu ID from a menu item's aria-controls attribute.
+ * @param {HTMLElement} menuItem The menu item to get submenu ID from.
+ * @returns {string | null} The submenu ID or null if not found.
+ */
 function getSubmenuId(menuItem: HTMLElement): string | null {
     return menuItem.getAttribute("aria-controls");
 }
 
-
+/**
+ * Handles keyboard press events for accessible navigation within interactive elements.
+ * Supports arrow key navigation, Enter/Space activation, and menu-specific behaviors.
+ * @param {KeyboardEvent} event The keyboard event.
+ * @param {NodeListOfHTMLElement} elementItems List of interactive elements to navigate.
+ * @param {number} elementItemIndex The index of the currently focused element.
+ * @param {HTMLElement} [menuElementDiv] Optional menu container element.
+ * @param {HTMLElement} [triggerButton] Optional menu trigger button.
+ * @param {Function} [openSubmenu] Optional callback to open a submenu.
+ * @param {Function} [closeSubmenu] Optional callback to close a submenu.
+ */
 export function handleKeyPress(
     event: KeyboardEvent,
     elementItems: NodeListOfHTMLElement,
@@ -114,7 +169,7 @@ export function handleKeyPress(
             event.preventDefault();
             if (menuElementDiv && triggerButton) {
                 if (getComputedStyle(menuElementDiv).display === "block") {
-                    handleMenuEscapeKeyPress(menuElementDiv, triggerButton);
+                    handleMenuClose(menuElementDiv, triggerButton);
                 }
                 triggerButton.focus();
             }
@@ -129,6 +184,12 @@ export function handleKeyPress(
                 event.preventDefault();
                 currentEl.click();
             }
+            break;
+        }
+        case "Tab": {
+            if (menuElementDiv && triggerButton && (!event.shiftKey || event.shiftKey)) {
+                handleMenuClose(menuElementDiv, triggerButton);
+            } 
             break;
         }
         default:

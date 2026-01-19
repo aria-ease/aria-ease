@@ -28,5 +28,3 @@ function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, current
 }
 
 exports.updateToggleAriaAttribute = updateToggleAriaAttribute;
-//# sourceMappingURL=index.cjs.map
-//# sourceMappingURL=index.cjs.map

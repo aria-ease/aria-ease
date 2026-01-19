@@ -1,7 +1,6 @@
-import { handleKeyPress } from '../chunk-MNMWQWXH.js';
+import { handleKeyPress } from '../chunk-TBJ6MIC7.js';
 
 // src/block/src/makeBlockAccessible/makeBlockAccessible.ts
-var eventListenersMap = /* @__PURE__ */ new Map();
 function makeBlockAccessible(blockId, blockItemsClass) {
   const blockDiv = document.querySelector(`#${blockId}`);
   if (!blockDiv) {
@@ -9,12 +8,20 @@ function makeBlockAccessible(blockId, blockItemsClass) {
     return { cleanup: () => {
     } };
   }
-  const blockItems = blockDiv.querySelectorAll(`.${blockItemsClass}`);
+  let cachedItems = null;
+  function getItems() {
+    if (!cachedItems) {
+      cachedItems = blockDiv.querySelectorAll(`.${blockItemsClass}`);
+    }
+    return cachedItems;
+  }
+  const blockItems = getItems();
   if (!blockItems || blockItems.length === 0) {
     console.error(`[aria-ease] Element with class="${blockItemsClass}" not found. Make sure the block items exist before calling makeBlockAccessible.`);
     return { cleanup: () => {
     } };
   }
+  const eventListenersMap = /* @__PURE__ */ new Map();
   blockItems.forEach((blockItem) => {
     if (!eventListenersMap.has(blockItem)) {
       const handler = (event) => {
@@ -35,9 +42,10 @@ function makeBlockAccessible(blockId, blockItemsClass) {
       }
     });
   }
-  return { cleanup };
+  function refresh() {
+    cachedItems = null;
+  }
+  return { cleanup, refresh };
 }
 
 export { makeBlockAccessible };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

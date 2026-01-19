@@ -1,4 +1,4 @@
-import { handleKeyPress } from '../chunk-MNMWQWXH.js';
+import { handleKeyPress } from '../chunk-TBJ6MIC7.js';
 
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
 function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
@@ -18,14 +18,70 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }, cleanup: () => {
     } };
   }
-  const handlerMap = /* @__PURE__ */ new Map();
+  if (!/^[\w-]+$/.test(menuId)) {
+    console.error("[aria-ease] Invalid menuId: must be alphanumeric");
+    return { openMenu: () => {
+    }, closeMenu: () => {
+    }, cleanup: () => {
+    } };
+  }
+  triggerButton.setAttribute("aria-haspopup", "true");
+  triggerButton.setAttribute("aria-controls", menuId);
+  triggerButton.setAttribute("aria-expanded", "false");
+  menuDiv.setAttribute("role", "menu");
+  menuDiv.setAttribute("aria-labelledby", triggerId);
+  menuDiv.style.display = "none";
+  const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
+  let filteredItems = null;
   function getItems() {
     if (!cachedItems) {
-      cachedItems = menuDiv.querySelectorAll(`:scope > .${menuItemsClass}`);
+      cachedItems = menuDiv.querySelectorAll(`.${menuItemsClass}`);
     }
     return cachedItems;
+  }
+  function getFilteredItems() {
+    if (!filteredItems) {
+      const allItems = getItems();
+      filteredItems = [];
+      for (let i = 0; i < allItems.length; i++) {
+        const item = allItems.item(i);
+        const isNested = isItemInNestedSubmenu(item);
+        if (!isNested) {
+          if (!item.hasAttribute("tabindex")) {
+            item.setAttribute("tabindex", "-1");
+          }
+          filteredItems.push(item);
+        }
+      }
+    }
+    return filteredItems;
+  }
+  function toNodeListLike(items) {
+    const nodeListLike = {
+      length: items.length,
+      item: (index) => items[index],
+      forEach: (callback) => {
+        items.forEach(callback);
+      },
+      [Symbol.iterator]: function* () {
+        for (const item of items) {
+          yield item;
+        }
+      }
+    };
+    return nodeListLike;
+  }
+  function isItemInNestedSubmenu(item) {
+    let parent = item.parentElement;
+    while (parent && parent !== menuDiv) {
+      if (parent.getAttribute("role") === "menu") {
+        return true;
+      }
+      parent = parent.parentElement;
+    }
+    return false;
   }
   function setAria(isOpen) {
     triggerButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
@@ -61,12 +117,13 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     closeMenu();
   }
   function addListeners() {
-    const menuItems = getItems();
-    menuItems.forEach((menuItem, index) => {
+    const items = getFilteredItems();
+    const nodeListLike = toNodeListLike(items);
+    items.forEach((menuItem, index) => {
       if (!handlerMap.has(menuItem)) {
         const handler = (event) => handleKeyPress(
           event,
-          menuItems,
+          nodeListLike,
           index,
           menuDiv,
           triggerButton,
@@ -79,8 +136,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     });
   }
   function removeListeners() {
-    const menuItems = getItems();
-    menuItems.forEach((menuItem) => {
+    const items = getFilteredItems();
+    items.forEach((menuItem) => {
       const handler = handlerMap.get(menuItem);
       if (handler) {
         menuItem.removeEventListener("keydown", handler);
@@ -91,9 +148,11 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   function openMenu() {
     menuDiv.style.display = "block";
     setAria(true);
+    const items = getFilteredItems();
     addListeners();
-    const menuItems = getItems();
-    if (menuItems.length > 0) menuItems[0].focus();
+    if (items && items.length > 0) {
+      items[0].focus();
+    }
   }
   function closeMenu() {
     removeListeners();
@@ -101,8 +160,47 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     setAria(false);
     triggerButton.focus();
   }
+  function intializeMenuItems() {
+    const items = getItems();
+    items.forEach((item) => {
+      item.setAttribute("role", "menuitem");
+    });
+  }
+  function handleTriggerKeydown(event) {
+    const key = event.key;
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
+      if (isExpanded) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    }
+  }
+  let isTransitioning = false;
+  function handleTriggerClick() {
+    if (isTransitioning) return;
+    const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
+    isTransitioning = true;
+    if (isExpanded) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+    setTimeout(() => {
+      isTransitioning = false;
+    }, 100);
+  }
+  intializeMenuItems();
+  triggerButton.addEventListener("keydown", handleTriggerKeydown);
+  triggerButton.addEventListener("click", handleTriggerClick);
+  triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
+    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
+    triggerButton.removeEventListener("click", handleTriggerClick);
+    triggerButton.removeAttribute("data-menu-initialized");
     menuDiv.style.display = "none";
     setAria(false);
     submenuInstances.forEach((instance) => instance.cleanup());
@@ -110,10 +208,9 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   }
   function refresh() {
     cachedItems = null;
+    filteredItems = null;
   }
   return { openMenu, closeMenu, cleanup, refresh };
 }
 
 export { makeMenuAccessible };
-//# sourceMappingURL=index.js.map
-//# sourceMappingURL=index.js.map

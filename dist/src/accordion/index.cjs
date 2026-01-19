@@ -27,5 +27,3 @@ function updateAccordionTriggerAriaAttributes(accordionId, accordionTriggersClas
 }
 
 exports.updateAccordionTriggerAriaAttributes = updateAccordionTriggerAriaAttributes;
-//# sourceMappingURL=index.cjs.map
-//# sourceMappingURL=index.cjs.map
