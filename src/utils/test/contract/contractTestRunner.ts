@@ -1,12 +1,12 @@
 import contract from "./contract.json";
 //import contractSchema from "./contract-schema.json";
-import type { Contract, ComponentContract, Selector } from "Types";
+import type { Contract, ComponentContract, Selector, ContractTestResult } from "Types";
 import fs from "fs/promises";
 import { fireEvent } from "@testing-library/dom";
 import { ContractReporter } from "./ContractReporter";
 
 
-export async function runContractTests(componentName: string, component: HTMLElement) {
+export async function runContractTests(componentName: string, component: HTMLElement): Promise<ContractTestResult> {
     const reporter = new ContractReporter(false);
 
     const contractTyped: Contract = contract;
@@ -314,5 +314,5 @@ export async function runContractTests(componentName: string, component: HTMLEle
     // Final summary
     reporter.summary(failures);
 
-    return { passes, failures, }
+    return { passes, failures, skipped}
 }

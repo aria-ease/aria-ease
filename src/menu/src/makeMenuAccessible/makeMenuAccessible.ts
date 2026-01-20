@@ -32,8 +32,6 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
   triggerButton.setAttribute("aria-expanded", "false");
 
   menuDiv.setAttribute("role", "menu");
-  menuDiv.setAttribute("aria-labelledby", triggerId);
-  menuDiv.style.display = "none"; // Ensure menu starts hidden
 
   /* const handlerMap = new Map<HTMLElement, (event: KeyboardEvent) => void>();
   const submenuInstances = new Map<string, ReturnType<typeof makeMenuAccessible>>(); */
@@ -61,8 +59,8 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
         const isNested = isItemInNestedSubmenu(item);
         
         if (!isNested) {
-          if (!item.hasAttribute("tabindex")) {
-            item.setAttribute("tabindex", "-1");
+          if (!item.hasAttribute('tabindex')) {
+            item.setAttribute('tabindex', '-1');
           }
           filteredItems.push(item);
         }
@@ -90,7 +88,7 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
   function isItemInNestedSubmenu(item: HTMLElement): boolean {
     let parent = item.parentElement;
     while (parent && parent !== menuDiv) {
-      if (parent.getAttribute("role") === "menu") {
+      if (parent.getAttribute('role') === 'menu') {
         return true;
       }
       parent = parent.parentElement;
@@ -195,51 +193,10 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
     });
   }
 
-  function handleTriggerKeydown(event: KeyboardEvent) {
-    const key = event.key;
-    if (key === "Enter" || key === " ") {
-      event.preventDefault();
-      const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
-      if (isExpanded) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    }
-  }
-
-  let isTransitioning = false; // Prevent rapid clicks from causing race conditions
-
-  function handleTriggerClick() {
-    if (isTransitioning) return;
-    
-    const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
-    isTransitioning = true;
-    
-    if (isExpanded) {
-      closeMenu();
-    } else {
-      openMenu();
-    }
-    
-    // Reset transition flag after a small delay
-    setTimeout(() => {
-      isTransitioning = false;
-    }, 100);
-  }
-
   intializeMenuItems();
-  triggerButton.addEventListener("keydown", handleTriggerKeydown);
-  triggerButton.addEventListener("click", handleTriggerClick);
-  
-  // Signal that menu is fully initialized for automated testing
-  triggerButton.setAttribute('data-menu-initialized', 'true');
 
   function cleanup() {
     removeListeners();
-    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
-    triggerButton.removeEventListener("click", handleTriggerClick);
-    triggerButton.removeAttribute('data-menu-initialized');
     menuDiv.style.display = "none";
     setAria(false);
     submenuInstances.forEach(instance => instance.cleanup());

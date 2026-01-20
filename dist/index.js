@@ -9439,8 +9439,6 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   triggerButton.setAttribute("aria-controls", menuId);
   triggerButton.setAttribute("aria-expanded", "false");
   menuDiv.setAttribute("role", "menu");
-  menuDiv.setAttribute("aria-labelledby", triggerId);
-  menuDiv.style.display = "none";
   const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
@@ -9576,41 +9574,9 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
       item.setAttribute("role", "menuitem");
     });
   }
-  function handleTriggerKeydown(event) {
-    const key = event.key;
-    if (key === "Enter" || key === " ") {
-      event.preventDefault();
-      const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
-      if (isExpanded) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    }
-  }
-  let isTransitioning = false;
-  function handleTriggerClick() {
-    if (isTransitioning) return;
-    const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
-    isTransitioning = true;
-    if (isExpanded) {
-      closeMenu();
-    } else {
-      openMenu();
-    }
-    setTimeout(() => {
-      isTransitioning = false;
-    }, 100);
-  }
   intializeMenuItems();
-  triggerButton.addEventListener("keydown", handleTriggerKeydown);
-  triggerButton.addEventListener("click", handleTriggerClick);
-  triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
-    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
-    triggerButton.removeEventListener("click", handleTriggerClick);
-    triggerButton.removeAttribute("data-menu-initialized");
     menuDiv.style.display = "none";
     setAria(false);
     submenuInstances.forEach((instance) => instance.cleanup());
@@ -13479,20 +13445,54 @@ async function runContractTests(componentName, component) {
   const staticFailed = 0;
   reporter.reportStatic(staticPassed, staticFailed);
   reporter.summary(failures);
-  return { passes, failures };
+  return { passes, failures, skipped };
 }
 
 // src/utils/test/src/test.ts
 async function testUiComponent(componentName, component, url) {
-  const results = await axe(component);
+  if (!componentName || typeof componentName !== "string") {
+    throw new Error("\u274C testUiComponent requires a valid componentName (string)");
+  }
+  if (!component || !(component instanceof HTMLElement)) {
+    throw new Error("\u274C testUiComponent requires a valid component (HTMLElement)");
+  }
+  if (url && typeof url !== "string") {
+    throw new Error("\u274C testUiComponent url parameter must be a string");
+  }
+  let results;
+  try {
+    results = await axe(component);
+  } catch (error) {
+    throw new Error(
+      `\u274C Axe accessibility scan failed
+Error: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
   let contract;
-  if (url) {
-    console.log(`\u{1F3AD} Running Playwright E2E tests on ${url}`);
-    const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-7U2O33SR.js");
-    contract = await runContractTestsPlaywright(componentName, url);
-  } else {
-    console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);
-    contract = await runContractTests(componentName, component);
+  try {
+    if (url) {
+      console.log(`\u{1F3AD} Running Playwright E2E tests on ${url}`);
+      try {
+        new URL(url);
+      } catch {
+        throw new Error(
+          `\u274C Invalid URL format: "${url}"
+URL must include protocol (e.g., "http://localhost:5173/test")`
+        );
+      }
+      const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-4UOHWGWD.js");
+      contract = await runContractTestsPlaywright(componentName, url);
+    } else {
+      console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);
+      console.log(`Some tests may be skipped or yield false positives/negatives.
+For full coverage, run with a URL to enable Playwright E2E tests.`);
+      contract = await runContractTests(componentName, component);
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(`\u274C Contract test execution failed: ${String(error)}`);
   }
   const result = {
     violations: results.violations,
@@ -13503,10 +13503,11 @@ async function testUiComponent(componentName, component, url) {
     const mode = url ? "Playwright" : "jsdom";
     throw new Error(
       `
-\u274C ${contract.failures.length} assertion${contract.failures.length > 1 ? "s" : ""} failed (${mode} mode)
-\u2705 ${contract.passes.length} assertion${contract.passes.length > 1 ? "s" : ""} passed
+\u274C ${contract.failures.length} accessibility contract test${contract.failures.length > 1 ? "s" : ""} failed (${mode} mode)
+\u2705 ${contract.passes.length} test${contract.passes.length > 1 ? "s" : ""} passed
 
-\u{1F4CB} Review the detailed test report above for specific failures.`
+\u{1F4CB} Review the detailed test report above for specific failures.
+\u{1F4A1} Contract tests validate ARIA attributes and keyboard interactions per W3C APG guidelines.`
     );
   }
   if (results.violations.length > 0) {

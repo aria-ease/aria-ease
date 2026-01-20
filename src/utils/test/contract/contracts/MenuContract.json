@@ -115,6 +115,7 @@
         {
             "description": "Pressing Enter key on trigger opens the menu and focuses first item.",
             "action": [
+                { "type": "focus", "target": "trigger" },
                 { "type": "keypress", "target": "trigger", "key": "Enter" }
             ],
             "assertions": [

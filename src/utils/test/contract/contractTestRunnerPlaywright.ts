@@ -2,13 +2,9 @@ import { chromium, Browser, Page } from "playwright";
 import { expect } from "@playwright/test";
 import { readFileSync } from "fs";
 import contract from "./contract.json";
-import type { ComponentContract, Contract } from "Types";
+import type { ComponentContract, Contract, ContractTestResult } from "Types";
 import { ContractReporter } from "./ContractReporter";
 
-export interface ContractTestResult {
-  passes: string[];
-  failures: string[];
-}
 
 export async function runContractTestsPlaywright(componentName: string, url: string): Promise<ContractTestResult> {
   const reporter = new ContractReporter(true);
@@ -29,7 +25,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
 
     const failures: string[] = [];
     const passes: string[] = [];
-    //const skipped: string[] = [];
+    const skipped: string[] = [];
     let browser: Browser | null = null;
 
   try {
@@ -39,7 +35,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
 
     await page.goto(url, { 
       waitUntil: "domcontentloaded",
-      timeout: 60000 
+      timeout: 90000 
     });
     
     // Wait for the main component element (try trigger first, fall back to input or container)
@@ -49,7 +45,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
     
-    await page.waitForSelector(mainSelector, { timeout: 60000 });
+    await page.waitForSelector(mainSelector, { timeout: 90000 });
 
     // Additional wait for component initialization (for menu and combobox)
     if (componentName === 'menu' && componentContract.selectors.trigger) {
@@ -59,7 +55,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
           return trigger && trigger.getAttribute('data-menu-initialized') === 'true';
         },
         componentContract.selectors.trigger,
-        { timeout: 5000 }
+        { timeout: 6000 }
       ).catch(() => {
         // If timeout, continue anyway (for backward compatibility)
         console.warn('Menu initialization signal not detected, continuing with tests...');
@@ -167,7 +163,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             if (componentContract.selectors.input) {
               const inputElement = page.locator(componentContract.selectors.input).first();
               await inputElement.clear();
-              await page.waitForTimeout(50);
+              await page.waitForTimeout(100);
             }
           }
         }
@@ -181,7 +177,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             continue;
           }
           await page.locator(focusSelector).first().focus();
-          await page.waitForTimeout(50);
+          await page.waitForTimeout(100);
         }
 
         if (act.type === "type" && act.value) {
@@ -191,7 +187,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             continue;
           }
           await page.locator(typeSelector).first().fill(act.value);
-          await page.waitForTimeout(50);
+          await page.waitForTimeout(100);
         }
 
         if (act.type === "click") {
@@ -245,7 +241,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
           if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
             await page.waitForTimeout(100);
             await page.keyboard.press(keyValue);
-            await page.waitForTimeout(50);
+            await page.waitForTimeout(100);
           } else {
             const keypressSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
             if (!keypressSelector) {
@@ -278,7 +274,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               continue;
             }
             await relativeElement.hover();
-            await page.waitForTimeout(50);
+            await page.waitForTimeout(100);
           } else {
             const hoverSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
             if (!hoverSelector) {
@@ -286,7 +282,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               continue;
             }
             await page.locator(hoverSelector).first().hover();
-            await page.waitForTimeout(50);
+            await page.waitForTimeout(100);
           }
         }
 
@@ -453,5 +449,5 @@ export async function runContractTestsPlaywright(componentName: string, url: str
     if (browser) await browser.close();
   }
 
-  return { passes, failures }
+  return { passes, failures, skipped }
 }

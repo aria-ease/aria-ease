@@ -172,7 +172,7 @@ updateAccordionTriggerAriaAttributes(
   "accordion-container", // Container ID
   "accordion-trigger", // Shared class for triggers
   accordionStates, // State array
-  0 // Index of trigger that changed
+  0, // Index of trigger that changed
 );
 ```
 
@@ -223,7 +223,7 @@ function handleCheckboxClick(index) {
     "checkbox-group",
     "custom-checkbox",
     checkboxStates,
-    index
+    index,
   );
 }
 ```
@@ -314,14 +314,14 @@ Aria-Ease includes a built-in testing framework for automated accessibility vali
 import { testUiComponent } from "aria-ease/test";
 
 // In your test file (Vitest, Jest, etc.)
-test("menu is accessible", async () => {
-  const { container } = render(<MyMenu />);
+test("combobox is accessible", async () => {
+  const { container } = render(<Combobox />);
 
   // Runs axe-core + contract tests
   const result = await testUiComponent(
-    "menu",
+    "combobox",
     container,
-    "http://localhost:3000" // Optional: full E2E with Playwright
+    "http://localhost:3000", // Optional: full E2E with Playwright
   );
 
   expect(result.violations).toHaveLength(0);

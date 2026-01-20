@@ -115,10 +115,11 @@ declare function updateToggleAriaAttribute(toggleId: string, togglesClass: strin
 declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, config }: ComboboxConfig): AccessibilityInstance;
 
 /**
-    * Runs static and interactions accessibility test on UI components.
-    * @param {HTMLElement} component The UI component to be tested
-    * @param {string} url Optional URL to run full Playwright E2E tests (requires dev server running)
-*/
+ * Runs static and interactions accessibility test on UI components.
+ * @param {string} componentName The name of the component contract to test against
+ * @param {HTMLElement} component The UI component to be tested
+ * @param {string} url Optional URL to run full Playwright E2E tests (requires dev server running)
+ */
 
 declare function testUiComponent(componentName: string, component: HTMLElement, url?: string): Promise<JestAxeResult>;
 

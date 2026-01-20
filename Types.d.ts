@@ -139,6 +139,12 @@ interface config {
     onClear?: () => void;
 }
 
+interface ContractTestResult {
+  passes: string[];
+  failures: string[];
+  skipped: string[];
+}
+
 export {
     AccordionStates,
     CheckboxStates,
@@ -153,7 +159,8 @@ export {
     Prerequisite,
     FailureReport,
     AccessibilityInstance,
-    ComboboxConfig
+    ComboboxConfig,
+    ContractTestResult
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;
