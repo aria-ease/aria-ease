@@ -4,75 +4,92 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [4.0.0](https://github.com/aria-ease/aria-ease/compare/v3.0.3...v4.0.0) (2026-01-21)
 
-
 ### Features
 
-* add comprehensive make*Accessible APIs with consistent interface pattern ([ad476ef](https://github.com/aria-ease/aria-ease/commit/ad476efae9c12caebdf720759d4e04d9859806a0))
+- add comprehensive make\*Accessible APIs with consistent interface pattern ([ad476ef](https://github.com/aria-ease/aria-ease/commit/ad476efae9c12caebdf720759d4e04d9859806a0))
+- **accordion:** add `makeAccordionAccessible()` with keyboard navigation and lifecycle management
+- **radio:** add `makeRadioAccessible()` with arrow key navigation and automatic selection management
+- **checkbox:** add `makeCheckboxAccessible()` with keyboard support and state queries
+- **toggle:** add `makeToggleAccessible()` supporting single toggles and toggle groups
+- **all:** standardize all component APIs with consistent Config interface pattern
+- **all:** add keyboard navigation (Arrow keys, Home, End, Space, Enter)
+- **all:** internal state management eliminates need for manual state tracking
+- **types:** update TypeScript definitions to include new return methods
+- **tests:** add comprehensive unit tests for all new functions (247 total tests)
+
+### Changed
+
+- All component APIs now follow consistent `make*Accessible` pattern
+- Improved TypeScript types for better IDE autocomplete
+
+### Deprecated
+
+- `updateAccordionTriggerAriaAttributes()` - use `makeAccordionAccessible()` instead
+- `updateRadioAriaAttributes()` - use `makeRadioAccessible()` instead
+- `updateCheckboxAriaAttributes()` - use `makeCheckboxAccessible()` instead
+- `updateToggleAriaAttribute()` - use `makeToggleAccessible()` instead
+
+**Note:** Old APIs remain fully functional for backward compatibility.
 
 ### [3.0.3](https://github.com/aria-ease/aria-ease/compare/v3.0.2...v3.0.3) (2026-01-20)
 
-
 ### Bug Fixes
 
-* **docs:** remove test limitation warnings from README ([24476a0](https://github.com/aria-ease/aria-ease/commit/24476a02ec9deb87e3359308ac6eada40323d73e))
+- **docs:** remove test limitation warnings from README ([24476a0](https://github.com/aria-ease/aria-ease/commit/24476a02ec9deb87e3359308ac6eada40323d73e))
 
 ### [3.0.2](https://github.com/aria-ease/aria-ease/compare/v3.0.1...v3.0.2) (2026-01-19)
 
-### [3.0.1](https://github.com/aria-ease/aria-ease/compare/v3.0.0...v3.0.1) (2026-01-17)
+### Bug Fixes
 
+- increased timeout value in Playwright contract test runner ([f05c7f0](https://github.com/aria-ease/aria-ease/commit/f05c7f025013f676ce2c5f452b26447ca0e3956c))
+
+### [3.0.1](https://github.com/aria-ease/aria-ease/compare/v3.0.0...v3.0.1) (2026-01-17)
 
 ### Bug Fixes
 
-* Menu: fixed wrong aria attribute in menu contract assertion. Changed 'aria-popup' to 'aria-haspopup' ([564ccf8](https://github.com/aria-ease/aria-ease/commit/564ccf8baac9e98b4d66c707d6ab9ac256bce308))
+- Menu: fixed wrong aria attribute in menu contract assertion. Changed 'aria-popup' to 'aria-haspopup' ([564ccf8](https://github.com/aria-ease/aria-ease/commit/564ccf8baac9e98b4d66c707d6ab9ac256bce308))
 
 ## [3.0.0](https://github.com/aria-ease/aria-ease/compare/v2.9.0...v3.0.0) (2026-01-14)
 
-
 ### Features
 
-* **menu:** auto-initialize ARIA attributes in makeMenuAccessible ([5c7f8d5](https://github.com/aria-ease/aria-ease/commit/5c7f8d5e342f80cb225f43457d492832c18d0f95))
+- **menu:** auto-initialize ARIA attributes in makeMenuAccessible ([5c7f8d5](https://github.com/aria-ease/aria-ease/commit/5c7f8d5e342f80cb225f43457d492832c18d0f95))
 
 ## [2.9.0](https://github.com/aria-ease/aria-ease/compare/v2.8.4...v2.9.0) (2026-01-13)
 
-
 ### Features
 
-* added combobox utility and contract test ([c23481b](https://github.com/aria-ease/aria-ease/commit/c23481b1a1aebec681353e472fd6482decba7edd))
+- added combobox utility and contract test ([c23481b](https://github.com/aria-ease/aria-ease/commit/c23481b1a1aebec681353e472fd6482decba7edd))
 
 ### [2.8.4](https://github.com/aria-ease/aria-ease/compare/v2.8.3...v2.8.4) (2026-01-08)
 
-
 ### Bug Fixes
 
-* fixed bin folder not publishing with rest of build ([6614b55](https://github.com/aria-ease/aria-ease/commit/6614b55836c57ed3eb6bd903266cbb4012a55349))
+- fixed bin folder not publishing with rest of build ([6614b55](https://github.com/aria-ease/aria-ease/commit/6614b55836c57ed3eb6bd903266cbb4012a55349))
 
 ### [2.8.3](https://github.com/aria-ease/aria-ease/compare/v2.8.2...v2.8.3) (2026-01-07)
 
-
 ### Bug Fixes
 
-* fixed menu component contract test failing when submenu not found ([13a8cff](https://github.com/aria-ease/aria-ease/commit/13a8cffd382ab773f356dcab8359ac050404a887))
+- fixed menu component contract test failing when submenu not found ([13a8cff](https://github.com/aria-ease/aria-ease/commit/13a8cffd382ab773f356dcab8359ac050404a887))
 
 ### [2.8.2](https://github.com/aria-ease/aria-ease/compare/v2.8.1...v2.8.2) (2026-01-06)
 
-
 ### Bug Fixes
 
-* reduced library size by excluding external dependencies ([5da6b8f](https://github.com/aria-ease/aria-ease/commit/5da6b8f14aa3db1cfcb9497e79906a7bb0a48f2a))
+- reduced library size by excluding external dependencies ([5da6b8f](https://github.com/aria-ease/aria-ease/commit/5da6b8f14aa3db1cfcb9497e79906a7bb0a48f2a))
 
 ### [2.8.1](https://github.com/aria-ease/aria-ease/compare/v2.8.0...v2.8.1) (2026-01-06)
 
-
 ### Bug Fixes
 
-* added missing Tab and Shift+Tab assertions to menu contract ([dc886a1](https://github.com/aria-ease/aria-ease/commit/dc886a1c5e961a3277228100b830ed585b7c9b69))
+- added missing Tab and Shift+Tab assertions to menu contract ([dc886a1](https://github.com/aria-ease/aria-ease/commit/dc886a1c5e961a3277228100b830ed585b7c9b69))
 
 ## [2.8.0](https://github.com/aria-ease/aria-ease/compare/v2.7.0...v2.8.0) (2026-01-02)
 
-
 ### Bug Fixes
 
-* Tab/Shift+Tab not closing menu ([dc41a01](https://github.com/aria-ease/aria-ease/commit/dc41a01e35e7d25f2b746a767adb4aec2ca1a417))
+- Tab/Shift+Tab not closing menu ([dc41a01](https://github.com/aria-ease/aria-ease/commit/dc41a01e35e7d25f2b746a767adb4aec2ca1a417))
 
 ## [2.7.0](https://github.com/aria-ease/aria-ease/compare/v2.6.0...v2.7.0) (2026-01-01)
 
