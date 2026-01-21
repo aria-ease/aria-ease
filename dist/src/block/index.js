@@ -1,7 +1,7 @@
 import { handleKeyPress } from '../chunk-TBJ6MIC7.js';
 
 // src/block/src/makeBlockAccessible/makeBlockAccessible.ts
-function makeBlockAccessible(blockId, blockItemsClass) {
+function makeBlockAccessible({ blockId, blockItemsClass }) {
   const blockDiv = document.querySelector(`#${blockId}`);
   if (!blockDiv) {
     console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);

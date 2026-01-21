@@ -122,6 +122,23 @@ interface AccessibilityInstance {
   refresh?: () => void;
   openMenu?: () => void;
   closeMenu?: () => void;
+  // Accordion methods
+  expandItem?: (index: number) => void;
+  collapseItem?: (index: number) => void;
+  toggleItem?: (index: number) => void;
+  // Radio methods
+  selectRadio?: (index: number) => void;
+  getSelectedIndex?: () => number;
+  // Checkbox methods
+  toggleCheckbox?: (index: number) => void;
+  setCheckboxState?: (index: number, checked: boolean) => void;
+  getCheckedStates?: () => boolean[];
+  getCheckedIndices?: () => number[];
+  // Toggle methods
+  toggleButton?: (index: number) => void;
+  setPressed?: (index: number, pressed: boolean) => void;
+  getPressedStates?: () => boolean[];
+  getPressedIndices?: () => number[];
 }
 
 interface ComboboxConfig {

@@ -25,6 +25,23 @@ interface AccessibilityInstance {
   refresh?: () => void;
   openMenu?: () => void;
   closeMenu?: () => void;
+  // Accordion methods
+  expandItem?: (index: number) => void;
+  collapseItem?: (index: number) => void;
+  toggleItem?: (index: number) => void;
+  // Radio methods
+  selectRadio?: (index: number) => void;
+  getSelectedIndex?: () => number;
+  // Checkbox methods
+  toggleCheckbox?: (index: number) => void;
+  setCheckboxState?: (index: number, checked: boolean) => void;
+  getCheckedStates?: () => boolean[];
+  getCheckedIndices?: () => number[];
+  // Toggle methods
+  toggleButton?: (index: number) => void;
+  setPressed?: (index: number, pressed: boolean) => void;
+  getPressedStates?: () => boolean[];
+  getPressedIndices?: () => number[];
 }
 
 interface ComboboxConfig {
@@ -53,12 +70,33 @@ interface config {
 declare function updateAccordionTriggerAriaAttributes(accordionId: string, accordionTriggersClass: string, accordionStates: AccordionStates[], clickedTriggerIndex: number): void;
 
 /**
+ * Makes an accordion accessible by managing ARIA attributes, keyboard navigation, and state.
+ * Handles multiple accordion items with proper focus management and keyboard interactions.
+ * @param {string} accordionId - The id of the accordion container.
+ * @param {string} triggersClass - The shared class of all accordion trigger buttons.
+ * @param {string} panelsClass - The shared class of all accordion panels.
+ * @param {boolean} allowMultiple - Whether multiple panels can be open simultaneously (default: false).
+ */
+
+interface AccordionConfig {
+    accordionId: string;
+    triggersClass: string;
+    panelsClass: string;
+    allowMultiple?: boolean;
+}
+declare function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple }: AccordionConfig): AccessibilityInstance;
+
+/**
  * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.
  * @param {string} blockId The id of the block container.
  * @param {string} blockItemsClass The shared class of the elements that are children of the block.
 */
 
-declare function makeBlockAccessible(blockId: string, blockItemsClass: string): AccessibilityInstance;
+interface BlockConfig {
+    blockId: string;
+    blockItemsClass: string;
+}
+declare function makeBlockAccessible({ blockId, blockItemsClass }: BlockConfig): AccessibilityInstance;
 
 /**
  * Adds screen reader accessibility to multiple checkboxes. Updates the aria attributes of the checkboxes. Checkbox elements must possess the following aria attributes; aria-checked and aria-label.
@@ -69,6 +107,19 @@ declare function makeBlockAccessible(blockId: string, blockItemsClass: string): 
 */
 
 declare function updateCheckboxAriaAttributes(checkboxId: string, checkboxesClass: string, checkboxStates: CheckboxStates[], currentPressedCheckboxIndex: number): void;
+
+/**
+ * Makes a checkbox group accessible by managing ARIA attributes and keyboard navigation.
+ * Handles multiple independent checkboxes with proper focus management and keyboard interactions.
+ * @param {string} checkboxGroupId - The id of the checkbox group container.
+ * @param {string} checkboxesClass - The shared class of all checkboxes.
+ */
+
+interface CheckboxConfig {
+    checkboxGroupId: string;
+    checkboxesClass: string;
+}
+declare function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: CheckboxConfig): AccessibilityInstance;
 
 /**
   * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first interactive item of the menu has focus when menu open.
@@ -94,6 +145,21 @@ declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {
 declare function updateRadioAriaAttributes(radioId: string, radiosClass: string, radioStates: RadioStates[], currentPressedRadioIndex: number): void;
 
 /**
+ * Makes a radio group accessible by managing ARIA attributes, keyboard navigation, and state.
+ * Handles radio button selection with proper focus management and keyboard interactions.
+ * @param {string} radioGroupId - The id of the radio group container.
+ * @param {string} radiosClass - The shared class of all radio buttons.
+ * @param {number} defaultSelectedIndex - The index of the initially selected radio (default: 0).
+ */
+
+interface RadioConfig {
+    radioGroupId: string;
+    radiosClass: string;
+    defaultSelectedIndex?: number;
+}
+declare function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex }: RadioConfig): AccessibilityInstance;
+
+/**
  * Adds screen reader accessibility to toggle buttons. Updates the aria attributes of the toggle buttons. Button must be a semantic button element or a non-semantic element with a role of button, and possess the aria-pressed attribute.
  * @param {string} toggleId The id of the toggle buttons parent container.
  * @param {string} togglesClass The shared class of all the toggle buttons.
@@ -102,6 +168,21 @@ declare function updateRadioAriaAttributes(radioId: string, radiosClass: string,
 */
 
 declare function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void;
+
+/**
+ * Makes a toggle button accessible by managing ARIA attributes and keyboard interactions.
+ * Handles toggle button state with proper focus management.
+ * @param {string} toggleId - The id of the toggle button or toggle button container.
+ * @param {string} togglesClass - The shared class of toggle buttons (for groups).
+ * @param {boolean} isSingleToggle - Whether this is a single toggle button (default: true).
+ */
+
+interface ToggleConfig {
+    toggleId: string;
+    togglesClass?: string;
+    isSingleToggle?: boolean;
+}
+declare function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle }: ToggleConfig): AccessibilityInstance;
 
 /**
  * Makes a Combobox accessible by adding appropriate ARIA attributes, keyboard interactions and focus management.
@@ -123,4 +204,4 @@ declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, lis
 
 declare function testUiComponent(componentName: string, component: HTMLElement, url?: string): Promise<JestAxeResult>;
 
-export { makeBlockAccessible, makeComboboxAccessible, makeMenuAccessible, testUiComponent, updateAccordionTriggerAriaAttributes, updateCheckboxAriaAttributes, updateRadioAriaAttributes, updateToggleAriaAttribute };
+export { makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeToggleAccessible, testUiComponent, updateAccordionTriggerAriaAttributes, updateCheckboxAriaAttributes, updateRadioAriaAttributes, updateToggleAriaAttribute };

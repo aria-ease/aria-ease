@@ -1,101 +1,104 @@
-'use strict';
+/**
+ * Makes a toggle button accessible by managing ARIA attributes and keyboard interactions.
+ * Handles toggle button state with proper focus management.
+ * @param {string} toggleId - The id of the toggle button or toggle button container.
+ * @param {string} togglesClass - The shared class of toggle buttons (for groups).
+ * @param {boolean} isSingleToggle - Whether this is a single toggle button (default: true).
+ */
 
-// src/toggle/src/updateToggleAriaAttribute/updateToggleAriaAttribute.ts
-function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, currentPressedToggleIndex) {
-  const toggleDiv = document.querySelector(`#${toggleId}`);
-  if (!toggleDiv) {
-    console.error(`[aria-ease] Element with id="${toggleId}" not found. Make sure the toggle element exists before calling updateToggleAriaAttribute.`);
-    return;
-  }
-  const toggleItems = Array.from(toggleDiv.querySelectorAll(`.${togglesClass}`));
-  if (toggleItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${togglesClass}" not found. Make sure the toggle items exist before calling updateToggleAriaAttribute.`);
-    return;
-  }
-  if (toggleItems.length !== toggleStates.length) {
-    console.error(`[aria-ease] Toggle state/DOM length mismatch: found ${toggleItems.length} triggers, but got ${toggleStates.length} state objects.'`);
-    return;
-  }
-  toggleItems.forEach((toggle, index) => {
-    if (index === currentPressedToggleIndex) {
-      const pressed = toggle.getAttribute("aria-pressed");
-      const shouldBePressed = toggleStates[index].pressed ? "true" : "false";
-      if (pressed && pressed !== shouldBePressed) {
-        toggle.setAttribute("aria-pressed", shouldBePressed);
-      }
-    }
-  });
+import { AccessibilityInstance } from "Types";
+
+interface ToggleConfig {
+  toggleId: string;
+  togglesClass?: string;
+  isSingleToggle?: boolean;
 }
 
-// src/toggle/src/makeTogggleAccessible/makeToggleAccessible.ts
-function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true }) {
-  const toggleContainer = document.querySelector(`#${toggleId}`);
+export function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true }: ToggleConfig): AccessibilityInstance {
+  const toggleContainer = document.querySelector(`#${toggleId}`) as HTMLElement;
   if (!toggleContainer) {
     console.error(`[aria-ease] Element with id="${toggleId}" not found. Make sure the toggle element exists before calling makeToggleAccessible.`);
-    return { cleanup: () => {
-    } };
+    return { cleanup: () => {} };
   }
-  let toggles;
+
+  let toggles: HTMLElement[];
+
   if (isSingleToggle) {
+    // The container itself is the toggle button
     toggles = [toggleContainer];
   } else {
+    // Find all toggle buttons within the container
     if (!togglesClass) {
       console.error(`[aria-ease] togglesClass is required when isSingleToggle is false.`);
-      return { cleanup: () => {
-      } };
+      return { cleanup: () => {} };
     }
-    toggles = Array.from(toggleContainer.querySelectorAll(`.${togglesClass}`));
+    toggles = Array.from(toggleContainer.querySelectorAll(`.${togglesClass}`)) as HTMLElement[];
     if (toggles.length === 0) {
       console.error(`[aria-ease] No elements with class="${togglesClass}" found. Make sure toggle buttons exist before calling makeToggleAccessible.`);
-      return { cleanup: () => {
-      } };
+      return { cleanup: () => {} };
     }
   }
-  const handlerMap = /* @__PURE__ */ new WeakMap();
-  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+
+  const handlerMap = new WeakMap<HTMLElement, (event: KeyboardEvent) => void>();
+  const clickHandlerMap = new WeakMap<HTMLElement, () => void>();
+
+  // Initialize ARIA attributes
   function initialize() {
     toggles.forEach((toggle) => {
+      // Ensure it's a button or has button role
       if (toggle.tagName.toLowerCase() !== "button" && !toggle.getAttribute("role")) {
         toggle.setAttribute("role", "button");
       }
+
+      // Set initial pressed state if not already set
       if (!toggle.hasAttribute("aria-pressed")) {
         toggle.setAttribute("aria-pressed", "false");
       }
+
+      // Make focusable
       if (!toggle.hasAttribute("tabindex")) {
         toggle.setAttribute("tabindex", "0");
       }
     });
   }
-  function toggleButton(index) {
+
+  function toggleButton(index: number) {
     if (index < 0 || index >= toggles.length) {
       console.error(`[aria-ease] Invalid toggle index: ${index}`);
       return;
     }
+
     const toggle = toggles[index];
     const isPressed = toggle.getAttribute("aria-pressed") === "true";
     toggle.setAttribute("aria-pressed", isPressed ? "false" : "true");
   }
-  function setPressed(index, pressed) {
+
+  function setPressed(index: number, pressed: boolean) {
     if (index < 0 || index >= toggles.length) {
       console.error(`[aria-ease] Invalid toggle index: ${index}`);
       return;
     }
+
     toggles[index].setAttribute("aria-pressed", pressed ? "true" : "false");
   }
-  function handleToggleClick(index) {
+
+  function handleToggleClick(index: number) {
     return () => {
       toggleButton(index);
     };
   }
-  function handleToggleKeydown(index) {
-    return (event) => {
+
+  function handleToggleKeydown(index: number) {
+    return (event: KeyboardEvent) => {
       const { key } = event;
+
       switch (key) {
         case "Enter":
         case " ":
           event.preventDefault();
           toggleButton(index);
           break;
+
         case "ArrowDown":
         case "ArrowRight":
           if (!isSingleToggle && toggles.length > 1) {
@@ -104,6 +107,7 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
             toggles[nextIndex].focus();
           }
           break;
+
         case "ArrowUp":
         case "ArrowLeft":
           if (!isSingleToggle && toggles.length > 1) {
@@ -112,12 +116,14 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
             toggles[prevIndex].focus();
           }
           break;
+
         case "Home":
           if (!isSingleToggle && toggles.length > 1) {
             event.preventDefault();
             toggles[0].focus();
           }
           break;
+
         case "End":
           if (!isSingleToggle && toggles.length > 1) {
             event.preventDefault();
@@ -127,20 +133,25 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
       }
     };
   }
+
   function addListeners() {
-    toggles.forEach((toggle, index) => {
+    toggles.forEach((toggle: HTMLElement, index: number) => {
       const clickHandler = handleToggleClick(index);
       const keydownHandler = handleToggleKeydown(index);
+
       toggle.addEventListener("click", clickHandler);
       toggle.addEventListener("keydown", keydownHandler);
+
       handlerMap.set(toggle, keydownHandler);
       clickHandlerMap.set(toggle, clickHandler);
     });
   }
+
   function removeListeners() {
-    toggles.forEach((toggle) => {
+    toggles.forEach((toggle: HTMLElement) => {
       const keydownHandler = handlerMap.get(toggle);
       const clickHandler = clickHandlerMap.get(toggle);
+
       if (keydownHandler) {
         toggle.removeEventListener("keydown", keydownHandler);
         handlerMap.delete(toggle);
@@ -151,17 +162,25 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
       }
     });
   }
+
   function cleanup() {
     removeListeners();
   }
-  function getPressedStates() {
-    return toggles.map((toggle) => toggle.getAttribute("aria-pressed") === "true");
+
+  function getPressedStates(): boolean[] {
+    return toggles.map(toggle => toggle.getAttribute("aria-pressed") === "true");
   }
-  function getPressedIndices() {
-    return toggles.map((toggle, index) => toggle.getAttribute("aria-pressed") === "true" ? index : -1).filter((index) => index !== -1);
+
+  function getPressedIndices(): number[] {
+    return toggles
+      .map((toggle, index) => toggle.getAttribute("aria-pressed") === "true" ? index : -1)
+      .filter(index => index !== -1);
   }
+
+  // Initialize the toggle(s)
   initialize();
   addListeners();
+
   return {
     toggleButton,
     setPressed,
@@ -170,6 +189,3 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
     cleanup
   };
 }
-
-exports.makeToggleAccessible = makeToggleAccessible;
-exports.updateToggleAriaAttribute = updateToggleAriaAttribute;

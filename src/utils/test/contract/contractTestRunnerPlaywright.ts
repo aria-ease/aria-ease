@@ -169,6 +169,43 @@ export async function runContractTestsPlaywright(componentName: string, url: str
         }
       }
 
+      // Check if test requires submenu elements that don't exist - skip early
+      let shouldSkipTest = false;
+      for (const act of action) {
+        if (act.type === 'keypress' && (act.target === 'submenuTrigger' || act.target === 'submenu')) {
+          const submenuSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
+          if (submenuSelector) {
+            const submenuCount = await page.locator(submenuSelector).count();
+            if (submenuCount === 0) {
+              reporter.reportTest(dynamicTest, 'skip', `Skipping test - ${act.target} element not found (optional submenu test)`);
+              shouldSkipTest = true;
+              break;
+            }
+          }
+        }
+      }
+      
+      // Also check assertions for submenu requirements
+      if (!shouldSkipTest) {
+        for (const assertion of assertions) {
+          if (assertion.target === 'submenu' || assertion.target === 'submenuTrigger') {
+            const submenuSelector = componentContract.selectors[assertion.target as keyof typeof componentContract.selectors];
+            if (submenuSelector) {
+              const submenuCount = await page.locator(submenuSelector).count();
+              if (submenuCount === 0) {
+                reporter.reportTest(dynamicTest, 'skip', `Skipping test - ${assertion.target} element not found (optional submenu test)`);
+                shouldSkipTest = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      
+      if (shouldSkipTest) {
+        continue; // Skip to next test
+      }
+
       for (const act of action) {
         if (act.type === "focus") {
           const focusSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];

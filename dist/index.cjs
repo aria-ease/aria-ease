@@ -9550,6 +9550,38 @@ async function runContractTestsPlaywright(componentName, url) {
           }
         }
       }
+      let shouldSkipTest = false;
+      for (const act of action) {
+        if (act.type === "keypress" && (act.target === "submenuTrigger" || act.target === "submenu")) {
+          const submenuSelector = componentContract.selectors[act.target];
+          if (submenuSelector) {
+            const submenuCount = await page.locator(submenuSelector).count();
+            if (submenuCount === 0) {
+              reporter.reportTest(dynamicTest, "skip", `Skipping test - ${act.target} element not found (optional submenu test)`);
+              shouldSkipTest = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!shouldSkipTest) {
+        for (const assertion of assertions) {
+          if (assertion.target === "submenu" || assertion.target === "submenuTrigger") {
+            const submenuSelector = componentContract.selectors[assertion.target];
+            if (submenuSelector) {
+              const submenuCount = await page.locator(submenuSelector).count();
+              if (submenuCount === 0) {
+                reporter.reportTest(dynamicTest, "skip", `Skipping test - ${assertion.target} element not found (optional submenu test)`);
+                shouldSkipTest = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      if (shouldSkipTest) {
+        continue;
+      }
       for (const act of action) {
         if (act.type === "focus") {
           const focusSelector = componentContract.selectors[act.target];
@@ -9814,9 +9846,13 @@ var init_contractTestRunnerPlaywright = __esm({
 // index.ts
 var index_exports = {};
 __export(index_exports, {
+  makeAccordionAccessible: () => makeAccordionAccessible,
   makeBlockAccessible: () => makeBlockAccessible,
+  makeCheckboxAccessible: () => makeCheckboxAccessible,
   makeComboboxAccessible: () => makeComboboxAccessible,
   makeMenuAccessible: () => makeMenuAccessible,
+  makeRadioAccessible: () => makeRadioAccessible,
+  makeToggleAccessible: () => makeToggleAccessible,
   testUiComponent: () => testUiComponent,
   updateAccordionTriggerAriaAttributes: () => updateAccordionTriggerAriaAttributes,
   updateCheckboxAriaAttributes: () => updateCheckboxAriaAttributes,
@@ -9849,6 +9885,164 @@ function updateAccordionTriggerAriaAttributes(accordionId, accordionTriggersClas
       accordionItem.setAttribute("aria-expanded", shouldBeExpanded);
     }
   });
+}
+
+// src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
+function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple = false }) {
+  const accordionContainer = document.querySelector(`#${accordionId}`);
+  if (!accordionContainer) {
+    console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const triggers = Array.from(accordionContainer.querySelectorAll(`.${triggersClass}`));
+  if (triggers.length === 0) {
+    console.error(`[aria-ease] No elements with class="${triggersClass}" found. Make sure accordion triggers exist before calling makeAccordionAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const panels = Array.from(accordionContainer.querySelectorAll(`.${panelsClass}`));
+  if (panels.length === 0) {
+    console.error(`[aria-ease] No elements with class="${panelsClass}" found. Make sure accordion panels exist before calling makeAccordionAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  if (triggers.length !== panels.length) {
+    console.error(`[aria-ease] Accordion trigger/panel mismatch: found ${triggers.length} triggers but ${panels.length} panels.`);
+    return { cleanup: () => {
+    } };
+  }
+  const handlerMap = /* @__PURE__ */ new WeakMap();
+  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+  function initialize() {
+    triggers.forEach((trigger, index) => {
+      const panel = panels[index];
+      if (!trigger.id) {
+        trigger.id = `${accordionId}-trigger-${index}`;
+      }
+      if (!panel.id) {
+        panel.id = `${accordionId}-panel-${index}`;
+      }
+      trigger.setAttribute("aria-controls", panel.id);
+      trigger.setAttribute("aria-expanded", "false");
+      panel.setAttribute("role", "region");
+      panel.setAttribute("aria-labelledby", trigger.id);
+      panel.style.display = "none";
+    });
+  }
+  function expandItem(index) {
+    if (index < 0 || index >= triggers.length) {
+      console.error(`[aria-ease] Invalid accordion index: ${index}`);
+      return;
+    }
+    const trigger = triggers[index];
+    const panel = panels[index];
+    trigger.setAttribute("aria-expanded", "true");
+    panel.style.display = "block";
+  }
+  function collapseItem(index) {
+    if (index < 0 || index >= triggers.length) {
+      console.error(`[aria-ease] Invalid accordion index: ${index}`);
+      return;
+    }
+    const trigger = triggers[index];
+    const panel = panels[index];
+    trigger.setAttribute("aria-expanded", "false");
+    panel.style.display = "none";
+  }
+  function toggleItem(index) {
+    const trigger = triggers[index];
+    const isExpanded = trigger.getAttribute("aria-expanded") === "true";
+    if (isExpanded) {
+      collapseItem(index);
+    } else {
+      if (!allowMultiple) {
+        triggers.forEach((_, i) => {
+          if (i !== index) {
+            collapseItem(i);
+          }
+        });
+      }
+      expandItem(index);
+    }
+  }
+  function handleTriggerClick(index) {
+    return () => {
+      toggleItem(index);
+    };
+  }
+  function handleTriggerKeydown(index) {
+    return (event) => {
+      const { key } = event;
+      switch (key) {
+        case "Enter":
+        case " ":
+          event.preventDefault();
+          toggleItem(index);
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          {
+            const nextIndex = (index + 1) % triggers.length;
+            triggers[nextIndex].focus();
+          }
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          {
+            const prevIndex = (index - 1 + triggers.length) % triggers.length;
+            triggers[prevIndex].focus();
+          }
+          break;
+        case "Home":
+          event.preventDefault();
+          triggers[0].focus();
+          break;
+        case "End":
+          event.preventDefault();
+          triggers[triggers.length - 1].focus();
+          break;
+      }
+    };
+  }
+  function addListeners() {
+    triggers.forEach((trigger, index) => {
+      const clickHandler = handleTriggerClick(index);
+      const keydownHandler = handleTriggerKeydown(index);
+      trigger.addEventListener("click", clickHandler);
+      trigger.addEventListener("keydown", keydownHandler);
+      handlerMap.set(trigger, keydownHandler);
+      clickHandlerMap.set(trigger, clickHandler);
+    });
+  }
+  function removeListeners() {
+    triggers.forEach((trigger) => {
+      const keydownHandler = handlerMap.get(trigger);
+      const clickHandler = clickHandlerMap.get(trigger);
+      if (keydownHandler) {
+        trigger.removeEventListener("keydown", keydownHandler);
+        handlerMap.delete(trigger);
+      }
+      if (clickHandler) {
+        trigger.removeEventListener("click", clickHandler);
+        clickHandlerMap.delete(trigger);
+      }
+    });
+  }
+  function cleanup() {
+    removeListeners();
+    triggers.forEach((_, index) => {
+      collapseItem(index);
+    });
+  }
+  initialize();
+  addListeners();
+  return {
+    expandItem,
+    collapseItem,
+    toggleItem,
+    cleanup
+  };
 }
 
 // src/utils/handleKeyPress/handleKeyPress.ts
@@ -9974,7 +10168,7 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
 }
 
 // src/block/src/makeBlockAccessible/makeBlockAccessible.ts
-function makeBlockAccessible(blockId, blockItemsClass) {
+function makeBlockAccessible({ blockId, blockItemsClass }) {
   const blockDiv = document.querySelector(`#${blockId}`);
   if (!blockDiv) {
     console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);
@@ -10053,6 +10247,134 @@ function updateCheckboxAriaAttributes(checkboxId, checkboxesClass, checkboxState
   });
 }
 
+// src/checkbox/src/makeCheckboxAccessible/makeCheckboxAccessible.ts
+function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }) {
+  const checkboxGroup = document.querySelector(`#${checkboxGroupId}`);
+  if (!checkboxGroup) {
+    console.error(`[aria-ease] Element with id="${checkboxGroupId}" not found. Make sure the checkbox group container exists before calling makeCheckboxAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const checkboxes = Array.from(checkboxGroup.querySelectorAll(`.${checkboxesClass}`));
+  if (checkboxes.length === 0) {
+    console.error(`[aria-ease] No elements with class="${checkboxesClass}" found. Make sure checkboxes exist before calling makeCheckboxAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const handlerMap = /* @__PURE__ */ new WeakMap();
+  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+  function initialize() {
+    if (!checkboxGroup.getAttribute("role")) {
+      checkboxGroup.setAttribute("role", "group");
+    }
+    checkboxes.forEach((checkbox) => {
+      checkbox.setAttribute("role", "checkbox");
+      if (!checkbox.hasAttribute("aria-checked")) {
+        checkbox.setAttribute("aria-checked", "false");
+      }
+      if (!checkbox.hasAttribute("tabindex")) {
+        checkbox.setAttribute("tabindex", "0");
+      }
+    });
+  }
+  function toggleCheckbox(index) {
+    if (index < 0 || index >= checkboxes.length) {
+      console.error(`[aria-ease] Invalid checkbox index: ${index}`);
+      return;
+    }
+    const checkbox = checkboxes[index];
+    const isChecked = checkbox.getAttribute("aria-checked") === "true";
+    checkbox.setAttribute("aria-checked", isChecked ? "false" : "true");
+  }
+  function setCheckboxState(index, checked) {
+    if (index < 0 || index >= checkboxes.length) {
+      console.error(`[aria-ease] Invalid checkbox index: ${index}`);
+      return;
+    }
+    checkboxes[index].setAttribute("aria-checked", checked ? "true" : "false");
+  }
+  function handleCheckboxClick(index) {
+    return () => {
+      toggleCheckbox(index);
+    };
+  }
+  function handleCheckboxKeydown(index) {
+    return (event) => {
+      const { key } = event;
+      switch (key) {
+        case " ":
+          event.preventDefault();
+          toggleCheckbox(index);
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          {
+            const nextIndex = (index + 1) % checkboxes.length;
+            checkboxes[nextIndex].focus();
+          }
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          {
+            const prevIndex = (index - 1 + checkboxes.length) % checkboxes.length;
+            checkboxes[prevIndex].focus();
+          }
+          break;
+        case "Home":
+          event.preventDefault();
+          checkboxes[0].focus();
+          break;
+        case "End":
+          event.preventDefault();
+          checkboxes[checkboxes.length - 1].focus();
+          break;
+      }
+    };
+  }
+  function addListeners() {
+    checkboxes.forEach((checkbox, index) => {
+      const clickHandler = handleCheckboxClick(index);
+      const keydownHandler = handleCheckboxKeydown(index);
+      checkbox.addEventListener("click", clickHandler);
+      checkbox.addEventListener("keydown", keydownHandler);
+      handlerMap.set(checkbox, keydownHandler);
+      clickHandlerMap.set(checkbox, clickHandler);
+    });
+  }
+  function removeListeners() {
+    checkboxes.forEach((checkbox) => {
+      const keydownHandler = handlerMap.get(checkbox);
+      const clickHandler = clickHandlerMap.get(checkbox);
+      if (keydownHandler) {
+        checkbox.removeEventListener("keydown", keydownHandler);
+        handlerMap.delete(checkbox);
+      }
+      if (clickHandler) {
+        checkbox.removeEventListener("click", clickHandler);
+        clickHandlerMap.delete(checkbox);
+      }
+    });
+  }
+  function cleanup() {
+    removeListeners();
+  }
+  function getCheckedStates() {
+    return checkboxes.map((checkbox) => checkbox.getAttribute("aria-checked") === "true");
+  }
+  function getCheckedIndices() {
+    return checkboxes.map((checkbox, index) => checkbox.getAttribute("aria-checked") === "true" ? index : -1).filter((index) => index !== -1);
+  }
+  initialize();
+  addListeners();
+  return {
+    toggleCheckbox,
+    setCheckboxState,
+    getCheckedStates,
+    getCheckedIndices,
+    cleanup
+  };
+}
+
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
 function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   const menuDiv = document.querySelector(`#${menuId}`);
@@ -10082,6 +10404,7 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   triggerButton.setAttribute("aria-controls", menuId);
   triggerButton.setAttribute("aria-expanded", "false");
   menuDiv.setAttribute("role", "menu");
+  menuDiv.setAttribute("aria-labelledby", triggerId);
   const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
@@ -10218,8 +10541,39 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     });
   }
   intializeMenuItems();
+  function handleTriggerKeydown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      const isOpen = menuDiv.style.display !== "none";
+      if (isOpen) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    }
+  }
+  function handleTriggerClick() {
+    const isOpen = menuDiv.style.display !== "none";
+    if (isOpen) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  }
+  function handleClickOutside(event) {
+    if (menuDiv && triggerButton && !menuDiv.contains(event.target) && !triggerButton.contains(event.target) && getComputedStyle(menuDiv).display !== "none" && triggerButton.getAttribute("aria-expanded") === "true") {
+      closeMenu();
+    }
+  }
+  triggerButton.addEventListener("keydown", handleTriggerKeydown);
+  triggerButton.addEventListener("click", handleTriggerClick);
+  document.addEventListener("click", handleClickOutside);
+  triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
+    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
+    triggerButton.removeEventListener("click", handleTriggerClick);
+    document.removeEventListener("click", handleClickOutside);
     menuDiv.style.display = "none";
     setAria(false);
     submenuInstances.forEach((instance) => instance.cleanup());
@@ -10262,6 +10616,127 @@ function updateRadioAriaAttributes(radioId, radiosClass, radioStates, currentPre
   });
 }
 
+// src/radio/src/makeRadioAccessible/makeRadioAccessible.ts
+function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex = 0 }) {
+  const radioGroup = document.querySelector(`#${radioGroupId}`);
+  if (!radioGroup) {
+    console.error(`[aria-ease] Element with id="${radioGroupId}" not found. Make sure the radio group container exists before calling makeRadioAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const radios = Array.from(radioGroup.querySelectorAll(`.${radiosClass}`));
+  if (radios.length === 0) {
+    console.error(`[aria-ease] No elements with class="${radiosClass}" found. Make sure radio buttons exist before calling makeRadioAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const handlerMap = /* @__PURE__ */ new WeakMap();
+  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+  let currentSelectedIndex = defaultSelectedIndex;
+  function initialize() {
+    if (!radioGroup.getAttribute("role")) {
+      radioGroup.setAttribute("role", "radiogroup");
+    }
+    radios.forEach((radio, index) => {
+      radio.setAttribute("role", "radio");
+      radio.setAttribute("tabindex", index === currentSelectedIndex ? "0" : "-1");
+      if (index === currentSelectedIndex) {
+        radio.setAttribute("aria-checked", "true");
+      } else {
+        radio.setAttribute("aria-checked", "false");
+      }
+    });
+  }
+  function selectRadio(index) {
+    if (index < 0 || index >= radios.length) {
+      console.error(`[aria-ease] Invalid radio index: ${index}`);
+      return;
+    }
+    if (currentSelectedIndex >= 0 && currentSelectedIndex < radios.length) {
+      radios[currentSelectedIndex].setAttribute("aria-checked", "false");
+      radios[currentSelectedIndex].setAttribute("tabindex", "-1");
+    }
+    radios[index].setAttribute("aria-checked", "true");
+    radios[index].setAttribute("tabindex", "0");
+    radios[index].focus();
+    currentSelectedIndex = index;
+  }
+  function handleRadioClick(index) {
+    return () => {
+      selectRadio(index);
+    };
+  }
+  function handleRadioKeydown(index) {
+    return (event) => {
+      const { key } = event;
+      let nextIndex = index;
+      switch (key) {
+        case "ArrowDown":
+        case "ArrowRight":
+          event.preventDefault();
+          nextIndex = (index + 1) % radios.length;
+          selectRadio(nextIndex);
+          break;
+        case "ArrowUp":
+        case "ArrowLeft":
+          event.preventDefault();
+          nextIndex = (index - 1 + radios.length) % radios.length;
+          selectRadio(nextIndex);
+          break;
+        case " ":
+          event.preventDefault();
+          selectRadio(index);
+          break;
+        case "Home":
+          event.preventDefault();
+          selectRadio(0);
+          break;
+        case "End":
+          event.preventDefault();
+          selectRadio(radios.length - 1);
+          break;
+      }
+    };
+  }
+  function addListeners() {
+    radios.forEach((radio, index) => {
+      const clickHandler = handleRadioClick(index);
+      const keydownHandler = handleRadioKeydown(index);
+      radio.addEventListener("click", clickHandler);
+      radio.addEventListener("keydown", keydownHandler);
+      handlerMap.set(radio, keydownHandler);
+      clickHandlerMap.set(radio, clickHandler);
+    });
+  }
+  function removeListeners() {
+    radios.forEach((radio) => {
+      const keydownHandler = handlerMap.get(radio);
+      const clickHandler = clickHandlerMap.get(radio);
+      if (keydownHandler) {
+        radio.removeEventListener("keydown", keydownHandler);
+        handlerMap.delete(radio);
+      }
+      if (clickHandler) {
+        radio.removeEventListener("click", clickHandler);
+        clickHandlerMap.delete(radio);
+      }
+    });
+  }
+  function cleanup() {
+    removeListeners();
+  }
+  function getSelectedIndex() {
+    return currentSelectedIndex;
+  }
+  initialize();
+  addListeners();
+  return {
+    selectRadio,
+    getSelectedIndex,
+    cleanup
+  };
+}
+
 // src/toggle/src/updateToggleAriaAttribute/updateToggleAriaAttribute.ts
 function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, currentPressedToggleIndex) {
   const toggleDiv = document.querySelector(`#${toggleId}`);
@@ -10287,6 +10762,150 @@ function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, current
       }
     }
   });
+}
+
+// src/toggle/src/makeTogggleAccessible/makeToggleAccessible.ts
+function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true }) {
+  const toggleContainer = document.querySelector(`#${toggleId}`);
+  if (!toggleContainer) {
+    console.error(`[aria-ease] Element with id="${toggleId}" not found. Make sure the toggle element exists before calling makeToggleAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  let toggles;
+  if (isSingleToggle) {
+    toggles = [toggleContainer];
+  } else {
+    if (!togglesClass) {
+      console.error(`[aria-ease] togglesClass is required when isSingleToggle is false.`);
+      return { cleanup: () => {
+      } };
+    }
+    toggles = Array.from(toggleContainer.querySelectorAll(`.${togglesClass}`));
+    if (toggles.length === 0) {
+      console.error(`[aria-ease] No elements with class="${togglesClass}" found. Make sure toggle buttons exist before calling makeToggleAccessible.`);
+      return { cleanup: () => {
+      } };
+    }
+  }
+  const handlerMap = /* @__PURE__ */ new WeakMap();
+  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+  function initialize() {
+    toggles.forEach((toggle) => {
+      if (toggle.tagName.toLowerCase() !== "button" && !toggle.getAttribute("role")) {
+        toggle.setAttribute("role", "button");
+      }
+      if (!toggle.hasAttribute("aria-pressed")) {
+        toggle.setAttribute("aria-pressed", "false");
+      }
+      if (!toggle.hasAttribute("tabindex")) {
+        toggle.setAttribute("tabindex", "0");
+      }
+    });
+  }
+  function toggleButton(index) {
+    if (index < 0 || index >= toggles.length) {
+      console.error(`[aria-ease] Invalid toggle index: ${index}`);
+      return;
+    }
+    const toggle = toggles[index];
+    const isPressed = toggle.getAttribute("aria-pressed") === "true";
+    toggle.setAttribute("aria-pressed", isPressed ? "false" : "true");
+  }
+  function setPressed(index, pressed) {
+    if (index < 0 || index >= toggles.length) {
+      console.error(`[aria-ease] Invalid toggle index: ${index}`);
+      return;
+    }
+    toggles[index].setAttribute("aria-pressed", pressed ? "true" : "false");
+  }
+  function handleToggleClick(index) {
+    return () => {
+      toggleButton(index);
+    };
+  }
+  function handleToggleKeydown(index) {
+    return (event) => {
+      const { key } = event;
+      switch (key) {
+        case "Enter":
+        case " ":
+          event.preventDefault();
+          toggleButton(index);
+          break;
+        case "ArrowDown":
+        case "ArrowRight":
+          if (!isSingleToggle && toggles.length > 1) {
+            event.preventDefault();
+            const nextIndex = (index + 1) % toggles.length;
+            toggles[nextIndex].focus();
+          }
+          break;
+        case "ArrowUp":
+        case "ArrowLeft":
+          if (!isSingleToggle && toggles.length > 1) {
+            event.preventDefault();
+            const prevIndex = (index - 1 + toggles.length) % toggles.length;
+            toggles[prevIndex].focus();
+          }
+          break;
+        case "Home":
+          if (!isSingleToggle && toggles.length > 1) {
+            event.preventDefault();
+            toggles[0].focus();
+          }
+          break;
+        case "End":
+          if (!isSingleToggle && toggles.length > 1) {
+            event.preventDefault();
+            toggles[toggles.length - 1].focus();
+          }
+          break;
+      }
+    };
+  }
+  function addListeners() {
+    toggles.forEach((toggle, index) => {
+      const clickHandler = handleToggleClick(index);
+      const keydownHandler = handleToggleKeydown(index);
+      toggle.addEventListener("click", clickHandler);
+      toggle.addEventListener("keydown", keydownHandler);
+      handlerMap.set(toggle, keydownHandler);
+      clickHandlerMap.set(toggle, clickHandler);
+    });
+  }
+  function removeListeners() {
+    toggles.forEach((toggle) => {
+      const keydownHandler = handlerMap.get(toggle);
+      const clickHandler = clickHandlerMap.get(toggle);
+      if (keydownHandler) {
+        toggle.removeEventListener("keydown", keydownHandler);
+        handlerMap.delete(toggle);
+      }
+      if (clickHandler) {
+        toggle.removeEventListener("click", clickHandler);
+        clickHandlerMap.delete(toggle);
+      }
+    });
+  }
+  function cleanup() {
+    removeListeners();
+  }
+  function getPressedStates() {
+    return toggles.map((toggle) => toggle.getAttribute("aria-pressed") === "true");
+  }
+  function getPressedIndices() {
+    return toggles.map((toggle, index) => toggle.getAttribute("aria-pressed") === "true" ? index : -1).filter((index) => index !== -1);
+  }
+  initialize();
+  addListeners();
+  return {
+    toggleButton,
+    setPressed,
+    getPressedStates,
+    getPressedIndices,
+    cleanup
+  };
 }
 
 // src/combobox/src/makeComboBoxAccessible.ts
@@ -14201,9 +14820,13 @@ if (typeof window === "undefined") {
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  makeAccordionAccessible,
   makeBlockAccessible,
+  makeCheckboxAccessible,
   makeComboboxAccessible,
   makeMenuAccessible,
+  makeRadioAccessible,
+  makeToggleAccessible,
   testUiComponent,
   updateAccordionTriggerAriaAttributes,
   updateCheckboxAriaAttributes,

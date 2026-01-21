@@ -1,98 +1,106 @@
-// src/accordion/src/updateAccordionTriggerAriaAttributes/updateAccordionTriggerAriaAttributes.ts
-function updateAccordionTriggerAriaAttributes(accordionId, accordionTriggersClass, accordionStates, clickedTriggerIndex) {
-  const accordionDiv = document.querySelector(`#${accordionId}`);
-  if (!accordionDiv) {
-    console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion element exists before calling updateAccordionTriggerAriaAttributes.`);
-    return;
-  }
-  const accordionItems = Array.from(accordionDiv.querySelectorAll(`.${accordionTriggersClass}`));
-  if (accordionItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${accordionTriggersClass}" not found. Make sure the accordion items exist before calling updateAccordionTriggerAriaAttributes.`);
-    return;
-  }
-  if (accordionItems.length !== accordionStates.length) {
-    console.error(`[aria-ease] Accordion state/DOM length mismatch: found ${accordionItems.length} triggers, but got ${accordionStates.length} state objects.'`);
-    return;
-  }
-  accordionItems.forEach((accordionItem, index) => {
-    const state = accordionStates[index];
-    const expanded = accordionItem.getAttribute("aria-expanded");
-    const shouldBeExpanded = index === clickedTriggerIndex ? state.display ? "true" : "false" : "false";
-    if (expanded && expanded !== shouldBeExpanded) {
-      accordionItem.setAttribute("aria-expanded", shouldBeExpanded);
-    }
-  });
+/**
+ * Makes an accordion accessible by managing ARIA attributes, keyboard navigation, and state.
+ * Handles multiple accordion items with proper focus management and keyboard interactions.
+ * @param {string} accordionId - The id of the accordion container.
+ * @param {string} triggersClass - The shared class of all accordion trigger buttons.
+ * @param {string} panelsClass - The shared class of all accordion panels.
+ * @param {boolean} allowMultiple - Whether multiple panels can be open simultaneously (default: false).
+ */
+
+import { AccessibilityInstance } from "Types";
+
+interface AccordionConfig {
+  accordionId: string;
+  triggersClass: string;
+  panelsClass: string;
+  allowMultiple?: boolean;
 }
 
-// src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
-function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple = false }) {
-  const accordionContainer = document.querySelector(`#${accordionId}`);
+export function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple = false }: AccordionConfig): AccessibilityInstance {
+  const accordionContainer = document.querySelector(`#${accordionId}`) as HTMLElement;
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
-    return { cleanup: () => {
-    } };
+    return { cleanup: () => {} };
   }
-  const triggers = Array.from(accordionContainer.querySelectorAll(`.${triggersClass}`));
+
+  const triggers = Array.from(accordionContainer.querySelectorAll(`.${triggersClass}`)) as HTMLElement[];
   if (triggers.length === 0) {
     console.error(`[aria-ease] No elements with class="${triggersClass}" found. Make sure accordion triggers exist before calling makeAccordionAccessible.`);
-    return { cleanup: () => {
-    } };
+    return { cleanup: () => {} };
   }
-  const panels = Array.from(accordionContainer.querySelectorAll(`.${panelsClass}`));
+
+  const panels = Array.from(accordionContainer.querySelectorAll(`.${panelsClass}`)) as HTMLElement[];
   if (panels.length === 0) {
     console.error(`[aria-ease] No elements with class="${panelsClass}" found. Make sure accordion panels exist before calling makeAccordionAccessible.`);
-    return { cleanup: () => {
-    } };
+    return { cleanup: () => {} };
   }
+
   if (triggers.length !== panels.length) {
     console.error(`[aria-ease] Accordion trigger/panel mismatch: found ${triggers.length} triggers but ${panels.length} panels.`);
-    return { cleanup: () => {
-    } };
+    return { cleanup: () => {} };
   }
-  const handlerMap = /* @__PURE__ */ new WeakMap();
-  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+
+  const handlerMap = new WeakMap<HTMLElement, (event: KeyboardEvent) => void>();
+  const clickHandlerMap = new WeakMap<HTMLElement, () => void>();
+
+  // Initialize ARIA attributes
   function initialize() {
     triggers.forEach((trigger, index) => {
       const panel = panels[index];
+
+      // Generate IDs if missing
       if (!trigger.id) {
         trigger.id = `${accordionId}-trigger-${index}`;
       }
       if (!panel.id) {
         panel.id = `${accordionId}-panel-${index}`;
       }
+
+      // Set ARIA attributes on trigger
       trigger.setAttribute("aria-controls", panel.id);
       trigger.setAttribute("aria-expanded", "false");
+
+      // Set ARIA attributes on panel
       panel.setAttribute("role", "region");
       panel.setAttribute("aria-labelledby", trigger.id);
       panel.style.display = "none";
     });
   }
-  function expandItem(index) {
+
+  function expandItem(index: number) {
     if (index < 0 || index >= triggers.length) {
       console.error(`[aria-ease] Invalid accordion index: ${index}`);
       return;
     }
+
     const trigger = triggers[index];
     const panel = panels[index];
+
     trigger.setAttribute("aria-expanded", "true");
     panel.style.display = "block";
   }
-  function collapseItem(index) {
+
+  function collapseItem(index: number) {
     if (index < 0 || index >= triggers.length) {
       console.error(`[aria-ease] Invalid accordion index: ${index}`);
       return;
     }
+
     const trigger = triggers[index];
     const panel = panels[index];
+
     trigger.setAttribute("aria-expanded", "false");
     panel.style.display = "none";
   }
-  function toggleItem(index) {
+
+  function toggleItem(index: number) {
     const trigger = triggers[index];
     const isExpanded = trigger.getAttribute("aria-expanded") === "true";
+
     if (isExpanded) {
       collapseItem(index);
     } else {
+      // If not allowing multiple, close all others first
       if (!allowMultiple) {
         triggers.forEach((_, i) => {
           if (i !== index) {
@@ -103,20 +111,24 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
       expandItem(index);
     }
   }
-  function handleTriggerClick(index) {
+
+  function handleTriggerClick(index: number) {
     return () => {
       toggleItem(index);
     };
   }
-  function handleTriggerKeydown(index) {
-    return (event) => {
+
+  function handleTriggerKeydown(index: number) {
+    return (event: KeyboardEvent) => {
       const { key } = event;
+
       switch (key) {
         case "Enter":
         case " ":
           event.preventDefault();
           toggleItem(index);
           break;
+
         case "ArrowDown":
           event.preventDefault();
           {
@@ -124,6 +136,7 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
             triggers[nextIndex].focus();
           }
           break;
+
         case "ArrowUp":
           event.preventDefault();
           {
@@ -131,10 +144,12 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
             triggers[prevIndex].focus();
           }
           break;
+
         case "Home":
           event.preventDefault();
           triggers[0].focus();
           break;
+
         case "End":
           event.preventDefault();
           triggers[triggers.length - 1].focus();
@@ -142,20 +157,26 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
       }
     };
   }
+
   function addListeners() {
-    triggers.forEach((trigger, index) => {
+    triggers.forEach((trigger: HTMLElement, index: number) => {
       const clickHandler = handleTriggerClick(index);
       const keydownHandler = handleTriggerKeydown(index);
+
       trigger.addEventListener("click", clickHandler);
       trigger.addEventListener("keydown", keydownHandler);
+
+      // Store both handlers
       handlerMap.set(trigger, keydownHandler);
       clickHandlerMap.set(trigger, clickHandler);
     });
   }
+
   function removeListeners() {
-    triggers.forEach((trigger) => {
+    triggers.forEach((trigger: HTMLElement) => {
       const keydownHandler = handlerMap.get(trigger);
       const clickHandler = clickHandlerMap.get(trigger);
+
       if (keydownHandler) {
         trigger.removeEventListener("keydown", keydownHandler);
         handlerMap.delete(trigger);
@@ -166,14 +187,19 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
       }
     });
   }
+
   function cleanup() {
     removeListeners();
+    // Reset all panels to closed state
     triggers.forEach((_, index) => {
       collapseItem(index);
     });
   }
+
+  // Initialize the accordion
   initialize();
   addListeners();
+
   return {
     expandItem,
     collapseItem,
@@ -181,5 +207,3 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     cleanup
   };
 }
-
-export { makeAccordionAccessible, updateAccordionTriggerAriaAttributes };
