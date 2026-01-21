@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [4.0.0](https://github.com/aria-ease/aria-ease/compare/v3.0.3...v4.0.0) (2026-01-21)
+
+
+### Features
+
+* add comprehensive make*Accessible APIs with consistent interface pattern ([ad476ef](https://github.com/aria-ease/aria-ease/commit/ad476efae9c12caebdf720759d4e04d9859806a0))
+
 ### [3.0.3](https://github.com/aria-ease/aria-ease/compare/v3.0.2...v3.0.3) (2026-01-20)
 
 
