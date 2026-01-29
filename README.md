@@ -203,19 +203,19 @@ accordion.toggleItem(2); // Toggle third panel
 ```
 
 <details>
-<summary>📌 Legacy API (Still Supported)</summary>
+<summary>📌 Legacy API deprecated</summary>
 
 ```javascript
-import { updateAccordionTriggerAriaAttributes } from "aria-ease/accordion";
+import { makeAccordionAccessible } from "aria-ease/accordion";
 
 const accordionStates = [{ display: true }, { display: false }];
 
-updateAccordionTriggerAriaAttributes(
-  "accordion-container",
-  "accordion-trigger",
-  accordionStates,
-  0,
-);
+makeAccordionAccessible({
+  accordionId: "faq-div",
+  triggersClass: "dropdown-button",
+  panelsClass: "accordion-panel",
+  allowMultiple: false, // Only one panel open at a time
+});
 ```
 
 </details>
@@ -265,19 +265,15 @@ const indices = checkboxGroup.getCheckedIndices(); // [0, 2]
 ```
 
 <details>
-<summary>📌 Legacy API (Still Supported)</summary>
+<summary>📌 Legacy API deprecated</summary>
 
 ```javascript
-import { updateCheckboxAriaAttributes } from "aria-ease/checkbox";
+import { makeCheckboxAccessible } from "aria-ease/checkbox";
 
-const checkboxStates = [{ checked: true }, { checked: false }];
-
-updateCheckboxAriaAttributes(
-  "checkbox-group",
-  "custom-checkbox",
-  checkboxStates,
-  0,
-);
+makeCheckboxAccessible({
+  checkboxGroupId: "checkbox-div",
+  checkboxesClass: "course-checkbox",
+});
 ```
 
 </details>
@@ -326,14 +322,16 @@ const selected = radioGroup.getSelectedIndex(); // Get current selection
 ```
 
 <details>
-<summary>📌 Legacy API (Still Supported)</summary>
+<summary>📌 Legacy API deprecated</summary>
 
 ```javascript
-import { updateRadioAriaAttributes } from "aria-ease/radio";
+import { makeRadioAccessible } from "aria-ease/radio";
 
-const radioStates = [{ checked: true }, { checked: false }];
-
-updateRadioAriaAttributes("radio-group", "custom-radio", radioStates, 0);
+makeRadioAccessible({
+  radioGroupId: "radio-div",
+  radiosClass: "radio",
+  defaultSelectedIndex: 0, // Optional: which radio is selected initially
+});
 ```
 
 </details>
@@ -393,7 +391,7 @@ toggle.cleanup();
 ```
 
 <details>
-<summary>📌 Legacy API (Still Supported)</summary>
+<summary>📌 Legacy API deprecated</summary>
 
 ```javascript
 import { updateToggleAriaAttribute } from "aria-ease/toggle";

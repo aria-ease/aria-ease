@@ -1,0 +1,55 @@
+{
+    "meta": {
+        "id": "aria-ease.accordion",
+        "version": "1.0.0",
+        "description": "ARIA Accordion interaction contract. Validates the ARIA and interaction contract for a custom accordion component following the ARIA Authoring Practices Guide accordion with show/hide pattern.",
+        "source": {
+            "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/accordion/",
+            "wcag": ["2.2 AA"]
+        },
+        "W3CName": "Accordion"
+    },
+
+    "selectors": {
+        "trigger": "[data-test-id=accordion-trigger]", //there would probably be more than one accordion trigger
+        "container": "[role=region]" //there would probably be more than one accordion panel
+    },
+
+    "observables": {
+        "observable": "focus | visible | attribute | role",
+        "target": "trigger | relative | panel",
+        "relative": "first | last | next | previous"
+    },
+
+    "static": [
+        {
+            "assertions": [
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "true | false",
+                    "failureMessage": "Accordion trigger button doesn't conform to the ARIA Accordion Button pattern as specified in APG 1.2. Accordion trigger button should have 'aria-expanded=true | false' attribute. This helps assistive technology to keep track of the open or close state of the accordion panel div that the button controls."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-controls",
+                    "failureMessage": "Accordion trigger button doesn't conform to the ARIA Accordion Button pattern as specified in APG 1.2. Accordion trigger button should have 'aria-controls' attribute that points to the id of the accordion panel div it controls with 'role=region'. This helps assistive technology to identify the accordion panel div that the button controls."
+                },
+                {
+                    "target": "container",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-labelledby | aria-label",
+                    "failureMessage": "Accordion container doesn't conform to the ARIA Accordion pattern as specified in APG 1.2. Accordion container should have 'aria-labelledby' attribute that points to the id of the trigger button that controls it."
+                }
+            ]
+        }
+    ],
+
+    "dynamic": [
+        {
+            
+        }
+    ]
+}

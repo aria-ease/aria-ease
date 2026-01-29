@@ -56,12 +56,10 @@ export async function testUiComponent(componentName: string, component: HTMLElem
             contract = await runContractTestsPlaywright(componentName, url);
         } else {
             console.log(`🧪 Running jsdom tests (limited event handling)`);
-            console.log(`Some tests may be skipped or yield false positives/negatives.\n` +
-                        `For full coverage, run with a URL to enable Playwright E2E tests.`);
+            console.log(`Some tests may be skipped or yield false positives/negatives.\n` + `For full coverage, run with a URL to enable Playwright E2E tests.`);
             contract = await runContractTests(componentName, component);
         }
     } catch (error) {
-        // If contract runner threw, re-throw with context
         if (error instanceof Error) {
             throw error;
         }

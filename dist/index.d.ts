@@ -1,19 +1,3 @@
-interface AccordionStates {
-    display: boolean;
-}
-
-interface CheckboxStates {
-    checked: boolean;
-}
-  
-interface RadioStates {
-    checked: boolean;
-}
-  
-interface ToggleStates {
-    pressed: boolean;
-}
-
 interface JestAxeResult {
     violations: unknown[];
     raw: unknown;
@@ -60,16 +44,6 @@ interface config {
 }
 
 /**
- * Adds screen reader accessibility to accordions. Updates the aria attributes of the accordion trigger button. Trigger button element must possess the following aria attributes; aria-expanded, aria-controls, aria-label (for only non-text triggers).
- * @param {string} accordionId The id of the accordion triggers parent container.
- * @param {string} accordionTriggersClass The shared class of all the accordion triggers.
- * @param {AccordionStates[]} accordionStates Array of objects containing accordions state information.
- * @param {number} clickedTriggerIndex Index of the currently clicked accordion trigger within the accordion div container.
-*/
-
-declare function updateAccordionTriggerAriaAttributes(accordionId: string, accordionTriggersClass: string, accordionStates: AccordionStates[], clickedTriggerIndex: number): void;
-
-/**
  * Makes an accordion accessible by managing ARIA attributes, keyboard navigation, and state.
  * Handles multiple accordion items with proper focus management and keyboard interactions.
  * @param {string} accordionId - The id of the accordion container.
@@ -99,16 +73,6 @@ interface BlockConfig {
 declare function makeBlockAccessible({ blockId, blockItemsClass }: BlockConfig): AccessibilityInstance;
 
 /**
- * Adds screen reader accessibility to multiple checkboxes. Updates the aria attributes of the checkboxes. Checkbox elements must possess the following aria attributes; aria-checked and aria-label.
- * @param {string} checkboxId The id of the checkbox parent container.
- * @param {string} checkboxesClass The shared class of all the checkboxes.
- * @param {CheckboxStates[]} checkboxStates Array of objects containing checkboxes state information.
- * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox.
-*/
-
-declare function updateCheckboxAriaAttributes(checkboxId: string, checkboxesClass: string, checkboxStates: CheckboxStates[], currentPressedCheckboxIndex: number): void;
-
-/**
  * Makes a checkbox group accessible by managing ARIA attributes and keyboard navigation.
  * Handles multiple independent checkboxes with proper focus management and keyboard interactions.
  * @param {string} checkboxGroupId - The id of the checkbox group container.
@@ -135,16 +99,6 @@ declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {
 }): AccessibilityInstance;
 
 /**
- * Adds screen reader accessibility to multiple radio buttons. Updates the aria attributes of the radio buttons. Radio elements must possess the following aria attributes; aria-checked and aria-label.
- * @param {string} radioId The id of the radio parent container.
- * @param {string} radiosClass The shared class of all the radios.
- * @param {RadioStates[]} radioStates Array of objects containing radio buttons state information.
- * @param {number} currentPressedRadioIndex Index of the currently checked or unchecked radio button.
- */
-
-declare function updateRadioAriaAttributes(radioId: string, radiosClass: string, radioStates: RadioStates[], currentPressedRadioIndex: number): void;
-
-/**
  * Makes a radio group accessible by managing ARIA attributes, keyboard navigation, and state.
  * Handles radio button selection with proper focus management and keyboard interactions.
  * @param {string} radioGroupId - The id of the radio group container.
@@ -158,16 +112,6 @@ interface RadioConfig {
     defaultSelectedIndex?: number;
 }
 declare function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex }: RadioConfig): AccessibilityInstance;
-
-/**
- * Adds screen reader accessibility to toggle buttons. Updates the aria attributes of the toggle buttons. Button must be a semantic button element or a non-semantic element with a role of button, and possess the aria-pressed attribute.
- * @param {string} toggleId The id of the toggle buttons parent container.
- * @param {string} togglesClass The shared class of all the toggle buttons.
- * @param {ToggleStates[]} toggleStates Array of objects containing toggle buttons state information.
- * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle button.
-*/
-
-declare function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void;
 
 /**
  * Makes a toggle button accessible by managing ARIA attributes and keyboard interactions.
@@ -204,4 +148,4 @@ declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, lis
 
 declare function testUiComponent(componentName: string, component: HTMLElement, url?: string): Promise<JestAxeResult>;
 
-export { makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeToggleAccessible, testUiComponent, updateAccordionTriggerAriaAttributes, updateCheckboxAriaAttributes, updateRadioAriaAttributes, updateToggleAriaAttribute };
+export { makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeToggleAccessible, testUiComponent };

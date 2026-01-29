@@ -265,8 +265,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     });
   }
   function openMenu() {
-    menuDiv.style.display = "block";
     setAria(true);
+    menuDiv.style.display = "block";
     const items = getFilteredItems();
     addListeners();
     if (items && items.length > 0) {
@@ -274,9 +274,9 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }
   }
   function closeMenu() {
-    removeListeners();
-    menuDiv.style.display = "none";
     setAria(false);
+    menuDiv.style.display = "none";
+    removeListeners();
     triggerButton.focus();
   }
   function intializeMenuItems() {
@@ -286,19 +286,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     });
   }
   intializeMenuItems();
-  function handleTriggerKeydown(event) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      const isOpen = menuDiv.style.display !== "none";
-      if (isOpen) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    }
-  }
   function handleTriggerClick() {
-    const isOpen = menuDiv.style.display !== "none";
+    const isOpen = triggerButton.getAttribute("aria-expanded") === "true";
     if (isOpen) {
       closeMenu();
     } else {
@@ -306,17 +295,19 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }
   }
   function handleClickOutside(event) {
-    if (menuDiv && triggerButton && !menuDiv.contains(event.target) && !triggerButton.contains(event.target) && getComputedStyle(menuDiv).display !== "none" && triggerButton.getAttribute("aria-expanded") === "true") {
+    const isMenuOpen = triggerButton.getAttribute("aria-expanded") === "true";
+    if (!isMenuOpen) return;
+    const clickedTrigger = triggerButton.contains(event.target);
+    const clickedMenu = menuDiv.contains(event.target);
+    if (!clickedTrigger && !clickedMenu) {
       closeMenu();
     }
   }
-  triggerButton.addEventListener("keydown", handleTriggerKeydown);
   triggerButton.addEventListener("click", handleTriggerClick);
   document.addEventListener("click", handleClickOutside);
   triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
-    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
     triggerButton.removeEventListener("click", handleTriggerClick);
     document.removeEventListener("click", handleClickOutside);
     menuDiv.style.display = "none";

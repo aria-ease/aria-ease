@@ -4,15 +4,20 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [4.0.1](https://github.com/aria-ease/aria-ease/compare/v4.0.0...v4.0.1) (2026-01-21)
 
+### Bug Fixes
+
+- **docs:** updated README with new API changes ([7e42f1a](https://github.com/aria-ease/aria-ease/commit/7e42f1a491ef15c2591079eebb73d02d96997801))
+
 ## [4.0.0](https://github.com/aria-ease/aria-ease/compare/v3.0.3...v4.0.0) (2026-01-21)
 
 ### Features
 
 - add comprehensive make\*Accessible APIs with consistent interface pattern ([ad476ef](https://github.com/aria-ease/aria-ease/commit/ad476efae9c12caebdf720759d4e04d9859806a0))
-- **accordion:** add `makeAccordionAccessible()` with keyboard navigation and lifecycle management
-- **radio:** add `makeRadioAccessible()` with arrow key navigation and automatic selection management
-- **checkbox:** add `makeCheckboxAccessible()` with keyboard support and state queries
-- **toggle:** add `makeToggleAccessible()` supporting single toggles and toggle groups
+- **accordion:** add makeAccordionAccessible with keyboard navigation and lifecycle management
+- **radio:** add makeRadioAccessible with arrow key navigation and automatic selection management
+- **checkbox:** add makeCheckboxAccessible with keyboard support and state queries
+- **toggle:** add makeToggleAccessible supporting single toggles and toggle groups
+- **block:** changed makeBlockAccessible to use consistent parameter pattern
 - **all:** standardize all component APIs with consistent Config interface pattern
 - **all:** add keyboard navigation (Arrow keys, Home, End, Space, Enter)
 - **all:** internal state management eliminates need for manual state tracking
@@ -21,15 +26,8 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Changed
 
-- All component APIs now follow consistent `make*Accessible` pattern
+- All component APIs now follow consistent **make\*Accessible** pattern
 - Improved TypeScript types for better IDE autocomplete
-
-### Deprecated
-
-- `updateAccordionTriggerAriaAttributes()` - use `makeAccordionAccessible()` instead
-- `updateRadioAriaAttributes()` - use `makeRadioAccessible()` instead
-- `updateCheckboxAriaAttributes()` - use `makeCheckboxAccessible()` instead
-- `updateToggleAriaAttribute()` - use `makeToggleAccessible()` instead
 
 **Note:** Old APIs remain fully functional for backward compatibility.
 

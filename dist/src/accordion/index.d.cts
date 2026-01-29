@@ -1,14 +1,4 @@
-import { A as AccordionStates, a as AccessibilityInstance } from '../Types.d-BrHSyS03.cjs';
-
-/**
- * Adds screen reader accessibility to accordions. Updates the aria attributes of the accordion trigger button. Trigger button element must possess the following aria attributes; aria-expanded, aria-controls, aria-label (for only non-text triggers).
- * @param {string} accordionId The id of the accordion triggers parent container.
- * @param {string} accordionTriggersClass The shared class of all the accordion triggers.
- * @param {AccordionStates[]} accordionStates Array of objects containing accordions state information.
- * @param {number} clickedTriggerIndex Index of the currently clicked accordion trigger within the accordion div container.
-*/
-
-declare function updateAccordionTriggerAriaAttributes(accordionId: string, accordionTriggersClass: string, accordionStates: AccordionStates[], clickedTriggerIndex: number): void;
+import { A as AccessibilityInstance } from '../Types.d-COr5IFp5.cjs';
 
 /**
  * Makes an accordion accessible by managing ARIA attributes, keyboard navigation, and state.
@@ -27,4 +17,4 @@ interface AccordionConfig {
 }
 declare function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple }: AccordionConfig): AccessibilityInstance;
 
-export { makeAccordionAccessible, updateAccordionTriggerAriaAttributes };
+export { makeAccordionAccessible };

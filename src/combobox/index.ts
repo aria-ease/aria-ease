@@ -1,1 +1,1 @@
-export * from "./src/makeComboBoxAccessible";
+export * from "./src/makeComboBoxAccessible/makeComboBoxAccessible";

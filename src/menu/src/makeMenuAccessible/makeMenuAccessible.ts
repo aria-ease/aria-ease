@@ -170,8 +170,9 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
   }
 
   function openMenu() {
-    menuDiv.style.display = "block";
     setAria(true);
+    menuDiv.style.display = "block";
+    
     const items = getFilteredItems();
     addListeners();
     
@@ -181,9 +182,10 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
   }
 
   function closeMenu() {
-    removeListeners();
-    menuDiv.style.display = "none";
     setAria(false);
+    menuDiv.style.display = "none";
+    
+    removeListeners();
     triggerButton.focus();
   }
 
@@ -196,21 +198,8 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
 
   intializeMenuItems();
 
-  // Add trigger keyboard event listeners
-  function handleTriggerKeydown(event: KeyboardEvent) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      const isOpen = menuDiv.style.display !== "none";
-      if (isOpen) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    }
-  }
-
   function handleTriggerClick() {
-    const isOpen = menuDiv.style.display !== "none";
+    const isOpen = triggerButton.getAttribute("aria-expanded") === "true";
     if (isOpen) {
       closeMenu();
     } else {
@@ -219,12 +208,17 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
   }
 
   function handleClickOutside(event: MouseEvent) {
-    if (menuDiv && triggerButton && !menuDiv.contains(event.target as Node) && !triggerButton.contains(event.target as Node) && getComputedStyle(menuDiv).display !== "none" && triggerButton.getAttribute("aria-expanded") === "true") {
+    const isMenuOpen = triggerButton.getAttribute("aria-expanded") === "true";
+    if (!isMenuOpen) return;
+    
+    const clickedTrigger = triggerButton.contains(event.target as Node);
+    const clickedMenu = menuDiv.contains(event.target as Node);
+    
+    if (!clickedTrigger && !clickedMenu) {
       closeMenu();
     }
   }
 
-  triggerButton.addEventListener("keydown", handleTriggerKeydown);
   triggerButton.addEventListener("click", handleTriggerClick);
   document.addEventListener("click", handleClickOutside);
 
@@ -232,7 +226,6 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: { menu
 
   function cleanup() {
     removeListeners();
-    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
     triggerButton.removeEventListener("click", handleTriggerClick);
     document.removeEventListener("click", handleClickOutside);
     menuDiv.style.display = "none";

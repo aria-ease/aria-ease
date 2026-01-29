@@ -9182,32 +9182,6 @@ var require_lz_string = __commonJS({
   }
 });
 
-// src/accordion/src/updateAccordionTriggerAriaAttributes/updateAccordionTriggerAriaAttributes.ts
-function updateAccordionTriggerAriaAttributes(accordionId, accordionTriggersClass, accordionStates, clickedTriggerIndex) {
-  const accordionDiv = document.querySelector(`#${accordionId}`);
-  if (!accordionDiv) {
-    console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion element exists before calling updateAccordionTriggerAriaAttributes.`);
-    return;
-  }
-  const accordionItems = Array.from(accordionDiv.querySelectorAll(`.${accordionTriggersClass}`));
-  if (accordionItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${accordionTriggersClass}" not found. Make sure the accordion items exist before calling updateAccordionTriggerAriaAttributes.`);
-    return;
-  }
-  if (accordionItems.length !== accordionStates.length) {
-    console.error(`[aria-ease] Accordion state/DOM length mismatch: found ${accordionItems.length} triggers, but got ${accordionStates.length} state objects.'`);
-    return;
-  }
-  accordionItems.forEach((accordionItem, index) => {
-    const state = accordionStates[index];
-    const expanded = accordionItem.getAttribute("aria-expanded");
-    const shouldBeExpanded = index === clickedTriggerIndex ? state.display ? "true" : "false" : "false";
-    if (expanded && expanded !== shouldBeExpanded) {
-      accordionItem.setAttribute("aria-expanded", shouldBeExpanded);
-    }
-  });
-}
-
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
 function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple = false }) {
   const accordionContainer = document.querySelector(`#${accordionId}`);
@@ -9536,38 +9510,6 @@ function makeBlockAccessible({ blockId, blockItemsClass }) {
   return { cleanup, refresh };
 }
 
-// src/checkbox/src/updateCheckboxAriaAttributes/updateCheckboxAriaAttributes.ts
-function updateCheckboxAriaAttributes(checkboxId, checkboxesClass, checkboxStates, currentPressedCheckboxIndex) {
-  const checkboxDiv = document.querySelector(`#${checkboxId}`);
-  if (!checkboxDiv) {
-    console.error(`[aria-ease] Invalid checkbox main div id provided. No checkbox div with id '${checkboxDiv} found.'`);
-    return;
-  }
-  const checkboxItems = Array.from(document.querySelectorAll(`.${checkboxesClass}`));
-  if (checkboxItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${checkboxesClass}" not found. Make sure the checkbox items exist before calling updateCheckboxAriaAttributes.`);
-    return;
-  }
-  ;
-  if (checkboxStates.length === 0) {
-    console.error(`[aria-ease] Checkbox states array is empty. Make sure the checkboxStates array is populated before calling updateCheckboxAriaAttributes.`);
-    return;
-  }
-  if (currentPressedCheckboxIndex < 0 || currentPressedCheckboxIndex >= checkboxStates.length) {
-    console.error(`[aria-ease] Checkbox index ${currentPressedCheckboxIndex} is out of bounds for states array of length ${checkboxStates.length}.`);
-    return;
-  }
-  checkboxItems.forEach((checkbox, index) => {
-    if (index === currentPressedCheckboxIndex) {
-      const checked = checkbox.getAttribute("aria-checked");
-      const shouldBeChecked = checkboxStates[index].checked ? "true" : "false";
-      if (checked && checked !== shouldBeChecked) {
-        checkbox.setAttribute("aria-checked", shouldBeChecked);
-      }
-    }
-  });
-}
-
 // src/checkbox/src/makeCheckboxAccessible/makeCheckboxAccessible.ts
 function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }) {
   const checkboxGroup = document.querySelector(`#${checkboxGroupId}`);
@@ -9841,8 +9783,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     });
   }
   function openMenu() {
-    menuDiv.style.display = "block";
     setAria(true);
+    menuDiv.style.display = "block";
     const items = getFilteredItems();
     addListeners();
     if (items && items.length > 0) {
@@ -9850,9 +9792,9 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }
   }
   function closeMenu() {
-    removeListeners();
-    menuDiv.style.display = "none";
     setAria(false);
+    menuDiv.style.display = "none";
+    removeListeners();
     triggerButton.focus();
   }
   function intializeMenuItems() {
@@ -9862,19 +9804,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     });
   }
   intializeMenuItems();
-  function handleTriggerKeydown(event) {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      const isOpen = menuDiv.style.display !== "none";
-      if (isOpen) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    }
-  }
   function handleTriggerClick() {
-    const isOpen = menuDiv.style.display !== "none";
+    const isOpen = triggerButton.getAttribute("aria-expanded") === "true";
     if (isOpen) {
       closeMenu();
     } else {
@@ -9882,17 +9813,19 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }
   }
   function handleClickOutside(event) {
-    if (menuDiv && triggerButton && !menuDiv.contains(event.target) && !triggerButton.contains(event.target) && getComputedStyle(menuDiv).display !== "none" && triggerButton.getAttribute("aria-expanded") === "true") {
+    const isMenuOpen = triggerButton.getAttribute("aria-expanded") === "true";
+    if (!isMenuOpen) return;
+    const clickedTrigger = triggerButton.contains(event.target);
+    const clickedMenu = menuDiv.contains(event.target);
+    if (!clickedTrigger && !clickedMenu) {
       closeMenu();
     }
   }
-  triggerButton.addEventListener("keydown", handleTriggerKeydown);
   triggerButton.addEventListener("click", handleTriggerClick);
   document.addEventListener("click", handleClickOutside);
   triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
-    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
     triggerButton.removeEventListener("click", handleTriggerClick);
     document.removeEventListener("click", handleClickOutside);
     menuDiv.style.display = "none";
@@ -9905,36 +9838,6 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     filteredItems = null;
   }
   return { openMenu, closeMenu, cleanup, refresh };
-}
-
-// src/radio/src/updateRadioAriaAttributes/updateRadioAriaAttributes.ts
-function updateRadioAriaAttributes(radioId, radiosClass, radioStates, currentPressedRadioIndex) {
-  const radioDiv = document.querySelector(`#${radioId}`);
-  if (!radioDiv) {
-    console.error(`[aria-ease] Element with id="${radioId}" not found. Make sure the radio element exists before calling updateRadioAriaAttributes.`);
-    return;
-  }
-  const radioItems = Array.from(radioDiv.querySelectorAll(`.${radiosClass}`));
-  if (radioItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${radiosClass}" not found. Make sure the radio items exist before calling updateRadioAriaAttributes.`);
-    return;
-  }
-  if (radioStates.length === 0) {
-    console.error(`[aria-ease] Radio states array is empty. Make sure the radioStates array is populated before calling updateRadioAriaAttributes.`);
-    return;
-  }
-  if (currentPressedRadioIndex < 0 || currentPressedRadioIndex >= radioStates.length) {
-    console.error(`[aria-ease] Radio index ${currentPressedRadioIndex} is out of bounds for states array of length ${radioStates.length}.`);
-    return;
-  }
-  radioItems.forEach((radioItem, index) => {
-    const state = radioStates[index];
-    const checked = radioItem.getAttribute("aria-checked");
-    const shouldBeChecked = index === currentPressedRadioIndex ? state.checked ? "true" : "false" : "false";
-    if (checked && checked !== shouldBeChecked) {
-      radioItem.setAttribute("aria-checked", shouldBeChecked);
-    }
-  });
 }
 
 // src/radio/src/makeRadioAccessible/makeRadioAccessible.ts
@@ -10056,33 +9959,6 @@ function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex =
     getSelectedIndex,
     cleanup
   };
-}
-
-// src/toggle/src/updateToggleAriaAttribute/updateToggleAriaAttribute.ts
-function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, currentPressedToggleIndex) {
-  const toggleDiv = document.querySelector(`#${toggleId}`);
-  if (!toggleDiv) {
-    console.error(`[aria-ease] Element with id="${toggleId}" not found. Make sure the toggle element exists before calling updateToggleAriaAttribute.`);
-    return;
-  }
-  const toggleItems = Array.from(toggleDiv.querySelectorAll(`.${togglesClass}`));
-  if (toggleItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${togglesClass}" not found. Make sure the toggle items exist before calling updateToggleAriaAttribute.`);
-    return;
-  }
-  if (toggleItems.length !== toggleStates.length) {
-    console.error(`[aria-ease] Toggle state/DOM length mismatch: found ${toggleItems.length} triggers, but got ${toggleStates.length} state objects.'`);
-    return;
-  }
-  toggleItems.forEach((toggle, index) => {
-    if (index === currentPressedToggleIndex) {
-      const pressed = toggle.getAttribute("aria-pressed");
-      const shouldBePressed = toggleStates[index].pressed ? "true" : "false";
-      if (pressed && pressed !== shouldBePressed) {
-        toggle.setAttribute("aria-pressed", shouldBePressed);
-      }
-    }
-  });
 }
 
 // src/toggle/src/makeTogggleAccessible/makeToggleAccessible.ts
@@ -10229,7 +10105,7 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
   };
 }
 
-// src/combobox/src/makeComboBoxAccessible.ts
+// src/combobox/src/makeComboBoxAccessible/makeComboBoxAccessible.ts
 function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, config: config2 }) {
   const comboboxInput = document.getElementById(`${comboboxInputId}`);
   if (!comboboxInput) {
@@ -14144,11 +14020,7 @@ export {
   makeMenuAccessible,
   makeRadioAccessible,
   makeToggleAccessible,
-  testUiComponent,
-  updateAccordionTriggerAriaAttributes,
-  updateCheckboxAriaAttributes,
-  updateRadioAriaAttributes,
-  updateToggleAriaAttribute
+  testUiComponent
 };
 /*! Bundled license information:
 

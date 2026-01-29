@@ -27,7 +27,7 @@ describe("makeBlockAccessible - multi region keyboard navigation", () => {
         </footer>
       </div>
     `;
-    ({ cleanup } = makeBlockAccessible("body", "shared-class"));
+    ({ cleanup } = makeBlockAccessible({ blockId: "body", blockItemsClass: "shared-class" }));
   });
 
   it("navigates through all shared-class elements in all regions with ArrowDown", () => {

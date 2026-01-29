@@ -1,10 +1,10 @@
 import { describe, it, beforeEach, expect, vi } from "vitest";
 import { makeMenuAccessible } from "../../../src/menu";
 import { makeBlockAccessible } from "../../../src/block";
-import { updateCheckboxAriaAttributes } from "../../../src/checkbox";
-import { updateRadioAriaAttributes } from "../../../src/radio";
-import { updateToggleAriaAttribute } from "../../../src/toggle";
-import { updateAccordionTriggerAriaAttributes } from "../../../src/accordion";
+import { makeCheckboxAccessible } from "../../../src/checkbox";
+import { makeRadioAccessible } from "../../../src/radio";
+import { makeToggleAccessible } from "../../../src/toggle";
+import { makeAccordionAccessible } from "../../../src/accordion";
 
 describe("Edge Cases - Null and Invalid Inputs", () => {
   beforeEach(() => {
@@ -125,7 +125,7 @@ describe("Edge Cases - Null and Invalid Inputs", () => {
   describe("makeBlockAccessible", () => {
     it("handles non-existent block element", () => {
       expect(() => {
-        makeBlockAccessible("non-existent-block", "items");
+        makeBlockAccessible({ blockId: "non-existent-block", blockItemsClass: "items" });
       }).not.toThrow();
     });
 
@@ -133,7 +133,7 @@ describe("Edge Cases - Null and Invalid Inputs", () => {
       document.body.innerHTML = `<div id="block"></div>`;
       
       expect(() => {
-        makeBlockAccessible("block", "non-existent-items");
+        makeBlockAccessible({ blockId: "block", blockItemsClass: "non-existent-items" });
       }).not.toThrow();
     });
 
@@ -141,33 +141,29 @@ describe("Edge Cases - Null and Invalid Inputs", () => {
       document.body.innerHTML = `<div id="block"></div>`;
       
       expect(() => {
-        makeBlockAccessible("block", "items");
+        makeBlockAccessible({ blockId: "block", blockItemsClass: "items" });
       }).not.toThrow();
     });
   });
 
-  describe("updateCheckboxAriaAttributes", () => {
+  describe("makeCheckboxAccessible", () => {
     it("handles non-existent container", () => {
-      updateCheckboxAriaAttributes("non-existent", "checkbox", [], 0);
-      
+      const result = makeCheckboxAccessible({ checkboxGroupId: "non-existent", checkboxesClass: "checkbox" });
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Invalid checkbox main div id provided')
+        expect.stringContaining('Element with id="non-existent" not found')
       );
+      expect(result.cleanup).toBeDefined();
     });
 
-    it("handles empty array of states", () => {
+    it("handles no checkboxes in container", () => {
       document.body.innerHTML = `
-        <div id="container">
-          <button class="checkbox" aria-checked="false">Check</button>
-        </div>
+        <div id="container"></div>
       `;
-
-      // Should handle gracefully with error message
-      updateCheckboxAriaAttributes("container", "checkbox", [], 0);
-      
+      const result = makeCheckboxAccessible({ checkboxGroupId: "container", checkboxesClass: "checkbox" });
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Checkbox states array is empty')
+        expect.stringContaining('No elements with class="checkbox" found')
       );
+      expect(result.cleanup).toBeDefined();
     });
 
     it("handles out of bounds index", () => {
@@ -176,11 +172,10 @@ describe("Edge Cases - Null and Invalid Inputs", () => {
           <button class="checkbox" aria-checked="false">Check</button>
         </div>
       `;
-
-      updateCheckboxAriaAttributes("container", "checkbox", [{ checked: true }], 5);
-      
+      const group = makeCheckboxAccessible({ checkboxGroupId: "container", checkboxesClass: "checkbox" });
+      group.setCheckboxState(5, true);
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Checkbox index 5 is out of bounds')
+        expect.stringContaining('Invalid checkbox index: 5')
       );
     });
 
@@ -190,84 +185,99 @@ describe("Edge Cases - Null and Invalid Inputs", () => {
           <button class="checkbox" aria-checked="false">Check</button>
         </div>
       `;
-
-      updateCheckboxAriaAttributes("container", "checkbox", [{ checked: true }], -1);
-      
+      const group = makeCheckboxAccessible({ checkboxGroupId: "container", checkboxesClass: "checkbox" });
+      group.setCheckboxState(-1, true);
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Checkbox index -1 is out of bounds')
+        expect.stringContaining('Invalid checkbox index: -1')
       );
     });
   });
 
-  describe("updateRadioAriaAttributes", () => {
+  describe("makeRadioAccessible", () => {
     it("handles non-existent container", () => {
-      updateRadioAriaAttributes("non-existent", "radio", [], 0);
-      
+      const result = makeRadioAccessible({ radioGroupId: "non-existent", radiosClass: "radio" });
       expect(console.error).toHaveBeenCalledWith(
         expect.stringContaining('Element with id="non-existent" not found')
       );
+      expect(result.cleanup).toBeDefined();
     });
 
-    it("handles empty items", () => {
+    it("handles no radios in container", () => {
       document.body.innerHTML = `<div id="container"></div>`;
-      
-      updateRadioAriaAttributes("container", "radio", [], 0);
-      
+      const result = makeRadioAccessible({ radioGroupId: "container", radiosClass: "radio" });
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Element with class="radio" not found.')
+        expect.stringContaining('No elements with class="radio" found')
       );
+      expect(result.cleanup).toBeDefined();
     });
   });
 
-  describe("updateToggleAriaAttribute", () => {
-    it("handles length mismatch between items and states", () => {
+  describe("makeToggleAccessible", () => {
+    it("handles non-existent container", () => {
+      const result = makeToggleAccessible({ toggleId: "non-existent", togglesClass: "toggle", isSingleToggle: false });
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Element with id="non-existent" not found')
+      );
+      expect(result.cleanup).toBeDefined();
+    });
+
+    it("handles no toggles in container", () => {
+      document.body.innerHTML = `<div id="container"></div>`;
+      const result = makeToggleAccessible({ toggleId: "container", togglesClass: "toggle", isSingleToggle: false });
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('No elements with class="toggle" found')
+      );
+      expect(result.cleanup).toBeDefined();
+    });
+
+    it("handles out of bounds index", () => {
       document.body.innerHTML = `
         <div id="container">
           <button class="toggle" aria-pressed="false">Toggle 1</button>
-          <button class="toggle" aria-pressed="false">Toggle 2</button>
         </div>
       `;
-
-      updateToggleAriaAttribute(
-        "container", 
-        "toggle", 
-        [{ pressed: true }],  // Only 1 state but 2 elements
-        0
-      );
-      
+      const group = makeToggleAccessible({ toggleId: "container", togglesClass: "toggle", isSingleToggle: false });
+      group.setPressed(5, true);
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Toggle state/DOM length mismatch')
+        expect.stringContaining('Invalid toggle index: 5')
       );
     });
   });
 
-  describe("updateAccordionTriggerAriaAttributes", () => {
-    it("handles length mismatch between triggers and states", () => {
-      document.body.innerHTML = `
-        <div id="container">
-          <button class="trigger" aria-expanded="false">Trigger 1</button>
-          <button class="trigger" aria-expanded="false">Trigger 2</button>
-        </div>
-      `;
-
-      updateAccordionTriggerAriaAttributes(
-        "container",
-        "trigger",
-        [{ display: true }],  // Only 1 state but 2 triggers
-        0
-      );
-      
+  describe("makeAccordionAccessible", () => {
+    it("handles non-existent container", () => {
+      const result = makeAccordionAccessible({ accordionId: "non-existent", triggersClass: "trigger", panelsClass: "panel" });
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining('Accordion state/DOM length mismatch')
+        expect.stringContaining('Element with id="non-existent" not found')
       );
+      expect(result.cleanup).toBeDefined();
     });
 
-    it("handles non-existent container", () => {
-      updateAccordionTriggerAriaAttributes("non-existent", "trigger", [], 0);
-      
+    it("handles no triggers in container", () => {
+      document.body.innerHTML = `<div id="container"></div>`;
+      const result = makeAccordionAccessible({ accordionId: "container", triggersClass: "trigger", panelsClass: "panel" });
       expect(console.error).toHaveBeenCalledWith(
-        expect.stringContaining(' Element with id="non-existent" not found.')
+        expect.stringContaining('No elements with class="trigger" found')
       );
+      expect(result.cleanup).toBeDefined();
+    });
+
+    it("handles no panels in container", () => {
+      document.body.innerHTML = `<div id="container"><button class="trigger"></button></div>`;
+      const result = makeAccordionAccessible({ accordionId: "container", triggersClass: "trigger", panelsClass: "panel" });
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('No elements with class="panel" found')
+      );
+      expect(result.cleanup).toBeDefined();
+    });
+
+    it("handles trigger/panel count mismatch", () => {
+      document.body.innerHTML = `<div id="container"><button class="trigger"></button><div class="panel"></div><div class="panel"></div></div>`;
+      const result = makeAccordionAccessible({ accordionId: "container", triggersClass: "trigger", panelsClass: "panel" });
+      expect(console.error).toHaveBeenCalledWith(
+        expect.stringContaining('Accordion trigger/panel mismatch')
+      );
+      expect(result.cleanup).toBeDefined();
     });
   });
 
