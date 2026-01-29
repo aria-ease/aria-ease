@@ -156,135 +156,252 @@ menu.refresh();
 
 ### 🪗 Accordion
 
-Updates `aria-expanded` attributes for accordion panels.
+Creates accessible accordions with keyboard navigation and automatic state management.
+
+**Features:**
+
+- Arrow key navigation between triggers
+- Automatic ARIA attribute management
+- Single or multiple panel expansion
+- Enter/Space to toggle panels
+- Home/End key support
 
 ```javascript
-import { updateAccordionTriggerAriaAttributes } from "aria-ease/accordion";
+import { makeAccordionAccessible } from "aria-ease/accordion";
 
-const accordionStates = [
-  { expanded: true },
-  { expanded: false },
-  { expanded: false },
-];
+// React Example
+useEffect(() => {
+  const accordion = makeAccordionAccessible({
+    accordionId: "accordion-container",
+    triggersClass: "accordion-trigger",
+    panelsClass: "accordion-panel",
+    allowMultiple: false, // Only one panel open at a time (default)
+  });
 
-// Call when accordion state changes
-updateAccordionTriggerAriaAttributes(
-  "accordion-container", // Container ID
-  "accordion-trigger", // Shared class for triggers
-  accordionStates, // State array
-  0 // Index of trigger that changed
-);
+  return () => accordion.cleanup();
+}, []);
+
+// Programmatic control
+accordion.expandItem(0); // Expand first panel
+accordion.collapseItem(1); // Collapse second panel
+accordion.toggleItem(2); // Toggle third panel
 ```
 
 **HTML structure:**
 
 ```html
 <div id="accordion-container">
-  <button
-    class="accordion-trigger"
-    aria-expanded="false"
-    aria-controls="panel-1"
-  >
-    Section 1
-  </button>
-  <div id="panel-1">Content 1</div>
+  <button class="accordion-trigger">Section 1</button>
+  <div class="accordion-panel">Content 1</div>
 
-  <button
-    class="accordion-trigger"
-    aria-expanded="false"
-    aria-controls="panel-2"
-  >
-    Section 2
-  </button>
-  <div id="panel-2">Content 2</div>
+  <button class="accordion-trigger">Section 2</button>
+  <div class="accordion-panel">Content 2</div>
+
+  <button class="accordion-trigger">Section 3</button>
+  <div class="accordion-panel">Content 3</div>
 </div>
 ```
+
+<details>
+<summary>📌 Legacy API deprecated</summary>
+
+```javascript
+import { makeAccordionAccessible } from "aria-ease/accordion";
+
+const accordionStates = [{ display: true }, { display: false }];
+
+makeAccordionAccessible({
+  accordionId: "faq-div",
+  triggersClass: "dropdown-button",
+  panelsClass: "accordion-panel",
+  allowMultiple: false, // Only one panel open at a time
+});
+```
+
+</details>
 
 ---
 
 ### ✅ Checkbox
 
-Updates `aria-checked` attributes for custom checkboxes.
+Creates accessible checkbox groups with keyboard navigation and state management.
+
+**Features:**
+
+- Arrow key navigation
+- Space to toggle
+- Independent state tracking
+- Home/End key support
+- Query checked states
 
 ```javascript
-import { updateCheckboxAriaAttributes } from "aria-ease/checkbox";
+import { makeCheckboxAccessible } from "aria-ease/checkbox";
 
-const checkboxStates = [
-  { checked: true },
-  { checked: false },
-  { checked: true },
-];
+// React Example
+useEffect(() => {
+  const checkboxGroup = makeCheckboxAccessible({
+    checkboxGroupId: "checkbox-group",
+    checkboxesClass: "custom-checkbox",
+  });
 
-// Call when checkbox is toggled
-function handleCheckboxClick(index) {
-  checkboxStates[index].checked = !checkboxStates[index].checked;
+  return () => checkboxGroup.cleanup();
+}, []);
 
-  updateCheckboxAriaAttributes(
-    "checkbox-group",
-    "custom-checkbox",
-    checkboxStates,
-    index
-  );
-}
+// Programmatic control
+checkboxGroup.toggleCheckbox(0); // Toggle first checkbox
+checkboxGroup.setCheckboxState(1, true); // Check second checkbox
+const states = checkboxGroup.getCheckedStates(); // [true, false, true]
+const indices = checkboxGroup.getCheckedIndices(); // [0, 2]
 ```
 
 **HTML structure:**
 
 ```html
 <div id="checkbox-group">
-  <div
-    class="custom-checkbox"
-    role="checkbox"
-    aria-checked="false"
-    aria-label="Option 1"
-  ></div>
-  <div
-    class="custom-checkbox"
-    role="checkbox"
-    aria-checked="false"
-    aria-label="Option 2"
-  ></div>
+  <div class="custom-checkbox" aria-label="Option 1"></div>
+  <div class="custom-checkbox" aria-label="Option 2"></div>
+  <div class="custom-checkbox" aria-label="Option 3"></div>
 </div>
 ```
+
+<details>
+<summary>📌 Legacy API deprecated</summary>
+
+```javascript
+import { makeCheckboxAccessible } from "aria-ease/checkbox";
+
+makeCheckboxAccessible({
+  checkboxGroupId: "checkbox-div",
+  checkboxesClass: "course-checkbox",
+});
+```
+
+</details>
 
 ---
 
 ### 🔘 Radio Button
 
-Updates `aria-checked` attributes for custom radio buttons.
+Creates accessible radio groups with keyboard navigation and automatic selection management.
+
+**Features:**
+
+- Arrow key navigation (all directions)
+- Automatic unchecking of other radios
+- Space to select
+- Home/End key support
+- Single selection enforcement
 
 ```javascript
-import { updateRadioAriaAttributes } from "aria-ease/radio";
+import { makeRadioAccessible } from "aria-ease/radio";
 
-const radioStates = [{ checked: true }, { checked: false }, { checked: false }];
-
-function handleRadioSelect(index) {
-  // Uncheck all, check selected
-  radioStates.forEach((state, i) => {
-    state.checked = i === index;
+// React Example
+useEffect(() => {
+  const radioGroup = makeRadioAccessible({
+    radioGroupId: "radio-group",
+    radiosClass: "custom-radio",
+    defaultSelectedIndex: 0, // Initially selected (optional)
   });
 
-  updateRadioAriaAttributes("radio-group", "custom-radio", radioStates);
-}
+  return () => radioGroup.cleanup();
+}, []);
+
+// Programmatic control
+radioGroup.selectRadio(2); // Select third radio
+const selected = radioGroup.getSelectedIndex(); // Get current selection
 ```
+
+**HTML structure:**
+
+```html
+<div id="radio-group">
+  <div class="custom-radio" aria-label="Option 1"></div>
+  <div class="custom-radio" aria-label="Option 2"></div>
+  <div class="custom-radio" aria-label="Option 3"></div>
+</div>
+```
+
+<details>
+<summary>📌 Legacy API deprecated</summary>
+
+```javascript
+import { makeRadioAccessible } from "aria-ease/radio";
+
+makeRadioAccessible({
+  radioGroupId: "radio-div",
+  radiosClass: "radio",
+  defaultSelectedIndex: 0, // Optional: which radio is selected initially
+});
+```
+
+</details>
 
 ---
 
 ### 🔀 Toggle Button
 
-Updates `aria-pressed` attributes for toggle buttons.
+Creates accessible toggle buttons with keyboard interactions and state management.
+
+**Features:**
+
+- Enter/Space to toggle
+- Single toggle or toggle groups
+- Arrow key navigation (groups)
+- Home/End support (groups)
+- Query pressed states
+
+```javascript
+import { makeToggleAccessible } from "aria-ease/toggle";
+
+// Single toggle button
+const toggle = makeToggleAccessible({
+  toggleId: "mute-button",
+  isSingleToggle: true,
+});
+
+// Toggle button group
+const toggleGroup = makeToggleAccessible({
+  toggleId: "toolbar",
+  togglesClass: "toggle-btn",
+  isSingleToggle: false,
+});
+
+// Programmatic control
+toggle.toggleButton(0); // Toggle the button
+toggle.setPressed(0, true); // Set pressed state
+const states = toggleGroup.getPressedStates(); // [false, true, false]
+const indices = toggleGroup.getPressedIndices(); // [1]
+
+// Cleanup
+toggle.cleanup();
+```
+
+**HTML structure:**
+
+```html
+<!-- Single toggle -->
+<button id="mute-button">Mute</button>
+
+<!-- Toggle group -->
+<div id="toolbar">
+  <button class="toggle-btn">Bold</button>
+  <button class="toggle-btn">Italic</button>
+  <button class="toggle-btn">Underline</button>
+</div>
+```
+
+<details>
+<summary>📌 Legacy API deprecated</summary>
 
 ```javascript
 import { updateToggleAriaAttribute } from "aria-ease/toggle";
 
-const toggleStates = [{ pressed: false }, { pressed: true }];
+const toggleStates = [{ pressed: false }];
 
-function handleToggle(index) {
-  toggleStates[index].pressed = !toggleStates[index].pressed;
-
-  updateToggleAriaAttribute("toggle-container", "toggle-btn", toggleStates);
-}
+updateToggleAriaAttribute("toggle-container", "toggle-btn", toggleStates, 0);
 ```
+
+</details>
 
 ---
 
@@ -314,14 +431,14 @@ Aria-Ease includes a built-in testing framework for automated accessibility vali
 import { testUiComponent } from "aria-ease/test";
 
 // In your test file (Vitest, Jest, etc.)
-test("menu is accessible", async () => {
-  const { container } = render(<MyMenu />);
+test("combobox is accessible", async () => {
+  const { container } = render(<Combobox />);
 
   // Runs axe-core + contract tests
   const result = await testUiComponent(
-    "menu",
+    "combobox",
     container,
-    "http://localhost:3000" // Optional: full E2E with Playwright
+    "http://localhost:3000", // Optional: full E2E with Playwright
   );
 
   expect(result.violations).toHaveLength(0);
@@ -336,23 +453,24 @@ Aria-Ease is designed to be lightweight and tree-shakable:
 
 | Import                       | Size (ESM)            |
 | ---------------------------- | --------------------- |
-| `aria-ease/accordion`        | ~1.5KB                |
-| `aria-ease/checkbox`         | ~1.6KB                |
-| `aria-ease/radio`            | ~1.6KB                |
-| `aria-ease/toggle`           | ~1.4KB                |
-| `aria-ease/menu`             | ~3.7KB                |
+| `aria-ease/accordion`        | ~6.5KB                |
+| `aria-ease/checkbox`         | ~6.0KB                |
+| `aria-ease/radio`            | ~5.5KB                |
+| `aria-ease/toggle`           | ~6.0KB                |
+| `aria-ease/menu`             | ~6.7KB                |
 | `aria-ease/block`            | ~1.7KB                |
-| Full bundle (all components) | ~416KB (uncompressed) |
+| `aria-ease/combobox`         | ~8.1KB                |
+| Full bundle (all components) | ~459KB (uncompressed) |
 
 **💡 Tip:** Always import individual components for optimal bundle size:
 
 ```javascript
-// ✅ Good - only imports menu code (~3.7KB)
+// ✅ Good - only imports menu code (~6.7KB)
 import { makeMenuAccessible } from "aria-ease/menu";
 //or
 import * as Block from "aria-ease/block";
 
-// ❌ Avoid - imports everything (~416KB)
+// ❌ Avoid - imports everything (~459KB)
 import { makeMenuAccessible } from "aria-ease";
 ```
 

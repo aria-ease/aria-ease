@@ -30,7 +30,6 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   triggerButton.setAttribute("aria-expanded", "false");
   menuDiv.setAttribute("role", "menu");
   menuDiv.setAttribute("aria-labelledby", triggerId);
-  menuDiv.style.display = "none";
   const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
@@ -146,8 +145,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     });
   }
   function openMenu() {
-    menuDiv.style.display = "block";
     setAria(true);
+    menuDiv.style.display = "block";
     const items = getFilteredItems();
     addListeners();
     if (items && items.length > 0) {
@@ -155,9 +154,9 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }
   }
   function closeMenu() {
-    removeListeners();
-    menuDiv.style.display = "none";
     setAria(false);
+    menuDiv.style.display = "none";
+    removeListeners();
     triggerButton.focus();
   }
   function intializeMenuItems() {
@@ -166,41 +165,31 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
       item.setAttribute("role", "menuitem");
     });
   }
-  function handleTriggerKeydown(event) {
-    const key = event.key;
-    if (key === "Enter" || key === " ") {
-      event.preventDefault();
-      const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
-      if (isExpanded) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    }
-  }
-  let isTransitioning = false;
+  intializeMenuItems();
   function handleTriggerClick() {
-    if (isTransitioning) return;
-    const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
-    isTransitioning = true;
-    if (isExpanded) {
+    const isOpen = triggerButton.getAttribute("aria-expanded") === "true";
+    if (isOpen) {
       closeMenu();
     } else {
       openMenu();
     }
-    setTimeout(() => {
-      isTransitioning = false;
-    }, 100);
   }
-  intializeMenuItems();
-  triggerButton.addEventListener("keydown", handleTriggerKeydown);
+  function handleClickOutside(event) {
+    const isMenuOpen = triggerButton.getAttribute("aria-expanded") === "true";
+    if (!isMenuOpen) return;
+    const clickedTrigger = triggerButton.contains(event.target);
+    const clickedMenu = menuDiv.contains(event.target);
+    if (!clickedTrigger && !clickedMenu) {
+      closeMenu();
+    }
+  }
   triggerButton.addEventListener("click", handleTriggerClick);
+  document.addEventListener("click", handleClickOutside);
   triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
-    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
     triggerButton.removeEventListener("click", handleTriggerClick);
-    triggerButton.removeAttribute("data-menu-initialized");
+    document.removeEventListener("click", handleClickOutside);
     menuDiv.style.display = "none";
     setAria(false);
     submenuInstances.forEach((instance) => instance.cleanup());

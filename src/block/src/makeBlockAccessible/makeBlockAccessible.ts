@@ -7,8 +7,12 @@
 import { NodeListOfHTMLElement, AccessibilityInstance } from "Types";
 import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
 
+interface BlockConfig {
+  blockId: string;
+  blockItemsClass: string;
+}
 
-export function makeBlockAccessible(blockId: string, blockItemsClass: string): AccessibilityInstance {
+export function makeBlockAccessible({ blockId, blockItemsClass } : BlockConfig): AccessibilityInstance {
   const blockDiv: HTMLElement = document.querySelector(`#${blockId}`) as HTMLElement
   if(!blockDiv) {
     console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);

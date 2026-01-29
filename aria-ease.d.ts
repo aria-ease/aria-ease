@@ -29,7 +29,7 @@ declare module 'aria-ease' {
    * @param {AccordionStates[]} accordionStates Array of objects containing accordions state information.
    * @param {number} clickedTriggerIndex Index of the currently clicked accordion trigger within the accordion div container.
   */
-  function updateAccordionTriggerAriaAttributes(accordionId: string, accordionTriggersClass: string, accordionStates: AccordionStates[], clickedTriggerIndex: number): void;
+  function makeAccordionAccessible(accordionId: string, accordionTriggersClass: string, accordionStates: AccordionStates[], clickedTriggerIndex: number): void;
 
   /**
    * Adds screen reader accessibility to multiple checkboxes. Updates the aria attributes of the checkboxes. Checkbox elements must possess the following aria attributes; aria-checked and aria-label.
@@ -38,7 +38,7 @@ declare module 'aria-ease' {
    * @param {CheckboxStates[]} checkboxStates Array of objects containing checkboxes state information.
    * @param {number} currentPressedCheckboxIndex Index of the currently checked or unchecked checkbox.
    */
-  function updateCheckboxAriaAttributes(checkboxId: string, checkboxesClass: string, checkboxStates: CheckboxStates[], currentPressedCheckboxIndex: number): void
+  function makeCheckboxAccessible(checkboxId: string, checkboxesClass: string, checkboxStates: CheckboxStates[], currentPressedCheckboxIndex: number): void
 
   /**
    * Adds screen reader accessibility to multiple radio buttons. Updates the aria attributes of the radio buttons. Radio elements must possess the following aria attributes; aria-checked and aria-label.
@@ -47,7 +47,7 @@ declare module 'aria-ease' {
    * @param {RadioStates[]} radioStates Array of objects containing radio buttons state information.
    * @param {number} currentPressedRadioIndex Index of the currently checked or unchecked radio button.
   */
-  function updateRadioAriaAttributes(radioId: string, radiosClass: string, radioStates: RadioStates[], currentPressedRadioIndex: number): void
+  function makeRadioAccessible(radioId: string, radiosClass: string, radioStates: RadioStates[], currentPressedRadioIndex: number): void
 
   /**
    * Adds screen reader accessibility to toggle buttons. Updates the aria attributes of the toggle buttons. Button must be a semantic button element or a non-semantic element with a role of button, and possess the aria-pressed attribute. The aria-label is optional for only non-text triggers.
@@ -56,7 +56,7 @@ declare module 'aria-ease' {
    * @param {ToggleStates[]} toggleStates Array of objects containing toggle buttons state information.
    * @param {number} currentPressedToggleIndex Index of the currently pressed or unpressed toggle button.
   */
- function updateToggleAriaAttribute(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void
+ function makeToggleAccessible(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void
 
   /**
    * Runs static and interactions accessibility test on UI components. 

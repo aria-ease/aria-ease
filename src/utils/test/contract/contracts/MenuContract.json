@@ -2,7 +2,7 @@
     "meta": {
         "id": "aria-ease.menu",
         "version": "1.0.0",
-        "description": "ARIA Menu interaction contract. Validates the ARIA and interaction contract for a custom menu component. This contract does not cover native HTML menu-adjacent components.",
+        "description": "ARIA Menu interaction contract. Validates the ARIA and interaction contract for a custom menu component following the ARIA Authoring Practices Guide menu with popup pattern.",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/menubar/",
             "wcag": ["2.2 AA"]

@@ -9433,6 +9433,7 @@ async function runContractTestsPlaywright(componentName, url) {
   reporter.start(componentName, totalTests);
   const failures = [];
   const passes = [];
+  const skipped = [];
   let browser = null;
   try {
     browser = await import_playwright.chromium.launch({ headless: true });
@@ -9440,13 +9441,13 @@ async function runContractTestsPlaywright(componentName, url) {
     const page = await context.newPage();
     await page.goto(url, {
       waitUntil: "domcontentloaded",
-      timeout: 6e4
+      timeout: 9e4
     });
     const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
     if (!mainSelector) {
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
-    await page.waitForSelector(mainSelector, { timeout: 6e4 });
+    await page.waitForSelector(mainSelector, { timeout: 9e4 });
     if (componentName === "menu" && componentContract.selectors.trigger) {
       await page.waitForFunction(
         (selector) => {
@@ -9454,7 +9455,7 @@ async function runContractTestsPlaywright(componentName, url) {
           return trigger && trigger.getAttribute("data-menu-initialized") === "true";
         },
         componentContract.selectors.trigger,
-        { timeout: 5e3 }
+        { timeout: 6e3 }
       ).catch(() => {
         console.warn("Menu initialization signal not detected, continuing with tests...");
       });
@@ -9544,10 +9545,42 @@ async function runContractTestsPlaywright(componentName, url) {
             if (componentContract.selectors.input) {
               const inputElement = page.locator(componentContract.selectors.input).first();
               await inputElement.clear();
-              await page.waitForTimeout(50);
+              await page.waitForTimeout(100);
             }
           }
         }
+      }
+      let shouldSkipTest = false;
+      for (const act of action) {
+        if (act.type === "keypress" && (act.target === "submenuTrigger" || act.target === "submenu")) {
+          const submenuSelector = componentContract.selectors[act.target];
+          if (submenuSelector) {
+            const submenuCount = await page.locator(submenuSelector).count();
+            if (submenuCount === 0) {
+              reporter.reportTest(dynamicTest, "skip", `Skipping test - ${act.target} element not found (optional submenu test)`);
+              shouldSkipTest = true;
+              break;
+            }
+          }
+        }
+      }
+      if (!shouldSkipTest) {
+        for (const assertion of assertions) {
+          if (assertion.target === "submenu" || assertion.target === "submenuTrigger") {
+            const submenuSelector = componentContract.selectors[assertion.target];
+            if (submenuSelector) {
+              const submenuCount = await page.locator(submenuSelector).count();
+              if (submenuCount === 0) {
+                reporter.reportTest(dynamicTest, "skip", `Skipping test - ${assertion.target} element not found (optional submenu test)`);
+                shouldSkipTest = true;
+                break;
+              }
+            }
+          }
+        }
+      }
+      if (shouldSkipTest) {
+        continue;
       }
       for (const act of action) {
         if (act.type === "focus") {
@@ -9557,7 +9590,7 @@ async function runContractTestsPlaywright(componentName, url) {
             continue;
           }
           await page.locator(focusSelector).first().focus();
-          await page.waitForTimeout(50);
+          await page.waitForTimeout(100);
         }
         if (act.type === "type" && act.value) {
           const typeSelector = componentContract.selectors[act.target];
@@ -9566,7 +9599,7 @@ async function runContractTestsPlaywright(componentName, url) {
             continue;
           }
           await page.locator(typeSelector).first().fill(act.value);
-          await page.waitForTimeout(50);
+          await page.waitForTimeout(100);
         }
         if (act.type === "click") {
           if (act.target === "document") {
@@ -9616,7 +9649,7 @@ async function runContractTestsPlaywright(componentName, url) {
           if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
             await page.waitForTimeout(100);
             await page.keyboard.press(keyValue);
-            await page.waitForTimeout(50);
+            await page.waitForTimeout(100);
           } else {
             const keypressSelector = componentContract.selectors[act.target];
             if (!keypressSelector) {
@@ -9645,7 +9678,7 @@ async function runContractTestsPlaywright(componentName, url) {
               continue;
             }
             await relativeElement.hover();
-            await page.waitForTimeout(50);
+            await page.waitForTimeout(100);
           } else {
             const hoverSelector = componentContract.selectors[act.target];
             if (!hoverSelector) {
@@ -9653,7 +9686,7 @@ async function runContractTestsPlaywright(componentName, url) {
               continue;
             }
             await page.locator(hoverSelector).first().hover();
-            await page.waitForTimeout(50);
+            await page.waitForTimeout(100);
           }
         }
         await page.waitForTimeout(100);
@@ -9795,7 +9828,7 @@ async function runContractTestsPlaywright(componentName, url) {
   } finally {
     if (browser) await browser.close();
   }
-  return { passes, failures };
+  return { passes, failures, skipped };
 }
 var import_playwright, import_fs, import_meta2;
 var init_contractTestRunnerPlaywright = __esm({
@@ -9813,41 +9846,173 @@ var init_contractTestRunnerPlaywright = __esm({
 // index.ts
 var index_exports = {};
 __export(index_exports, {
+  makeAccordionAccessible: () => makeAccordionAccessible,
   makeBlockAccessible: () => makeBlockAccessible,
+  makeCheckboxAccessible: () => makeCheckboxAccessible,
   makeComboboxAccessible: () => makeComboboxAccessible,
   makeMenuAccessible: () => makeMenuAccessible,
-  testUiComponent: () => testUiComponent,
-  updateAccordionTriggerAriaAttributes: () => updateAccordionTriggerAriaAttributes,
-  updateCheckboxAriaAttributes: () => updateCheckboxAriaAttributes,
-  updateRadioAriaAttributes: () => updateRadioAriaAttributes,
-  updateToggleAriaAttribute: () => updateToggleAriaAttribute
+  makeRadioAccessible: () => makeRadioAccessible,
+  makeToggleAccessible: () => makeToggleAccessible,
+  testUiComponent: () => testUiComponent
 });
 module.exports = __toCommonJS(index_exports);
 
-// src/accordion/src/updateAccordionTriggerAriaAttributes/updateAccordionTriggerAriaAttributes.ts
-function updateAccordionTriggerAriaAttributes(accordionId, accordionTriggersClass, accordionStates, clickedTriggerIndex) {
-  const accordionDiv = document.querySelector(`#${accordionId}`);
-  if (!accordionDiv) {
-    console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion element exists before calling updateAccordionTriggerAriaAttributes.`);
-    return;
+// src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
+function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple = false }) {
+  const accordionContainer = document.querySelector(`#${accordionId}`);
+  if (!accordionContainer) {
+    console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
+    return { cleanup: () => {
+    } };
   }
-  const accordionItems = Array.from(accordionDiv.querySelectorAll(`.${accordionTriggersClass}`));
-  if (accordionItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${accordionTriggersClass}" not found. Make sure the accordion items exist before calling updateAccordionTriggerAriaAttributes.`);
-    return;
+  const triggers = Array.from(accordionContainer.querySelectorAll(`.${triggersClass}`));
+  if (triggers.length === 0) {
+    console.error(`[aria-ease] No elements with class="${triggersClass}" found. Make sure accordion triggers exist before calling makeAccordionAccessible.`);
+    return { cleanup: () => {
+    } };
   }
-  if (accordionItems.length !== accordionStates.length) {
-    console.error(`[aria-ease] Accordion state/DOM length mismatch: found ${accordionItems.length} triggers, but got ${accordionStates.length} state objects.'`);
-    return;
+  const panels = Array.from(accordionContainer.querySelectorAll(`.${panelsClass}`));
+  if (panels.length === 0) {
+    console.error(`[aria-ease] No elements with class="${panelsClass}" found. Make sure accordion panels exist before calling makeAccordionAccessible.`);
+    return { cleanup: () => {
+    } };
   }
-  accordionItems.forEach((accordionItem, index) => {
-    const state = accordionStates[index];
-    const expanded = accordionItem.getAttribute("aria-expanded");
-    const shouldBeExpanded = index === clickedTriggerIndex ? state.display ? "true" : "false" : "false";
-    if (expanded && expanded !== shouldBeExpanded) {
-      accordionItem.setAttribute("aria-expanded", shouldBeExpanded);
+  if (triggers.length !== panels.length) {
+    console.error(`[aria-ease] Accordion trigger/panel mismatch: found ${triggers.length} triggers but ${panels.length} panels.`);
+    return { cleanup: () => {
+    } };
+  }
+  const handlerMap = /* @__PURE__ */ new WeakMap();
+  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+  function initialize() {
+    triggers.forEach((trigger, index) => {
+      const panel = panels[index];
+      if (!trigger.id) {
+        trigger.id = `${accordionId}-trigger-${index}`;
+      }
+      if (!panel.id) {
+        panel.id = `${accordionId}-panel-${index}`;
+      }
+      trigger.setAttribute("aria-controls", panel.id);
+      trigger.setAttribute("aria-expanded", "false");
+      panel.setAttribute("role", "region");
+      panel.setAttribute("aria-labelledby", trigger.id);
+      panel.style.display = "none";
+    });
+  }
+  function expandItem(index) {
+    if (index < 0 || index >= triggers.length) {
+      console.error(`[aria-ease] Invalid accordion index: ${index}`);
+      return;
     }
-  });
+    const trigger = triggers[index];
+    const panel = panels[index];
+    trigger.setAttribute("aria-expanded", "true");
+    panel.style.display = "block";
+  }
+  function collapseItem(index) {
+    if (index < 0 || index >= triggers.length) {
+      console.error(`[aria-ease] Invalid accordion index: ${index}`);
+      return;
+    }
+    const trigger = triggers[index];
+    const panel = panels[index];
+    trigger.setAttribute("aria-expanded", "false");
+    panel.style.display = "none";
+  }
+  function toggleItem(index) {
+    const trigger = triggers[index];
+    const isExpanded = trigger.getAttribute("aria-expanded") === "true";
+    if (isExpanded) {
+      collapseItem(index);
+    } else {
+      if (!allowMultiple) {
+        triggers.forEach((_, i) => {
+          if (i !== index) {
+            collapseItem(i);
+          }
+        });
+      }
+      expandItem(index);
+    }
+  }
+  function handleTriggerClick(index) {
+    return () => {
+      toggleItem(index);
+    };
+  }
+  function handleTriggerKeydown(index) {
+    return (event) => {
+      const { key } = event;
+      switch (key) {
+        case "Enter":
+        case " ":
+          event.preventDefault();
+          toggleItem(index);
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          {
+            const nextIndex = (index + 1) % triggers.length;
+            triggers[nextIndex].focus();
+          }
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          {
+            const prevIndex = (index - 1 + triggers.length) % triggers.length;
+            triggers[prevIndex].focus();
+          }
+          break;
+        case "Home":
+          event.preventDefault();
+          triggers[0].focus();
+          break;
+        case "End":
+          event.preventDefault();
+          triggers[triggers.length - 1].focus();
+          break;
+      }
+    };
+  }
+  function addListeners() {
+    triggers.forEach((trigger, index) => {
+      const clickHandler = handleTriggerClick(index);
+      const keydownHandler = handleTriggerKeydown(index);
+      trigger.addEventListener("click", clickHandler);
+      trigger.addEventListener("keydown", keydownHandler);
+      handlerMap.set(trigger, keydownHandler);
+      clickHandlerMap.set(trigger, clickHandler);
+    });
+  }
+  function removeListeners() {
+    triggers.forEach((trigger) => {
+      const keydownHandler = handlerMap.get(trigger);
+      const clickHandler = clickHandlerMap.get(trigger);
+      if (keydownHandler) {
+        trigger.removeEventListener("keydown", keydownHandler);
+        handlerMap.delete(trigger);
+      }
+      if (clickHandler) {
+        trigger.removeEventListener("click", clickHandler);
+        clickHandlerMap.delete(trigger);
+      }
+    });
+  }
+  function cleanup() {
+    removeListeners();
+    triggers.forEach((_, index) => {
+      collapseItem(index);
+    });
+  }
+  initialize();
+  addListeners();
+  return {
+    expandItem,
+    collapseItem,
+    toggleItem,
+    cleanup
+  };
 }
 
 // src/utils/handleKeyPress/handleKeyPress.ts
@@ -9973,7 +10138,7 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
 }
 
 // src/block/src/makeBlockAccessible/makeBlockAccessible.ts
-function makeBlockAccessible(blockId, blockItemsClass) {
+function makeBlockAccessible({ blockId, blockItemsClass }) {
   const blockDiv = document.querySelector(`#${blockId}`);
   if (!blockDiv) {
     console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);
@@ -10020,36 +10185,132 @@ function makeBlockAccessible(blockId, blockItemsClass) {
   return { cleanup, refresh };
 }
 
-// src/checkbox/src/updateCheckboxAriaAttributes/updateCheckboxAriaAttributes.ts
-function updateCheckboxAriaAttributes(checkboxId, checkboxesClass, checkboxStates, currentPressedCheckboxIndex) {
-  const checkboxDiv = document.querySelector(`#${checkboxId}`);
-  if (!checkboxDiv) {
-    console.error(`[aria-ease] Invalid checkbox main div id provided. No checkbox div with id '${checkboxDiv} found.'`);
-    return;
+// src/checkbox/src/makeCheckboxAccessible/makeCheckboxAccessible.ts
+function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }) {
+  const checkboxGroup = document.querySelector(`#${checkboxGroupId}`);
+  if (!checkboxGroup) {
+    console.error(`[aria-ease] Element with id="${checkboxGroupId}" not found. Make sure the checkbox group container exists before calling makeCheckboxAccessible.`);
+    return { cleanup: () => {
+    } };
   }
-  const checkboxItems = Array.from(document.querySelectorAll(`.${checkboxesClass}`));
-  if (checkboxItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${checkboxesClass}" not found. Make sure the checkbox items exist before calling updateCheckboxAriaAttributes.`);
-    return;
+  const checkboxes = Array.from(checkboxGroup.querySelectorAll(`.${checkboxesClass}`));
+  if (checkboxes.length === 0) {
+    console.error(`[aria-ease] No elements with class="${checkboxesClass}" found. Make sure checkboxes exist before calling makeCheckboxAccessible.`);
+    return { cleanup: () => {
+    } };
   }
-  ;
-  if (checkboxStates.length === 0) {
-    console.error(`[aria-ease] Checkbox states array is empty. Make sure the checkboxStates array is populated before calling updateCheckboxAriaAttributes.`);
-    return;
-  }
-  if (currentPressedCheckboxIndex < 0 || currentPressedCheckboxIndex >= checkboxStates.length) {
-    console.error(`[aria-ease] Checkbox index ${currentPressedCheckboxIndex} is out of bounds for states array of length ${checkboxStates.length}.`);
-    return;
-  }
-  checkboxItems.forEach((checkbox, index) => {
-    if (index === currentPressedCheckboxIndex) {
-      const checked = checkbox.getAttribute("aria-checked");
-      const shouldBeChecked = checkboxStates[index].checked ? "true" : "false";
-      if (checked && checked !== shouldBeChecked) {
-        checkbox.setAttribute("aria-checked", shouldBeChecked);
-      }
+  const handlerMap = /* @__PURE__ */ new WeakMap();
+  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+  function initialize() {
+    if (!checkboxGroup.getAttribute("role")) {
+      checkboxGroup.setAttribute("role", "group");
     }
-  });
+    checkboxes.forEach((checkbox) => {
+      checkbox.setAttribute("role", "checkbox");
+      if (!checkbox.hasAttribute("aria-checked")) {
+        checkbox.setAttribute("aria-checked", "false");
+      }
+      if (!checkbox.hasAttribute("tabindex")) {
+        checkbox.setAttribute("tabindex", "0");
+      }
+    });
+  }
+  function toggleCheckbox(index) {
+    if (index < 0 || index >= checkboxes.length) {
+      console.error(`[aria-ease] Invalid checkbox index: ${index}`);
+      return;
+    }
+    const checkbox = checkboxes[index];
+    const isChecked = checkbox.getAttribute("aria-checked") === "true";
+    checkbox.setAttribute("aria-checked", isChecked ? "false" : "true");
+  }
+  function setCheckboxState(index, checked) {
+    if (index < 0 || index >= checkboxes.length) {
+      console.error(`[aria-ease] Invalid checkbox index: ${index}`);
+      return;
+    }
+    checkboxes[index].setAttribute("aria-checked", checked ? "true" : "false");
+  }
+  function handleCheckboxClick(index) {
+    return () => {
+      toggleCheckbox(index);
+    };
+  }
+  function handleCheckboxKeydown(index) {
+    return (event) => {
+      const { key } = event;
+      switch (key) {
+        case " ":
+          event.preventDefault();
+          toggleCheckbox(index);
+          break;
+        case "ArrowDown":
+          event.preventDefault();
+          {
+            const nextIndex = (index + 1) % checkboxes.length;
+            checkboxes[nextIndex].focus();
+          }
+          break;
+        case "ArrowUp":
+          event.preventDefault();
+          {
+            const prevIndex = (index - 1 + checkboxes.length) % checkboxes.length;
+            checkboxes[prevIndex].focus();
+          }
+          break;
+        case "Home":
+          event.preventDefault();
+          checkboxes[0].focus();
+          break;
+        case "End":
+          event.preventDefault();
+          checkboxes[checkboxes.length - 1].focus();
+          break;
+      }
+    };
+  }
+  function addListeners() {
+    checkboxes.forEach((checkbox, index) => {
+      const clickHandler = handleCheckboxClick(index);
+      const keydownHandler = handleCheckboxKeydown(index);
+      checkbox.addEventListener("click", clickHandler);
+      checkbox.addEventListener("keydown", keydownHandler);
+      handlerMap.set(checkbox, keydownHandler);
+      clickHandlerMap.set(checkbox, clickHandler);
+    });
+  }
+  function removeListeners() {
+    checkboxes.forEach((checkbox) => {
+      const keydownHandler = handlerMap.get(checkbox);
+      const clickHandler = clickHandlerMap.get(checkbox);
+      if (keydownHandler) {
+        checkbox.removeEventListener("keydown", keydownHandler);
+        handlerMap.delete(checkbox);
+      }
+      if (clickHandler) {
+        checkbox.removeEventListener("click", clickHandler);
+        clickHandlerMap.delete(checkbox);
+      }
+    });
+  }
+  function cleanup() {
+    removeListeners();
+  }
+  function getCheckedStates() {
+    return checkboxes.map((checkbox) => checkbox.getAttribute("aria-checked") === "true");
+  }
+  function getCheckedIndices() {
+    return checkboxes.map((checkbox, index) => checkbox.getAttribute("aria-checked") === "true" ? index : -1).filter((index) => index !== -1);
+  }
+  initialize();
+  addListeners();
+  return {
+    toggleCheckbox,
+    setCheckboxState,
+    getCheckedStates,
+    getCheckedIndices,
+    cleanup
+  };
 }
 
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
@@ -10082,7 +10343,6 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   triggerButton.setAttribute("aria-expanded", "false");
   menuDiv.setAttribute("role", "menu");
   menuDiv.setAttribute("aria-labelledby", triggerId);
-  menuDiv.style.display = "none";
   const handlerMap = /* @__PURE__ */ new WeakMap();
   const submenuInstances = /* @__PURE__ */ new Map();
   let cachedItems = null;
@@ -10198,8 +10458,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     });
   }
   function openMenu() {
-    menuDiv.style.display = "block";
     setAria(true);
+    menuDiv.style.display = "block";
     const items = getFilteredItems();
     addListeners();
     if (items && items.length > 0) {
@@ -10207,9 +10467,9 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     }
   }
   function closeMenu() {
-    removeListeners();
-    menuDiv.style.display = "none";
     setAria(false);
+    menuDiv.style.display = "none";
+    removeListeners();
     triggerButton.focus();
   }
   function intializeMenuItems() {
@@ -10218,41 +10478,31 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
       item.setAttribute("role", "menuitem");
     });
   }
-  function handleTriggerKeydown(event) {
-    const key = event.key;
-    if (key === "Enter" || key === " ") {
-      event.preventDefault();
-      const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
-      if (isExpanded) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    }
-  }
-  let isTransitioning = false;
+  intializeMenuItems();
   function handleTriggerClick() {
-    if (isTransitioning) return;
-    const isExpanded = triggerButton.getAttribute("aria-expanded") === "true";
-    isTransitioning = true;
-    if (isExpanded) {
+    const isOpen = triggerButton.getAttribute("aria-expanded") === "true";
+    if (isOpen) {
       closeMenu();
     } else {
       openMenu();
     }
-    setTimeout(() => {
-      isTransitioning = false;
-    }, 100);
   }
-  intializeMenuItems();
-  triggerButton.addEventListener("keydown", handleTriggerKeydown);
+  function handleClickOutside(event) {
+    const isMenuOpen = triggerButton.getAttribute("aria-expanded") === "true";
+    if (!isMenuOpen) return;
+    const clickedTrigger = triggerButton.contains(event.target);
+    const clickedMenu = menuDiv.contains(event.target);
+    if (!clickedTrigger && !clickedMenu) {
+      closeMenu();
+    }
+  }
   triggerButton.addEventListener("click", handleTriggerClick);
+  document.addEventListener("click", handleClickOutside);
   triggerButton.setAttribute("data-menu-initialized", "true");
   function cleanup() {
     removeListeners();
-    triggerButton.removeEventListener("keydown", handleTriggerKeydown);
     triggerButton.removeEventListener("click", handleTriggerClick);
-    triggerButton.removeAttribute("data-menu-initialized");
+    document.removeEventListener("click", handleClickOutside);
     menuDiv.style.display = "none";
     setAria(false);
     submenuInstances.forEach((instance) => instance.cleanup());
@@ -10265,64 +10515,272 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   return { openMenu, closeMenu, cleanup, refresh };
 }
 
-// src/radio/src/updateRadioAriaAttributes/updateRadioAriaAttributes.ts
-function updateRadioAriaAttributes(radioId, radiosClass, radioStates, currentPressedRadioIndex) {
-  const radioDiv = document.querySelector(`#${radioId}`);
-  if (!radioDiv) {
-    console.error(`[aria-ease] Element with id="${radioId}" not found. Make sure the radio element exists before calling updateRadioAriaAttributes.`);
-    return;
+// src/radio/src/makeRadioAccessible/makeRadioAccessible.ts
+function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex = 0 }) {
+  const radioGroup = document.querySelector(`#${radioGroupId}`);
+  if (!radioGroup) {
+    console.error(`[aria-ease] Element with id="${radioGroupId}" not found. Make sure the radio group container exists before calling makeRadioAccessible.`);
+    return { cleanup: () => {
+    } };
   }
-  const radioItems = Array.from(radioDiv.querySelectorAll(`.${radiosClass}`));
-  if (radioItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${radiosClass}" not found. Make sure the radio items exist before calling updateRadioAriaAttributes.`);
-    return;
+  const radios = Array.from(radioGroup.querySelectorAll(`.${radiosClass}`));
+  if (radios.length === 0) {
+    console.error(`[aria-ease] No elements with class="${radiosClass}" found. Make sure radio buttons exist before calling makeRadioAccessible.`);
+    return { cleanup: () => {
+    } };
   }
-  if (radioStates.length === 0) {
-    console.error(`[aria-ease] Radio states array is empty. Make sure the radioStates array is populated before calling updateRadioAriaAttributes.`);
-    return;
-  }
-  if (currentPressedRadioIndex < 0 || currentPressedRadioIndex >= radioStates.length) {
-    console.error(`[aria-ease] Radio index ${currentPressedRadioIndex} is out of bounds for states array of length ${radioStates.length}.`);
-    return;
-  }
-  radioItems.forEach((radioItem, index) => {
-    const state = radioStates[index];
-    const checked = radioItem.getAttribute("aria-checked");
-    const shouldBeChecked = index === currentPressedRadioIndex ? state.checked ? "true" : "false" : "false";
-    if (checked && checked !== shouldBeChecked) {
-      radioItem.setAttribute("aria-checked", shouldBeChecked);
+  const handlerMap = /* @__PURE__ */ new WeakMap();
+  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+  let currentSelectedIndex = defaultSelectedIndex;
+  function initialize() {
+    if (!radioGroup.getAttribute("role")) {
+      radioGroup.setAttribute("role", "radiogroup");
     }
-  });
-}
-
-// src/toggle/src/updateToggleAriaAttribute/updateToggleAriaAttribute.ts
-function updateToggleAriaAttribute(toggleId, togglesClass, toggleStates, currentPressedToggleIndex) {
-  const toggleDiv = document.querySelector(`#${toggleId}`);
-  if (!toggleDiv) {
-    console.error(`[aria-ease] Element with id="${toggleId}" not found. Make sure the toggle element exists before calling updateToggleAriaAttribute.`);
-    return;
-  }
-  const toggleItems = Array.from(toggleDiv.querySelectorAll(`.${togglesClass}`));
-  if (toggleItems.length === 0) {
-    console.error(`[aria-ease] Element with class="${togglesClass}" not found. Make sure the toggle items exist before calling updateToggleAriaAttribute.`);
-    return;
-  }
-  if (toggleItems.length !== toggleStates.length) {
-    console.error(`[aria-ease] Toggle state/DOM length mismatch: found ${toggleItems.length} triggers, but got ${toggleStates.length} state objects.'`);
-    return;
-  }
-  toggleItems.forEach((toggle, index) => {
-    if (index === currentPressedToggleIndex) {
-      const pressed = toggle.getAttribute("aria-pressed");
-      const shouldBePressed = toggleStates[index].pressed ? "true" : "false";
-      if (pressed && pressed !== shouldBePressed) {
-        toggle.setAttribute("aria-pressed", shouldBePressed);
+    radios.forEach((radio, index) => {
+      radio.setAttribute("role", "radio");
+      radio.setAttribute("tabindex", index === currentSelectedIndex ? "0" : "-1");
+      if (index === currentSelectedIndex) {
+        radio.setAttribute("aria-checked", "true");
+      } else {
+        radio.setAttribute("aria-checked", "false");
       }
+    });
+  }
+  function selectRadio(index) {
+    if (index < 0 || index >= radios.length) {
+      console.error(`[aria-ease] Invalid radio index: ${index}`);
+      return;
     }
-  });
+    if (currentSelectedIndex >= 0 && currentSelectedIndex < radios.length) {
+      radios[currentSelectedIndex].setAttribute("aria-checked", "false");
+      radios[currentSelectedIndex].setAttribute("tabindex", "-1");
+    }
+    radios[index].setAttribute("aria-checked", "true");
+    radios[index].setAttribute("tabindex", "0");
+    radios[index].focus();
+    currentSelectedIndex = index;
+  }
+  function handleRadioClick(index) {
+    return () => {
+      selectRadio(index);
+    };
+  }
+  function handleRadioKeydown(index) {
+    return (event) => {
+      const { key } = event;
+      let nextIndex = index;
+      switch (key) {
+        case "ArrowDown":
+        case "ArrowRight":
+          event.preventDefault();
+          nextIndex = (index + 1) % radios.length;
+          selectRadio(nextIndex);
+          break;
+        case "ArrowUp":
+        case "ArrowLeft":
+          event.preventDefault();
+          nextIndex = (index - 1 + radios.length) % radios.length;
+          selectRadio(nextIndex);
+          break;
+        case " ":
+          event.preventDefault();
+          selectRadio(index);
+          break;
+        case "Home":
+          event.preventDefault();
+          selectRadio(0);
+          break;
+        case "End":
+          event.preventDefault();
+          selectRadio(radios.length - 1);
+          break;
+      }
+    };
+  }
+  function addListeners() {
+    radios.forEach((radio, index) => {
+      const clickHandler = handleRadioClick(index);
+      const keydownHandler = handleRadioKeydown(index);
+      radio.addEventListener("click", clickHandler);
+      radio.addEventListener("keydown", keydownHandler);
+      handlerMap.set(radio, keydownHandler);
+      clickHandlerMap.set(radio, clickHandler);
+    });
+  }
+  function removeListeners() {
+    radios.forEach((radio) => {
+      const keydownHandler = handlerMap.get(radio);
+      const clickHandler = clickHandlerMap.get(radio);
+      if (keydownHandler) {
+        radio.removeEventListener("keydown", keydownHandler);
+        handlerMap.delete(radio);
+      }
+      if (clickHandler) {
+        radio.removeEventListener("click", clickHandler);
+        clickHandlerMap.delete(radio);
+      }
+    });
+  }
+  function cleanup() {
+    removeListeners();
+  }
+  function getSelectedIndex() {
+    return currentSelectedIndex;
+  }
+  initialize();
+  addListeners();
+  return {
+    selectRadio,
+    getSelectedIndex,
+    cleanup
+  };
 }
 
-// src/combobox/src/makeComboBoxAccessible.ts
+// src/toggle/src/makeTogggleAccessible/makeToggleAccessible.ts
+function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true }) {
+  const toggleContainer = document.querySelector(`#${toggleId}`);
+  if (!toggleContainer) {
+    console.error(`[aria-ease] Element with id="${toggleId}" not found. Make sure the toggle element exists before calling makeToggleAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  let toggles;
+  if (isSingleToggle) {
+    toggles = [toggleContainer];
+  } else {
+    if (!togglesClass) {
+      console.error(`[aria-ease] togglesClass is required when isSingleToggle is false.`);
+      return { cleanup: () => {
+      } };
+    }
+    toggles = Array.from(toggleContainer.querySelectorAll(`.${togglesClass}`));
+    if (toggles.length === 0) {
+      console.error(`[aria-ease] No elements with class="${togglesClass}" found. Make sure toggle buttons exist before calling makeToggleAccessible.`);
+      return { cleanup: () => {
+      } };
+    }
+  }
+  const handlerMap = /* @__PURE__ */ new WeakMap();
+  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+  function initialize() {
+    toggles.forEach((toggle) => {
+      if (toggle.tagName.toLowerCase() !== "button" && !toggle.getAttribute("role")) {
+        toggle.setAttribute("role", "button");
+      }
+      if (!toggle.hasAttribute("aria-pressed")) {
+        toggle.setAttribute("aria-pressed", "false");
+      }
+      if (!toggle.hasAttribute("tabindex")) {
+        toggle.setAttribute("tabindex", "0");
+      }
+    });
+  }
+  function toggleButton(index) {
+    if (index < 0 || index >= toggles.length) {
+      console.error(`[aria-ease] Invalid toggle index: ${index}`);
+      return;
+    }
+    const toggle = toggles[index];
+    const isPressed = toggle.getAttribute("aria-pressed") === "true";
+    toggle.setAttribute("aria-pressed", isPressed ? "false" : "true");
+  }
+  function setPressed(index, pressed) {
+    if (index < 0 || index >= toggles.length) {
+      console.error(`[aria-ease] Invalid toggle index: ${index}`);
+      return;
+    }
+    toggles[index].setAttribute("aria-pressed", pressed ? "true" : "false");
+  }
+  function handleToggleClick(index) {
+    return () => {
+      toggleButton(index);
+    };
+  }
+  function handleToggleKeydown(index) {
+    return (event) => {
+      const { key } = event;
+      switch (key) {
+        case "Enter":
+        case " ":
+          event.preventDefault();
+          toggleButton(index);
+          break;
+        case "ArrowDown":
+        case "ArrowRight":
+          if (!isSingleToggle && toggles.length > 1) {
+            event.preventDefault();
+            const nextIndex = (index + 1) % toggles.length;
+            toggles[nextIndex].focus();
+          }
+          break;
+        case "ArrowUp":
+        case "ArrowLeft":
+          if (!isSingleToggle && toggles.length > 1) {
+            event.preventDefault();
+            const prevIndex = (index - 1 + toggles.length) % toggles.length;
+            toggles[prevIndex].focus();
+          }
+          break;
+        case "Home":
+          if (!isSingleToggle && toggles.length > 1) {
+            event.preventDefault();
+            toggles[0].focus();
+          }
+          break;
+        case "End":
+          if (!isSingleToggle && toggles.length > 1) {
+            event.preventDefault();
+            toggles[toggles.length - 1].focus();
+          }
+          break;
+      }
+    };
+  }
+  function addListeners() {
+    toggles.forEach((toggle, index) => {
+      const clickHandler = handleToggleClick(index);
+      const keydownHandler = handleToggleKeydown(index);
+      toggle.addEventListener("click", clickHandler);
+      toggle.addEventListener("keydown", keydownHandler);
+      handlerMap.set(toggle, keydownHandler);
+      clickHandlerMap.set(toggle, clickHandler);
+    });
+  }
+  function removeListeners() {
+    toggles.forEach((toggle) => {
+      const keydownHandler = handlerMap.get(toggle);
+      const clickHandler = clickHandlerMap.get(toggle);
+      if (keydownHandler) {
+        toggle.removeEventListener("keydown", keydownHandler);
+        handlerMap.delete(toggle);
+      }
+      if (clickHandler) {
+        toggle.removeEventListener("click", clickHandler);
+        clickHandlerMap.delete(toggle);
+      }
+    });
+  }
+  function cleanup() {
+    removeListeners();
+  }
+  function getPressedStates() {
+    return toggles.map((toggle) => toggle.getAttribute("aria-pressed") === "true");
+  }
+  function getPressedIndices() {
+    return toggles.map((toggle, index) => toggle.getAttribute("aria-pressed") === "true" ? index : -1).filter((index) => index !== -1);
+  }
+  initialize();
+  addListeners();
+  return {
+    toggleButton,
+    setPressed,
+    getPressedStates,
+    getPressedIndices,
+    cleanup
+  };
+}
+
+// src/combobox/src/makeComboBoxAccessible/makeComboBoxAccessible.ts
 function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, config: config2 }) {
   const comboboxInput = document.getElementById(`${comboboxInputId}`);
   if (!comboboxInput) {
@@ -14124,20 +14582,54 @@ async function runContractTests(componentName, component) {
   const staticFailed = 0;
   reporter.reportStatic(staticPassed, staticFailed);
   reporter.summary(failures);
-  return { passes, failures };
+  return { passes, failures, skipped };
 }
 
 // src/utils/test/src/test.ts
 async function testUiComponent(componentName, component, url) {
-  const results = await (0, import_jest_axe.axe)(component);
+  if (!componentName || typeof componentName !== "string") {
+    throw new Error("\u274C testUiComponent requires a valid componentName (string)");
+  }
+  if (!component || !(component instanceof HTMLElement)) {
+    throw new Error("\u274C testUiComponent requires a valid component (HTMLElement)");
+  }
+  if (url && typeof url !== "string") {
+    throw new Error("\u274C testUiComponent url parameter must be a string");
+  }
+  let results;
+  try {
+    results = await (0, import_jest_axe.axe)(component);
+  } catch (error) {
+    throw new Error(
+      `\u274C Axe accessibility scan failed
+Error: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
   let contract;
-  if (url) {
-    console.log(`\u{1F3AD} Running Playwright E2E tests on ${url}`);
-    const { runContractTestsPlaywright: runContractTestsPlaywright2 } = await Promise.resolve().then(() => (init_contractTestRunnerPlaywright(), contractTestRunnerPlaywright_exports));
-    contract = await runContractTestsPlaywright2(componentName, url);
-  } else {
-    console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);
-    contract = await runContractTests(componentName, component);
+  try {
+    if (url) {
+      console.log(`\u{1F3AD} Running Playwright E2E tests on ${url}`);
+      try {
+        new URL(url);
+      } catch {
+        throw new Error(
+          `\u274C Invalid URL format: "${url}"
+URL must include protocol (e.g., "http://localhost:5173/test")`
+        );
+      }
+      const { runContractTestsPlaywright: runContractTestsPlaywright2 } = await Promise.resolve().then(() => (init_contractTestRunnerPlaywright(), contractTestRunnerPlaywright_exports));
+      contract = await runContractTestsPlaywright2(componentName, url);
+    } else {
+      console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);
+      console.log(`Some tests may be skipped or yield false positives/negatives.
+For full coverage, run with a URL to enable Playwright E2E tests.`);
+      contract = await runContractTests(componentName, component);
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error(`\u274C Contract test execution failed: ${String(error)}`);
   }
   const result = {
     violations: results.violations,
@@ -14148,10 +14640,11 @@ async function testUiComponent(componentName, component, url) {
     const mode = url ? "Playwright" : "jsdom";
     throw new Error(
       `
-\u274C ${contract.failures.length} assertion${contract.failures.length > 1 ? "s" : ""} failed (${mode} mode)
-\u2705 ${contract.passes.length} assertion${contract.passes.length > 1 ? "s" : ""} passed
+\u274C ${contract.failures.length} accessibility contract test${contract.failures.length > 1 ? "s" : ""} failed (${mode} mode)
+\u2705 ${contract.passes.length} test${contract.passes.length > 1 ? "s" : ""} passed
 
-\u{1F4CB} Review the detailed test report above for specific failures.`
+\u{1F4CB} Review the detailed test report above for specific failures.
+\u{1F4A1} Contract tests validate ARIA attributes and keyboard interactions per W3C APG guidelines.`
     );
   }
   if (results.violations.length > 0) {
@@ -14199,14 +14692,14 @@ if (typeof window === "undefined") {
 }
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  makeAccordionAccessible,
   makeBlockAccessible,
+  makeCheckboxAccessible,
   makeComboboxAccessible,
   makeMenuAccessible,
-  testUiComponent,
-  updateAccordionTriggerAriaAttributes,
-  updateCheckboxAriaAttributes,
-  updateRadioAriaAttributes,
-  updateToggleAriaAttribute
+  makeRadioAccessible,
+  makeToggleAccessible,
+  testUiComponent
 });
 /*! Bundled license information:
 

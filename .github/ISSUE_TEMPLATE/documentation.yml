@@ -52,9 +52,9 @@ body:
       description: How should the documentation be changed or improved?
       placeholder: |
         Update the code example to show:
-        Block.makeBlockAccessible('id', 'class')
+        Block.makeBlockAccessible({ blockId: 'id', blockItemsClass: 'class' })
         Instead of:
-        Block.makeBlockAccessible({ blockId: 'id', ... })
+        Block.makeBlockAccessible("id", "class")
     validations:
       required: false
 
