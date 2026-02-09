@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.0.1](https://github.com/aria-ease/aria-ease/compare/v5.0.0...v5.0.1) (2026-02-09)
+
+
+### Bug Fixes
+
+* fixed menu component throwing false negatives due to test setup issues (missing event handlers and timing issues) ([13a01d1](https://github.com/aria-ease/aria-ease/commit/13a01d138631b48ac7395803e9ca302e84d3614d))
+
 ## [5.0.0](https://github.com/aria-ease/aria-ease/compare/v4.0.1...v5.0.0) (2026-01-29)
 
 ### Features
