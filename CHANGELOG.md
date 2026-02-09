@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file. See [standa
 
 ## [5.0.0](https://github.com/aria-ease/aria-ease/compare/v4.0.1...v5.0.0) (2026-01-29)
 
+### Features
+
+- removed update\*AriaAttributes utilities and legacy APIs (BREAKING CHANGE) ([093b72d](https://github.com/aria-ease/aria-ease/commit/093b72dd1e78aab6f7a94852b5fe3bec8ea8fad1))
+- Use make\*Accessible APIs instead
+
 ### [4.0.1](https://github.com/aria-ease/aria-ease/compare/v4.0.0...v4.0.1) (2026-01-21)
 
 ### Bug Fixes

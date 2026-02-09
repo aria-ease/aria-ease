@@ -13939,7 +13939,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
 URL must include protocol (e.g., "http://localhost:5173/test")`
         );
       }
-      const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-UQQI5MYS.js");
+      const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-45CFWUOD.js");
       contract = await runContractTestsPlaywright(componentName, url);
     } else {
       console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);
