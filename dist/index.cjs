@@ -9455,10 +9455,11 @@ async function runContractTestsPlaywright(componentName, url) {
           return trigger && trigger.getAttribute("data-menu-initialized") === "true";
         },
         componentContract.selectors.trigger,
-        { timeout: 6e3 }
+        { timeout: 1e4 }
       ).catch(() => {
         console.warn("Menu initialization signal not detected, continuing with tests...");
       });
+      await page.waitForTimeout(300);
     }
     async function resolveRelativeTarget(selector, relative) {
       const items = await page.locator(selector).all();
@@ -9536,17 +9537,83 @@ async function runContractTestsPlaywright(componentName, url) {
         const popupElement = page.locator(popupSelector).first();
         const isPopupVisible = await popupElement.isVisible();
         if (isPopupVisible) {
-          const closeSelector = componentContract.selectors.input || componentContract.selectors.trigger;
+          let menuClosed = false;
+          let closeSelector = componentContract.selectors.input;
+          if (!closeSelector && componentContract.selectors.focusable) {
+            closeSelector = componentContract.selectors.focusable;
+          } else if (!closeSelector) {
+            closeSelector = componentContract.selectors.trigger;
+          }
           if (closeSelector) {
             const closeElement = page.locator(closeSelector).first();
             await closeElement.focus();
-            await page.keyboard.press("Escape");
             await page.waitForTimeout(200);
-            if (componentContract.selectors.input) {
-              const inputElement = page.locator(componentContract.selectors.input).first();
-              await inputElement.clear();
-              await page.waitForTimeout(100);
+            await page.keyboard.press("Escape");
+            menuClosed = await page.waitForFunction(
+              (selector) => {
+                const popup = document.querySelector(selector);
+                return popup && getComputedStyle(popup).display === "none";
+              },
+              popupSelector,
+              { timeout: 3e3 }
+            ).then(() => true).catch(() => false);
+          }
+          if (!menuClosed && componentContract.selectors.trigger) {
+            const triggerElement = page.locator(componentContract.selectors.trigger).first();
+            await triggerElement.click();
+            await page.waitForTimeout(500);
+            menuClosed = await page.waitForFunction(
+              (selector) => {
+                const popup = document.querySelector(selector);
+                return popup && getComputedStyle(popup).display === "none";
+              },
+              popupSelector,
+              { timeout: 3e3 }
+            ).then(() => true).catch(() => false);
+          }
+          if (!menuClosed) {
+            await page.mouse.click(10, 10);
+            await page.waitForTimeout(500);
+            menuClosed = await page.waitForFunction(
+              (selector) => {
+                const popup = document.querySelector(selector);
+                return popup && getComputedStyle(popup).display === "none";
+              },
+              popupSelector,
+              { timeout: 3e3 }
+            ).then(() => true).catch(() => false);
+            if (menuClosed) {
+              console.log("\u{1F3AF} Strategy 3 (Click outside) worked");
             }
+          }
+          if (!menuClosed) {
+            throw new Error(
+              `\u274C FATAL: Cannot close menu between tests. Menu remains visible after trying:
+  1. Escape key
+  2. Clicking trigger
+  3. Clicking outside
+This indicates a problem with the menu component's close functionality.`
+            );
+          }
+          if (componentName === "menu" && componentContract.selectors.trigger) {
+            await page.waitForFunction(
+              (selector) => {
+                const trigger = document.querySelector(selector);
+                return document.activeElement === trigger;
+              },
+              componentContract.selectors.trigger,
+              { timeout: 2e3 }
+            ).catch(async () => {
+              const triggerElement = page.locator(componentContract.selectors.trigger).first();
+              await triggerElement.focus();
+              await page.waitForTimeout(200);
+            });
+          }
+          await page.waitForTimeout(500);
+          if (componentContract.selectors.input) {
+            const inputElement = page.locator(componentContract.selectors.input).first();
+            await inputElement.clear();
+            await page.waitForTimeout(100);
           }
         }
       }
@@ -9616,7 +9683,7 @@ async function runContractTestsPlaywright(componentName, url) {
               continue;
             }
             await relativeElement.click();
-            await page.waitForTimeout(componentName === "menu" ? 500 : 200);
+            await page.waitForTimeout(componentName === "menu" ? 800 : 200);
           } else {
             const actionSelector = componentContract.selectors[act.target];
             if (!actionSelector) {
@@ -9624,7 +9691,7 @@ async function runContractTestsPlaywright(componentName, url) {
               continue;
             }
             await page.locator(actionSelector).first().click();
-            await page.waitForTimeout(componentName === "menu" ? 500 : 200);
+            await page.waitForTimeout(componentName === "menu" ? 800 : 200);
           }
         }
         if (act.type === "keypress" && act.key) {
@@ -9647,9 +9714,9 @@ async function runContractTestsPlaywright(componentName, url) {
             keyValue = keyValue.replace(/ /g, "");
           }
           if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
-            await page.waitForTimeout(100);
+            await page.waitForTimeout(componentName === "menu" ? 200 : 100);
             await page.keyboard.press(keyValue);
-            await page.waitForTimeout(100);
+            await page.waitForTimeout(componentName === "menu" ? 300 : 100);
           } else {
             const keypressSelector = componentContract.selectors[act.target];
             if (!keypressSelector) {
@@ -9689,8 +9756,9 @@ async function runContractTestsPlaywright(componentName, url) {
             await page.waitForTimeout(100);
           }
         }
-        await page.waitForTimeout(100);
+        await page.waitForTimeout(componentName === "menu" ? 200 : 100);
       }
+      await page.waitForTimeout(componentName === "menu" ? 300 : 100);
       for (const assertion of assertions) {
         let target;
         if (assertion.target === "relative") {
@@ -9788,7 +9856,11 @@ async function runContractTestsPlaywright(componentName, url) {
             await (0, test_exports.expect)(target).toBeFocused({ timeout: 5e3 });
             passes.push(`${assertion.target} has focus as expected. Test: "${dynamicTest.description}".`);
           } catch {
-            failures.push(`${assertion.failureMessage}`);
+            const actualFocus = await page.evaluate(() => {
+              const focused = document.activeElement;
+              return focused ? `${focused.tagName}#${focused.id || "no-id"}.${focused.className || "no-class"}` : "no element focused";
+            });
+            failures.push(`${assertion.failureMessage} (actual focus: ${actualFocus})`);
           }
         }
         if (assertion.assertion === "toHaveRole" && assertion.expectedValue) {
