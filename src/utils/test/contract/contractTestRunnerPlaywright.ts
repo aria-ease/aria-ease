@@ -21,7 +21,8 @@ export async function runContractTestsPlaywright(componentName: string, url: str
     const componentContract: ComponentContract = JSON.parse(contractData);
 
     const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
-    reporter.start(componentName, totalTests);
+    const apgUrl = componentContract.meta?.source?.apg;
+    reporter.start(componentName, totalTests, apgUrl);
 
     const failures: string[] = [];
     const passes: string[] = [];
@@ -230,7 +231,6 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               componentContract.selectors.trigger,
               { timeout: 2000 }
             ).catch(async () => {
-              // Force focus back to trigger if it's not there
               const triggerElement = page.locator(componentContract.selectors.trigger as string).first();
               await triggerElement.focus();
               await page.waitForTimeout(200);
@@ -457,7 +457,6 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             await expect(target).toBeHidden({ timeout: 5000 });
             passes.push(`${assertion.target} is not visible as expected. Test: "${dynamicTest.description}".`);
           } catch{
-            // Debug: check actual state
             const debugState = await page.evaluate((sel) => {
               const el = sel ? document.querySelector(sel) : null;
               if (!el) return 'element not found';
@@ -538,7 +537,17 @@ export async function runContractTestsPlaywright(componentName: string, url: str
       const failuresAfterTest = failures.length;
       const testPassed = failuresAfterTest === failuresBeforeTest;
       const failureMessage = testPassed ? undefined : failures[failures.length - 1];
-      reporter.reportTest(dynamicTest, testPassed ? 'pass' : 'fail', failureMessage);
+      
+      // Handle optional tests differently - treat failures as suggestions
+      if (dynamicTest.isOptional === true && !testPassed) {
+        // Remove the failure from the failures array (don't count as hard failure)
+        failures.pop();
+        // Report as optional failure (suggestion)
+        reporter.reportTest(dynamicTest, 'optional-fail', failureMessage);
+      } else {
+        // Report normal pass/fail
+        reporter.reportTest(dynamicTest, testPassed ? 'pass' : 'fail', failureMessage);
+      }
     }
     
     // Report static test summary

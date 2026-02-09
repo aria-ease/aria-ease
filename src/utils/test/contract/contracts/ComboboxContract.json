@@ -198,6 +198,7 @@
         },
         {
             "description": "Home key navigates to first listbox option.",
+            "isOptional": true,
             "action": [
                 { "type": "focus", "target": "input" },
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },
@@ -217,6 +218,7 @@
         },
         {
             "description": "End key navigates to last listbox option.",
+            "isOptional": true,
             "action": [
                 { "type": "focus", "target": "input" },
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },
