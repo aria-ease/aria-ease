@@ -11,13 +11,16 @@
     },
 
     "selectors": {
-        "trigger": "[data-test-id=accordion-trigger]", //there would probably be more than one accordion trigger
-        "container": "[role=region]" //there would probably be more than one accordion panel
+        "container": "[data-test-id=accordion-group]",
+        "trigger": "[data-test-id=accordion-trigger]",
+        "focusable": "[data-test-id=accordion-trigger]",
+        "relative": "[data-test-id=accordion-trigger]",
+        "panel": "[role=region]"
     },
 
     "observables": {
         "observable": "focus | visible | attribute | role",
-        "target": "trigger | relative | panel",
+        "target": "trigger | relative | panel | container",
         "relative": "first | last | next | previous"
     },
 
@@ -38,10 +41,17 @@
                     "failureMessage": "Accordion trigger button doesn't conform to the ARIA Accordion Button pattern as specified in APG 1.2. Accordion trigger button should have 'aria-controls' attribute that points to the id of the accordion panel div it controls with 'role=region'. This helps assistive technology to identify the accordion panel div that the button controls."
                 },
                 {
-                    "target": "container",
+                    "target": "panel",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "role",
+                    "expectedValue": "region",
+                    "failureMessage": "Accordion panel doesn't conform to the ARIA Accordion pattern as specified in APG 1.2. Each accordion panel should have 'role=region' attribute. This helps assistive technology identify the panel as a significant region of the page."
+                },
+                {
+                    "target": "panel",
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-labelledby | aria-label",
-                    "failureMessage": "Accordion container doesn't conform to the ARIA Accordion pattern as specified in APG 1.2. Accordion container should have 'aria-labelledby' attribute that points to the id of the trigger button that controls it."
+                    "failureMessage": "Accordion panel doesn't conform to the ARIA Accordion pattern as specified in APG 1.2. Accordion panel should have 'aria-labelledby' attribute that points to the id of the trigger button that controls it."
                 }
             ]
         }
@@ -49,7 +59,223 @@
 
     "dynamic": [
         {
-            
+            "description": "Clicking the trigger expands a collapsed panel.",
+            "action": [
+                { "type": "click", "target": "trigger" }
+            ],
+            "assertions": [
+                {
+                    "target": "panel",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "Panel should be visible after clicking the trigger."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "true",
+                    "failureMessage": "Trigger's aria-expanded attribute should be true after clicking to expand."
+                }
+            ]
+        },
+        {
+            "description": "Clicking the trigger again collapses an expanded panel.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "click", "target": "trigger" }
+            ],
+            "assertions": [
+                {
+                    "target": "panel",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Panel should not be visible after clicking the trigger twice."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Trigger's aria-expanded attribute should be false after collapsing."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Enter key on trigger expands a collapsed panel.",
+            "action": [
+                { "type": "keypress", "target": "trigger", "key": "Enter" }
+            ],
+            "assertions": [
+                {
+                    "target": "panel",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "Panel should be visible after pressing Enter on trigger."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "true",
+                    "failureMessage": "Trigger's aria-expanded should be true after pressing Enter."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Space key on trigger expands a collapsed panel.",
+            "action": [
+                { "type": "keypress", "target": "trigger", "key": "Space" }
+            ],
+            "assertions": [
+                {
+                    "target": "panel",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "Panel should be visible after pressing Space on trigger."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "true",
+                    "failureMessage": "Trigger's aria-expanded should be true after pressing Space."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Enter key on trigger collapses an expanded panel.",
+            "action": [
+                { "type": "keypress", "target": "trigger", "key": "Enter" },
+                { "type": "keypress", "target": "trigger", "key": "Enter" }
+            ],
+            "assertions": [
+                {
+                    "target": "panel",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Panel should not be visible after pressing Enter on expanded trigger."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Trigger's aria-expanded should be false after collapsing with Enter."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Space key on trigger collapses an expanded panel.",
+            "action": [
+                { "type": "keypress", "target": "trigger", "key": "Space" },
+                { "type": "keypress", "target": "trigger", "key": "Space" }
+            ],
+            "assertions": [
+                {
+                    "target": "panel",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Panel should not be visible after pressing Space on expanded trigger."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Trigger's aria-expanded should be false after collapsing with Space."
+                }
+            ]
+        },
+        {
+            "description": "Arrow Down key moves focus to next accordion trigger.",
+            "isMultiple": true,
+            "isOptional": true,
+            "action": [
+                { "type": "keypress", "target": "focusable", "key": "ArrowDown" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "second",
+                    "failureMessage": "Focus should move to the next accordion trigger after pressing ArrowDown."
+                }
+            ]
+        },
+        {
+            "description": "Arrow Up key moves focus to previous accordion trigger.",
+            "isMultiple": true,
+            "isOptional": true,
+            "action": [
+                { "type": "keypress", "target": "focusable", "key": "ArrowUp" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "Focus should move to the previous accordion trigger after pressing ArrowUp."
+                }
+            ]
+        },
+        {
+            "description": "Home key moves focus to first accordion trigger.",
+            "isMultiple": true,
+            "isOptional": true,
+            "action": [
+                { "type": "keypress", "target": "focusable", "key": "Home" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "Focus should move to the first accordion trigger after pressing Home."
+                }
+            ]
+        },
+        {
+            "description": "End key moves focus to last accordion trigger.",
+            "isMultiple": true,
+            "isOptional": true,
+            "action": [
+                { "type": "keypress", "target": "focusable", "key": "End" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "last",
+                    "failureMessage": "Focus should move to the last accordion trigger after pressing End."
+                }
+            ]
+        },
+        {
+            "description": "Arrow Down wraps focus from last trigger to first trigger.",
+            "isMultiple": true,
+            "isOptional": true,
+            "action": [
+                { "type": "keypress", "target": "focusable", "key": "ArrowDown" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "Focus should wrap from last to first accordion trigger after pressing ArrowDown."
+                }
+            ]
+        },
+        {
+            "description": "Arrow Up wraps focus from first trigger to last trigger.",
+            "isMultiple": true,
+            "isOptional": true,
+            "action": [
+                { "type": "keypress", "target": "focusable", "key": "ArrowUp" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "last",
+                    "failureMessage": "Focus should wrap from first to last accordion trigger after pressing ArrowUp."
+                }
+            ]
         }
     ]
 }

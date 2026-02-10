@@ -5,9 +5,10 @@
 
 interface TestResult {
   description: string;
-  status: 'pass' | 'fail' | 'skip';
+  status: 'pass' | 'fail' | 'skip' | 'optional-fail';
   failureMessage?: string;
   skipReason?: string;
+  isOptional?: boolean;
 }
 
 export class ContractReporter {
@@ -18,7 +19,9 @@ export class ContractReporter {
   private dynamicResults: TestResult[] = [];
   private totalTests: number = 0;
   private skipped: number = 0;
+  private optionalSuggestions: number = 0;
   private isPlaywright: boolean = false;
+  private apgUrl: string = 'https://www.w3.org/WAI/ARIA/apg/';
 
   constructor(isPlaywright: boolean = false) {
     this.isPlaywright = isPlaywright;
@@ -28,10 +31,13 @@ export class ContractReporter {
     process.stderr.write(message + '\n');
   }
 
-  start(componentName: string, totalTests: number) {
+  start(componentName: string, totalTests: number, apgUrl?: string) {
     this.startTime = Date.now();
     this.componentName = componentName;
     this.totalTests = totalTests;
+    if (apgUrl) {
+      this.apgUrl = apgUrl;
+    }
     
     const mode = this.isPlaywright ? 'Playwright (Real Browser)' : 'jsdom (Fast)';
     this.log(`\n${'═'.repeat(60)}`);
@@ -46,18 +52,31 @@ export class ContractReporter {
     const icon = failures === 0 ? '✅' : '❌';
     const status = failures === 0 ? 'PASS' : 'FAIL';
     
+    this.log(''); // Add blank line before summary
     this.log(`${icon} Static ARIA Tests: ${status}`);
     this.log(`   ${passes}/${passes + failures} required attributes present\n`);
   }
 
   /**
+   * Report individual static test pass
+   */
+  reportStaticTest(description: string, passed: boolean, failureMessage?: string) {
+    const icon = passed ? '✓' : '✗';
+    this.log(`  ${icon} ${description}`);
+    if (!passed && failureMessage) {
+      this.log(`     ↳ ${failureMessage}`);
+    }
+  }
+
+  /**
    * Report individual dynamic test result
    */
-  reportTest(test: { description: string; requiresBrowser?: boolean }, status: 'pass' | 'fail' | 'skip', failureMessage?: string) {
+  reportTest(test: { description: string; requiresBrowser?: boolean; isOptional?: boolean }, status: 'pass' | 'fail' | 'skip' | 'optional-fail', failureMessage?: string) {
     const result: TestResult = {
       description: test.description,
       status,
       failureMessage,
+      isOptional: test.isOptional,
     };
 
     if (status === 'skip' && test.requiresBrowser) {
@@ -66,17 +85,22 @@ export class ContractReporter {
 
     this.dynamicResults.push(result);
 
-    const icons = { pass: '✓', fail: '✗', skip: '○' };
+    const icons = { pass: '✓', fail: '✗', skip: '○', 'optional-fail': '○' };
     //const colors = { pass: '', fail: '', skip: '' };
     
-    this.log(`  ${icons[status]} ${test.description}`);
+    const prefix = test.isOptional ? '[OPTIONAL] ' : '';
+    this.log(`  ${icons[status]} ${prefix}${test.description}`);
     
     if (status === 'skip' && !this.isPlaywright) {
       this.log(`     ↳ Skipped in jsdom (runs in Playwright)`);
     }
     
-    if (status === 'fail' && failureMessage) {
+    if (status === 'fail' && failureMessage && !test.isOptional) {
       this.log(`     ↳ ${failureMessage}`);
+    }
+    
+    if (status === 'optional-fail') {
+      this.log(`     ↳ Not implemented (recommended for enhanced UX)`);
     }
   }
 
@@ -101,6 +125,29 @@ export class ContractReporter {
       }
       this.log('');
     });
+  }
+
+  /**
+   * Report optional features that aren't implemented
+   */
+  private reportOptionalSuggestions() {
+    const suggestions = this.dynamicResults.filter(r => r.status === 'optional-fail');
+    if (suggestions.length === 0) return;
+
+    this.log(`\n${'─'.repeat(60)}`);
+    this.log(`💡 Optional Enhancements (${suggestions.length}):\n`);
+    this.log(`These features are optional per APG guidelines but recommended`);
+    this.log(`for improved user experience and keyboard navigation:\n`);
+    
+    suggestions.forEach((test, index) => {
+      this.log(`${index + 1}. ${test.description}`);
+      if (test.failureMessage) {
+        this.log(`   ↳ ${test.failureMessage}`);
+      }
+    });
+    
+    this.log(`\n✨ Consider implementing these for better accessibility`);
+    this.log(`   Reference: ${this.apgUrl}\n`);
   }
 
   /**
@@ -133,6 +180,7 @@ export class ContractReporter {
     const dynamicPasses = this.dynamicResults.filter(r => r.status === 'pass').length;
     const dynamicFailures = this.dynamicResults.filter(r => r.status === 'fail').length;
     this.skipped = this.dynamicResults.filter(r => r.status === 'skip').length;
+    this.optionalSuggestions = this.dynamicResults.filter(r => r.status === 'optional-fail').length;
     
     const totalPasses = this.staticPasses + dynamicPasses;
     const totalFailures = this.staticFailures + dynamicFailures;
@@ -143,6 +191,9 @@ export class ContractReporter {
       this.reportFailures(failures);
     }
 
+    // Report optional suggestions
+    this.reportOptionalSuggestions();
+
     // Report skipped tests
     this.reportSkipped();
 
@@ -150,18 +201,26 @@ export class ContractReporter {
     this.log(`\n${'═'.repeat(60)}`);
     this.log(`📊 Summary\n`);
     
-    if (totalFailures === 0 && this.skipped === 0) {
+    if (totalFailures === 0 && this.skipped === 0 && this.optionalSuggestions === 0) {
       this.log(`✅ All ${totalRun} tests passed!`);
       this.log(`   ${this.componentName} component meets APG and WCAG guidelines ✓`);
     } else if (totalFailures === 0) {
-      this.log(`✅ ${totalPasses}/${totalRun} tests passed`);
-      this.log(`○  ${this.skipped} tests skipped (jsdom limitation)`);
-      this.log(`   ${this.componentName} component works correctly`);
+      this.log(`✅ ${totalPasses}/${totalRun} required tests passed`);
+      if (this.skipped > 0) {
+        this.log(`○  ${this.skipped} tests skipped (jsdom limitation)`);
+      }
+      if (this.optionalSuggestions > 0) {
+        this.log(`💡 ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? 's' : ''} suggested`);
+      }
+      this.log(`   ${this.componentName} component meets required standards ✓`);
     } else {
       this.log(`❌ ${totalFailures} test${totalFailures > 1 ? 's' : ''} failed`);
       this.log(`✅ ${totalPasses} test${totalPasses > 1 ? 's' : ''} passed`);
       if (this.skipped > 0) {
         this.log(`○  ${this.skipped} test${this.skipped > 1 ? 's' : ''} skipped`);
+      }
+      if (this.optionalSuggestions > 0) {
+        this.log(`💡 ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? 's' : ''} suggested`);
       }
     }
     

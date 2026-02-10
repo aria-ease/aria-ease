@@ -70,6 +70,16 @@ interface Prerequisite {
 }
 
 interface ComponentContract {
+    meta?: {
+        id?: string;
+        version?: string;
+        description?: string;
+        source?: {
+            apg?: string;
+            wcag?: string[];
+        };
+        W3CName?: string;
+    };
     selectors: Selector;
     static: Array<{
         assertions: Array<{
@@ -82,6 +92,8 @@ interface ComponentContract {
     dynamic: Array<{
         description: string;
         requiresBrowser?: boolean;
+        isOptional?: boolean;
+        isMultiple?: boolean;
         prerequisite: Array<Prerequisite>;
         action: Array<{
             type: string;

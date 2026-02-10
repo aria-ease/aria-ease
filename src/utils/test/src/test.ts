@@ -35,28 +35,47 @@ export async function testUiComponent(componentName: string, component: HTMLElem
         );
     }
     
+    // Check if dev server is running
+    async function checkDevServer(testUrl?: string): Promise<string | null> {
+        const urlsToTry = testUrl 
+            ? [testUrl]
+            : [
+                'http://localhost:5173',
+                'http://localhost:3000', 
+                'http://localhost:8080',
+                'http://localhost:4173'
+              ];
+        
+        for (const serverUrl of urlsToTry) {
+            try {
+                const response = await fetch(serverUrl, { 
+                    method: 'HEAD',
+                    signal: AbortSignal.timeout(1000)
+                });
+                if (response.ok || response.status === 304) {
+                    return serverUrl;
+                }
+            } catch {
+                return null;
+            }
+        }
+        return null;
+    }
+    
     // Run contract tests
     let contract;
     
     try {
-        if (url) {
-            console.log(`🎭 Running Playwright E2E tests on ${url}`);
-            
-            // Validate URL format
-            try {
-                new URL(url);
-            } catch {
-                throw new Error(
-                    `❌ Invalid URL format: "${url}"\n` +
-                    `URL must include protocol (e.g., "http://localhost:5173/test")`
-                );
-            }
+        const devServerUrl = await checkDevServer(url);
+        
+        if (devServerUrl) {
+            console.log(`🎭 Running Playwright E2E tests on ${devServerUrl}`);
             
             const { runContractTestsPlaywright } = await import("../contract/contractTestRunnerPlaywright");
-            contract = await runContractTestsPlaywright(componentName, url);
+            contract = await runContractTestsPlaywright(componentName, devServerUrl);
         } else {
             console.log(`🧪 Running jsdom tests (limited event handling)`);
-            console.log(`Some tests may be skipped or yield false positives/negatives.\n` + `For full coverage, run with a URL to enable Playwright E2E tests.`);
+            console.log(`⚠️  No dev server detected. Some tests may be skipped.\n` + `For full coverage start your dev server and provide a URL.\n`);
             contract = await runContractTests(componentName, component);
         }
     } catch (error) {
@@ -73,11 +92,10 @@ export async function testUiComponent(componentName: string, component: HTMLElem
     };
     
     // Check for contract test failures
-    if (contract.failures.length > 0) {
-        const mode = url ? 'Playwright' : 'jsdom';
+    if (contract.failures.length > 0 && url === "Playwright") {
         
         throw new Error(
-            `\n❌ ${contract.failures.length} accessibility contract test${contract.failures.length > 1 ? 's' : ''} failed (${mode} mode)\n` +
+            `\n❌ ${contract.failures.length} accessibility contract test${contract.failures.length > 1 ? 's' : ''} failed (Playwright mode)\n` +
             `✅ ${contract.passes.length} test${contract.passes.length > 1 ? 's' : ''} passed\n\n` +
             `📋 Review the detailed test report above for specific failures.\n` +
             `💡 Contract tests validate ARIA attributes and keyboard interactions per W3C APG guidelines.`
