@@ -175,7 +175,7 @@ useEffect(() => {
     accordionId: "accordion-container",
     triggersClass: "accordion-trigger",
     panelsClass: "accordion-panel",
-    allowMultiple: false, // Only one panel open at a time (default)
+    allowMultipleOpen: false, // Only one panel open at a time (default)
   });
 
   return () => accordion.cleanup();
@@ -214,7 +214,7 @@ makeAccordionAccessible({
   accordionId: "faq-div",
   triggersClass: "dropdown-button",
   panelsClass: "accordion-panel",
-  allowMultiple: false, // Only one panel open at a time
+  allowMultipleOpen: false, // Only one panel open at a time
 });
 ```
 

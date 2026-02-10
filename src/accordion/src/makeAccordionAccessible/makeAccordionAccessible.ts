@@ -4,7 +4,7 @@
  * @param {string} accordionId - The id of the accordion container.
  * @param {string} triggersClass - The shared class of all accordion trigger buttons.
  * @param {string} panelsClass - The shared class of all accordion panels.
- * @param {boolean} allowMultiple - Whether multiple panels can be open simultaneously (default: false).
+ * @param {boolean} allowMultipleOpen - Whether multiple panels can be open simultaneously (default: false).
  */
 
 import { AccessibilityInstance } from "Types";
@@ -13,10 +13,10 @@ interface AccordionConfig {
   accordionId: string;
   triggersClass: string;
   panelsClass: string;
-  allowMultiple?: boolean;
+  allowMultipleOpen?: boolean;
 }
 
-export function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple = false }: AccordionConfig): AccessibilityInstance {
+export function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }: AccordionConfig): AccessibilityInstance {
   const accordionContainer = document.querySelector(`#${accordionId}`) as HTMLElement;
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -101,7 +101,7 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
       collapseItem(index);
     } else {
       // If not allowing multiple, close all others first
-      if (!allowMultiple) {
+      if (!allowMultipleOpen) {
         triggers.forEach((_, i) => {
           if (i !== index) {
             collapseItem(i);

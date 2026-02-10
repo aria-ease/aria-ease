@@ -219,7 +219,7 @@ describe("makeAccordionAccessible", () => {
       expect(panel.style.display).toBe("none");
     });
 
-    it("closes other items when allowMultiple is false", () => {
+    it("closes other items when allowMultipleOpen is false", () => {
       accordionInstance.expandItem!(0);
       accordionInstance.toggleItem!(1);
 
@@ -230,13 +230,13 @@ describe("makeAccordionAccessible", () => {
       expect(trigger1.getAttribute("aria-expanded")).toBe("true");
     });
 
-    it("keeps other items open when allowMultiple is true", () => {
+    it("keeps other items open when allowMultipleOpen is true", () => {
       accordionInstance.cleanup();
       accordionInstance = makeAccordionAccessible({
         accordionId: "test-accordion",
         triggersClass: "accordion-trigger",
         panelsClass: "accordion-panel",
-        allowMultiple: true
+        allowMultipleOpen: true
       });
 
       accordionInstance.expandItem!(0);
