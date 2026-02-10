@@ -1,10 +1,10 @@
 import {
   ContractReporter,
   contract_default
-} from "./chunk-AVCZIF6G.js";
+} from "./chunk-KJ33RDSC.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
-function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple = false }) {
+function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }) {
   const accordionContainer = document.querySelector(`#${accordionId}`);
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -72,7 +72,7 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     if (isExpanded) {
       collapseItem(index);
     } else {
-      if (!allowMultiple) {
+      if (!allowMultipleOpen) {
         triggers.forEach((_, i) => {
           if (i !== index) {
             collapseItem(i);
@@ -1280,7 +1280,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
     const devServerUrl = await checkDevServer(url);
     if (devServerUrl) {
       console.log(`\u{1F3AD} Running Playwright E2E tests on ${devServerUrl}`);
-      const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-BFHRDJTJ.js");
+      const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-7ZOM7ZMG.js");
       contract = await runContractTestsPlaywright(componentName, devServerUrl);
     } else {
       console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);

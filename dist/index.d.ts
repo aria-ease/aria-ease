@@ -49,16 +49,16 @@ interface config {
  * @param {string} accordionId - The id of the accordion container.
  * @param {string} triggersClass - The shared class of all accordion trigger buttons.
  * @param {string} panelsClass - The shared class of all accordion panels.
- * @param {boolean} allowMultiple - Whether multiple panels can be open simultaneously (default: false).
+ * @param {boolean} allowMultipleOpen - Whether multiple panels can be open simultaneously (default: false).
  */
 
 interface AccordionConfig {
     accordionId: string;
     triggersClass: string;
     panelsClass: string;
-    allowMultiple?: boolean;
+    allowMultipleOpen?: boolean;
 }
-declare function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple }: AccordionConfig): AccessibilityInstance;
+declare function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen }: AccordionConfig): AccessibilityInstance;
 
 /**
  * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.

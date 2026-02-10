@@ -1,5 +1,5 @@
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
-function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple = false }) {
+function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }) {
   const accordionContainer = document.querySelector(`#${accordionId}`);
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -67,7 +67,7 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     if (isExpanded) {
       collapseItem(index);
     } else {
-      if (!allowMultiple) {
+      if (!allowMultipleOpen) {
         triggers.forEach((_, i) => {
           if (i !== index) {
             collapseItem(i);

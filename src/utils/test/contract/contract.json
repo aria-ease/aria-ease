@@ -6,5 +6,9 @@
     "combobox": {
         "path": "./contracts/ComboboxContract.json",
         "component": "combobox"
+    },
+    "accordion": {
+        "path": "./contracts/AccordionContract.json",
+        "component": "accordion"
     }
 }

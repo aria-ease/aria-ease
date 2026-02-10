@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
   "main": "dist/index.cjs",
   "type": "module",
@@ -19,7 +19,7 @@
     "clean": "rm -rf dist bin",
     "build:core": "tsup ./index.ts --format esm,cjs --dts --outDir dist --external jest-axe --external @testing-library/react --external @axe-core/playwright --external playwright",
     "build:modules": "tsup ./src/combobox/index.ts ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/radio/index.ts ./src/toggle/index.ts --format esm,cjs --dts --treeshake --outDir dist/src",
-    "build:test": "tsup ./src/utils/test/index.ts --format esm,cjs --dts --treeshake --external jest-axe --external @testing-library/react --outDir dist/src/utils/test",
+    "build:test": "tsup ./src/utils/test/index.ts --format esm,cjs --dts --treeshake --external jest-axe --external @testing-library/react --external playwright --external @playwright/test --outDir dist/src/utils/test",
     "build:cli": "tsup ./src/utils/cli/cli.ts --format esm,cjs --dts --outDir bin --external commander --external chalk --external jest-axe --external @testing-library/react --external @axe-core/playwright --external playwright",
     "build:contracts": "mkdir -p ./dist/src/utils/test && cp -r ./src/utils/test/contract/contracts ./dist/src/utils/test/",
     "build": "npm run clean && npm run build:core && npm run build:modules && npm run build:test && npm run build:cli && npm run build:contracts"

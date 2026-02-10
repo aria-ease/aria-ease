@@ -43,6 +43,10 @@ var init_contract = __esm({
       combobox: {
         path: "./contracts/ComboboxContract.json",
         component: "combobox"
+      },
+      accordion: {
+        path: "./contracts/AccordionContract.json",
+        component: "accordion"
       }
     };
   }
@@ -317,25 +321,21 @@ async function runContractTestsPlaywright(componentName, url) {
     const page = await context.newPage();
     await page.goto(url, {
       waitUntil: "domcontentloaded",
-      timeout: 9e4
+      timeout: 9e5
     });
+    await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
     if (!mainSelector) {
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
-    await page.waitForSelector(mainSelector, { timeout: 9e4 });
+    await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: 9e5 });
     if (componentName === "menu" && componentContract.selectors.trigger) {
-      await page.waitForFunction(
-        (selector) => {
-          const trigger = document.querySelector(selector);
-          return trigger && trigger.getAttribute("data-menu-initialized") === "true";
-        },
-        componentContract.selectors.trigger,
-        { timeout: 1e4 }
-      ).catch(() => {
-        console.warn("Menu initialization signal not detected, continuing with tests...");
+      await page.locator(componentContract.selectors.trigger).first().waitFor({
+        state: "visible",
+        timeout: 1e4
+      }).catch(() => {
+        console.warn("Menu trigger not visible, continuing with tests...");
       });
-      await page.waitForTimeout(300);
     }
     async function resolveRelativeTarget(selector, relative) {
       const items = await page.locator(selector).all();
@@ -411,7 +411,7 @@ async function runContractTestsPlaywright(componentName, url) {
         const popupSelector = componentContract.selectors.listbox || componentContract.selectors.container;
         if (!popupSelector) continue;
         const popupElement = page.locator(popupSelector).first();
-        const isPopupVisible = await popupElement.isVisible();
+        const isPopupVisible = await popupElement.isVisible().catch(() => false);
         if (isPopupVisible) {
           let menuClosed = false;
           let closeSelector = componentContract.selectors.input;
@@ -423,44 +423,17 @@ async function runContractTestsPlaywright(componentName, url) {
           if (closeSelector) {
             const closeElement = page.locator(closeSelector).first();
             await closeElement.focus();
-            await page.waitForTimeout(200);
             await page.keyboard.press("Escape");
-            menuClosed = await page.waitForFunction(
-              (selector) => {
-                const popup = document.querySelector(selector);
-                return popup && getComputedStyle(popup).display === "none";
-              },
-              popupSelector,
-              { timeout: 3e3 }
-            ).then(() => true).catch(() => false);
+            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 3e3 }).then(() => true).catch(() => false);
           }
           if (!menuClosed && componentContract.selectors.trigger) {
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
             await triggerElement.click();
-            await page.waitForTimeout(500);
-            menuClosed = await page.waitForFunction(
-              (selector) => {
-                const popup = document.querySelector(selector);
-                return popup && getComputedStyle(popup).display === "none";
-              },
-              popupSelector,
-              { timeout: 3e3 }
-            ).then(() => true).catch(() => false);
+            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 3e3 }).then(() => true).catch(() => false);
           }
           if (!menuClosed) {
             await page.mouse.click(10, 10);
-            await page.waitForTimeout(500);
-            menuClosed = await page.waitForFunction(
-              (selector) => {
-                const popup = document.querySelector(selector);
-                return popup && getComputedStyle(popup).display === "none";
-              },
-              popupSelector,
-              { timeout: 3e3 }
-            ).then(() => true).catch(() => false);
-            if (menuClosed) {
-              console.log("\u{1F3AF} Strategy 3 (Click outside) worked");
-            }
+            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 3e3 }).then(() => true).catch(() => false);
           }
           if (!menuClosed) {
             throw new Error(
@@ -471,25 +444,12 @@ async function runContractTestsPlaywright(componentName, url) {
 This indicates a problem with the menu component's close functionality.`
             );
           }
-          if (componentName === "menu" && componentContract.selectors.trigger) {
-            await page.waitForFunction(
-              (selector) => {
-                const trigger = document.querySelector(selector);
-                return document.activeElement === trigger;
-              },
-              componentContract.selectors.trigger,
-              { timeout: 2e3 }
-            ).catch(async () => {
-              const triggerElement = page.locator(componentContract.selectors.trigger).first();
-              await triggerElement.focus();
-              await page.waitForTimeout(200);
-            });
-          }
-          await page.waitForTimeout(500);
           if (componentContract.selectors.input) {
-            const inputElement = page.locator(componentContract.selectors.input).first();
-            await inputElement.clear();
-            await page.waitForTimeout(100);
+            await page.locator(componentContract.selectors.input).first().clear();
+          }
+          if (componentName === "menu" && componentContract.selectors.trigger) {
+            const triggerElement = page.locator(componentContract.selectors.trigger).first();
+            await triggerElement.focus();
           }
         }
       }
@@ -533,7 +493,6 @@ This indicates a problem with the menu component's close functionality.`
             continue;
           }
           await page.locator(focusSelector).first().focus();
-          await page.waitForTimeout(100);
         }
         if (act.type === "type" && act.value) {
           const typeSelector = componentContract.selectors[act.target];
@@ -542,7 +501,6 @@ This indicates a problem with the menu component's close functionality.`
             continue;
           }
           await page.locator(typeSelector).first().fill(act.value);
-          await page.waitForTimeout(100);
         }
         if (act.type === "click") {
           if (act.target === "document") {
@@ -559,7 +517,6 @@ This indicates a problem with the menu component's close functionality.`
               continue;
             }
             await relativeElement.click();
-            await page.waitForTimeout(componentName === "menu" ? 800 : 200);
           } else {
             const actionSelector = componentContract.selectors[act.target];
             if (!actionSelector) {
@@ -567,7 +524,6 @@ This indicates a problem with the menu component's close functionality.`
               continue;
             }
             await page.locator(actionSelector).first().click();
-            await page.waitForTimeout(componentName === "menu" ? 800 : 200);
           }
         }
         if (act.type === "keypress" && act.key) {
@@ -590,9 +546,7 @@ This indicates a problem with the menu component's close functionality.`
             keyValue = keyValue.replace(/ /g, "");
           }
           if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
-            await page.waitForTimeout(componentName === "menu" ? 200 : 100);
             await page.keyboard.press(keyValue);
-            await page.waitForTimeout(componentName === "menu" ? 300 : 100);
           } else {
             const keypressSelector = componentContract.selectors[act.target];
             if (!keypressSelector) {
@@ -621,7 +575,6 @@ This indicates a problem with the menu component's close functionality.`
               continue;
             }
             await relativeElement.hover();
-            await page.waitForTimeout(100);
           } else {
             const hoverSelector = componentContract.selectors[act.target];
             if (!hoverSelector) {
@@ -629,12 +582,9 @@ This indicates a problem with the menu component's close functionality.`
               continue;
             }
             await page.locator(hoverSelector).first().hover();
-            await page.waitForTimeout(100);
           }
         }
-        await page.waitForTimeout(componentName === "menu" ? 200 : 100);
       }
-      await page.waitForTimeout(componentName === "menu" ? 300 : 100);
       for (const assertion of assertions) {
         let target;
         if (assertion.target === "relative") {
@@ -811,7 +761,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
-function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultiple = false }) {
+function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }) {
   const accordionContainer = document.querySelector(`#${accordionId}`);
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -879,7 +829,7 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     if (isExpanded) {
       collapseItem(index);
     } else {
-      if (!allowMultiple) {
+      if (!allowMultipleOpen) {
         triggers.forEach((_, i) => {
           if (i !== index) {
             collapseItem(i);

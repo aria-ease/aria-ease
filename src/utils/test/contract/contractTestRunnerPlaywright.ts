@@ -36,8 +36,10 @@ export async function runContractTestsPlaywright(componentName: string, url: str
 
     await page.goto(url, { 
       waitUntil: "domcontentloaded",
-      timeout: 90000 
+      timeout: 900000 
     });
+
+    await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     
     // Wait for the main component element (try trigger first, fall back to input or container)
     const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
@@ -46,23 +48,16 @@ export async function runContractTestsPlaywright(componentName: string, url: str
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
     
-    await page.waitForSelector(mainSelector, { timeout: 90000 });
+    await page.locator(mainSelector).first().waitFor({ state: 'attached', timeout: 900000 });
 
     // Additional wait for component initialization (for menu and combobox)
     if (componentName === 'menu' && componentContract.selectors.trigger) {
-      await page.waitForFunction(
-        (selector) => {
-          const trigger = document.querySelector(selector);
-          return trigger && trigger.getAttribute('data-menu-initialized') === 'true';
-        },
-        componentContract.selectors.trigger,
-        { timeout: 10000 }
-      ).catch(() => {
-        // If timeout, continue anyway (for backward compatibility)
-        console.warn('Menu initialization signal not detected, continuing with tests...');
+      await page.locator(componentContract.selectors.trigger).first().waitFor({ 
+        state: 'visible',
+        timeout: 10000 
+      }).catch(() => {
+        console.warn('Menu trigger not visible, continuing with tests...');
       });
-      
-      await page.waitForTimeout(300);
     }
 
     async function resolveRelativeTarget(selector: string, relative: string) {
@@ -151,11 +146,14 @@ export async function runContractTestsPlaywright(componentName: string, url: str
         const popupSelector = componentContract.selectors.listbox || componentContract.selectors.container;
         if (!popupSelector) continue;
         const popupElement = page.locator(popupSelector).first();
-        const isPopupVisible = await popupElement.isVisible();
+        
+        // Check if popup is visible - use Playwright's built-in waiting
+        const isPopupVisible = await popupElement.isVisible().catch(() => false);
         
         if (isPopupVisible) {
-          let menuClosed = false;
+          let menuClosed = false; // Track if we successfully closed the popup
           
+          // Strategy 1: Try Escape key
           let closeSelector = componentContract.selectors.input; // For combobox
           if (!closeSelector && componentContract.selectors.focusable) {
             closeSelector = componentContract.selectors.focusable;
@@ -165,51 +163,31 @@ export async function runContractTestsPlaywright(componentName: string, url: str
           
           if (closeSelector) {
             const closeElement = page.locator(closeSelector).first();
-            
             await closeElement.focus();
-            await page.waitForTimeout(200);
             await page.keyboard.press('Escape');
             
-            menuClosed = await page.waitForFunction(
-              (selector) => {
-                const popup = document.querySelector(selector);
-                return popup && getComputedStyle(popup).display === 'none';
-              },
-              popupSelector,
-              { timeout: 3000 }
-            ).then(() => true).catch(() => false);
+            // Wait for popup to close - declaratively
+            menuClosed = await expect(popupElement).toBeHidden({ timeout: 3000 })
+              .then(() => true)
+              .catch(() => false);
           }
           
+          // Strategy 2: Try clicking trigger to toggle
           if (!menuClosed && componentContract.selectors.trigger) {
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
             await triggerElement.click();
-            await page.waitForTimeout(500);
             
-            menuClosed = await page.waitForFunction(
-              (selector) => {
-                const popup = document.querySelector(selector);
-                return popup && getComputedStyle(popup).display === 'none';
-              },
-              popupSelector,
-              { timeout: 3000 }
-            ).then(() => true).catch(() => false);
+            menuClosed = await expect(popupElement).toBeHidden({ timeout: 3000 })
+              .then(() => true)
+              .catch(() => false);
           }
           
+          // Strategy 3: Try clicking outside
           if (!menuClosed) {
-            await page.mouse.click(10, 10); // Click top-left corner (outside menu)
-            await page.waitForTimeout(500);
-            
-            menuClosed = await page.waitForFunction(
-              (selector) => {
-                const popup = document.querySelector(selector);
-                return popup && getComputedStyle(popup).display === 'none';
-              },
-              popupSelector,
-              { timeout: 3000 }
-            ).then(() => true).catch(() => false);
-            if (menuClosed) {
-              console.log("🎯 Strategy 3 (Click outside) worked");
-            }
+            await page.mouse.click(10, 10);
+            menuClosed = await expect(popupElement).toBeHidden({ timeout: 3000 })
+              .then(() => true)
+              .catch(() => false);
           }
           
           if (!menuClosed) {
@@ -222,27 +200,15 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             );
           }
           
-          if (componentName === 'menu' && componentContract.selectors.trigger) {
-            await page.waitForFunction(
-              (selector) => {
-                const trigger = document.querySelector(selector);
-                return document.activeElement === trigger;
-              },
-              componentContract.selectors.trigger,
-              { timeout: 2000 }
-            ).catch(async () => {
-              const triggerElement = page.locator(componentContract.selectors.trigger as string).first();
-              await triggerElement.focus();
-              await page.waitForTimeout(200);
-            });
+          // Clear any input values after successful close
+          if (componentContract.selectors.input) {
+            await page.locator(componentContract.selectors.input).first().clear();
           }
           
-          await page.waitForTimeout(500);
-          
-          if (componentContract.selectors.input) {
-            const inputElement = page.locator(componentContract.selectors.input).first();
-            await inputElement.clear();
-            await page.waitForTimeout(100);
+          // Ensure trigger has focus for menu components
+          if (componentName === 'menu' && componentContract.selectors.trigger) {
+            const triggerElement = page.locator(componentContract.selectors.trigger).first();
+            await triggerElement.focus();
           }
         }
       }
@@ -291,8 +257,8 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             failures.push(`Selector for focus target ${act.target} not found.`);
             continue;
           }
+          // Playwright auto-waits for element to be ready before focusing
           await page.locator(focusSelector).first().focus();
-          await page.waitForTimeout(100);
         }
 
         if (act.type === "type" && act.value) {
@@ -301,8 +267,8 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             failures.push(`Selector for type target ${act.target} not found.`);
             continue;
           }
+          // Playwright auto-waits for element to be ready before typing
           await page.locator(typeSelector).first().fill(act.value);
-          await page.waitForTimeout(100);
         }
 
         if (act.type === "click") {
@@ -319,16 +285,16 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               failures.push(`Could not resolve relative target ${act.relativeTarget} for click.`);
               continue;
             }
+            // Playwright auto-waits for element to be ready before clicking
             await relativeElement.click();
-            await page.waitForTimeout(componentName === 'menu' ? 800 : 200);
           } else {
             const actionSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
             if (!actionSelector) {
               failures.push(`Selector for action target ${act.target} not found.`);
               continue;
             }
+            // Playwright auto-waits for element to be ready before clicking
             await page.locator(actionSelector).first().click();
-            await page.waitForTimeout(componentName === 'menu' ? 800 : 200);
           }
         }
 
@@ -354,9 +320,8 @@ export async function runContractTestsPlaywright(componentName: string, url: str
           }
 
           if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
-            await page.waitForTimeout(componentName === 'menu' ? 200 : 100);
+            // For arrow keys on focusable elements, just press the key - no arbitrary waits
             await page.keyboard.press(keyValue);
-            await page.waitForTimeout(componentName === 'menu' ? 300 : 100);
           } else {
             const keypressSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
             if (!keypressSelector) {
@@ -372,6 +337,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               break;
             }
             
+            // Playwright auto-waits for element to be ready before pressing key
             await target.press(keyValue);
           }
         }
@@ -388,25 +354,22 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               failures.push(`Could not resolve relative target ${act.relativeTarget} for hover.`);
               continue;
             }
+            // Playwright auto-waits for element to be ready before hovering
             await relativeElement.hover();
-            await page.waitForTimeout(100);
           } else {
             const hoverSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
             if (!hoverSelector) {
               failures.push(`Selector for hover target ${act.target} not found.`);
               continue;
             }
+            // Playwright auto-waits for element to be ready before hovering
             await page.locator(hoverSelector).first().hover();
-            await page.waitForTimeout(100);
           }
         }
-
-        await page.waitForTimeout(componentName === 'menu' ? 200 : 100);
       }
 
-      await page.waitForTimeout(componentName === 'menu' ? 300 : 100);
-
       // Evaluate assertions after action chain completes
+      // No arbitrary timeout - assertions have their own timeouts
       for (const assertion of assertions) {
         let target;
 
