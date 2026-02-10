@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [5.0.3](https://github.com/aria-ease/aria-ease/compare/v5.0.2...v5.0.3) (2026-02-10)
+
+
+### Bug Fixes
+
+* fixed Playwright test runner flakiness by migrating Playwright from timeouts(imperative) to web-first assertions(declarative) ([d5d992a](https://github.com/aria-ease/aria-ease/commit/d5d992ac250f51193b570720a25c1de65f6c6c4b))
+
 ### [5.0.2](https://github.com/aria-ease/aria-ease/compare/v5.0.1...v5.0.2) (2026-02-09)
 
 

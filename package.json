@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
   "main": "dist/index.cjs",
   "type": "module",
