@@ -1,1 +1,1 @@
-export { testUiComponent, runTest } from "./src/test";
+export { testUiComponent, runTest, cleanupTests } from "./src/test";

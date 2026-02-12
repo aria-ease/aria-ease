@@ -58,6 +58,7 @@ interface Selector {
     input?: string;
     listbox?: string;
     button?: string;
+    popup?: string;
 }
 
 interface Prerequisite {

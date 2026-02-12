@@ -16,12 +16,10 @@ export async function runContractTests(componentName: string, component: HTMLEle
     }
 
     const resolvedPath = new URL(contractPath, import.meta.url).pathname;
-
     const contractData = await fs.readFile(resolvedPath, "utf-8");
     const componentContract: ComponentContract = JSON.parse(contractData);
-    
-    // Start reporter
     const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
+
     reporter.start(componentName, totalTests);
 
     const failures: string[] = [];
@@ -36,8 +34,8 @@ export async function runContractTests(componentName: string, component: HTMLEle
                 reporter.reportStaticTest(`${test.target} has required ARIA attributes`, false, `Selector for target ${test.target} not found.`);
                 continue;
             }
-            const target = component.querySelector(selector) as HTMLElement;
 
+            const target = component.querySelector(selector) as HTMLElement;
             if (!target) {
                 failures.push(`Target ${test.target} not found.`);
                 reporter.reportStaticTest(`${test.target} has required ARIA attributes`, false, `Target ${test.target} not found.`);

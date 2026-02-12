@@ -1,7 +1,8 @@
 import {
   ContractReporter,
+  closeSharedBrowser,
   contract_default
-} from "./chunk-KJ33RDSC.js";
+} from "./chunk-PDZQOXUN.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
 function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }) {
@@ -1238,56 +1239,58 @@ async function testUiComponent(componentName, component, url) {
   if (!componentName || typeof componentName !== "string") {
     throw new Error("\u274C testUiComponent requires a valid componentName (string)");
   }
-  if (!component || !(component instanceof HTMLElement)) {
-    throw new Error("\u274C testUiComponent requires a valid component (HTMLElement)");
+  if (!url && (!component || !(component instanceof HTMLElement))) {
+    throw new Error("\u274C testUiComponent requires either a valid component (HTMLElement) or a URL");
   }
   if (url && typeof url !== "string") {
     throw new Error("\u274C testUiComponent url parameter must be a string");
   }
   let results;
-  try {
-    results = await axe(component);
-  } catch (error) {
-    throw new Error(
-      `\u274C Axe accessibility scan failed
+  if (component) {
+    try {
+      results = await axe(component);
+    } catch (error) {
+      throw new Error(
+        `\u274C Axe accessibility scan failed
 Error: ${error instanceof Error ? error.message : String(error)}`
-    );
+      );
+    }
+  } else {
+    results = { violations: [] };
   }
-  async function checkDevServer(testUrl) {
-    const urlsToTry = testUrl ? [testUrl] : [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:8080",
-      "http://localhost:4173"
-    ];
-    for (const serverUrl of urlsToTry) {
-      try {
-        const response = await fetch(serverUrl, {
-          method: "HEAD",
-          signal: AbortSignal.timeout(1e3)
-        });
-        if (response.ok || response.status === 304) {
-          return serverUrl;
-        }
-      } catch {
-        return null;
+  async function checkDevServer(url2) {
+    try {
+      const response = await fetch(url2, {
+        method: "HEAD",
+        signal: AbortSignal.timeout(1e3)
+      });
+      if (response.ok || response.status === 304) {
+        return url2;
       }
+    } catch {
+      return null;
     }
     return null;
   }
   let contract;
   try {
-    const devServerUrl = await checkDevServer(url);
-    if (devServerUrl) {
-      console.log(`\u{1F3AD} Running Playwright E2E tests on ${devServerUrl}`);
-      const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-7ZOM7ZMG.js");
-      contract = await runContractTestsPlaywright(componentName, devServerUrl);
-    } else {
-      console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);
-      console.log(`\u26A0\uFE0F  No dev server detected. Some tests may be skipped.
-For full coverage start your dev server and provide a URL.
-`);
+    if (url) {
+      const devServerUrl = await checkDevServer(url);
+      if (devServerUrl) {
+        console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-ZO6GM4TU.js");
+        contract = await runContractTestsPlaywright(componentName, devServerUrl);
+      } else {
+        throw new Error(
+          `\u274C Dev server not running at ${url}
+Please start your dev server and try again.`
+        );
+      }
+    } else if (component) {
+      console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
       contract = await runContractTests(componentName, component);
+    } else {
+      throw new Error("\u274C Either component or URL must be provided");
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -1353,7 +1356,11 @@ if (typeof window === "undefined") {
     );
   };
 }
+async function cleanupTests() {
+  await closeSharedBrowser();
+}
 export {
+  cleanupTests,
   makeAccordionAccessible,
   makeBlockAccessible,
   makeCheckboxAccessible,

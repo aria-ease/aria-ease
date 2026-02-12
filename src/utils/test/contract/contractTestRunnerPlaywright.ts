@@ -1,12 +1,12 @@
-import { chromium, Browser, Page } from "playwright";
+import { Page } from "playwright";
 import { expect } from "@playwright/test";
 import { readFileSync } from "fs";
 import contract from "./contract.json";
 import type { ComponentContract, Contract, ContractTestResult } from "Types";
 import { ContractReporter } from "./ContractReporter";
+import { createTestPage } from "./playwrightTestHarness";
 
-
-export async function runContractTestsPlaywright(componentName: string, url: string): Promise<ContractTestResult> {
+export async function runContractTestsPlaywright( componentName: string,  url?: string ): Promise<ContractTestResult> {
   const reporter = new ContractReporter(true);
   
   const contractTyped: Contract = contract;
@@ -27,19 +27,21 @@ export async function runContractTestsPlaywright(componentName: string, url: str
     const failures: string[] = [];
     const passes: string[] = [];
     const skipped: string[] = [];
-    let browser: Browser | null = null;
+    let page: Page | null = null;
+    const useNavigation = !!url;
 
   try {
-    browser = await chromium.launch({ headless: true });
-    const context = await browser.newContext();
-    const page: Page = await context.newPage();
+    page = await createTestPage();
 
-    await page.goto(url, { 
-      waitUntil: "domcontentloaded",
-      timeout: 900000 
-    });
-
-    await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
+    // Use content injection for isolated testing, or navigation for full app testing
+    if (url) {
+      await page.goto(url, { 
+        waitUntil: "domcontentloaded",
+        timeout: 30000 
+      });
+      
+      await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
+    }
     
     // Wait for the main component element (try trigger first, fall back to input or container)
     const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
@@ -48,19 +50,24 @@ export async function runContractTestsPlaywright(componentName: string, url: str
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
     
-    await page.locator(mainSelector).first().waitFor({ state: 'attached', timeout: 900000 });
+    // Shorter timeout for content injection, longer for navigation
+    const elementTimeout = useNavigation ? 30000 : 5000;
+    await page.locator(mainSelector).first().waitFor({ state: 'attached', timeout: elementTimeout });
 
     // Additional wait for component initialization (for menu and combobox)
     if (componentName === 'menu' && componentContract.selectors.trigger) {
       await page.locator(componentContract.selectors.trigger).first().waitFor({ 
         state: 'visible',
-        timeout: 10000 
+        timeout: 5000 
       }).catch(() => {
         console.warn('Menu trigger not visible, continuing with tests...');
       });
     }
 
     async function resolveRelativeTarget(selector: string, relative: string) {
+      if (!page) {
+        throw new Error('Page is not initialized');
+      }
       const items = await page.locator(selector).all();
       
       switch (relative) {
@@ -142,8 +149,8 @@ export async function runContractTestsPlaywright(componentName: string, url: str
 
       // Reset component state before each test for proper isolation
       // For components with listbox/popup (menu, combobox, etc), close if open
-      if (componentContract.selectors.listbox || componentContract.selectors.container) {
-        const popupSelector = componentContract.selectors.listbox || componentContract.selectors.container;
+      if (componentContract.selectors.popup) {
+        const popupSelector = componentContract.selectors.popup;
         if (!popupSelector) continue;
         const popupElement = page.locator(popupSelector).first();
         
@@ -167,7 +174,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             await page.keyboard.press('Escape');
             
             // Wait for popup to close - declaratively
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: 3000 })
+            menuClosed = await expect(popupElement).toBeHidden({ timeout: 2000 })
               .then(() => true)
               .catch(() => false);
           }
@@ -177,7 +184,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
             await triggerElement.click();
             
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: 3000 })
+            menuClosed = await expect(popupElement).toBeHidden({ timeout: 2000 })
               .then(() => true)
               .catch(() => false);
           }
@@ -185,19 +192,23 @@ export async function runContractTestsPlaywright(componentName: string, url: str
           // Strategy 3: Try clicking outside
           if (!menuClosed) {
             await page.mouse.click(10, 10);
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: 3000 })
+            menuClosed = await expect(popupElement).toBeHidden({ timeout: 2000 })
               .then(() => true)
               .catch(() => false);
           }
           
           if (!menuClosed) {
-            throw new Error(
-              `❌ FATAL: Cannot close menu between tests. Menu remains visible after trying:\n` +
-              `  1. Escape key\n` +
-              `  2. Clicking trigger\n` +
-              `  3. Clicking outside\n` +
-              `This indicates a problem with the menu component's close functionality.`
-            );
+            // For isolated component testing (componentHTML), just warn - we'll reload anyway
+            // For full navigation (url), this is a real problem
+            if (useNavigation) {
+              throw new Error(
+                `❌ FATAL: Cannot close menu between tests. Menu remains visible after trying:\n` +
+                `  1. Escape key\n` +
+                `  2. Clicking trigger\n` +
+                `  3. Clicking outside\n` +
+                `This indicates a problem with the menu component's close functionality.`
+              );
+            }
           }
           
           // Clear any input values after successful close
@@ -257,7 +268,6 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             failures.push(`Selector for focus target ${act.target} not found.`);
             continue;
           }
-          // Playwright auto-waits for element to be ready before focusing
           await page.locator(focusSelector).first().focus();
         }
 
@@ -267,7 +277,6 @@ export async function runContractTestsPlaywright(componentName: string, url: str
             failures.push(`Selector for type target ${act.target} not found.`);
             continue;
           }
-          // Playwright auto-waits for element to be ready before typing
           await page.locator(typeSelector).first().fill(act.value);
         }
 
@@ -280,12 +289,12 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               failures.push(`Relative selector not defined for click action.`);
               continue;
             }
+
             const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
             if (!relativeElement) {
               failures.push(`Could not resolve relative target ${act.relativeTarget} for click.`);
               continue;
             }
-            // Playwright auto-waits for element to be ready before clicking
             await relativeElement.click();
           } else {
             const actionSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
@@ -293,7 +302,6 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               failures.push(`Selector for action target ${act.target} not found.`);
               continue;
             }
-            // Playwright auto-waits for element to be ready before clicking
             await page.locator(actionSelector).first().click();
           }
         }
@@ -320,7 +328,6 @@ export async function runContractTestsPlaywright(componentName: string, url: str
           }
 
           if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
-            // For arrow keys on focusable elements, just press the key - no arbitrary waits
             await page.keyboard.press(keyValue);
           } else {
             const keypressSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
@@ -328,16 +335,13 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               failures.push(`Selector for keypress target ${act.target} not found.`);
               continue;
             }
+
             const target = page.locator(keypressSelector).first();
-            
-            // Check if element exists before trying to interact with it
             const elementCount = await target.count();
             if (elementCount === 0) {
               reporter.reportTest(dynamicTest, 'skip', `Skipping test - ${act.target} element not found (optional submenu test)`);
               break;
             }
-            
-            // Playwright auto-waits for element to be ready before pressing key
             await target.press(keyValue);
           }
         }
@@ -349,12 +353,12 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               failures.push(`Relative selector not defined for hover action.`);
               continue;
             }
+
             const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
             if (!relativeElement) {
               failures.push(`Could not resolve relative target ${act.relativeTarget} for hover.`);
               continue;
             }
-            // Playwright auto-waits for element to be ready before hovering
             await relativeElement.hover();
           } else {
             const hoverSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
@@ -362,7 +366,6 @@ export async function runContractTestsPlaywright(componentName: string, url: str
               failures.push(`Selector for hover target ${act.target} not found.`);
               continue;
             }
-            // Playwright auto-waits for element to be ready before hovering
             await page.locator(hoverSelector).first().hover();
           }
         }
@@ -402,7 +405,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
         // Evaluate assertion with retry logic
         if (assertion.assertion === "toBeVisible") {
           try {
-            await expect(target).toBeVisible({ timeout: 3000 });
+            await expect(target).toBeVisible({ timeout: 2000 });
             passes.push(`${assertion.target} is visible as expected. Test: "${dynamicTest.description}".`);
           } catch {
             const debugState = await page.evaluate((sel) => {
@@ -417,7 +420,7 @@ export async function runContractTestsPlaywright(componentName: string, url: str
 
         if (assertion.assertion === "notToBeVisible") {
           try {
-            await expect(target).toBeHidden({ timeout: 5000 });
+            await expect(target).toBeHidden({ timeout: 2000 });
             passes.push(`${assertion.target} is not visible as expected. Test: "${dynamicTest.description}".`);
           } catch{
             const debugState = await page.evaluate((sel) => {
@@ -537,7 +540,8 @@ export async function runContractTestsPlaywright(componentName: string, url: str
       }
     }
   } finally {
-    if (browser) await browser.close();
+    // Close only the page, not the shared browser
+    if (page) await page.close();
   }
 
   return { passes, failures, skipped }

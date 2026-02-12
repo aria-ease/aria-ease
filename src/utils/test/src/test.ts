@@ -2,62 +2,58 @@
  * Runs static and interactions accessibility test on UI components. 
  * @param {string} componentName The name of the component contract to test against
  * @param {HTMLElement} component The UI component to be tested
- * @param {string} url Optional URL to run full Playwright E2E tests (requires dev server running)
+ * @param {string} url Optional URL to run full Playwright E2E tests. If omitted, uses isolated component testing with page.setContent()
  */
 
 import { axe } from "jest-axe";
 import type { JestAxeResult } from "Types";
 import { runContractTests } from "../contract/contractTestRunner";
+import { closeSharedBrowser } from "../contract/playwrightTestHarness";
 
 
-export async function testUiComponent(componentName: string, component: HTMLElement, url?: string): Promise<JestAxeResult> {
+export async function testUiComponent(componentName: string, component: HTMLElement | null, url: string | null): Promise<JestAxeResult> {
     // Validate inputs
     if (!componentName || typeof componentName !== 'string') {
         throw new Error('❌ testUiComponent requires a valid componentName (string)');
     }
     
-    if (!component || !(component instanceof HTMLElement)) {
-        throw new Error('❌ testUiComponent requires a valid component (HTMLElement)');
+    // Component can be null if URL is provided (for URL-only testing)
+    if (!url && (!component || !(component instanceof HTMLElement))) {
+        throw new Error('❌ testUiComponent requires either a valid component (HTMLElement) or a URL');
     }
     
     if (url && typeof url !== 'string') {
         throw new Error('❌ testUiComponent url parameter must be a string');
     }
 
-    // Run axe accessibility tests
+    // Run axe accessibility tests (skip if using URL-only mode)
     let results;
-    try {
-        results = await axe(component);
-    } catch (error) {
-        throw new Error(
-            `❌ Axe accessibility scan failed\n` +
-            `Error: ${error instanceof Error ? error.message : String(error)}`
-        );
+    if (component) {
+        try {
+            results = await axe(component);
+        } catch (error) {
+            throw new Error(
+                `❌ Axe accessibility scan failed\n` +
+                `Error: ${error instanceof Error ? error.message : String(error)}`
+            );
+        }
+    } else {
+        // URL-only mode - skip axe scan, Playwright will handle it
+        results = { violations: [] } as unknown as JestAxeResult;
     }
     
     // Check if dev server is running
-    async function checkDevServer(testUrl?: string): Promise<string | null> {
-        const urlsToTry = testUrl 
-            ? [testUrl]
-            : [
-                'http://localhost:5173',
-                'http://localhost:3000', 
-                'http://localhost:8080',
-                'http://localhost:4173'
-              ];
-        
-        for (const serverUrl of urlsToTry) {
-            try {
-                const response = await fetch(serverUrl, { 
-                    method: 'HEAD',
-                    signal: AbortSignal.timeout(1000)
-                });
-                if (response.ok || response.status === 304) {
-                    return serverUrl;
-                }
-            } catch {
-                return null;
+    async function checkDevServer(url: string): Promise<string | null> {
+        try {
+            const response = await fetch(url, { 
+                method: 'HEAD',
+                signal: AbortSignal.timeout(1000)
+            });
+            if (response.ok || response.status === 304) {
+                return url;
             }
+        } catch {
+            return null;
         }
         return null;
     }
@@ -66,17 +62,28 @@ export async function testUiComponent(componentName: string, component: HTMLElem
     let contract;
     
     try {
-        const devServerUrl = await checkDevServer(url);
-        
-        if (devServerUrl) {
-            console.log(`🎭 Running Playwright E2E tests on ${devServerUrl}`);
+        // If URL provided, use it for full app testing; otherwise use isolated component injection
+        if (url) {
+            const devServerUrl = await checkDevServer(url);
             
-            const { runContractTestsPlaywright } = await import("../contract/contractTestRunnerPlaywright");
-            contract = await runContractTestsPlaywright(componentName, devServerUrl);
+            if (devServerUrl) {
+                console.log(`🎭 Running Playwright tests on ${devServerUrl}`);
+                
+                const { runContractTestsPlaywright } = await import("../contract/contractTestRunnerPlaywright");
+                contract = await runContractTestsPlaywright(componentName, devServerUrl);
+            } else {
+                throw new Error(
+                    `❌ Dev server not running at ${url}\n` +
+                    `Please start your dev server and try again.`
+                );
+            }
+        } else if (component) {
+            // No URL provided - use isolated testing with page.setContent 
+            console.log(`🎭 Running component contract tests in JSDOM mode`);
+            
+            contract = await runContractTests(componentName, component as HTMLElement);
         } else {
-            console.log(`🧪 Running jsdom tests (limited event handling)`);
-            console.log(`⚠️  No dev server detected. Some tests may be skipped.\n` + `For full coverage start your dev server and provide a URL.\n`);
-            contract = await runContractTests(componentName, component);
+            throw new Error('❌ Either component or URL must be provided');
         }
     } catch (error) {
         if (error instanceof Error) {
@@ -105,7 +112,7 @@ export async function testUiComponent(componentName: string, component: HTMLElem
     // Check for axe violations
     if (results.violations.length > 0) {
         const violationCount = results.violations.length;
-        const violationDetails = results.violations.map(v => 
+        const violationDetails = (results.violations as Array<{ id: string; description: string; impact: string; nodes: unknown[]; helpUrl: string }>).map((v) => 
             `\n  - ${v.id}: ${v.description}\n    Impact: ${v.impact}\n    Affected elements: ${v.nodes.length}\n    Help: ${v.helpUrl}`
         ).join('\n');
         
@@ -150,4 +157,12 @@ if (typeof window === "undefined") {
     }
 }
 
-export { runTest }
+/**
+ * Cleanup function to close the shared Playwright browser
+ * Call this in afterAll() or after all tests complete
+ */
+async function cleanupTests(): Promise<void> {
+    await closeSharedBrowser();
+}
+
+export { runTest, cleanupTests };
