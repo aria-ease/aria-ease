@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.0.0](https://github.com/aria-ease/aria-ease/compare/v5.0.3...v6.0.0) (2026-02-12)
+
+
+### ⚠ BREAKING CHANGES
+
+* **test:** Playwright tests now require /test-harness route in app. See CONTRACT-TEST-ARCHITECTURE.md for migration guide.
+
+### Features
+
+* **test:** add test harness pattern for 15x faster Playwright tests ([472e72c](https://github.com/aria-ease/aria-ease/commit/472e72cc1f6120eb68b41594f5ea0b4fb8779724))
+
 ### [5.0.3](https://github.com/aria-ease/aria-ease/compare/v5.0.2...v5.0.3) (2026-02-10)
 
 ### Bug Fixes
