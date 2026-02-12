@@ -126,11 +126,11 @@
   "dependencies": {
     "chalk": "^5.6.2",
     "commander": "^14.0.1",
-    "fs-extra": "^11.3.2",
-    "playwright": "^1.57.0"
+    "fs-extra": "^11.3.2"
   },
   "peerDependencies": {
-    "@axe-core/playwright": "^4.10.2"
+    "@axe-core/playwright": "^4.10.2",
+    "playwright": "^1.57.0"
   },
   "peerDependenciesMeta": {
     "@axe-core/playwright": {

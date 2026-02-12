@@ -6,3 +6,4 @@ export * from "./src/radio";
 export * from "./src/toggle";
 export * from "./src/combobox";
 export { testUiComponent } from "./src/utils/test";
+export { cleanupTests } from "./src/utils/test/src/test";

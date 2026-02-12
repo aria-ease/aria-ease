@@ -4,17 +4,15 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [5.0.3](https://github.com/aria-ease/aria-ease/compare/v5.0.2...v5.0.3) (2026-02-10)
 
-
 ### Bug Fixes
 
-* fixed Playwright test runner flakiness by migrating Playwright from timeouts(imperative) to web-first assertions(declarative) ([d5d992a](https://github.com/aria-ease/aria-ease/commit/d5d992ac250f51193b570720a25c1de65f6c6c4b))
+- fixed Playwright test runner flakiness by migrating Playwright from timeouts to web-first assertions ([d5d992a](https://github.com/aria-ease/aria-ease/commit/d5d992ac250f51193b570720a25c1de65f6c6c4b))
 
 ### [5.0.2](https://github.com/aria-ease/aria-ease/compare/v5.0.1...v5.0.2) (2026-02-09)
 
-
 ### Bug Fixes
 
-* fixed constract test throwing false positives in jsdom mode ([b79f7e6](https://github.com/aria-ease/aria-ease/commit/b79f7e6a76cbe36ada1c9b6bf397da876756f808))
+- fixed constract test throwing false positives in jsdom mode ([b79f7e6](https://github.com/aria-ease/aria-ease/commit/b79f7e6a76cbe36ada1c9b6bf397da876756f808))
 
 ### [5.0.1](https://github.com/aria-ease/aria-ease/compare/v5.0.0...v5.0.1) (2026-02-09)
 

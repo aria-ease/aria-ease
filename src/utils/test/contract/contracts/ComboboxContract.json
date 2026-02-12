@@ -16,7 +16,8 @@
         "listbox": "[role=listbox]",
         "options": "[role=option]",
         "focusable": "[role=combobox]",
-        "relative": "[role=option]"
+        "relative": "[role=option]",
+        "popup": "[role=listbox]"
     },
 
     "observables": {

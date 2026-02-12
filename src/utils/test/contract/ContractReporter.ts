@@ -207,7 +207,7 @@ export class ContractReporter {
     } else if (totalFailures === 0) {
       this.log(`✅ ${totalPasses}/${totalRun} required tests passed`);
       if (this.skipped > 0) {
-        this.log(`○  ${this.skipped} tests skipped (jsdom limitation)`);
+        this.log(`○  ${this.skipped} tests skipped`);
       }
       if (this.optionalSuggestions > 0) {
         this.log(`💡 ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? 's' : ''} suggested`);

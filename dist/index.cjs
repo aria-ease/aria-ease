@@ -228,7 +228,7 @@ ${"\u2550".repeat(60)}`);
         } else if (totalFailures === 0) {
           this.log(`\u2705 ${totalPasses}/${totalRun} required tests passed`);
           if (this.skipped > 0) {
-            this.log(`\u25CB  ${this.skipped} tests skipped (jsdom limitation)`);
+            this.log(`\u25CB  ${this.skipped} tests skipped`);
           }
           if (this.optionalSuggestions > 0) {
             this.log(`\u{1F4A1} ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? "s" : ""} suggested`);
@@ -279,6 +279,56 @@ ${"\u2550".repeat(60)}`);
   }
 });
 
+// src/utils/test/contract/playwrightTestHarness.ts
+async function getOrCreateBrowser() {
+  if (!sharedBrowser) {
+    sharedBrowser = await import_playwright.chromium.launch({
+      headless: true,
+      // Launch with clean browser profile - no extensions, no user data
+      args: [
+        "--disable-extensions",
+        "--disable-blink-features=AutomationControlled"
+      ]
+    });
+  }
+  return sharedBrowser;
+}
+async function getOrCreateContext() {
+  if (!sharedContext) {
+    const browser = await getOrCreateBrowser();
+    sharedContext = await browser.newContext({
+      // Isolated context - no permissions, no geolocation, etc.
+      permissions: [],
+      // Ignore HTTPS errors for local dev servers
+      ignoreHTTPSErrors: true
+    });
+  }
+  return sharedContext;
+}
+async function createTestPage() {
+  const context = await getOrCreateContext();
+  return await context.newPage();
+}
+async function closeSharedBrowser() {
+  if (sharedContext) {
+    await sharedContext.close();
+    sharedContext = null;
+  }
+  if (sharedBrowser) {
+    await sharedBrowser.close();
+    sharedBrowser = null;
+  }
+}
+var import_playwright, sharedBrowser, sharedContext;
+var init_playwrightTestHarness = __esm({
+  "src/utils/test/contract/playwrightTestHarness.ts"() {
+    "use strict";
+    import_playwright = require("playwright");
+    sharedBrowser = null;
+    sharedContext = null;
+  }
+});
+
 // node_modules/@playwright/test/index.mjs
 var test_exports = {};
 __export(test_exports, {
@@ -314,30 +364,35 @@ async function runContractTestsPlaywright(componentName, url) {
   const failures = [];
   const passes = [];
   const skipped = [];
-  let browser = null;
+  let page = null;
+  const useNavigation = !!url;
   try {
-    browser = await import_playwright.chromium.launch({ headless: true });
-    const context = await browser.newContext();
-    const page = await context.newPage();
-    await page.goto(url, {
-      waitUntil: "domcontentloaded",
-      timeout: 9e5
-    });
-    await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
+    page = await createTestPage();
+    if (url) {
+      await page.goto(url, {
+        waitUntil: "domcontentloaded",
+        timeout: 3e4
+      });
+      await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
+    }
     const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
     if (!mainSelector) {
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
-    await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: 9e5 });
+    const elementTimeout = useNavigation ? 3e4 : 5e3;
+    await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: elementTimeout });
     if (componentName === "menu" && componentContract.selectors.trigger) {
       await page.locator(componentContract.selectors.trigger).first().waitFor({
         state: "visible",
-        timeout: 1e4
+        timeout: 5e3
       }).catch(() => {
         console.warn("Menu trigger not visible, continuing with tests...");
       });
     }
     async function resolveRelativeTarget(selector, relative) {
+      if (!page) {
+        throw new Error("Page is not initialized");
+      }
       const items = await page.locator(selector).all();
       switch (relative) {
         case "first":
@@ -407,8 +462,8 @@ async function runContractTestsPlaywright(componentName, url) {
     for (const dynamicTest of componentContract.dynamic || []) {
       const { action, assertions } = dynamicTest;
       const failuresBeforeTest = failures.length;
-      if (componentContract.selectors.listbox || componentContract.selectors.container) {
-        const popupSelector = componentContract.selectors.listbox || componentContract.selectors.container;
+      if (componentContract.selectors.popup) {
+        const popupSelector = componentContract.selectors.popup;
         if (!popupSelector) continue;
         const popupElement = page.locator(popupSelector).first();
         const isPopupVisible = await popupElement.isVisible().catch(() => false);
@@ -424,25 +479,27 @@ async function runContractTestsPlaywright(componentName, url) {
             const closeElement = page.locator(closeSelector).first();
             await closeElement.focus();
             await page.keyboard.press("Escape");
-            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 3e3 }).then(() => true).catch(() => false);
+            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 2e3 }).then(() => true).catch(() => false);
           }
           if (!menuClosed && componentContract.selectors.trigger) {
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
             await triggerElement.click();
-            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 3e3 }).then(() => true).catch(() => false);
+            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 2e3 }).then(() => true).catch(() => false);
           }
           if (!menuClosed) {
             await page.mouse.click(10, 10);
-            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 3e3 }).then(() => true).catch(() => false);
+            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 2e3 }).then(() => true).catch(() => false);
           }
           if (!menuClosed) {
-            throw new Error(
-              `\u274C FATAL: Cannot close menu between tests. Menu remains visible after trying:
+            if (useNavigation) {
+              throw new Error(
+                `\u274C FATAL: Cannot close menu between tests. Menu remains visible after trying:
   1. Escape key
   2. Clicking trigger
   3. Clicking outside
 This indicates a problem with the menu component's close functionality.`
-            );
+              );
+            }
           }
           if (componentContract.selectors.input) {
             await page.locator(componentContract.selectors.input).first().clear();
@@ -613,7 +670,7 @@ This indicates a problem with the menu component's close functionality.`
         }
         if (assertion.assertion === "toBeVisible") {
           try {
-            await (0, test_exports.expect)(target).toBeVisible({ timeout: 3e3 });
+            await (0, test_exports.expect)(target).toBeVisible({ timeout: 2e3 });
             passes.push(`${assertion.target} is visible as expected. Test: "${dynamicTest.description}".`);
           } catch {
             const debugState = await page.evaluate((sel) => {
@@ -627,7 +684,7 @@ This indicates a problem with the menu component's close functionality.`
         }
         if (assertion.assertion === "notToBeVisible") {
           try {
-            await (0, test_exports.expect)(target).toBeHidden({ timeout: 5e3 });
+            await (0, test_exports.expect)(target).toBeHidden({ timeout: 2e3 });
             passes.push(`${assertion.target} is not visible as expected. Test: "${dynamicTest.description}".`);
           } catch {
             const debugState = await page.evaluate((sel) => {
@@ -729,19 +786,19 @@ This indicates a problem with the menu component's close functionality.`
       }
     }
   } finally {
-    if (browser) await browser.close();
+    if (page) await page.close();
   }
   return { passes, failures, skipped };
 }
-var import_playwright, import_fs, import_meta2;
+var import_fs, import_meta2;
 var init_contractTestRunnerPlaywright = __esm({
   "src/utils/test/contract/contractTestRunnerPlaywright.ts"() {
     "use strict";
-    import_playwright = require("playwright");
     init_test();
     import_fs = require("fs");
     init_contract();
     init_ContractReporter();
+    init_playwrightTestHarness();
     import_meta2 = {};
   }
 });
@@ -749,6 +806,7 @@ var init_contractTestRunnerPlaywright = __esm({
 // index.ts
 var index_exports = {};
 __export(index_exports, {
+  cleanupTests: () => cleanupTests,
   makeAccordionAccessible: () => makeAccordionAccessible,
   makeBlockAccessible: () => makeBlockAccessible,
   makeCheckboxAccessible: () => makeCheckboxAccessible,
@@ -1994,60 +2052,63 @@ async function runContractTests(componentName, component) {
 }
 
 // src/utils/test/src/test.ts
+init_playwrightTestHarness();
 async function testUiComponent(componentName, component, url) {
   if (!componentName || typeof componentName !== "string") {
     throw new Error("\u274C testUiComponent requires a valid componentName (string)");
   }
-  if (!component || !(component instanceof HTMLElement)) {
-    throw new Error("\u274C testUiComponent requires a valid component (HTMLElement)");
+  if (!url && (!component || !(component instanceof HTMLElement))) {
+    throw new Error("\u274C testUiComponent requires either a valid component (HTMLElement) or a URL");
   }
   if (url && typeof url !== "string") {
     throw new Error("\u274C testUiComponent url parameter must be a string");
   }
   let results;
-  try {
-    results = await (0, import_jest_axe.axe)(component);
-  } catch (error) {
-    throw new Error(
-      `\u274C Axe accessibility scan failed
+  if (component) {
+    try {
+      results = await (0, import_jest_axe.axe)(component);
+    } catch (error) {
+      throw new Error(
+        `\u274C Axe accessibility scan failed
 Error: ${error instanceof Error ? error.message : String(error)}`
-    );
+      );
+    }
+  } else {
+    results = { violations: [] };
   }
-  async function checkDevServer(testUrl) {
-    const urlsToTry = testUrl ? [testUrl] : [
-      "http://localhost:5173",
-      "http://localhost:3000",
-      "http://localhost:8080",
-      "http://localhost:4173"
-    ];
-    for (const serverUrl of urlsToTry) {
-      try {
-        const response = await fetch(serverUrl, {
-          method: "HEAD",
-          signal: AbortSignal.timeout(1e3)
-        });
-        if (response.ok || response.status === 304) {
-          return serverUrl;
-        }
-      } catch {
-        return null;
+  async function checkDevServer(url2) {
+    try {
+      const response = await fetch(url2, {
+        method: "HEAD",
+        signal: AbortSignal.timeout(1e3)
+      });
+      if (response.ok || response.status === 304) {
+        return url2;
       }
+    } catch {
+      return null;
     }
     return null;
   }
   let contract;
   try {
-    const devServerUrl = await checkDevServer(url);
-    if (devServerUrl) {
-      console.log(`\u{1F3AD} Running Playwright E2E tests on ${devServerUrl}`);
-      const { runContractTestsPlaywright: runContractTestsPlaywright2 } = await Promise.resolve().then(() => (init_contractTestRunnerPlaywright(), contractTestRunnerPlaywright_exports));
-      contract = await runContractTestsPlaywright2(componentName, devServerUrl);
-    } else {
-      console.log(`\u{1F9EA} Running jsdom tests (limited event handling)`);
-      console.log(`\u26A0\uFE0F  No dev server detected. Some tests may be skipped.
-For full coverage start your dev server and provide a URL.
-`);
+    if (url) {
+      const devServerUrl = await checkDevServer(url);
+      if (devServerUrl) {
+        console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
+        const { runContractTestsPlaywright: runContractTestsPlaywright2 } = await Promise.resolve().then(() => (init_contractTestRunnerPlaywright(), contractTestRunnerPlaywright_exports));
+        contract = await runContractTestsPlaywright2(componentName, devServerUrl);
+      } else {
+        throw new Error(
+          `\u274C Dev server not running at ${url}
+Please start your dev server and try again.`
+        );
+      }
+    } else if (component) {
+      console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
       contract = await runContractTests(componentName, component);
+    } else {
+      throw new Error("\u274C Either component or URL must be provided");
     }
   } catch (error) {
     if (error instanceof Error) {
@@ -2113,8 +2174,12 @@ if (typeof window === "undefined") {
     );
   };
 }
+async function cleanupTests() {
+  await closeSharedBrowser();
+}
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
+  cleanupTests,
   makeAccordionAccessible,
   makeBlockAccessible,
   makeCheckboxAccessible,

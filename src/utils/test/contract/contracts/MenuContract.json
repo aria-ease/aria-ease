@@ -17,7 +17,8 @@
         "submenuTrigger": "[role=menuitem][aria-haspopup=true], [role=menuitemradio][aria-haspopup=true], [role=menuitemcheckbox][aria-haspopup=true]",
         "submenu": "[role=menu][aria-labelledby]",
         "focusable": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
-        "relative": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]"
+        "relative": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
+        "popup": "[role=menu]"
     },
 
     "observables": {

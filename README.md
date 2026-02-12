@@ -428,20 +428,30 @@ blockInstance.current.cleanup();
 Aria-Ease includes a built-in testing framework for automated accessibility validation:
 
 ```javascript
-import { testUiComponent } from "aria-ease/test";
+import { describe, test, afterAll } from "vitest";
+import { testUiComponent, cleanupTests } from "aria-ease/test";
+import { render } from "@testing-library/react";
+import ShopifyUserMenu from "../src/components/menus/ShopifyUserMenu";
 
-// In your test file (Vitest, Jest, etc.)
-test("combobox is accessible", async () => {
-  const { container } = render(<Combobox />);
+afterAll(async () => {
+  await cleanupTests();
+});
 
-  // Runs axe-core + contract tests
-  const result = await testUiComponent(
-    "combobox",
-    container,
-    "http://localhost:3000", // Optional: full E2E with Playwright
-  );
+describe("Shopify User Menu Accessibility Test", () => {
+  test("renders Shopify user menu without accessibility violation(s)", async () => {
+    await testUiComponent(
+      "menu",
+      null,
+      "http://localhost:5173/test-harness?component=menu",
+    ); // For full component interaction test. Uses Playwright to test interaction and behaviors
+  }, 6000);
+});
 
-  expect(result.violations).toHaveLength(0);
+describe("Shopify User Menu Accessibility Test", () => {
+  test("renders Shopify user menu without accessibility violation(s)", async () => {
+    const { container } = render(<ShopifyUserMenu />);
+    await testUiComponent("menu", container, null); // For fast limited static tests. Doesn't test for interaction and behaviors
+  });
 });
 ```
 
