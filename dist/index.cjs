@@ -365,7 +365,6 @@ async function runContractTestsPlaywright(componentName, url) {
   const passes = [];
   const skipped = [];
   let page = null;
-  const useNavigation = !!url;
   try {
     page = await createTestPage();
     if (url) {
@@ -379,8 +378,7 @@ async function runContractTestsPlaywright(componentName, url) {
     if (!mainSelector) {
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
-    const elementTimeout = useNavigation ? 3e4 : 5e3;
-    await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: elementTimeout });
+    await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: 3e4 });
     if (componentName === "menu" && componentContract.selectors.trigger) {
       await page.locator(componentContract.selectors.trigger).first().waitFor({
         state: "visible",
@@ -491,15 +489,13 @@ async function runContractTestsPlaywright(componentName, url) {
             menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 2e3 }).then(() => true).catch(() => false);
           }
           if (!menuClosed) {
-            if (useNavigation) {
-              throw new Error(
-                `\u274C FATAL: Cannot close menu between tests. Menu remains visible after trying:
+            throw new Error(
+              `\u274C FATAL: Cannot close menu between tests. Menu remains visible after trying:
   1. Escape key
   2. Clicking trigger
   3. Clicking outside
 This indicates a problem with the menu component's close functionality.`
-              );
-            }
+            );
           }
           if (componentContract.selectors.input) {
             await page.locator(componentContract.selectors.input).first().clear();
@@ -507,6 +503,23 @@ This indicates a problem with the menu component's close functionality.`
           if (componentName === "menu" && componentContract.selectors.trigger) {
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
             await triggerElement.focus();
+          }
+        }
+      }
+      if (componentContract.selectors.panel && componentContract.selectors.trigger && !componentContract.selectors.popup) {
+        const triggerSelector = componentContract.selectors.trigger;
+        const panelSelector = componentContract.selectors.panel;
+        if (triggerSelector && panelSelector) {
+          const allTriggers = await page.locator(triggerSelector).all();
+          for (const trigger of allTriggers) {
+            const isExpanded = await trigger.getAttribute("aria-expanded") === "true";
+            const triggerPanel = await trigger.getAttribute("aria-controls");
+            if (isExpanded && triggerPanel) {
+              await trigger.click();
+              const panel = page.locator(`#${triggerPanel}`);
+              await (0, test_exports.expect)(panel).toBeHidden({ timeout: 1e3 }).catch(() => {
+              });
+            }
           }
         }
       }

@@ -1,3 +1,9 @@
+/**
+ * Contract Test Runner using Playwright
+ * This module defines the function to run contract tests for components using Playwright.
+ * It reads the contract definition, executes the specified actions, and evaluates assertions while reporting results.
+ */
+
 import { Page } from "playwright";
 import { expect } from "@playwright/test";
 import { readFileSync } from "fs";
@@ -28,12 +34,9 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
     const passes: string[] = [];
     const skipped: string[] = [];
     let page: Page | null = null;
-    const useNavigation = !!url;
 
   try {
     page = await createTestPage();
-
-    // Use content injection for isolated testing, or navigation for full app testing
     if (url) {
       await page.goto(url, { 
         waitUntil: "domcontentloaded",
@@ -43,18 +46,14 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     }
     
-    // Wait for the main component element (try trigger first, fall back to input or container)
     const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
     
     if (!mainSelector) {
       throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
     
-    // Shorter timeout for content injection, longer for navigation
-    const elementTimeout = useNavigation ? 30000 : 5000;
-    await page.locator(mainSelector).first().waitFor({ state: 'attached', timeout: elementTimeout });
+    await page.locator(mainSelector).first().waitFor({ state: 'attached', timeout: 30000 });
 
-    // Additional wait for component initialization (for menu and combobox)
     if (componentName === 'menu' && componentContract.selectors.trigger) {
       await page.locator(componentContract.selectors.trigger).first().waitFor({ 
         state: 'visible',
@@ -154,7 +153,6 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
         if (!popupSelector) continue;
         const popupElement = page.locator(popupSelector).first();
         
-        // Check if popup is visible - use Playwright's built-in waiting
         const isPopupVisible = await popupElement.isVisible().catch(() => false);
         
         if (isPopupVisible) {
@@ -198,17 +196,13 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
           }
           
           if (!menuClosed) {
-            // For isolated component testing (componentHTML), just warn - we'll reload anyway
-            // For full navigation (url), this is a real problem
-            if (useNavigation) {
-              throw new Error(
+            throw new Error(
                 `❌ FATAL: Cannot close menu between tests. Menu remains visible after trying:\n` +
                 `  1. Escape key\n` +
                 `  2. Clicking trigger\n` +
                 `  3. Clicking outside\n` +
                 `This indicates a problem with the menu component's close functionality.`
               );
-            }
           }
           
           // Clear any input values after successful close
@@ -220,6 +214,30 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
           if (componentName === 'menu' && componentContract.selectors.trigger) {
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
             await triggerElement.focus();
+          }
+        }
+      }
+      
+      // For accordion components, collapse all expanded panels
+      if (componentContract.selectors.panel && componentContract.selectors.trigger && !componentContract.selectors.popup) {
+        const triggerSelector = componentContract.selectors.trigger;
+        const panelSelector = componentContract.selectors.panel;
+        
+        if (triggerSelector && panelSelector) {
+          const allTriggers = await page.locator(triggerSelector).all();
+          
+          for (const trigger of allTriggers) {
+            const isExpanded = await trigger.getAttribute('aria-expanded') === 'true';
+            const triggerPanel = await trigger.getAttribute('aria-controls');
+            
+            if (isExpanded && triggerPanel) {
+              await trigger.click();
+              
+              const panel = page.locator(`#${triggerPanel}`);
+              await expect(panel).toBeHidden({ timeout: 1000 }).catch(() => {
+                // Silent catch - test will fail if panel state is wrong
+              });
+            }
           }
         }
       }
