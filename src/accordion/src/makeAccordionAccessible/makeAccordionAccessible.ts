@@ -5,18 +5,13 @@
  * @param {string} triggersClass - The shared class of all accordion trigger buttons.
  * @param {string} panelsClass - The shared class of all accordion panels.
  * @param {boolean} allowMultipleOpen - Whether multiple panels can be open simultaneously (default: false).
+ * @param {AccordionCallback} callback - Configuration options for callbacks.
  */
 
-import { AccessibilityInstance } from "Types";
+import { AccessibilityInstance, AccordionConfig } from "Types";
 
-interface AccordionConfig {
-  accordionId: string;
-  triggersClass: string;
-  panelsClass: string;
-  allowMultipleOpen?: boolean;
-}
 
-export function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }: AccordionConfig): AccessibilityInstance {
+export function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false, callback }: AccordionConfig): AccessibilityInstance {
   const accordionContainer = document.querySelector(`#${accordionId}`) as HTMLElement;
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -60,7 +55,7 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
       trigger.setAttribute("aria-controls", panel.id);
       trigger.setAttribute("aria-expanded", "false");
 
-      // Set ARIA attributes on panel
+      // Set attributes on panel
       panel.setAttribute("role", "region");
       panel.setAttribute("aria-labelledby", trigger.id);
       panel.style.display = "none";
@@ -78,6 +73,10 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
 
     trigger.setAttribute("aria-expanded", "true");
     panel.style.display = "block";
+    
+    if (callback?.onExpand) {
+      callback.onExpand(index);
+    }
   }
 
   function collapseItem(index: number) {
@@ -91,6 +90,10 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
 
     trigger.setAttribute("aria-expanded", "false");
     panel.style.display = "none";
+    
+    if (callback?.onCollapse) {
+      callback.onCollapse(index);
+    }
   }
 
   function toggleItem(index: number) {

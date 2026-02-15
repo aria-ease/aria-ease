@@ -28,16 +28,29 @@ interface AccessibilityInstance {
   getPressedIndices?: () => number[];
 }
 
+interface AccordionConfig {
+  accordionId: string;
+  triggersClass: string;
+  panelsClass: string;
+  allowMultipleOpen?: boolean;
+  callback?: AccordionCallback;
+}
+
+interface AccordionCallback {
+    onExpand?: (index: number) => void;
+    onCollapse?: (index: number) => void;
+}
+
 interface ComboboxConfig {
     comboboxInputId: string; 
     comboboxButtonId?: string; 
     listBoxId: string; 
     listBoxItemsClass: string;
-    config?: config;
+    callback?: ComboboxCallback;
 }
 
-interface config {
-    onSelect?: (item: HTMLElement, value: string) => void;
+interface ComboboxCallback {
+    onSelect?: (item: HTMLElement) => void;
     onOpenChange?: (isOpen: boolean) => void;
     onActiveDescendantChange?: (optionId: string, item: HTMLElement) => void;
     onClear?: () => void;
@@ -50,15 +63,10 @@ interface config {
  * @param {string} triggersClass - The shared class of all accordion trigger buttons.
  * @param {string} panelsClass - The shared class of all accordion panels.
  * @param {boolean} allowMultipleOpen - Whether multiple panels can be open simultaneously (default: false).
+ * @param {AccordionCallback} callback - Configuration options for callbacks.
  */
 
-interface AccordionConfig {
-    accordionId: string;
-    triggersClass: string;
-    panelsClass: string;
-    allowMultipleOpen?: boolean;
-}
-declare function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen }: AccordionConfig): AccessibilityInstance;
+declare function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen, callback }: AccordionConfig): AccessibilityInstance;
 
 /**
  * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.
@@ -134,10 +142,10 @@ declare function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle }
  * @param {string} comboboxButtonId - The id of the button that toggles the listbox (optional).
  * @param {string} listBoxId - The id of the listbox element.
  * @param {string} listBoxItemsClass - The class of the items within the listbox.
- * @param {ComboboxConfig} config - Configuration options for callbacks.
+ * @param {ComboboxCallback} callback - Configuration options for callbacks.
  */
 
-declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, config }: ComboboxConfig): AccessibilityInstance;
+declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, callback }: ComboboxConfig): AccessibilityInstance;
 
 /**
  * Runs static and interactions accessibility test on UI components.

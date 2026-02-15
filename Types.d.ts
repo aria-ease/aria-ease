@@ -155,16 +155,29 @@ interface AccessibilityInstance {
   getPressedIndices?: () => number[];
 }
 
+interface AccordionConfig {
+  accordionId: string;
+  triggersClass: string;
+  panelsClass: string;
+  allowMultipleOpen?: boolean;
+  callback?: AccordionCallback;
+}
+
+interface AccordionCallback {
+    onExpand?: (index: number) => void;
+    onCollapse?: (index: number) => void;
+}
+
 interface ComboboxConfig {
     comboboxInputId: string; 
     comboboxButtonId?: string; 
     listBoxId: string; 
     listBoxItemsClass: string;
-    config?: config;
+    callback?: ComboboxCallback;
 }
 
-interface config {
-    onSelect?: (item: HTMLElement, value: string) => void;
+interface ComboboxCallback {
+    onSelect?: (item: HTMLElement) => void;
     onOpenChange?: (isOpen: boolean) => void;
     onActiveDescendantChange?: (optionId: string, item: HTMLElement) => void;
     onClear?: () => void;
@@ -191,7 +204,8 @@ export {
     FailureReport,
     AccessibilityInstance,
     ComboboxConfig,
-    ContractTestResult
+    ContractTestResult,
+    AccordionConfig
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;

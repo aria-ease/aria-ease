@@ -832,7 +832,7 @@ __export(index_exports, {
 module.exports = __toCommonJS(index_exports);
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
-function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }) {
+function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false, callback }) {
   const accordionContainer = document.querySelector(`#${accordionId}`);
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -883,6 +883,9 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     const panel = panels[index];
     trigger.setAttribute("aria-expanded", "true");
     panel.style.display = "block";
+    if (callback?.onExpand) {
+      callback.onExpand(index);
+    }
   }
   function collapseItem(index) {
     if (index < 0 || index >= triggers.length) {
@@ -893,6 +896,9 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     const panel = panels[index];
     trigger.setAttribute("aria-expanded", "false");
     panel.style.display = "none";
+    if (callback?.onCollapse) {
+      callback.onCollapse(index);
+    }
   }
   function toggleItem(index) {
     const trigger = triggers[index];
@@ -1755,7 +1761,7 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
 }
 
 // src/combobox/src/makeComboBoxAccessible/makeComboBoxAccessible.ts
-function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, config }) {
+function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, callback }) {
   const comboboxInput = document.getElementById(`${comboboxInputId}`);
   if (!comboboxInput) {
     console.error(`[aria-ease] Element with id="${comboboxInputId}" not found. Make sure the combobox input element exists before calling makeComboboxAccessible.`);
@@ -1802,9 +1808,9 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
       if (typeof activeItem.scrollIntoView === "function") {
         activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
-      if (config?.onActiveDescendantChange) {
+      if (callback?.onActiveDescendantChange) {
         try {
-          config.onActiveDescendantChange(itemId, activeItem);
+          callback.onActiveDescendantChange(itemId, activeItem);
         } catch (error) {
           console.error("[aria-ease] Error in onActiveDescendantChange callback:", error);
         }
@@ -1816,9 +1822,10 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   }
   function openListbox() {
     comboboxInput.setAttribute("aria-expanded", "true");
-    if (config?.onOpenChange) {
+    listBox.style.display = "block";
+    if (callback?.onOpenChange) {
       try {
-        config.onOpenChange(true);
+        callback.onOpenChange(true);
       } catch (error) {
         console.error("[aria-ease] Error in onOpenChange callback:", error);
       }
@@ -1827,12 +1834,13 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   function closeListbox() {
     comboboxInput.setAttribute("aria-expanded", "false");
     comboboxInput.setAttribute("aria-activedescendant", "");
+    listBox.style.display = "none";
     activeIndex = -1;
     const visibleItems = getVisibleItems();
     visibleItems.forEach((item) => item.setAttribute("aria-selected", "false"));
-    if (config?.onOpenChange) {
+    if (callback?.onOpenChange) {
       try {
-        config.onOpenChange(false);
+        callback.onOpenChange(false);
       } catch (error) {
         console.error("[aria-ease] Error in onOpenChange callback:", error);
       }
@@ -1842,9 +1850,9 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
     const value = item.textContent?.trim() || "";
     comboboxInput.value = value;
     closeListbox();
-    if (config?.onSelect) {
+    if (callback?.onSelect) {
       try {
-        config.onSelect(item, value);
+        callback.onSelect(item);
       } catch (error) {
         console.error("[aria-ease] Error in onSelect callback:", error);
       }
@@ -1887,9 +1895,9 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
         } else if (comboboxInput.value) {
           event.preventDefault();
           comboboxInput.value = "";
-          if (config?.onClear) {
+          if (callback?.onClear) {
             try {
-              config.onClear();
+              callback.onClear();
             } catch (error) {
               console.error("[aria-ease] Error in onClear callback:", error);
             }

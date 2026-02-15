@@ -4,21 +4,19 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [6.0.1](https://github.com/aria-ease/aria-ease/compare/v6.0.0...v6.0.1) (2026-02-14)
 
-
 ### Bug Fixes
 
-* fixed accordion contract test failing and/or timin ([7a5c2fd](https://github.com/aria-ease/aria-ease/commit/7a5c2fdb1191bb8da5d98710750ef9c5639372e2))
+- fixed accordion contract test failing and/or timing out ([7a5c2fd](https://github.com/aria-ease/aria-ease/commit/7a5c2fdb1191bb8da5d98710750ef9c5639372e2))
 
 ## [6.0.0](https://github.com/aria-ease/aria-ease/compare/v5.0.3...v6.0.0) (2026-02-12)
 
-
 ### ⚠ BREAKING CHANGES
 
-* **test:** Playwright tests now require /test-harness route in app. See CONTRACT-TEST-ARCHITECTURE.md for migration guide.
+- **test:** Playwright tests now require /test-harness route in app. See CONTRACT-TEST-ARCHITECTURE.md for migration guide.
 
 ### Features
 
-* **test:** add test harness pattern for 15x faster Playwright tests ([472e72c](https://github.com/aria-ease/aria-ease/commit/472e72cc1f6120eb68b41594f5ea0b4fb8779724))
+- **test:** add test harness pattern for 15x faster Playwright tests ([472e72c](https://github.com/aria-ease/aria-ease/commit/472e72cc1f6120eb68b41594f5ea0b4fb8779724))
 
 ### [5.0.3](https://github.com/aria-ease/aria-ease/compare/v5.0.2...v5.0.3) (2026-02-10)
 

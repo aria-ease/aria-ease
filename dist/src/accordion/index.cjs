@@ -1,7 +1,7 @@
 'use strict';
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
-function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }) {
+function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false, callback }) {
   const accordionContainer = document.querySelector(`#${accordionId}`);
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -52,6 +52,9 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     const panel = panels[index];
     trigger.setAttribute("aria-expanded", "true");
     panel.style.display = "block";
+    if (callback?.onExpand) {
+      callback.onExpand(index);
+    }
   }
   function collapseItem(index) {
     if (index < 0 || index >= triggers.length) {
@@ -62,6 +65,9 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     const panel = panels[index];
     trigger.setAttribute("aria-expanded", "false");
     panel.style.display = "none";
+    if (callback?.onCollapse) {
+      callback.onCollapse(index);
+    }
   }
   function toggleItem(index) {
     const trigger = triggers[index];
