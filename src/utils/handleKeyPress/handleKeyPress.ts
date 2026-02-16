@@ -110,7 +110,8 @@ export function handleKeyPress(
     menuElementDiv?: HTMLElement,
     triggerButton?: HTMLElement,
     openSubmenu?: (submenuId: string) => void,
-    closeSubmenu?: () => void
+    closeSubmenu?: () => void,
+    onOpenChange?: (isOpen: boolean) => void
 ): void {
     const currentEl = elementItems.item(elementItemIndex);
     switch (event.key) {
@@ -170,6 +171,9 @@ export function handleKeyPress(
             if (menuElementDiv && triggerButton) {
                 if (getComputedStyle(menuElementDiv).display === "block") {
                     handleMenuClose(menuElementDiv, triggerButton);
+                    if (onOpenChange) {
+                        onOpenChange(false);
+                    }
                 }
                 triggerButton.focus();
             }
@@ -189,6 +193,9 @@ export function handleKeyPress(
         case "Tab": {
             if (menuElementDiv && triggerButton && (!event.shiftKey || event.shiftKey)) {
                 handleMenuClose(menuElementDiv, triggerButton);
+                if (onOpenChange) {
+                    onOpenChange(false);
+                }
             } 
             break;
         }

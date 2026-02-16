@@ -183,6 +183,16 @@ interface ComboboxCallback {
     onClear?: () => void;
 }
 
+interface MenuConfig {
+    menuId: string; 
+    menuItemsClass: string; 
+    triggerId: string;
+    callback: MenuCallback;
+}
+
+interface MenuCallback {
+    onOpenChange?: (isOpen: boolean) => void;
+}
 interface ContractTestResult {
   passes: string[];
   failures: string[];
@@ -205,7 +215,8 @@ export {
     AccessibilityInstance,
     ComboboxConfig,
     ContractTestResult,
-    AccordionConfig
+    AccordionConfig,
+    MenuConfig
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;

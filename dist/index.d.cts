@@ -56,6 +56,17 @@ interface ComboboxCallback {
     onClear?: () => void;
 }
 
+interface MenuConfig {
+    menuId: string; 
+    menuItemsClass: string; 
+    triggerId: string;
+    callback: MenuCallback;
+}
+
+interface MenuCallback {
+    onOpenChange?: (isOpen: boolean) => void;
+}
+
 /**
  * Makes an accordion accessible by managing ARIA attributes, keyboard navigation, and state.
  * Handles multiple accordion items with proper focus management and keyboard interactions.
@@ -100,11 +111,7 @@ declare function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: Ch
   * @param {string} triggerId - The id of the button that triggers the menu.
 */
 
-declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {
-    menuId: string;
-    menuItemsClass: string;
-    triggerId: string;
-}): AccessibilityInstance;
+declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }: MenuConfig): AccessibilityInstance;
 
 /**
  * Makes a radio group accessible by managing ARIA attributes, keyboard navigation, and state.

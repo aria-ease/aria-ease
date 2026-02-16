@@ -51,7 +51,11 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     trigger.setAttribute("aria-expanded", "true");
     panel.style.display = "block";
     if (callback?.onExpand) {
-      callback.onExpand(index);
+      try {
+        callback.onExpand(index);
+      } catch (error) {
+        console.error("[aria-ease] Error in accordion onExpand callback:", error);
+      }
     }
   }
   function collapseItem(index) {
@@ -64,7 +68,11 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     trigger.setAttribute("aria-expanded", "false");
     panel.style.display = "none";
     if (callback?.onCollapse) {
-      callback.onCollapse(index);
+      try {
+        callback.onCollapse(index);
+      } catch (error) {
+        console.error("[aria-ease] Error in accordion onCollapse callback:", error);
+      }
     }
   }
   function toggleItem(index) {
@@ -152,13 +160,25 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
       collapseItem(index);
     });
   }
+  function refresh() {
+    removeListeners();
+    const newTriggers = Array.from(accordionContainer.querySelectorAll(`.${triggersClass}`));
+    const newPanels = Array.from(accordionContainer.querySelectorAll(`.${panelsClass}`));
+    triggers.length = 0;
+    triggers.push(...newTriggers);
+    panels.length = 0;
+    panels.push(...newPanels);
+    initialize();
+    addListeners();
+  }
   initialize();
   addListeners();
   return {
     expandItem,
     collapseItem,
     toggleItem,
-    cleanup
+    cleanup,
+    refresh
   };
 }
 

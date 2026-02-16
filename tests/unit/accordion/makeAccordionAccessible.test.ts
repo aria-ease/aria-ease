@@ -368,4 +368,142 @@ describe("makeAccordionAccessible", () => {
       });
     });
   });
+
+  describe("refresh", () => {
+    it("picks up dynamically added accordion items", () => {
+      accordionInstance = makeAccordionAccessible({
+        accordionId: "test-accordion",
+        triggersClass: "accordion-trigger",
+        panelsClass: "accordion-panel"
+      });
+
+      // Add new accordion item dynamically
+      const newTrigger = document.createElement("button");
+      newTrigger.className = "accordion-trigger";
+      newTrigger.textContent = "Section 4";
+      
+      const newPanel = document.createElement("div");
+      newPanel.className = "accordion-panel";
+      newPanel.textContent = "Content 4";
+
+      accordionContainer.appendChild(newTrigger);
+      accordionContainer.appendChild(newPanel);
+
+      // Refresh to pick up new items
+      accordionInstance.refresh!();
+
+      // Check that new trigger has proper ARIA attributes
+      expect(newTrigger.getAttribute("aria-expanded")).toBe("false");
+      expect(newTrigger.getAttribute("aria-controls")).toBeTruthy();
+      expect(newTrigger.id).toBeTruthy();
+
+      // Check that new panel has proper attributes
+      expect(newPanel.getAttribute("role")).toBe("region");
+      expect(newPanel.getAttribute("aria-labelledby")).toBe(newTrigger.id);
+      expect(newPanel.style.display).toBe("none");
+    });
+
+    it("attaches event listeners to newly added items", () => {
+      accordionInstance = makeAccordionAccessible({
+        accordionId: "test-accordion",
+        triggersClass: "accordion-trigger",
+        panelsClass: "accordion-panel"
+      });
+
+      // Add new accordion item
+      const newTrigger = document.createElement("button");
+      newTrigger.className = "accordion-trigger";
+      newTrigger.textContent = "Section 4";
+      
+      const newPanel = document.createElement("div");
+      newPanel.className = "accordion-panel";
+      newPanel.textContent = "Content 4";
+
+      accordionContainer.appendChild(newTrigger);
+      accordionContainer.appendChild(newPanel);
+
+      accordionInstance.refresh!();
+
+      // Test keyboard interaction on new trigger
+      newTrigger.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+      expect(newTrigger.getAttribute("aria-expanded")).toBe("true");
+
+      // Test click interaction on new trigger
+      newTrigger.click();
+      expect(newTrigger.getAttribute("aria-expanded")).toBe("false");
+    });
+
+    it("handles removed accordion items", () => {
+      accordionInstance = makeAccordionAccessible({
+        accordionId: "test-accordion",
+        triggersClass: "accordion-trigger",
+        panelsClass: "accordion-panel"
+      });
+
+      // Remove the last accordion item
+      const triggers = accordionContainer.querySelectorAll(".accordion-trigger");
+      const panels = accordionContainer.querySelectorAll(".accordion-panel");
+      
+      accordionContainer.removeChild(triggers[2]);
+      accordionContainer.removeChild(panels[2]);
+
+      // Refresh to update
+      accordionInstance.refresh!();
+
+      // Verify only 2 triggers exist now
+      const updatedTriggers = accordionContainer.querySelectorAll(".accordion-trigger");
+      expect(updatedTriggers.length).toBe(2);
+
+      // Verify keyboard navigation still works with remaining items
+      const trigger0 = updatedTriggers[0] as HTMLElement;
+      const trigger1 = updatedTriggers[1] as HTMLElement;
+
+      trigger0.focus();
+      trigger0.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
+      expect(document.activeElement).toBe(trigger1);
+    });
+
+    it("re-initializes all items with proper ARIA attributes", () => {
+      accordionInstance = makeAccordionAccessible({
+        accordionId: "test-accordion",
+        triggersClass: "accordion-trigger",
+        panelsClass: "accordion-panel"
+      });
+
+      // Manually corrupt some ARIA attributes
+      const trigger = accordionContainer.querySelectorAll(".accordion-trigger")[0] as HTMLElement;
+      trigger.removeAttribute("aria-expanded");
+      trigger.removeAttribute("aria-controls");
+
+      // Refresh should restore them
+      accordionInstance.refresh!();
+
+      expect(trigger.getAttribute("aria-expanded")).toBe("false");
+      expect(trigger.getAttribute("aria-controls")).toBeTruthy();
+    });
+
+    it("maintains state after refresh for expanded items", () => {
+      accordionInstance = makeAccordionAccessible({
+        accordionId: "test-accordion",
+        triggersClass: "accordion-trigger",
+        panelsClass: "accordion-panel"
+      });
+
+      // Expand first item
+      accordionInstance.expandItem!(0);
+      
+      const trigger = accordionContainer.querySelectorAll(".accordion-trigger")[0] as HTMLElement;
+      const panel = accordionContainer.querySelectorAll(".accordion-panel")[0] as HTMLElement;
+
+      expect(trigger.getAttribute("aria-expanded")).toBe("true");
+      expect(panel.style.display).toBe("block");
+
+      // Refresh
+      accordionInstance.refresh!();
+
+      // After refresh, items should be re-initialized to closed state
+      expect(trigger.getAttribute("aria-expanded")).toBe("false");
+      expect(panel.style.display).toBe("none");
+    });
+  });
 });

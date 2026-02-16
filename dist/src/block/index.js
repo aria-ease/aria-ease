@@ -1,4 +1,4 @@
-import { handleKeyPress } from '../chunk-TBJ6MIC7.js';
+import { handleKeyPress } from '../chunk-ZJXZZDUR.js';
 
 // src/block/src/makeBlockAccessible/makeBlockAccessible.ts
 function makeBlockAccessible({ blockId, blockItemsClass }) {

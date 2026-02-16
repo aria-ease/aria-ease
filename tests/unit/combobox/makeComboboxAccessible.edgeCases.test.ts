@@ -560,7 +560,7 @@ describe("makeComboboxAccessible - edge cases: callback edge cases", () => {
     expect(errorCallback).toHaveBeenCalledTimes(1);
     // Error should be logged to console
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Error in onSelect callback"),
+      expect.stringContaining("Error in combobox onSelect callback"),
       expect.any(Error)
     );
 

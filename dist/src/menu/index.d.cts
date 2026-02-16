@@ -1,4 +1,4 @@
-import { a as AccessibilityInstance } from '../Types.d-Dt_ojd71.cjs';
+import { M as MenuConfig, a as AccessibilityInstance } from '../Types.d-CxWrr421.cjs';
 
 /**
   * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first interactive item of the menu has focus when menu open.
@@ -7,10 +7,6 @@ import { a as AccessibilityInstance } from '../Types.d-Dt_ojd71.cjs';
   * @param {string} triggerId - The id of the button that triggers the menu.
 */
 
-declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId }: {
-    menuId: string;
-    menuItemsClass: string;
-    triggerId: string;
-}): AccessibilityInstance;
+declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }: MenuConfig): AccessibilityInstance;
 
 export { makeMenuAccessible };

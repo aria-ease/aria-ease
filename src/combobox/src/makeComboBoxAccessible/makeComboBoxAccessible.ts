@@ -74,7 +74,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 try {
                     callback.onActiveDescendantChange(itemId, activeItem);
                 } catch (error) {
-                    console.error("[aria-ease] Error in onActiveDescendantChange callback:", error);
+                    console.error("[aria-ease] Error in combobox onActiveDescendantChange callback:", error);
                 }
             }
         } else {
@@ -87,11 +87,12 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
     function openListbox() {
         comboboxInput.setAttribute("aria-expanded", "true");
         listBox.style.display = "block";
+
         if (callback?.onOpenChange) {
             try {
                 callback.onOpenChange(true);
             } catch (error) {
-                console.error("[aria-ease] Error in onOpenChange callback:", error);
+                console.error("[aria-ease] Error in combobox onOpenChange callback:", error);
             }
         }
     }
@@ -109,7 +110,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
             try {
                 callback.onOpenChange(false);
             } catch (error) {
-                console.error("[aria-ease] Error in onOpenChange callback:", error);
+                console.error("[aria-ease] Error in combobox onOpenChange callback:", error);
             }
         }
     }
@@ -123,7 +124,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
             try {
                 callback.onSelect(item);
             } catch (error) {
-                console.error("[aria-ease] Error in onSelect callback:", error);
+                console.error("[aria-ease] Error in combobox onSelect callback:", error);
             }
         }
     }
@@ -177,7 +178,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                         try {
                             callback.onClear();
                         } catch (error) {
-                            console.error("[aria-ease] Error in onClear callback:", error);
+                            console.error("[aria-ease] Error in combobox onClear callback:", error);
                         }
                     }
                 }
