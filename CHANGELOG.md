@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.2.0](https://github.com/aria-ease/aria-ease/compare/v6.1.0...v6.2.0) (2026-02-16)
+
+
+### Features
+
+* added callback for menu utility, and refresh return for accordion utility ([14b0740](https://github.com/aria-ease/aria-ease/commit/14b0740f28c7278a6de15ecb7421267829d2c64f))
+
 ## [6.1.0](https://github.com/aria-ease/aria-ease/compare/v6.0.1...v6.1.0) (2026-02-15)
 
 
