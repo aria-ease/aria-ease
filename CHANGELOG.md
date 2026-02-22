@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.2.1](https://github.com/aria-ease/aria-ease/compare/v6.2.0...v6.2.1) (2026-02-22)
+
+
+### Bug Fixes
+
+* fixed audit CLI creating Playwright browser instance for each audit URL ([e8074b0](https://github.com/aria-ease/aria-ease/commit/e8074b00819b523b8107ef935130a9673d9299e8))
+
 ## [6.2.0](https://github.com/aria-ease/aria-ease/compare/v6.1.0...v6.2.0) (2026-02-16)
 
 
