@@ -516,7 +516,7 @@ describe("makeComboboxAccessible - callbacks", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onOpenChange }
+      callback: { onOpenChange }
     });
 
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
@@ -531,7 +531,7 @@ describe("makeComboboxAccessible - callbacks", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onOpenChange }
+      callback: { onOpenChange }
     });
 
     // Open then close
@@ -548,7 +548,7 @@ describe("makeComboboxAccessible - callbacks", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onSelect }
+      callback: { onSelect }
     });
 
     // Open, select first item
@@ -561,10 +561,7 @@ describe("makeComboboxAccessible - callbacks", () => {
     
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
 
-    expect(onSelect).toHaveBeenCalledWith(
-      expect.any(HTMLElement),
-      "Apple"
-    );
+    expect(onSelect).toHaveBeenCalledWith(firstOption);
   });
 
   it("calls onActiveDescendantChange callback when navigating", () => {
@@ -574,7 +571,7 @@ describe("makeComboboxAccessible - callbacks", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onActiveDescendantChange }
+      callback: { onActiveDescendantChange }
     });
 
     // Open listbox (first ArrowDown just opens, doesn't select)
@@ -596,7 +593,7 @@ describe("makeComboboxAccessible - callbacks", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onClear }
+      callback: { onClear }
     });
 
     input.value = "Test";

@@ -1,5 +1,5 @@
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
-function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }) {
+function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false, callback }) {
   const accordionContainer = document.querySelector(`#${accordionId}`);
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -50,6 +50,13 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     const panel = panels[index];
     trigger.setAttribute("aria-expanded", "true");
     panel.style.display = "block";
+    if (callback?.onExpand) {
+      try {
+        callback.onExpand(index);
+      } catch (error) {
+        console.error("[aria-ease] Error in accordion onExpand callback:", error);
+      }
+    }
   }
   function collapseItem(index) {
     if (index < 0 || index >= triggers.length) {
@@ -60,6 +67,13 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     const panel = panels[index];
     trigger.setAttribute("aria-expanded", "false");
     panel.style.display = "none";
+    if (callback?.onCollapse) {
+      try {
+        callback.onCollapse(index);
+      } catch (error) {
+        console.error("[aria-ease] Error in accordion onCollapse callback:", error);
+      }
+    }
   }
   function toggleItem(index) {
     const trigger = triggers[index];
@@ -146,13 +160,25 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
       collapseItem(index);
     });
   }
+  function refresh() {
+    removeListeners();
+    const newTriggers = Array.from(accordionContainer.querySelectorAll(`.${triggersClass}`));
+    const newPanels = Array.from(accordionContainer.querySelectorAll(`.${panelsClass}`));
+    triggers.length = 0;
+    triggers.push(...newTriggers);
+    panels.length = 0;
+    panels.push(...newPanels);
+    initialize();
+    addListeners();
+  }
   initialize();
   addListeners();
   return {
     expandItem,
     collapseItem,
     toggleItem,
-    cleanup
+    cleanup,
+    refresh
   };
 }
 

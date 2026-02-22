@@ -26,7 +26,7 @@ function isClickableButNotSemantic(el) {
 function hasSubmenu(menuItem) {
   return menuItem.getAttribute("aria-haspopup") === "true" || menuItem.getAttribute("aria-haspopup") === "menu";
 }
-function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, openSubmenu, closeSubmenu) {
+function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, openSubmenu, closeSubmenu, onOpenChange) {
   const currentEl = elementItems.item(elementItemIndex);
   switch (event.key) {
     case "ArrowUp":

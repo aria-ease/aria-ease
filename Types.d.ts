@@ -59,6 +59,7 @@ interface Selector {
     listbox?: string;
     button?: string;
     popup?: string;
+    panel?: string;
 }
 
 interface Prerequisite {
@@ -154,21 +155,44 @@ interface AccessibilityInstance {
   getPressedIndices?: () => number[];
 }
 
+interface AccordionConfig {
+  accordionId: string;
+  triggersClass: string;
+  panelsClass: string;
+  allowMultipleOpen?: boolean;
+  callback?: AccordionCallback;
+}
+
+interface AccordionCallback {
+    onExpand?: (index: number) => void;
+    onCollapse?: (index: number) => void;
+}
+
 interface ComboboxConfig {
     comboboxInputId: string; 
     comboboxButtonId?: string; 
     listBoxId: string; 
     listBoxItemsClass: string;
-    config?: config;
+    callback?: ComboboxCallback;
 }
 
-interface config {
-    onSelect?: (item: HTMLElement, value: string) => void;
+interface ComboboxCallback {
+    onSelect?: (item: HTMLElement) => void;
     onOpenChange?: (isOpen: boolean) => void;
     onActiveDescendantChange?: (optionId: string, item: HTMLElement) => void;
     onClear?: () => void;
 }
 
+interface MenuConfig {
+    menuId: string; 
+    menuItemsClass: string; 
+    triggerId: string;
+    callback: MenuCallback;
+}
+
+interface MenuCallback {
+    onOpenChange?: (isOpen: boolean) => void;
+}
 interface ContractTestResult {
   passes: string[];
   failures: string[];
@@ -190,7 +214,9 @@ export {
     FailureReport,
     AccessibilityInstance,
     ComboboxConfig,
-    ContractTestResult
+    ContractTestResult,
+    AccordionConfig,
+    MenuConfig
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;

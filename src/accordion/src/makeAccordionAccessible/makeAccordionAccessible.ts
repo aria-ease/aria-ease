@@ -5,18 +5,13 @@
  * @param {string} triggersClass - The shared class of all accordion trigger buttons.
  * @param {string} panelsClass - The shared class of all accordion panels.
  * @param {boolean} allowMultipleOpen - Whether multiple panels can be open simultaneously (default: false).
+ * @param {AccordionCallback} callback - Configuration options for callbacks.
  */
 
-import { AccessibilityInstance } from "Types";
+import { AccessibilityInstance, AccordionConfig } from "Types";
 
-interface AccordionConfig {
-  accordionId: string;
-  triggersClass: string;
-  panelsClass: string;
-  allowMultipleOpen?: boolean;
-}
 
-export function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }: AccordionConfig): AccessibilityInstance {
+export function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false, callback }: AccordionConfig): AccessibilityInstance {
   const accordionContainer = document.querySelector(`#${accordionId}`) as HTMLElement;
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -60,7 +55,7 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
       trigger.setAttribute("aria-controls", panel.id);
       trigger.setAttribute("aria-expanded", "false");
 
-      // Set ARIA attributes on panel
+      // Set attributes on panel
       panel.setAttribute("role", "region");
       panel.setAttribute("aria-labelledby", trigger.id);
       panel.style.display = "none";
@@ -78,6 +73,14 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
 
     trigger.setAttribute("aria-expanded", "true");
     panel.style.display = "block";
+    
+    if (callback?.onExpand) {
+      try {
+        callback.onExpand(index);
+      } catch (error) {
+        console.error("[aria-ease] Error in accordion onExpand callback:", error);
+      }
+    }
   }
 
   function collapseItem(index: number) {
@@ -91,6 +94,15 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
 
     trigger.setAttribute("aria-expanded", "false");
     panel.style.display = "none";
+    
+    if (callback?.onCollapse) {
+      
+      try {
+        callback.onCollapse(index);
+      } catch (error) {
+        console.error("[aria-ease] Error in accordion onCollapse callback:", error);
+      }
+    }
   }
 
   function toggleItem(index: number) {
@@ -196,6 +208,25 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
     });
   }
 
+  function refresh() {
+    // Remove old listeners
+    removeListeners();
+    
+    // Re-query triggers and panels
+    const newTriggers = Array.from(accordionContainer.querySelectorAll(`.${triggersClass}`)) as HTMLElement[];
+    const newPanels = Array.from(accordionContainer.querySelectorAll(`.${panelsClass}`)) as HTMLElement[];
+    
+    // Update cached references
+    triggers.length = 0;
+    triggers.push(...newTriggers);
+    panels.length = 0;
+    panels.push(...newPanels);
+    
+    // Re-initialize and re-attach listeners
+    initialize();
+    addListeners();
+  }
+
   // Initialize the accordion
   initialize();
   addListeners();
@@ -204,6 +235,7 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
     expandItem,
     collapseItem,
     toggleItem,
-    cleanup
+    cleanup,
+    refresh
   };
 }

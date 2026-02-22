@@ -1,4 +1,4 @@
-import { A as AccessibilityInstance } from '../Types.d-COr5IFp5.cjs';
+import { a as AccordionConfig, A as AccessibilityInstance } from '../Types.d-CBuuHF3d.cjs';
 
 /**
  * Makes an accordion accessible by managing ARIA attributes, keyboard navigation, and state.
@@ -7,14 +7,9 @@ import { A as AccessibilityInstance } from '../Types.d-COr5IFp5.cjs';
  * @param {string} triggersClass - The shared class of all accordion trigger buttons.
  * @param {string} panelsClass - The shared class of all accordion panels.
  * @param {boolean} allowMultipleOpen - Whether multiple panels can be open simultaneously (default: false).
+ * @param {AccordionCallback} callback - Configuration options for callbacks.
  */
 
-interface AccordionConfig {
-    accordionId: string;
-    triggersClass: string;
-    panelsClass: string;
-    allowMultipleOpen?: boolean;
-}
-declare function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen }: AccordionConfig): AccessibilityInstance;
+declare function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen, callback }: AccordionConfig): AccessibilityInstance;
 
 export { makeAccordionAccessible };

@@ -53,22 +53,28 @@ program.command('audit')
   }
 
   const allResults: { url: string, result?: AxeResult }[] = [];
-  const auditOptions = {
-    timeout: config.audit?.timeout,
-    waitUntil: config.audit?.waitUntil
-  };
   
-  for (const url of urls) {
-    console.log(chalk.yellow(`🔎 Auditing: ${url}`));
-    try {
-      const result: AxeResult = await runAudit(url, auditOptions);
-      allResults.push({ url: url, result });
-      console.log(chalk.green(`✅ Completed audit for ${url}\n`));
-    } catch (error: unknown) {
-      if(error instanceof Error && error.message) {
-        console.log(chalk.red(`❌ Failed auditing ${url}: ${error.message}`));
+  const { createAuditBrowser } = await import("../audit/src/audit/audit.js");
+  const browser = await createAuditBrowser();
+  
+  try {
+    const auditOptions = { browser };
+    
+    for (const url of urls) {
+      console.log(chalk.yellow(`🔎 Auditing: ${url}`));
+      try {
+        const result: AxeResult = await runAudit(url, auditOptions);
+        allResults.push({ url: url, result });
+        console.log(chalk.green(`✅ Completed audit for ${url}\n`));
+      } catch (error: unknown) {
+        if(error instanceof Error && error.message) {
+          console.log(chalk.red(`❌ Failed auditing ${url}: ${error.message}`));
+        }
       }
     }
+  } finally {
+    // Always close the browser after all audits complete
+    await browser.close();
   }
 
   const hasResults = allResults.some(r => r.result && r.result.violations && r.result.violations.length > 0);

@@ -5,7 +5,7 @@ import {
 } from "./chunk-PDZQOXUN.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
-function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false }) {
+function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false, callback }) {
   const accordionContainer = document.querySelector(`#${accordionId}`);
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
@@ -56,6 +56,13 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     const panel = panels[index];
     trigger.setAttribute("aria-expanded", "true");
     panel.style.display = "block";
+    if (callback?.onExpand) {
+      try {
+        callback.onExpand(index);
+      } catch (error) {
+        console.error("[aria-ease] Error in accordion onExpand callback:", error);
+      }
+    }
   }
   function collapseItem(index) {
     if (index < 0 || index >= triggers.length) {
@@ -66,6 +73,13 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
     const panel = panels[index];
     trigger.setAttribute("aria-expanded", "false");
     panel.style.display = "none";
+    if (callback?.onCollapse) {
+      try {
+        callback.onCollapse(index);
+      } catch (error) {
+        console.error("[aria-ease] Error in accordion onCollapse callback:", error);
+      }
+    }
   }
   function toggleItem(index) {
     const trigger = triggers[index];
@@ -152,13 +166,25 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
       collapseItem(index);
     });
   }
+  function refresh() {
+    removeListeners();
+    const newTriggers = Array.from(accordionContainer.querySelectorAll(`.${triggersClass}`));
+    const newPanels = Array.from(accordionContainer.querySelectorAll(`.${panelsClass}`));
+    triggers.length = 0;
+    triggers.push(...newTriggers);
+    panels.length = 0;
+    panels.push(...newPanels);
+    initialize();
+    addListeners();
+  }
   initialize();
   addListeners();
   return {
     expandItem,
     collapseItem,
     toggleItem,
-    cleanup
+    cleanup,
+    refresh
   };
 }
 
@@ -200,7 +226,7 @@ function hasSubmenu(menuItem) {
 function getSubmenuId(menuItem) {
   return menuItem.getAttribute("aria-controls");
 }
-function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, openSubmenu, closeSubmenu) {
+function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, openSubmenu, closeSubmenu, onOpenChange) {
   const currentEl = elementItems.item(elementItemIndex);
   switch (event.key) {
     case "ArrowUp":
@@ -257,6 +283,9 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
       if (menuElementDiv && triggerButton) {
         if (getComputedStyle(menuElementDiv).display === "block") {
           handleMenuClose(menuElementDiv, triggerButton);
+          if (onOpenChange) {
+            onOpenChange(false);
+          }
         }
         triggerButton.focus();
       }
@@ -276,6 +305,9 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
     case "Tab": {
       if (menuElementDiv && triggerButton && (!event.shiftKey || event.shiftKey)) {
         handleMenuClose(menuElementDiv, triggerButton);
+        if (onOpenChange) {
+          onOpenChange(false);
+        }
       }
       break;
     }
@@ -461,7 +493,7 @@ function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }) {
 }
 
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
-function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
+function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
   const menuDiv = document.querySelector(`#${menuId}`);
   if (!menuDiv) {
     console.error(`[aria-ease] Element with id="${menuId}" not found. Make sure the menu element exists before calling makeMenuAccessible.`);
@@ -521,8 +553,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     const nodeListLike = {
       length: items.length,
       item: (index) => items[index],
-      forEach: (callback) => {
-        items.forEach(callback);
+      forEach: (callback2) => {
+        items.forEach(callback2);
       },
       [Symbol.iterator]: function* () {
         for (const item of items) {
@@ -566,7 +598,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
       submenuInstance = makeMenuAccessible({
         menuId: submenuId,
         menuItemsClass,
-        triggerId: submenuTrigger.id
+        triggerId: submenuTrigger.id,
+        callback
       });
       submenuInstances.set(submenuId, submenuInstance);
     }
@@ -574,6 +607,15 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   }
   function closeSubmenu() {
     closeMenu();
+  }
+  function onOpenChange(isOpen) {
+    if (callback?.onOpenChange) {
+      try {
+        callback.onOpenChange(isOpen);
+      } catch (error) {
+        console.error("[aria-ease] Error in menu onOpenChange callback:", error);
+      }
+    }
   }
   function addListeners() {
     const items = getFilteredItems();
@@ -587,7 +629,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
           menuDiv,
           triggerButton,
           openSubmenu,
-          closeSubmenu
+          closeSubmenu,
+          onOpenChange
         );
         menuItem.addEventListener("keydown", handler);
         handlerMap.set(menuItem, handler);
@@ -612,12 +655,26 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     if (items && items.length > 0) {
       items[0].focus();
     }
+    if (callback?.onOpenChange) {
+      try {
+        callback.onOpenChange(true);
+      } catch (error) {
+        console.error("[aria-ease] Error in menu onOpenChange callback:", error);
+      }
+    }
   }
   function closeMenu() {
     setAria(false);
     menuDiv.style.display = "none";
     removeListeners();
     triggerButton.focus();
+    if (callback?.onOpenChange) {
+      try {
+        callback.onOpenChange(false);
+      } catch (error) {
+        console.error("[aria-ease] Error in menu onOpenChange callback:", error);
+      }
+    }
   }
   function intializeMenuItems() {
     const items = getItems();
@@ -928,7 +985,7 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
 }
 
 // src/combobox/src/makeComboBoxAccessible/makeComboBoxAccessible.ts
-function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, config }) {
+function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, callback }) {
   const comboboxInput = document.getElementById(`${comboboxInputId}`);
   if (!comboboxInput) {
     console.error(`[aria-ease] Element with id="${comboboxInputId}" not found. Make sure the combobox input element exists before calling makeComboboxAccessible.`);
@@ -975,11 +1032,11 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
       if (typeof activeItem.scrollIntoView === "function") {
         activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
       }
-      if (config?.onActiveDescendantChange) {
+      if (callback?.onActiveDescendantChange) {
         try {
-          config.onActiveDescendantChange(itemId, activeItem);
+          callback.onActiveDescendantChange(itemId, activeItem);
         } catch (error) {
-          console.error("[aria-ease] Error in onActiveDescendantChange callback:", error);
+          console.error("[aria-ease] Error in combobox onActiveDescendantChange callback:", error);
         }
       }
     } else {
@@ -989,25 +1046,27 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   }
   function openListbox() {
     comboboxInput.setAttribute("aria-expanded", "true");
-    if (config?.onOpenChange) {
+    listBox.style.display = "block";
+    if (callback?.onOpenChange) {
       try {
-        config.onOpenChange(true);
+        callback.onOpenChange(true);
       } catch (error) {
-        console.error("[aria-ease] Error in onOpenChange callback:", error);
+        console.error("[aria-ease] Error in combobox onOpenChange callback:", error);
       }
     }
   }
   function closeListbox() {
     comboboxInput.setAttribute("aria-expanded", "false");
     comboboxInput.setAttribute("aria-activedescendant", "");
+    listBox.style.display = "none";
     activeIndex = -1;
     const visibleItems = getVisibleItems();
     visibleItems.forEach((item) => item.setAttribute("aria-selected", "false"));
-    if (config?.onOpenChange) {
+    if (callback?.onOpenChange) {
       try {
-        config.onOpenChange(false);
+        callback.onOpenChange(false);
       } catch (error) {
-        console.error("[aria-ease] Error in onOpenChange callback:", error);
+        console.error("[aria-ease] Error in combobox onOpenChange callback:", error);
       }
     }
   }
@@ -1015,11 +1074,11 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
     const value = item.textContent?.trim() || "";
     comboboxInput.value = value;
     closeListbox();
-    if (config?.onSelect) {
+    if (callback?.onSelect) {
       try {
-        config.onSelect(item, value);
+        callback.onSelect(item);
       } catch (error) {
-        console.error("[aria-ease] Error in onSelect callback:", error);
+        console.error("[aria-ease] Error in combobox onSelect callback:", error);
       }
     }
   }
@@ -1060,11 +1119,11 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
         } else if (comboboxInput.value) {
           event.preventDefault();
           comboboxInput.value = "";
-          if (config?.onClear) {
+          if (callback?.onClear) {
             try {
-              config.onClear();
+              callback.onClear();
             } catch (error) {
-              console.error("[aria-ease] Error in onClear callback:", error);
+              console.error("[aria-ease] Error in combobox onClear callback:", error);
             }
           }
         }
@@ -1278,7 +1337,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-ZO6GM4TU.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-EXEBWWPC.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl);
       } else {
         throw new Error(

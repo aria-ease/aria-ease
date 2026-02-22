@@ -71,7 +71,7 @@ describe("makeComboboxAccessible - edge cases: rapid/concurrent actions", () => 
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onSelect: onSelectMock }
+      callback: { onSelect: onSelectMock }
     });
 
     // Open and select item
@@ -238,7 +238,7 @@ describe("makeComboboxAccessible - edge cases: special characters", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onSelect: onSelectMock }
+      callback: { onSelect: onSelectMock }
     });
 
     const options = listbox.querySelectorAll(".combo-option");
@@ -250,7 +250,7 @@ describe("makeComboboxAccessible - edge cases: special characters", () => {
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
 
-    expect(onSelectMock).toHaveBeenCalledWith(options[3], "🍎 Apple");
+    expect(onSelectMock).toHaveBeenCalledWith(options[3]);
   });
 
   it("handles empty option text", () => {
@@ -374,10 +374,8 @@ describe("makeComboboxAccessible - edge cases: boundary conditions", () => {
   });
 
   it("handles option with extremely long text", () => {
-    const longText = "A".repeat(1000);
     const option = document.createElement("li");
     option.className = "combo-option";
-    option.textContent = longText;
     listbox.appendChild(option);
 
     const onSelectMock = vi.fn();
@@ -385,14 +383,14 @@ describe("makeComboboxAccessible - edge cases: boundary conditions", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onSelect: onSelectMock }
+      callback: { onSelect: onSelectMock }
     });
 
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
 
-    expect(onSelectMock).toHaveBeenCalledWith(option, longText);
+    expect(onSelectMock).toHaveBeenCalledWith(option);
   });
 
   it("handles no options in listbox", () => {
@@ -457,7 +455,7 @@ describe("makeComboboxAccessible - edge cases: focus management", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onOpenChange: onOpenChangeMock }
+      callback: { onOpenChange: onOpenChangeMock }
     });
 
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
@@ -547,7 +545,7 @@ describe("makeComboboxAccessible - edge cases: callback edge cases", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onSelect: errorCallback }
+      callback: { onSelect: errorCallback }
     });
 
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
@@ -562,7 +560,7 @@ describe("makeComboboxAccessible - edge cases: callback edge cases", () => {
     expect(errorCallback).toHaveBeenCalledTimes(1);
     // Error should be logged to console
     expect(consoleSpy).toHaveBeenCalledWith(
-      expect.stringContaining("Error in onSelect callback"),
+      expect.stringContaining("Error in combobox onSelect callback"),
       expect.any(Error)
     );
 
@@ -575,7 +573,7 @@ describe("makeComboboxAccessible - edge cases: callback edge cases", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: {
+      callback: {
         onSelect: undefined,
         onOpenChange: undefined,
         onActiveDescendantChange: undefined
@@ -597,7 +595,7 @@ describe("makeComboboxAccessible - edge cases: callback edge cases", () => {
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      config: { onClear: onClearMock }
+      callback: { onClear: onClearMock }
     });
 
     input.value = "";

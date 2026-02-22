@@ -4,12 +4,12 @@
  * @param {string} comboboxButtonId - The id of the button that toggles the listbox (optional).
  * @param {string} listBoxId - The id of the listbox element.
  * @param {string} listBoxItemsClass - The class of the items within the listbox.
- * @param {ComboboxConfig} config - Configuration options for callbacks.
+ * @param {ComboboxCallback} callback - Configuration options for callbacks.
  */
 
 import { AccessibilityInstance, ComboboxConfig } from "Types";
 
-export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, config }: ComboboxConfig): AccessibilityInstance {
+export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, callback }: ComboboxConfig): AccessibilityInstance {
     const comboboxInput = document.getElementById(`${comboboxInputId}`) as HTMLInputElement;
     if(!comboboxInput) {
         console.error(`[aria-ease] Element with id="${comboboxInputId}" not found. Make sure the combobox input element exists before calling makeComboboxAccessible.`);
@@ -70,11 +70,11 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
             }
             
-            if (config?.onActiveDescendantChange) {
+            if (callback?.onActiveDescendantChange) {
                 try {
-                    config.onActiveDescendantChange(itemId, activeItem);
+                    callback.onActiveDescendantChange(itemId, activeItem);
                 } catch (error) {
-                    console.error("[aria-ease] Error in onActiveDescendantChange callback:", error);
+                    console.error("[aria-ease] Error in combobox onActiveDescendantChange callback:", error);
                 }
             }
         } else {
@@ -86,11 +86,13 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
 
     function openListbox() {
         comboboxInput.setAttribute("aria-expanded", "true");
-        if (config?.onOpenChange) {
+        listBox.style.display = "block";
+
+        if (callback?.onOpenChange) {
             try {
-                config.onOpenChange(true);
+                callback.onOpenChange(true);
             } catch (error) {
-                console.error("[aria-ease] Error in onOpenChange callback:", error);
+                console.error("[aria-ease] Error in combobox onOpenChange callback:", error);
             }
         }
     }
@@ -98,16 +100,17 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
     function closeListbox() {
         comboboxInput.setAttribute("aria-expanded", "false");
         comboboxInput.setAttribute("aria-activedescendant", "");
+        listBox.style.display = "none";
         activeIndex = -1;
         
         const visibleItems = getVisibleItems();
         visibleItems.forEach(item => item.setAttribute("aria-selected", "false"));
         
-        if (config?.onOpenChange) {
+        if (callback?.onOpenChange) {
             try {
-                config.onOpenChange(false);
+                callback.onOpenChange(false);
             } catch (error) {
-                console.error("[aria-ease] Error in onOpenChange callback:", error);
+                console.error("[aria-ease] Error in combobox onOpenChange callback:", error);
             }
         }
     }
@@ -117,11 +120,11 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         comboboxInput.value = value;
         closeListbox();
         
-        if (config?.onSelect) {
+        if (callback?.onSelect) {
             try {
-                config.onSelect(item, value);
+                callback.onSelect(item);
             } catch (error) {
-                console.error("[aria-ease] Error in onSelect callback:", error);
+                console.error("[aria-ease] Error in combobox onSelect callback:", error);
             }
         }
     }
@@ -171,11 +174,11 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 } else if (comboboxInput.value) {
                     event.preventDefault();
                     comboboxInput.value = "";
-                    if (config?.onClear) {
+                    if (callback?.onClear) {
                         try {
-                            config.onClear();
+                            callback.onClear();
                         } catch (error) {
-                            console.error("[aria-ease] Error in onClear callback:", error);
+                            console.error("[aria-ease] Error in combobox onClear callback:", error);
                         }
                     }
                 }
@@ -259,7 +262,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
 
     function initializeOptions() {
         const items = listBox.querySelectorAll(`.${listBoxItemsClass}`) as NodeListOf<HTMLElement>;
-        if (items.length === 0) return; // Early return if no items
+        if (items.length === 0) return;
         
         items.forEach((item, index) => {
             item.setAttribute("role", "option");

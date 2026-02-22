@@ -2,16 +2,42 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-## [6.0.0](https://github.com/aria-ease/aria-ease/compare/v5.0.3...v6.0.0) (2026-02-12)
+### [6.2.1](https://github.com/aria-ease/aria-ease/compare/v6.2.0...v6.2.1) (2026-02-22)
 
 
-### ⚠ BREAKING CHANGES
+### Bug Fixes
 
-* **test:** Playwright tests now require /test-harness route in app. See CONTRACT-TEST-ARCHITECTURE.md for migration guide.
+* fixed audit CLI creating Playwright browser instance for each audit URL ([e8074b0](https://github.com/aria-ease/aria-ease/commit/e8074b00819b523b8107ef935130a9673d9299e8))
+
+## [6.2.0](https://github.com/aria-ease/aria-ease/compare/v6.1.0...v6.2.0) (2026-02-16)
+
 
 ### Features
 
-* **test:** add test harness pattern for 15x faster Playwright tests ([472e72c](https://github.com/aria-ease/aria-ease/commit/472e72cc1f6120eb68b41594f5ea0b4fb8779724))
+* added callback for menu utility, and refresh return for accordion utility ([14b0740](https://github.com/aria-ease/aria-ease/commit/14b0740f28c7278a6de15ecb7421267829d2c64f))
+
+## [6.1.0](https://github.com/aria-ease/aria-ease/compare/v6.0.1...v6.1.0) (2026-02-15)
+
+
+### Features
+
+* added onExpand and onCollapse callbacks for accordion utility ([031021c](https://github.com/aria-ease/aria-ease/commit/031021c94f24ccab47821760df6f26e67ca9d11e))
+
+### [6.0.1](https://github.com/aria-ease/aria-ease/compare/v6.0.0...v6.0.1) (2026-02-14)
+
+### Bug Fixes
+
+- fixed accordion contract test failing and/or timing out ([7a5c2fd](https://github.com/aria-ease/aria-ease/commit/7a5c2fdb1191bb8da5d98710750ef9c5639372e2))
+
+## [6.0.0](https://github.com/aria-ease/aria-ease/compare/v5.0.3...v6.0.0) (2026-02-12)
+
+### ⚠ BREAKING CHANGES
+
+- **test:** Playwright tests now require /test-harness route in app. See CONTRACT-TEST-ARCHITECTURE.md for migration guide.
+
+### Features
+
+- **test:** add test harness pattern for 15x faster Playwright tests ([472e72c](https://github.com/aria-ease/aria-ease/commit/472e72cc1f6120eb68b41594f5ea0b4fb8779724))
 
 ### [5.0.3](https://github.com/aria-ease/aria-ease/compare/v5.0.2...v5.0.3) (2026-02-10)
 

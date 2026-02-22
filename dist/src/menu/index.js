@@ -1,7 +1,7 @@
-import { handleKeyPress } from '../chunk-TBJ6MIC7.js';
+import { handleKeyPress } from '../chunk-ZJXZZDUR.js';
 
 // src/menu/src/makeMenuAccessible/makeMenuAccessible.ts
-function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
+function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
   const menuDiv = document.querySelector(`#${menuId}`);
   if (!menuDiv) {
     console.error(`[aria-ease] Element with id="${menuId}" not found. Make sure the menu element exists before calling makeMenuAccessible.`);
@@ -61,8 +61,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     const nodeListLike = {
       length: items.length,
       item: (index) => items[index],
-      forEach: (callback) => {
-        items.forEach(callback);
+      forEach: (callback2) => {
+        items.forEach(callback2);
       },
       [Symbol.iterator]: function* () {
         for (const item of items) {
@@ -106,7 +106,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
       submenuInstance = makeMenuAccessible({
         menuId: submenuId,
         menuItemsClass,
-        triggerId: submenuTrigger.id
+        triggerId: submenuTrigger.id,
+        callback
       });
       submenuInstances.set(submenuId, submenuInstance);
     }
@@ -114,6 +115,15 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
   }
   function closeSubmenu() {
     closeMenu();
+  }
+  function onOpenChange(isOpen) {
+    if (callback?.onOpenChange) {
+      try {
+        callback.onOpenChange(isOpen);
+      } catch (error) {
+        console.error("[aria-ease] Error in menu onOpenChange callback:", error);
+      }
+    }
   }
   function addListeners() {
     const items = getFilteredItems();
@@ -127,7 +137,8 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
           menuDiv,
           triggerButton,
           openSubmenu,
-          closeSubmenu
+          closeSubmenu,
+          onOpenChange
         );
         menuItem.addEventListener("keydown", handler);
         handlerMap.set(menuItem, handler);
@@ -152,12 +163,26 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId }) {
     if (items && items.length > 0) {
       items[0].focus();
     }
+    if (callback?.onOpenChange) {
+      try {
+        callback.onOpenChange(true);
+      } catch (error) {
+        console.error("[aria-ease] Error in menu onOpenChange callback:", error);
+      }
+    }
   }
   function closeMenu() {
     setAria(false);
     menuDiv.style.display = "none";
     removeListeners();
     triggerButton.focus();
+    if (callback?.onOpenChange) {
+      try {
+        callback.onOpenChange(false);
+      } catch (error) {
+        console.error("[aria-ease] Error in menu onOpenChange callback:", error);
+      }
+    }
   }
   function intializeMenuItems() {
     const items = getItems();
