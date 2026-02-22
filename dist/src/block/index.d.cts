@@ -1,4 +1,4 @@
-import { a as AccessibilityInstance } from '../Types.d-CxWrr421.cjs';
+import { A as AccessibilityInstance } from '../Types.d-CBuuHF3d.cjs';
 
 /**
  * Adds keyboard interaction to block. The block traps focus and can be interacted with using the keyboard.

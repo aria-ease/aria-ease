@@ -1,21 +1,39 @@
 import AxeBuilder from "@axe-core/playwright";
-import { chromium } from "playwright";
-import type { AxeResult } from "Types";
+import { chromium, Browser } from "playwright";
+import { AxeResult } from "Types";
 
-export async function runAudit(url: string, options?: { timeout?: number; waitUntil?: 'load' | 'domcontentloaded' | 'networkidle' }) {
-    let browser;
+/**
+ * Shared browser instance for auditing multiple URLs
+ * Reuses browser across audits to avoid repeated launch overhead
+ */
+export async function createAuditBrowser(): Promise<Browser> {
+    return await chromium.launch({ headless: true });
+}
+
+export async function runAudit(url: string, options: { browser?: Browser; }): Promise<AxeResult> {
+    let browser: Browser | undefined = options.browser;
+    let browserCreated: boolean = false;
     
-    // Default to 60s timeout and domcontentloaded for better reliability
-    const timeout = options?.timeout || 60000;
-    const waitUntil = options?.waitUntil || 'domcontentloaded';
+    const timeout: number = 60000;
+    const waitUntil: "load" | "domcontentloaded" | "networkidle" | "commit" | undefined = 'domcontentloaded';
 
     try{ 
-        browser = await chromium.launch({ headless: true });
+        // Create browser only if not provided (backward compatibility)
+        if (!browser) {
+            browser = await chromium.launch({ headless: true });
+            browserCreated = true;
+        }
+        
         const context = await browser.newContext();
         const page = await context.newPage();
         await page.goto(url, { waitUntil, timeout });
         const axe = new AxeBuilder({ page });
         const axeResults: AxeResult = await axe.analyze();
+        
+        // Clean up page and context but not browser (if reused)
+        await page.close();
+        await context.close();
+        
         return axeResults;
     } catch(error: unknown) {
         if (error instanceof Error) {
@@ -40,6 +58,8 @@ export async function runAudit(url: string, options?: { timeout?: number; waitUn
         }
         throw error;
     } finally {
-        if(browser) await browser.close(); 
+        if(browser && browserCreated) {
+            await browser.close(); 
+        }
     }
 }
