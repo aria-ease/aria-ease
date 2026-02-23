@@ -128,23 +128,11 @@ menu.refresh();
 **Required HTML structure:**
 
 ```html
-<button
-  id="menu-button"
-  aria-expanded="false"
-  aria-controls="dropdown-menu"
-  aria-haspopup="true"
->
-  Menu
-</button>
-<div
-  id="dropdown-menu"
-  style="display: none;"
-  aria-labelledby="menu-button"
-  role="menu"
->
-  <a role="menuitem" href="#" class="menu-item">Item 1</a>
-  <a role="menuitem" href="#" class="menu-item">Item 2</a>
-  <button role="menuitem" class="menu-item">Item 3</button>
+<button id="menu-button" aria-label="Home example menu">Menu</button>
+<div id="dropdown-menu" style="display: none;">
+  <a href="#" class="menu-item">Item 1</a>
+  <a href="#" class="menu-item">Item 2</a>
+  <button class="menu-item">Item 3</button>
 </div>
 ```
 

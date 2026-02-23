@@ -1,4 +1,4 @@
-import { A as AccessibilityInstance } from '../Types.d-CBuuHF3d.js';
+import { a as AccessibilityInstance } from '../Types.d-CRjhbrcw.js';
 
 /**
  * Makes a radio group accessible by managing ARIA attributes, keyboard navigation, and state.

@@ -12,6 +12,7 @@
             "properties": {
                 "id": { "type": "string" },
                 "version": { "type": "string" },
+                "lastUpdated": { "type": "string" },
                 "description": { "type": "string" },
                 "source": {
                     "type": "object",

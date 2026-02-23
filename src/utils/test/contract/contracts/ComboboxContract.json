@@ -2,6 +2,7 @@
     "meta": {
         "id": "aria-ease.combobox",
         "version": "1.0.0",
+        "lastUpdated": "11-06-2026",
         "description": "ARIA Combobox interaction contract. Validates the ARIA and interaction contract for a custom combobox component following the ARIA Authoring Practices Guide combobox with listbox popup pattern.",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/",
