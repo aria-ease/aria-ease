@@ -68,6 +68,7 @@ function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex =
           selectRadio(nextIndex);
           break;
         case " ":
+        case "Enter":
           event.preventDefault();
           selectRadio(index);
           break;

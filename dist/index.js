@@ -787,6 +787,7 @@ function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex =
           selectRadio(nextIndex);
           break;
         case " ":
+        case "Enter":
           event.preventDefault();
           selectRadio(index);
           break;
@@ -1337,7 +1338,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-EXEBWWPC.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-O7FF7GV4.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl);
       } else {
         throw new Error(
