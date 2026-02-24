@@ -98,6 +98,7 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
           break;
 
         case " ":
+        case "Enter":
           event.preventDefault();
           selectRadio(index);
           break;

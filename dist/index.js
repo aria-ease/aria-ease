@@ -1225,7 +1225,7 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
     activeIndex = -1;
     setActiveDescendant(-1);
   }
-  return { cleanup, refresh };
+  return { cleanup, refresh, openListbox, closeListbox };
 }
 
 // src/utils/test/src/test.ts

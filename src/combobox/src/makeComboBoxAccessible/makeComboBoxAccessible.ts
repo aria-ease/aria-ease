@@ -297,5 +297,5 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         setActiveDescendant(-1);
     }
 
-    return { cleanup, refresh }
+    return { cleanup, refresh, openListbox, closeListbox }
 }
