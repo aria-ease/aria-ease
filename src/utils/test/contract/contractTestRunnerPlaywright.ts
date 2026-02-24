@@ -14,6 +14,12 @@ import { createTestPage } from "./playwrightTestHarness";
 
 export async function runContractTestsPlaywright( componentName: string,  url?: string ): Promise<ContractTestResult> {
   const reporter = new ContractReporter(true);
+  const actionTimeoutMs = 400;
+  const assertionTimeoutMs = 400;
+
+  function isBrowserClosedError(error: unknown): boolean {
+    return error instanceof Error && error.message.includes("Target page, context or browser has been closed");
+  }
   
   const contractTyped: Contract = contract;
   const contractPath = contractTyped[componentName]?.path;
@@ -37,11 +43,20 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
 
   try {
     page = await createTestPage();
+    
     if (url) {
-      await page.goto(url, { 
-        waitUntil: "domcontentloaded",
-        timeout: 30000 
-      });
+      try {
+        await page.goto(url, { 
+          waitUntil: "domcontentloaded",
+          timeout: 30000 
+        });
+      } catch (error) {
+        throw new Error(
+          `Failed to navigate to ${url}. ` +
+          `Ensure dev server is running and accessible. ` +
+          `Original error: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
       
       await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     }
@@ -49,10 +64,18 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
     const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
     
     if (!mainSelector) {
-      throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
+      throw new Error(`CRITICAL: No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
     
-    await page.locator(mainSelector).first().waitFor({ state: 'attached', timeout: 30000 });
+    try {
+      await page.locator(mainSelector).first().waitFor({ state: 'attached', timeout: 30000 });
+    } catch (error) {
+      throw new Error(
+        `CRITICAL: Component element '${mainSelector}' not found on page within 30s. ` +
+        `This usually means the component didn't render or the contract selector is incorrect. ` +
+        `Original error: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
 
     if (componentName === 'menu' && componentContract.selectors.trigger) {
       await page.locator(componentContract.selectors.trigger).first().waitFor({ 
@@ -142,6 +165,13 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
 
     // Run dynamic tests
     for (const dynamicTest of componentContract.dynamic || []) {
+      // Check if page is still available before starting new test
+      if (!page || page.isClosed()) {
+        console.warn(`\n⚠️  Browser closed - skipping remaining ${componentContract.dynamic.length - componentContract.dynamic.indexOf(dynamicTest)} tests\n`);
+        failures.push(`CRITICAL: Browser/page closed before completing all tests. ${componentContract.dynamic.length - componentContract.dynamic.indexOf(dynamicTest)} tests skipped.`);
+        break; // Exit dynamic test loop
+      }
+
       const { action, assertions } = dynamicTest;
       
       const failuresBeforeTest = failures.length;
@@ -172,7 +202,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
             await page.keyboard.press('Escape');
             
             // Wait for popup to close - declaratively
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: 2000 })
+            menuClosed = await expect(popupElement).toBeHidden({ timeout: assertionTimeoutMs })
               .then(() => true)
               .catch(() => false);
           }
@@ -180,9 +210,9 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
           // Strategy 2: Try clicking trigger to toggle
           if (!menuClosed && componentContract.selectors.trigger) {
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
-            await triggerElement.click();
+            await triggerElement.click({ timeout: actionTimeoutMs });
             
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: 2000 })
+            menuClosed = await expect(popupElement).toBeHidden({ timeout: assertionTimeoutMs })
               .then(() => true)
               .catch(() => false);
           }
@@ -190,7 +220,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
           // Strategy 3: Try clicking outside
           if (!menuClosed) {
             await page.mouse.click(10, 10);
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: 2000 })
+            menuClosed = await expect(popupElement).toBeHidden({ timeout: assertionTimeoutMs })
               .then(() => true)
               .catch(() => false);
           }
@@ -231,10 +261,10 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
             const triggerPanel = await trigger.getAttribute('aria-controls');
             
             if (isExpanded && triggerPanel) {
-              await trigger.click();
+              await trigger.click({ timeout: actionTimeoutMs });
               
               const panel = page.locator(`#${triggerPanel}`);
-              await expect(panel).toBeHidden({ timeout: 1000 }).catch(() => {
+              await expect(panel).toBeHidden({ timeout: assertionTimeoutMs }).catch(() => {
                 // Silent catch - test will fail if panel state is wrong
               });
             }
@@ -280,51 +310,85 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       }
 
       for (const act of action) {
+        // Check if page is still available (in case of external timeout)
+        if (!page || page.isClosed()) {
+          failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+          break; // Exit action loop
+        }
+
         if (act.type === "focus") {
-          const focusSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-          if (!focusSelector) {
-            failures.push(`Selector for focus target ${act.target} not found.`);
+          try {
+            const focusSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
+            if (!focusSelector) {
+              failures.push(`Selector for focus target ${act.target} not found.`);
+              continue;
+            }
+            await page.locator(focusSelector).first().focus({ timeout: actionTimeoutMs });
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+              break;
+            }
+            failures.push(`Failed to focus ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
             continue;
           }
-          await page.locator(focusSelector).first().focus();
         }
 
         if (act.type === "type" && act.value) {
-          const typeSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-          if (!typeSelector) {
-            failures.push(`Selector for type target ${act.target} not found.`);
+          try {
+            const typeSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
+            if (!typeSelector) {
+              failures.push(`Selector for type target ${act.target} not found.`);
+              continue;
+            }
+            await page.locator(typeSelector).first().fill(act.value, { timeout: actionTimeoutMs });
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+              break;
+            }
+            failures.push(`Failed to type into ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
             continue;
           }
-          await page.locator(typeSelector).first().fill(act.value);
         }
 
         if (act.type === "click") {
-          if (act.target === "document") {
-            await page.mouse.click(10, 10);
-          } else if (act.target === "relative" && act.relativeTarget) {
-            const relativeSelector = componentContract.selectors.relative;
-            if (!relativeSelector) {
-              failures.push(`Relative selector not defined for click action.`);
-              continue;
-            }
+          try {
+            if (act.target === "document") {
+              await page.mouse.click(10, 10);
+            } else if (act.target === "relative" && act.relativeTarget) {
+              const relativeSelector = componentContract.selectors.relative;
+              if (!relativeSelector) {
+                failures.push(`Relative selector not defined for click action.`);
+                continue;
+              }
 
-            const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
-            if (!relativeElement) {
-              failures.push(`Could not resolve relative target ${act.relativeTarget} for click.`);
-              continue;
+              const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
+              if (!relativeElement) {
+                failures.push(`Could not resolve relative target ${act.relativeTarget} for click.`);
+                continue;
+              }
+              await relativeElement.click({ timeout: actionTimeoutMs });
+            } else {
+              const actionSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
+              if (!actionSelector) {
+                failures.push(`Selector for action target ${act.target} not found.`);
+                continue;
+              }
+              await page.locator(actionSelector).first().click({ timeout: actionTimeoutMs });
             }
-            await relativeElement.click();
-          } else {
-            const actionSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-            if (!actionSelector) {
-              failures.push(`Selector for action target ${act.target} not found.`);
-              continue;
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+              break;
             }
-            await page.locator(actionSelector).first().click();
+            failures.push(`Failed to click ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
+            continue;
           }
         }
 
         if (act.type === "keypress" && act.key) {
+          try {
             const keyMap: Record<string, string> = {
               "Space": "Space",
               "Enter": "Enter",
@@ -338,53 +402,70 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
               "Tab": "Tab"
             };
 
-          let keyValue = keyMap[act.key] || act.key;
-          if (keyValue === "Space") {
-            keyValue = " ";
-          } else if (keyValue.includes(" ")) {
-            keyValue = keyValue.replace(/ /g, "");
-          }
-
-          if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
-            await page.keyboard.press(keyValue);
-          } else {
-            const keypressSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-            if (!keypressSelector) {
-              failures.push(`Selector for keypress target ${act.target} not found.`);
-              continue;
+            let keyValue = keyMap[act.key] || act.key;
+            if (keyValue === "Space") {
+              keyValue = " ";
+            } else if (keyValue.includes(" ")) {
+              keyValue = keyValue.replace(/ /g, "");
             }
 
-            const target = page.locator(keypressSelector).first();
-            const elementCount = await target.count();
-            if (elementCount === 0) {
-              reporter.reportTest(dynamicTest, 'skip', `Skipping test - ${act.target} element not found (optional submenu test)`);
+            if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
+              await page.keyboard.press(keyValue);
+            } else {
+              const keypressSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
+              if (!keypressSelector) {
+                failures.push(`Selector for keypress target ${act.target} not found.`);
+                continue;
+              }
+
+              const target = page.locator(keypressSelector).first();
+              const elementCount = await target.count();
+              if (elementCount === 0) {
+                reporter.reportTest(dynamicTest, 'skip', `Skipping test - ${act.target} element not found (optional submenu test)`);
+                break;
+              }
+              await target.press(keyValue, { timeout: actionTimeoutMs });
+            }
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
               break;
             }
-            await target.press(keyValue);
+            failures.push(`Failed to press ${act.key} on ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
+            continue;
           }
         }
 
         if (act.type === "hover") {
-          if (act.target === "relative" && act.relativeTarget) {
-            const relativeSelector = componentContract.selectors.relative;
-            if (!relativeSelector) {
-              failures.push(`Relative selector not defined for hover action.`);
-              continue;
-            }
+          try {
+            if (act.target === "relative" && act.relativeTarget) {
+              const relativeSelector = componentContract.selectors.relative;
+              if (!relativeSelector) {
+                failures.push(`Relative selector not defined for hover action.`);
+                continue;
+              }
 
-            const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
-            if (!relativeElement) {
-              failures.push(`Could not resolve relative target ${act.relativeTarget} for hover.`);
-              continue;
+              const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
+              if (!relativeElement) {
+                failures.push(`Could not resolve relative target ${act.relativeTarget} for hover.`);
+                continue;
+              }
+              await relativeElement.hover({ timeout: actionTimeoutMs });
+            } else {
+              const hoverSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
+              if (!hoverSelector) {
+                failures.push(`Selector for hover target ${act.target} not found.`);
+                continue;
+              }
+              await page.locator(hoverSelector).first().hover({ timeout: actionTimeoutMs });
             }
-            await relativeElement.hover();
-          } else {
-            const hoverSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-            if (!hoverSelector) {
-              failures.push(`Selector for hover target ${act.target} not found.`);
-              continue;
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+              break;
             }
-            await page.locator(hoverSelector).first().hover();
+            failures.push(`Failed to hover ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
+            continue;
           }
         }
       }
@@ -392,38 +473,49 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       // Evaluate assertions after action chain completes
       // No arbitrary timeout - assertions have their own timeouts
       for (const assertion of assertions) {
-        let target;
-
-        if (assertion.target === "relative") {
-          const relativeSelector = componentContract.selectors.relative;
-          if (!relativeSelector) {
-            failures.push("Relative selector is not defined in the contract.");
-            continue;
-          }
-          const relativeTargetValue = assertion.relativeTarget || assertion.expectedValue;
-          if (!relativeTargetValue) {
-            failures.push("Relative target or expected value is not defined.");
-            continue;
-          }
-          target = await resolveRelativeTarget(relativeSelector, relativeTargetValue);
-        } else {
-          const assertionSelector = componentContract.selectors[assertion.target as keyof typeof componentContract.selectors];
-          if (!assertionSelector) {
-            failures.push(`Selector for assertion target ${assertion.target} not found.`);
-            continue;
-          }
-          target = page.locator(assertionSelector).first();
+        // Check if page is still available (in case of external timeout)
+        if (!page || page.isClosed()) {
+          failures.push(`CRITICAL: Browser/page closed before completing all tests. Increase test timeout or reduce test complexity.`);
+          break; // Exit assertion loop
         }
 
-        if (!target) {
-          failures.push(`Target ${assertion.target} not found.`);
+        let target;
+
+        try {
+          if (assertion.target === "relative") {
+            const relativeSelector = componentContract.selectors.relative;
+            if (!relativeSelector) {
+              failures.push("Relative selector is not defined in the contract.");
+              continue;
+            }
+            const relativeTargetValue = assertion.relativeTarget || assertion.expectedValue;
+            if (!relativeTargetValue) {
+              failures.push("Relative target or expected value is not defined.");
+              continue;
+            }
+            target = await resolveRelativeTarget(relativeSelector, relativeTargetValue);
+          } else {
+            const assertionSelector = componentContract.selectors[assertion.target as keyof typeof componentContract.selectors];
+            if (!assertionSelector) {
+              failures.push(`Selector for assertion target ${assertion.target} not found.`);
+              continue;
+            }
+            target = page.locator(assertionSelector).first();
+          }
+
+          if (!target) {
+            failures.push(`Target ${assertion.target} not found.`);
+            continue;
+          }
+        } catch (error) {
+          failures.push(`Failed to resolve target ${assertion.target}: ${error instanceof Error ? error.message : String(error)}`);
           continue;
         }
 
         // Evaluate assertion with retry logic
         if (assertion.assertion === "toBeVisible") {
           try {
-            await expect(target).toBeVisible({ timeout: 2000 });
+            await expect(target).toBeVisible({ timeout: assertionTimeoutMs });
             passes.push(`${assertion.target} is visible as expected. Test: "${dynamicTest.description}".`);
           } catch {
             const debugState = await page.evaluate((sel) => {
@@ -438,7 +530,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
 
         if (assertion.assertion === "notToBeVisible") {
           try {
-            await expect(target).toBeHidden({ timeout: 2000 });
+            await expect(target).toBeHidden({ timeout: assertionTimeoutMs });
             passes.push(`${assertion.target} is not visible as expected. Test: "${dynamicTest.description}".`);
           } catch{
             const debugState = await page.evaluate((sel) => {
@@ -463,7 +555,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
                 failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should not be empty, found "${attributeValue}".`);
               }
             } else {
-              await expect(target).toHaveAttribute(assertion.attribute, assertion.expectedValue, { timeout: 3000 });
+              await expect(target).toHaveAttribute(assertion.attribute, assertion.expectedValue, { timeout: assertionTimeoutMs });
               passes.push(`${assertion.target} has expected "${assertion.attribute}". Test: "${dynamicTest.description}".`);
             }
           } catch {
@@ -496,7 +588,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
 
         if (assertion.assertion === "toHaveFocus") {
           try {
-            await expect(target).toBeFocused({ timeout: 5000 });
+            await expect(target).toBeFocused({ timeout: assertionTimeoutMs });
             passes.push(`${assertion.target} has focus as expected. Test: "${dynamicTest.description}".`);
           } catch {
             const actualFocus = await page.evaluate(() => {
@@ -544,17 +636,39 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
 
   } catch (error: unknown) {
     if (error instanceof Error) {
-      if (error.message.includes("Executable doesn't exist")) {
-        console.error("\n❌ Playwright browsers not found!\n");
+      // Critical errors that should stop the entire test
+      if (error.message.includes("Executable doesn't exist") || error.message.includes("browserType.launch")) {
+        console.error("\n❌ CRITICAL: Playwright browsers not found!\n");
         console.log("📦 Run: npx playwright install chromium\n");
-        failures.push("Playwright browser not installed. Run: npx playwright install chromium");
-      } else if (error.message.includes("net::ERR_CONNECTION_REFUSED")) {
-        console.error("\n❌ Cannot connect to dev server!\n");
+        failures.push("CRITICAL: Playwright browser not installed. Run: npx playwright install chromium");
+      } else if (error.message.includes("net::ERR_CONNECTION_REFUSED") || error.message.includes("NS_ERROR_CONNECTION_REFUSED")) {
+        console.error("\n❌ CRITICAL: Cannot connect to dev server!\n");
         console.log(`   Make sure your dev server is running at ${url}\n`);
-        failures.push(`Dev server not running at ${url}`);
+        failures.push(`CRITICAL: Dev server not running at ${url}`);
+      } else if (error.message.includes("Timeout") && error.message.includes("waitFor")) {
+        console.error("\n❌ CRITICAL: Component not found on page!\n");
+        console.log(`   The component selector could not be found within 30 seconds.\n`);
+        console.log(`   This usually means:\n`);
+        console.log(`   - The component didn't render\n`);
+        console.log(`   - The URL is incorrect\n`);
+        console.log(`   - The component selector in the contract is wrong\n`);
+        failures.push(`CRITICAL: Component element not found on page - ${error.message}`);
+      } else if (error.message.includes("Target page, context or browser has been closed")) {
+        console.error("\n❌ CRITICAL: Browser/page was closed unexpectedly!\n");
+        console.log(`   This usually means:\n`);
+        console.log(`   - The test timeout was too short\n`);
+        console.log(`   - The browser crashed\n`);
+        console.log(`   - An external process killed the browser\n`);
+        failures.push(`CRITICAL: Browser/page closed unexpectedly - ${error.message}`);
+      } else if (error.message.includes("FATAL")) {
+        // Re-throw FATAL errors (like menu not closing between tests)
+        console.error(`\n${error.message}\n`);
+        failures.push(error.message);
       } else {
-        console.error("❌ Playwright test error:", error.message);
-        failures.push(`Test error: ${error.message}`);
+        // Unexpected errors - these are bugs
+        console.error("\n❌ UNEXPECTED ERROR:", error.message);
+        console.error("Stack:", error.stack);
+        failures.push(`UNEXPECTED ERROR: ${error.message}`);
       }
     }
   } finally {

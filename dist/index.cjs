@@ -350,6 +350,11 @@ __export(contractTestRunnerPlaywright_exports, {
 });
 async function runContractTestsPlaywright(componentName, url) {
   const reporter = new ContractReporter(true);
+  const actionTimeoutMs = 400;
+  const assertionTimeoutMs = 400;
+  function isBrowserClosedError(error) {
+    return error instanceof Error && error.message.includes("Target page, context or browser has been closed");
+  }
   const contractTyped = contract_default;
   const contractPath = contractTyped[componentName]?.path;
   if (!contractPath) {
@@ -368,17 +373,29 @@ async function runContractTestsPlaywright(componentName, url) {
   try {
     page = await createTestPage();
     if (url) {
-      await page.goto(url, {
-        waitUntil: "domcontentloaded",
-        timeout: 3e4
-      });
+      try {
+        await page.goto(url, {
+          waitUntil: "domcontentloaded",
+          timeout: 3e4
+        });
+      } catch (error) {
+        throw new Error(
+          `Failed to navigate to ${url}. Ensure dev server is running and accessible. Original error: ${error instanceof Error ? error.message : String(error)}`
+        );
+      }
       await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     }
     const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
     if (!mainSelector) {
-      throw new Error(`No main selector (trigger, input, or container) found in contract for ${componentName}`);
+      throw new Error(`CRITICAL: No main selector (trigger, input, or container) found in contract for ${componentName}`);
     }
-    await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: 3e4 });
+    try {
+      await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: 3e4 });
+    } catch (error) {
+      throw new Error(
+        `CRITICAL: Component element '${mainSelector}' not found on page within 30s. This usually means the component didn't render or the contract selector is incorrect. Original error: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
     if (componentName === "menu" && componentContract.selectors.trigger) {
       await page.locator(componentContract.selectors.trigger).first().waitFor({
         state: "visible",
@@ -458,6 +475,13 @@ async function runContractTestsPlaywright(componentName, url) {
       }
     }
     for (const dynamicTest of componentContract.dynamic || []) {
+      if (!page || page.isClosed()) {
+        console.warn(`
+\u26A0\uFE0F  Browser closed - skipping remaining ${componentContract.dynamic.length - componentContract.dynamic.indexOf(dynamicTest)} tests
+`);
+        failures.push(`CRITICAL: Browser/page closed before completing all tests. ${componentContract.dynamic.length - componentContract.dynamic.indexOf(dynamicTest)} tests skipped.`);
+        break;
+      }
       const { action, assertions } = dynamicTest;
       const failuresBeforeTest = failures.length;
       if (componentContract.selectors.popup) {
@@ -477,16 +501,16 @@ async function runContractTestsPlaywright(componentName, url) {
             const closeElement = page.locator(closeSelector).first();
             await closeElement.focus();
             await page.keyboard.press("Escape");
-            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 2e3 }).then(() => true).catch(() => false);
+            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: assertionTimeoutMs }).then(() => true).catch(() => false);
           }
           if (!menuClosed && componentContract.selectors.trigger) {
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
-            await triggerElement.click();
-            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 2e3 }).then(() => true).catch(() => false);
+            await triggerElement.click({ timeout: actionTimeoutMs });
+            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: assertionTimeoutMs }).then(() => true).catch(() => false);
           }
           if (!menuClosed) {
             await page.mouse.click(10, 10);
-            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: 2e3 }).then(() => true).catch(() => false);
+            menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: assertionTimeoutMs }).then(() => true).catch(() => false);
           }
           if (!menuClosed) {
             throw new Error(
@@ -515,9 +539,9 @@ This indicates a problem with the menu component's close functionality.`
             const isExpanded = await trigger.getAttribute("aria-expanded") === "true";
             const triggerPanel = await trigger.getAttribute("aria-controls");
             if (isExpanded && triggerPanel) {
-              await trigger.click();
+              await trigger.click({ timeout: actionTimeoutMs });
               const panel = page.locator(`#${triggerPanel}`);
-              await (0, test_exports.expect)(panel).toBeHidden({ timeout: 1e3 }).catch(() => {
+              await (0, test_exports.expect)(panel).toBeHidden({ timeout: assertionTimeoutMs }).catch(() => {
               });
             }
           }
@@ -556,134 +580,192 @@ This indicates a problem with the menu component's close functionality.`
         continue;
       }
       for (const act of action) {
+        if (!page || page.isClosed()) {
+          failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+          break;
+        }
         if (act.type === "focus") {
-          const focusSelector = componentContract.selectors[act.target];
-          if (!focusSelector) {
-            failures.push(`Selector for focus target ${act.target} not found.`);
+          try {
+            const focusSelector = componentContract.selectors[act.target];
+            if (!focusSelector) {
+              failures.push(`Selector for focus target ${act.target} not found.`);
+              continue;
+            }
+            await page.locator(focusSelector).first().focus({ timeout: actionTimeoutMs });
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+              break;
+            }
+            failures.push(`Failed to focus ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
             continue;
           }
-          await page.locator(focusSelector).first().focus();
         }
         if (act.type === "type" && act.value) {
-          const typeSelector = componentContract.selectors[act.target];
-          if (!typeSelector) {
-            failures.push(`Selector for type target ${act.target} not found.`);
+          try {
+            const typeSelector = componentContract.selectors[act.target];
+            if (!typeSelector) {
+              failures.push(`Selector for type target ${act.target} not found.`);
+              continue;
+            }
+            await page.locator(typeSelector).first().fill(act.value, { timeout: actionTimeoutMs });
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+              break;
+            }
+            failures.push(`Failed to type into ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
             continue;
           }
-          await page.locator(typeSelector).first().fill(act.value);
         }
         if (act.type === "click") {
-          if (act.target === "document") {
-            await page.mouse.click(10, 10);
-          } else if (act.target === "relative" && act.relativeTarget) {
-            const relativeSelector = componentContract.selectors.relative;
-            if (!relativeSelector) {
-              failures.push(`Relative selector not defined for click action.`);
-              continue;
+          try {
+            if (act.target === "document") {
+              await page.mouse.click(10, 10);
+            } else if (act.target === "relative" && act.relativeTarget) {
+              const relativeSelector = componentContract.selectors.relative;
+              if (!relativeSelector) {
+                failures.push(`Relative selector not defined for click action.`);
+                continue;
+              }
+              const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
+              if (!relativeElement) {
+                failures.push(`Could not resolve relative target ${act.relativeTarget} for click.`);
+                continue;
+              }
+              await relativeElement.click({ timeout: actionTimeoutMs });
+            } else {
+              const actionSelector = componentContract.selectors[act.target];
+              if (!actionSelector) {
+                failures.push(`Selector for action target ${act.target} not found.`);
+                continue;
+              }
+              await page.locator(actionSelector).first().click({ timeout: actionTimeoutMs });
             }
-            const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
-            if (!relativeElement) {
-              failures.push(`Could not resolve relative target ${act.relativeTarget} for click.`);
-              continue;
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+              break;
             }
-            await relativeElement.click();
-          } else {
-            const actionSelector = componentContract.selectors[act.target];
-            if (!actionSelector) {
-              failures.push(`Selector for action target ${act.target} not found.`);
-              continue;
-            }
-            await page.locator(actionSelector).first().click();
+            failures.push(`Failed to click ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
+            continue;
           }
         }
         if (act.type === "keypress" && act.key) {
-          const keyMap = {
-            "Space": "Space",
-            "Enter": "Enter",
-            "Escape": "Escape",
-            "Arrow Up": "ArrowUp",
-            "Arrow Down": "ArrowDown",
-            "Arrow Left": "ArrowLeft",
-            "Arrow Right": "ArrowRight",
-            "Home": "Home",
-            "End": "End",
-            "Tab": "Tab"
-          };
-          let keyValue = keyMap[act.key] || act.key;
-          if (keyValue === "Space") {
-            keyValue = " ";
-          } else if (keyValue.includes(" ")) {
-            keyValue = keyValue.replace(/ /g, "");
-          }
-          if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
-            await page.keyboard.press(keyValue);
-          } else {
-            const keypressSelector = componentContract.selectors[act.target];
-            if (!keypressSelector) {
-              failures.push(`Selector for keypress target ${act.target} not found.`);
-              continue;
+          try {
+            const keyMap = {
+              "Space": "Space",
+              "Enter": "Enter",
+              "Escape": "Escape",
+              "Arrow Up": "ArrowUp",
+              "Arrow Down": "ArrowDown",
+              "Arrow Left": "ArrowLeft",
+              "Arrow Right": "ArrowRight",
+              "Home": "Home",
+              "End": "End",
+              "Tab": "Tab"
+            };
+            let keyValue = keyMap[act.key] || act.key;
+            if (keyValue === "Space") {
+              keyValue = " ";
+            } else if (keyValue.includes(" ")) {
+              keyValue = keyValue.replace(/ /g, "");
             }
-            const target = page.locator(keypressSelector).first();
-            const elementCount = await target.count();
-            if (elementCount === 0) {
-              reporter.reportTest(dynamicTest, "skip", `Skipping test - ${act.target} element not found (optional submenu test)`);
+            if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
+              await page.keyboard.press(keyValue);
+            } else {
+              const keypressSelector = componentContract.selectors[act.target];
+              if (!keypressSelector) {
+                failures.push(`Selector for keypress target ${act.target} not found.`);
+                continue;
+              }
+              const target = page.locator(keypressSelector).first();
+              const elementCount = await target.count();
+              if (elementCount === 0) {
+                reporter.reportTest(dynamicTest, "skip", `Skipping test - ${act.target} element not found (optional submenu test)`);
+                break;
+              }
+              await target.press(keyValue, { timeout: actionTimeoutMs });
+            }
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
               break;
             }
-            await target.press(keyValue);
+            failures.push(`Failed to press ${act.key} on ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
+            continue;
           }
         }
         if (act.type === "hover") {
-          if (act.target === "relative" && act.relativeTarget) {
-            const relativeSelector = componentContract.selectors.relative;
-            if (!relativeSelector) {
-              failures.push(`Relative selector not defined for hover action.`);
-              continue;
+          try {
+            if (act.target === "relative" && act.relativeTarget) {
+              const relativeSelector = componentContract.selectors.relative;
+              if (!relativeSelector) {
+                failures.push(`Relative selector not defined for hover action.`);
+                continue;
+              }
+              const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
+              if (!relativeElement) {
+                failures.push(`Could not resolve relative target ${act.relativeTarget} for hover.`);
+                continue;
+              }
+              await relativeElement.hover({ timeout: actionTimeoutMs });
+            } else {
+              const hoverSelector = componentContract.selectors[act.target];
+              if (!hoverSelector) {
+                failures.push(`Selector for hover target ${act.target} not found.`);
+                continue;
+              }
+              await page.locator(hoverSelector).first().hover({ timeout: actionTimeoutMs });
             }
-            const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
-            if (!relativeElement) {
-              failures.push(`Could not resolve relative target ${act.relativeTarget} for hover.`);
-              continue;
+          } catch (error) {
+            if (isBrowserClosedError(error)) {
+              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+              break;
             }
-            await relativeElement.hover();
-          } else {
-            const hoverSelector = componentContract.selectors[act.target];
-            if (!hoverSelector) {
-              failures.push(`Selector for hover target ${act.target} not found.`);
-              continue;
-            }
-            await page.locator(hoverSelector).first().hover();
+            failures.push(`Failed to hover ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
+            continue;
           }
         }
       }
       for (const assertion of assertions) {
-        let target;
-        if (assertion.target === "relative") {
-          const relativeSelector = componentContract.selectors.relative;
-          if (!relativeSelector) {
-            failures.push("Relative selector is not defined in the contract.");
-            continue;
-          }
-          const relativeTargetValue = assertion.relativeTarget || assertion.expectedValue;
-          if (!relativeTargetValue) {
-            failures.push("Relative target or expected value is not defined.");
-            continue;
-          }
-          target = await resolveRelativeTarget(relativeSelector, relativeTargetValue);
-        } else {
-          const assertionSelector = componentContract.selectors[assertion.target];
-          if (!assertionSelector) {
-            failures.push(`Selector for assertion target ${assertion.target} not found.`);
-            continue;
-          }
-          target = page.locator(assertionSelector).first();
+        if (!page || page.isClosed()) {
+          failures.push(`CRITICAL: Browser/page closed before completing all tests. Increase test timeout or reduce test complexity.`);
+          break;
         }
-        if (!target) {
-          failures.push(`Target ${assertion.target} not found.`);
+        let target;
+        try {
+          if (assertion.target === "relative") {
+            const relativeSelector = componentContract.selectors.relative;
+            if (!relativeSelector) {
+              failures.push("Relative selector is not defined in the contract.");
+              continue;
+            }
+            const relativeTargetValue = assertion.relativeTarget || assertion.expectedValue;
+            if (!relativeTargetValue) {
+              failures.push("Relative target or expected value is not defined.");
+              continue;
+            }
+            target = await resolveRelativeTarget(relativeSelector, relativeTargetValue);
+          } else {
+            const assertionSelector = componentContract.selectors[assertion.target];
+            if (!assertionSelector) {
+              failures.push(`Selector for assertion target ${assertion.target} not found.`);
+              continue;
+            }
+            target = page.locator(assertionSelector).first();
+          }
+          if (!target) {
+            failures.push(`Target ${assertion.target} not found.`);
+            continue;
+          }
+        } catch (error) {
+          failures.push(`Failed to resolve target ${assertion.target}: ${error instanceof Error ? error.message : String(error)}`);
           continue;
         }
         if (assertion.assertion === "toBeVisible") {
           try {
-            await (0, test_exports.expect)(target).toBeVisible({ timeout: 2e3 });
+            await (0, test_exports.expect)(target).toBeVisible({ timeout: assertionTimeoutMs });
             passes.push(`${assertion.target} is visible as expected. Test: "${dynamicTest.description}".`);
           } catch {
             const debugState = await page.evaluate((sel) => {
@@ -697,7 +779,7 @@ This indicates a problem with the menu component's close functionality.`
         }
         if (assertion.assertion === "notToBeVisible") {
           try {
-            await (0, test_exports.expect)(target).toBeHidden({ timeout: 2e3 });
+            await (0, test_exports.expect)(target).toBeHidden({ timeout: assertionTimeoutMs });
             passes.push(`${assertion.target} is not visible as expected. Test: "${dynamicTest.description}".`);
           } catch {
             const debugState = await page.evaluate((sel) => {
@@ -719,7 +801,7 @@ This indicates a problem with the menu component's close functionality.`
                 failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should not be empty, found "${attributeValue}".`);
               }
             } else {
-              await (0, test_exports.expect)(target).toHaveAttribute(assertion.attribute, assertion.expectedValue, { timeout: 3e3 });
+              await (0, test_exports.expect)(target).toHaveAttribute(assertion.attribute, assertion.expectedValue, { timeout: assertionTimeoutMs });
               passes.push(`${assertion.target} has expected "${assertion.attribute}". Test: "${dynamicTest.description}".`);
             }
           } catch {
@@ -749,7 +831,7 @@ This indicates a problem with the menu component's close functionality.`
         }
         if (assertion.assertion === "toHaveFocus") {
           try {
-            await (0, test_exports.expect)(target).toBeFocused({ timeout: 5e3 });
+            await (0, test_exports.expect)(target).toBeFocused({ timeout: assertionTimeoutMs });
             passes.push(`${assertion.target} has focus as expected. Test: "${dynamicTest.description}".`);
           } catch {
             const actualFocus = await page.evaluate(() => {
@@ -784,18 +866,48 @@ This indicates a problem with the menu component's close functionality.`
     reporter.summary(failures);
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message.includes("Executable doesn't exist")) {
-        console.error("\n\u274C Playwright browsers not found!\n");
+      if (error.message.includes("Executable doesn't exist") || error.message.includes("browserType.launch")) {
+        console.error("\n\u274C CRITICAL: Playwright browsers not found!\n");
         console.log("\u{1F4E6} Run: npx playwright install chromium\n");
-        failures.push("Playwright browser not installed. Run: npx playwright install chromium");
-      } else if (error.message.includes("net::ERR_CONNECTION_REFUSED")) {
-        console.error("\n\u274C Cannot connect to dev server!\n");
+        failures.push("CRITICAL: Playwright browser not installed. Run: npx playwright install chromium");
+      } else if (error.message.includes("net::ERR_CONNECTION_REFUSED") || error.message.includes("NS_ERROR_CONNECTION_REFUSED")) {
+        console.error("\n\u274C CRITICAL: Cannot connect to dev server!\n");
         console.log(`   Make sure your dev server is running at ${url}
 `);
-        failures.push(`Dev server not running at ${url}`);
+        failures.push(`CRITICAL: Dev server not running at ${url}`);
+      } else if (error.message.includes("Timeout") && error.message.includes("waitFor")) {
+        console.error("\n\u274C CRITICAL: Component not found on page!\n");
+        console.log(`   The component selector could not be found within 30 seconds.
+`);
+        console.log(`   This usually means:
+`);
+        console.log(`   - The component didn't render
+`);
+        console.log(`   - The URL is incorrect
+`);
+        console.log(`   - The component selector in the contract is wrong
+`);
+        failures.push(`CRITICAL: Component element not found on page - ${error.message}`);
+      } else if (error.message.includes("Target page, context or browser has been closed")) {
+        console.error("\n\u274C CRITICAL: Browser/page was closed unexpectedly!\n");
+        console.log(`   This usually means:
+`);
+        console.log(`   - The test timeout was too short
+`);
+        console.log(`   - The browser crashed
+`);
+        console.log(`   - An external process killed the browser
+`);
+        failures.push(`CRITICAL: Browser/page closed unexpectedly - ${error.message}`);
+      } else if (error.message.includes("FATAL")) {
+        console.error(`
+${error.message}
+`);
+        failures.push(error.message);
       } else {
-        console.error("\u274C Playwright test error:", error.message);
-        failures.push(`Test error: ${error.message}`);
+        console.error("\n\u274C UNEXPECTED ERROR:", error.message);
+        console.error("Stack:", error.stack);
+        failures.push(`UNEXPECTED ERROR: ${error.message}`);
       }
     }
   } finally {
@@ -1614,6 +1726,7 @@ function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex =
           selectRadio(nextIndex);
           break;
         case " ":
+        case "Enter":
           event.preventDefault();
           selectRadio(index);
           break;

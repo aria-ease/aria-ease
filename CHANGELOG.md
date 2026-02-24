@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.2.2](https://github.com/aria-ease/aria-ease/compare/v6.2.1...v6.2.2) (2026-02-24)
+
+
+### Bug Fixes
+
+* improve contract test failure handling and timeout management ([0ff539a](https://github.com/aria-ease/aria-ease/commit/0ff539a3b09b3cd6c805b926d808a2cdac7406bc))
+
 ### [6.2.1](https://github.com/aria-ease/aria-ease/compare/v6.2.0...v6.2.1) (2026-02-22)
 
 
