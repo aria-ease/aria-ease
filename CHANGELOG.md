@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.2.3](https://github.com/aria-ease/aria-ease/compare/v6.2.2...v6.2.3) (2026-02-27)
+
+
+### Bug Fixes
+
+* remove non-APG keyboard interactions from checkbox, radio, and toggle ([c98c5ea](https://github.com/aria-ease/aria-ease/commit/c98c5ea190137754f4bc0ca01bf81dbcc19be23f))
+
 ### [6.2.2](https://github.com/aria-ease/aria-ease/compare/v6.2.1...v6.2.2) (2026-02-24)
 
 ### Bug Fixes
