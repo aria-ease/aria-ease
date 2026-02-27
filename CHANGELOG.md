@@ -4,31 +4,27 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### [6.2.2](https://github.com/aria-ease/aria-ease/compare/v6.2.1...v6.2.2) (2026-02-24)
 
-
 ### Bug Fixes
 
-* improve contract test failure handling and timeout management ([0ff539a](https://github.com/aria-ease/aria-ease/commit/0ff539a3b09b3cd6c805b926d808a2cdac7406bc))
+- improved contract test failure handling and timeout management ([0ff539a](https://github.com/aria-ease/aria-ease/commit/0ff539a3b09b3cd6c805b926d808a2cdac7406bc))
 
 ### [6.2.1](https://github.com/aria-ease/aria-ease/compare/v6.2.0...v6.2.1) (2026-02-22)
 
-
 ### Bug Fixes
 
-* fixed audit CLI creating Playwright browser instance for each audit URL ([e8074b0](https://github.com/aria-ease/aria-ease/commit/e8074b00819b523b8107ef935130a9673d9299e8))
+- fixed audit CLI creating Playwright browser instance for each audit URL ([e8074b0](https://github.com/aria-ease/aria-ease/commit/e8074b00819b523b8107ef935130a9673d9299e8))
 
 ## [6.2.0](https://github.com/aria-ease/aria-ease/compare/v6.1.0...v6.2.0) (2026-02-16)
 
-
 ### Features
 
-* added callback for menu utility, and refresh return for accordion utility ([14b0740](https://github.com/aria-ease/aria-ease/commit/14b0740f28c7278a6de15ecb7421267829d2c64f))
+- added callback for menu utility, and refresh return for accordion utility ([14b0740](https://github.com/aria-ease/aria-ease/commit/14b0740f28c7278a6de15ecb7421267829d2c64f))
 
 ## [6.1.0](https://github.com/aria-ease/aria-ease/compare/v6.0.1...v6.1.0) (2026-02-15)
 
-
 ### Features
 
-* added onExpand and onCollapse callbacks for accordion utility ([031021c](https://github.com/aria-ease/aria-ease/commit/031021c94f24ccab47821760df6f26e67ca9d11e))
+- added onExpand and onCollapse callbacks for accordion utility ([031021c](https://github.com/aria-ease/aria-ease/commit/031021c94f24ccab47821760df6f26e67ca9d11e))
 
 ### [6.0.1](https://github.com/aria-ease/aria-ease/compare/v6.0.0...v6.0.1) (2026-02-14)
 

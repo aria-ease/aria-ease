@@ -423,28 +423,6 @@ function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }) {
           event.preventDefault();
           toggleCheckbox(index);
           break;
-        case "ArrowDown":
-          event.preventDefault();
-          {
-            const nextIndex = (index + 1) % checkboxes.length;
-            checkboxes[nextIndex].focus();
-          }
-          break;
-        case "ArrowUp":
-          event.preventDefault();
-          {
-            const prevIndex = (index - 1 + checkboxes.length) % checkboxes.length;
-            checkboxes[prevIndex].focus();
-          }
-          break;
-        case "Home":
-          event.preventDefault();
-          checkboxes[0].focus();
-          break;
-        case "End":
-          event.preventDefault();
-          checkboxes[checkboxes.length - 1].focus();
-          break;
       }
     };
   }
@@ -791,14 +769,6 @@ function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex =
           event.preventDefault();
           selectRadio(index);
           break;
-        case "Home":
-          event.preventDefault();
-          selectRadio(0);
-          break;
-        case "End":
-          event.preventDefault();
-          selectRadio(radios.length - 1);
-          break;
       }
     };
   }
@@ -909,34 +879,6 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
         case " ":
           event.preventDefault();
           toggleButton(index);
-          break;
-        case "ArrowDown":
-        case "ArrowRight":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            const nextIndex = (index + 1) % toggles.length;
-            toggles[nextIndex].focus();
-          }
-          break;
-        case "ArrowUp":
-        case "ArrowLeft":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            const prevIndex = (index - 1 + toggles.length) % toggles.length;
-            toggles[prevIndex].focus();
-          }
-          break;
-        case "Home":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            toggles[0].focus();
-          }
-          break;
-        case "End":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            toggles[toggles.length - 1].focus();
-          }
           break;
       }
     };

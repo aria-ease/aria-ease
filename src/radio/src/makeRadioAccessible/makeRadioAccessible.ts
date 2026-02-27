@@ -102,16 +102,6 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
           event.preventDefault();
           selectRadio(index);
           break;
-
-        case "Home":
-          event.preventDefault();
-          selectRadio(0);
-          break;
-
-        case "End":
-          event.preventDefault();
-          selectRadio(radios.length - 1);
-          break;
       }
     };
   }

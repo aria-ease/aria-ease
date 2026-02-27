@@ -225,66 +225,6 @@ describe("makeCheckboxAccessible", () => {
 
       expect(checkbox.getAttribute("aria-checked")).toBe("true");
     });
-
-    it("focuses next checkbox on ArrowDown", () => {
-      const checkbox0 = checkboxGroup.querySelectorAll(".checkbox-item")[0] as HTMLElement;
-      const checkbox1 = checkboxGroup.querySelectorAll(".checkbox-item")[1] as HTMLElement;
-
-      checkbox0.focus();
-      checkbox0.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
-
-      expect(document.activeElement).toBe(checkbox1);
-    });
-
-    it("focuses previous checkbox on ArrowUp", () => {
-      const checkbox0 = checkboxGroup.querySelectorAll(".checkbox-item")[0] as HTMLElement;
-      const checkbox1 = checkboxGroup.querySelectorAll(".checkbox-item")[1] as HTMLElement;
-
-      checkbox1.focus();
-      checkbox1.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
-
-      expect(document.activeElement).toBe(checkbox0);
-    });
-
-    it("focuses first checkbox on Home", () => {
-      const checkbox0 = checkboxGroup.querySelectorAll(".checkbox-item")[0] as HTMLElement;
-      const checkbox2 = checkboxGroup.querySelectorAll(".checkbox-item")[2] as HTMLElement;
-
-      checkbox2.focus();
-      checkbox2.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }));
-
-      expect(document.activeElement).toBe(checkbox0);
-    });
-
-    it("focuses last checkbox on End", () => {
-      const checkbox0 = checkboxGroup.querySelectorAll(".checkbox-item")[0] as HTMLElement;
-      const checkbox2 = checkboxGroup.querySelectorAll(".checkbox-item")[2] as HTMLElement;
-
-      checkbox0.focus();
-      checkbox0.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
-
-      expect(document.activeElement).toBe(checkbox2);
-    });
-
-    it("wraps around from last to first on ArrowDown", () => {
-      const checkbox0 = checkboxGroup.querySelectorAll(".checkbox-item")[0] as HTMLElement;
-      const checkbox2 = checkboxGroup.querySelectorAll(".checkbox-item")[2] as HTMLElement;
-
-      checkbox2.focus();
-      checkbox2.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }));
-
-      expect(document.activeElement).toBe(checkbox0);
-    });
-
-    it("wraps around from first to last on ArrowUp", () => {
-      const checkbox0 = checkboxGroup.querySelectorAll(".checkbox-item")[0] as HTMLElement;
-      const checkbox2 = checkboxGroup.querySelectorAll(".checkbox-item")[2] as HTMLElement;
-
-      checkbox0.focus();
-      checkbox0.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowUp", bubbles: true }));
-
-      expect(document.activeElement).toBe(checkbox2);
-    });
   });
 
   describe("click interactions", () => {

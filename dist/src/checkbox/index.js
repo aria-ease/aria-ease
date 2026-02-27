@@ -57,28 +57,6 @@ function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }) {
           event.preventDefault();
           toggleCheckbox(index);
           break;
-        case "ArrowDown":
-          event.preventDefault();
-          {
-            const nextIndex = (index + 1) % checkboxes.length;
-            checkboxes[nextIndex].focus();
-          }
-          break;
-        case "ArrowUp":
-          event.preventDefault();
-          {
-            const prevIndex = (index - 1 + checkboxes.length) % checkboxes.length;
-            checkboxes[prevIndex].focus();
-          }
-          break;
-        case "Home":
-          event.preventDefault();
-          checkboxes[0].focus();
-          break;
-        case "End":
-          event.preventDefault();
-          checkboxes[checkboxes.length - 1].focus();
-          break;
       }
     };
   }
