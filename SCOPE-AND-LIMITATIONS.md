@@ -20,7 +20,7 @@ We provide full WCAG-compliant implementations for:
 
 - ✅ **Menu / Dropdowns** - Navigation menus, user profile dropdowns, context menus
 - ✅ **Accordion** - Expandable sections, FAQs, collapsible content
-- ✅ **Checkbox Groups** - Multi-select options with keyboard navigation
+- ✅ **Checkbox Groups** - Multi-select options with keyboard interaction
 - ✅ **Radio Button Groups** - Single-select options with arrow key navigation
 - ✅ **Toggle Buttons** - On/off switches, settings toggles
 - ✅ **Combobox** - Autocomplete, search with suggestions, editable dropdowns
@@ -30,7 +30,7 @@ We provide full WCAG-compliant implementations for:
 
 For each pattern, Aria-Ease automatically handles:
 
-- ✅ **Keyboard Navigation**
+- ✅ **Keyboard Interaction**
   - Arrow keys (↑ ↓ ← →)
   - Tab/Shift+Tab
   - Enter and Space activation
@@ -243,7 +243,7 @@ We recommend a **layered approach** to accessibility:
 ### Layer 2: Component Behavior (15-25% coverage)
 
 **Tools:** Aria-Ease, manual keyboard testing  
-**Catches:** Keyboard navigation, focus management, ARIA implementation, interactive patterns  
+**Catches:** Keyboard interaction, focus management, ARIA implementation, interactive patterns  
 **Aria-Ease Role:** ⭐ Component Contract Testing tool provides this layer
 
 ### Layer 3: Content & Context (30-40% coverage)
@@ -327,7 +327,7 @@ Based on typical web application accessibility issues:
 
 | Category                     | Aria-Ease Coverage | Requires Manual             |
 | ---------------------------- | ------------------ | --------------------------- |
-| **Keyboard Navigation**      | 95%                | 5% (edge cases)             |
+| **Keyboard Interaction**     | 95%                | 5% (edge cases)             |
 | **Focus Management**         | 90%                | 10% (complex flows)         |
 | **ARIA Attributes**          | 100%               | 0% (for covered patterns)   |
 | **Interactive Patterns**     | 100%               | 0% (for 7 core components)  |

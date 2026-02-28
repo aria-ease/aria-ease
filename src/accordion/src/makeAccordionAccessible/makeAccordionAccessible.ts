@@ -1,5 +1,5 @@
 /**
- * Makes an accordion accessible by managing ARIA attributes, keyboard navigation, and state.
+ * Makes an accordion accessible by managing ARIA attributes, keyboard interaction, and state.
  * Handles multiple accordion items with proper focus management and keyboard interactions.
  * @param {string} accordionId - The id of the accordion container.
  * @param {string} triggersClass - The shared class of all accordion trigger buttons.

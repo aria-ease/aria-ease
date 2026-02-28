@@ -61,10 +61,10 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     }
     
-    const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
+    const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container || componentContract.selectors.tablist || componentContract.selectors.tab;
     
     if (!mainSelector) {
-      throw new Error(`CRITICAL: No main selector (trigger, input, or container) found in contract for ${componentName}`);
+      throw new Error(`CRITICAL: No main selector (trigger, input, container, tablist, or tab) found in contract for ${componentName}`);
     }
     
     try {
@@ -137,35 +137,67 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
         continue;
       }
 
+      const isRedundantCheck = (selector: string, attrName: string, expectedVal?: string): boolean => {
+        const attrPattern = new RegExp(`\\[${attrName}(?:=["']?([^\\]"']+)["']?)?\\]`);
+        const match = selector.match(attrPattern);
+        
+        if (!match) return false;
+        
+        if (!expectedVal) return true;
+        
+        const selectorValue = match[1];
+        if (selectorValue) {
+          const expectedValues = expectedVal.split(" | ");
+          return expectedValues.includes(selectorValue);
+        }
+        
+        return false;
+      };
+
       if (!test.expectedValue) {
         const attributes = test.attribute.split(" | ");
         let hasAny = false;
+        let allRedundant = true;
+        
         for (const attr of attributes) {
-          const value = await target.getAttribute(attr.trim());
+          const attrTrimmed = attr.trim();
+          
+          if (isRedundantCheck(targetSelector, attrTrimmed)) {
+            passes.push(`${attrTrimmed} on ${test.target} verified by selector (already present in: ${targetSelector}).`);
+            hasAny = true;
+            continue;
+          }
+          
+          allRedundant = false;
+          const value = await target.getAttribute(attrTrimmed);
           if (value !== null) {
             hasAny = true;
             break;
           }
         }
-        if (!hasAny) {
+        
+        if (!hasAny && !allRedundant) {
           failures.push(test.failureMessage + ` None of the attributes "${test.attribute}" are present.`);
-        } else {
+        } else if (!allRedundant && hasAny) {
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
         }
       } else {
-        const attributeValue = await target.getAttribute(test.attribute);
-        const expectedValues = test.expectedValue.split(" | ");
-        if (!attributeValue || !expectedValues.includes(attributeValue)) {
-          failures.push(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
+        if (isRedundantCheck(targetSelector, test.attribute, test.expectedValue)) {
+          passes.push(`${test.attribute}="${test.expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
         } else {
-          passes.push(`Attribute value matches expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
+          const attributeValue = await target.getAttribute(test.attribute);
+          const expectedValues = test.expectedValue.split(" | ");
+          if (!attributeValue || !expectedValues.includes(attributeValue)) {
+            failures.push(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
+          } else {
+            passes.push(`Attribute value matches expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
+          }
         }
       }
     }
 
     // Run dynamic tests
     for (const dynamicTest of componentContract.dynamic || []) {
-      // Check if page is still available before starting new test
       if (!page || page.isClosed()) {
         console.warn(`\n⚠️  Browser closed - skipping remaining ${componentContract.dynamic.length - componentContract.dynamic.indexOf(dynamicTest)} tests\n`);
         failures.push(`CRITICAL: Browser/page closed before completing all tests. ${componentContract.dynamic.length - componentContract.dynamic.indexOf(dynamicTest)} tests skipped.`);
@@ -186,9 +218,8 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
         const isPopupVisible = await popupElement.isVisible().catch(() => false);
         
         if (isPopupVisible) {
-          let menuClosed = false; // Track if we successfully closed the popup
+          let menuClosed = false;
           
-          // Strategy 1: Try Escape key
           let closeSelector = componentContract.selectors.input; // For combobox
           if (!closeSelector && componentContract.selectors.focusable) {
             closeSelector = componentContract.selectors.focusable;
@@ -201,13 +232,11 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
             await closeElement.focus();
             await page.keyboard.press('Escape');
             
-            // Wait for popup to close - declaratively
             menuClosed = await expect(popupElement).toBeHidden({ timeout: assertionTimeoutMs })
               .then(() => true)
               .catch(() => false);
           }
           
-          // Strategy 2: Try clicking trigger to toggle
           if (!menuClosed && componentContract.selectors.trigger) {
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
             await triggerElement.click({ timeout: actionTimeoutMs });
@@ -217,7 +246,6 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
               .catch(() => false);
           }
           
-          // Strategy 3: Try clicking outside
           if (!menuClosed) {
             await page.mouse.click(10, 10);
             menuClosed = await expect(popupElement).toBeHidden({ timeout: assertionTimeoutMs })
@@ -235,12 +263,10 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
               );
           }
           
-          // Clear any input values after successful close
           if (componentContract.selectors.input) {
             await page.locator(componentContract.selectors.input).first().clear();
           }
           
-          // Ensure trigger has focus for menu components
           if (componentName === 'menu' && componentContract.selectors.trigger) {
             const triggerElement = page.locator(componentContract.selectors.trigger).first();
             await triggerElement.focus();
@@ -309,11 +335,29 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
         continue; // Skip to next test
       }
 
+      // For Tabs component
+      if(componentContract.selectors.panel && componentContract.selectors.tab && componentContract.selectors.tablist) {
+        if (dynamicTest.isVertical !== undefined && componentContract.selectors.tablist) {
+          const tablistSelector = componentContract.selectors.tablist;
+          const tablist = page.locator(tablistSelector).first();
+          const orientation = await tablist.getAttribute('aria-orientation');
+          
+          const isVertical = orientation === 'vertical';
+          
+          if (dynamicTest.isVertical !== isVertical) {
+            const skipReason = dynamicTest.isVertical 
+              ? `Skipping vertical tabs test - component has horizontal orientation`
+              : `Skipping horizontal tabs test - component has vertical orientation`;
+            reporter.reportTest(dynamicTest, 'skip', skipReason);
+            continue;
+          }
+        }
+      }
+
       for (const act of action) {
-        // Check if page is still available (in case of external timeout)
         if (!page || page.isClosed()) {
           failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
-          break; // Exit action loop
+          break;
         }
 
         if (act.type === "focus") {
@@ -470,13 +514,10 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
         }
       }
 
-      // Evaluate assertions after action chain completes
-      // No arbitrary timeout - assertions have their own timeouts
       for (const assertion of assertions) {
-        // Check if page is still available (in case of external timeout)
         if (!page || page.isClosed()) {
           failures.push(`CRITICAL: Browser/page closed before completing all tests. Increase test timeout or reduce test complexity.`);
-          break; // Exit assertion loop
+          break;
         }
 
         let target;
@@ -512,7 +553,6 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
           continue;
         }
 
-        // Evaluate assertion with retry logic
         if (assertion.assertion === "toBeVisible") {
           try {
             await expect(target).toBeVisible({ timeout: assertionTimeoutMs });
@@ -547,7 +587,6 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
           try {
             // Handle special case: !empty means attribute should have any non-empty value
             if (assertion.expectedValue === "!empty") {
-              // For !empty, check that attribute exists and is not empty
               const attributeValue = await target.getAttribute(assertion.attribute);
               if (attributeValue && attributeValue.trim() !== "") {
                 passes.push(`${assertion.target} has non-empty "${assertion.attribute}". Test: "${dynamicTest.description}".`);
@@ -616,9 +655,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       
       // Handle optional tests differently - treat failures as suggestions
       if (dynamicTest.isOptional === true && !testPassed) {
-        // Remove the failure from the failures array (don't count as hard failure)
         failures.pop();
-        // Report as optional failure (suggestion)
         reporter.reportTest(dynamicTest, 'optional-fail', failureMessage);
       } else {
         // Report normal pass/fail

@@ -17,6 +17,9 @@ interface AccessibilityInstance {
   collapseItem?: (index: number) => void;
   toggleItem?: (index: number) => void;
 
+  // Tabs methods
+  activateTab?: (index: number, shouldFocus?: boolean) => void;
+
   // Radio methods
   selectRadio?: (index: number) => void;
   getSelectedIndex?: () => number;
@@ -51,6 +54,20 @@ interface AccordionCallback {
     onCollapse?: (index: number) => void;
 }
 
+interface TabsConfig {
+  tabListId: string;
+  tabsClass: string;
+  tabPanelsClass: string;
+  orientation?: "horizontal" | "vertical";
+  activateOnFocus?: boolean;
+  callback?: TabsCallback;
+}
+
+interface TabsCallback {
+  onTabChange?: (activeIndex: number, previousIndex: number) => void;
+  onContextMenu?: (tabIndex: number, tabElement: HTMLElement) => void;
+}
+
 interface ComboboxConfig {
     comboboxInputId: string; 
     comboboxButtonId?: string; 
@@ -78,7 +95,7 @@ interface MenuCallback {
 }
 
 /**
- * Makes an accordion accessible by managing ARIA attributes, keyboard navigation, and state.
+ * Makes an accordion accessible by managing ARIA attributes, keyboard interaction, and state.
  * Handles multiple accordion items with proper focus management and keyboard interactions.
  * @param {string} accordionId - The id of the accordion container.
  * @param {string} triggersClass - The shared class of all accordion trigger buttons.
@@ -102,7 +119,7 @@ interface BlockConfig {
 declare function makeBlockAccessible({ blockId, blockItemsClass }: BlockConfig): AccessibilityInstance;
 
 /**
- * Makes a checkbox group accessible by managing ARIA attributes and keyboard navigation.
+ * Makes a checkbox group accessible by managing ARIA attributes and keyboard interaction.
  * Handles multiple independent checkboxes with proper focus management and keyboard interactions.
  * @param {string} checkboxGroupId - The id of the checkbox group container.
  * @param {string} checkboxesClass - The shared class of all checkboxes.
@@ -124,7 +141,7 @@ declare function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: Ch
 declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }: MenuConfig): AccessibilityInstance;
 
 /**
- * Makes a radio group accessible by managing ARIA attributes, keyboard navigation, and state.
+ * Makes a radio group accessible by managing ARIA attributes, keyboard interaction, and state.
  * Handles radio button selection with proper focus management and keyboard interactions.
  * @param {string} radioGroupId - The id of the radio group container.
  * @param {string} radiosClass - The shared class of all radio buttons.
@@ -165,6 +182,19 @@ declare function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle }
 declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, callback }: ComboboxConfig): AccessibilityInstance;
 
 /**
+ * Makes tabs accessible by managing ARIA attributes, keyboard interaction, and state.
+ * Implements WAI-ARIA tabs pattern with full keyboard support and ARIA properties.
+ * @param {string} tabListId - The id of the tab list container.
+ * @param {string} tabsClass - The shared class of all tab buttons.
+ * @param {string} tabPanelsClass - The shared class of all tab panels.
+ * @param {('horizontal' | 'vertical')} orientation - Tab list orientation (default: 'horizontal').
+ * @param {boolean} activateOnFocus - Whether tabs activate automatically on focus (default: true).
+ * @param {TabsCallback} callback - Configuration options for callbacks.
+ */
+
+declare function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation, activateOnFocus, callback }: TabsConfig): AccessibilityInstance;
+
+/**
  * Runs static and interactions accessibility test on UI components.
  * @param {string} componentName The name of the component contract to test against
  * @param {HTMLElement} component The UI component to be tested
@@ -178,4 +208,4 @@ declare function testUiComponent(componentName: string, component: HTMLElement |
  */
 declare function cleanupTests(): Promise<void>;
 
-export { cleanupTests, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeToggleAccessible, testUiComponent };
+export { cleanupTests, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };

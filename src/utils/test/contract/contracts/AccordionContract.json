@@ -2,7 +2,8 @@
     "meta": {
         "id": "aria-ease.accordion",
         "version": "1.0.0",
-        "lastUpdated": "09-06-2026",
+        "created": "09-02-2026",
+        "lastUpdated": "28-02-2026",
         "description": "ARIA Accordion interaction contract. Validates the ARIA and interaction contract for a custom accordion component following the ARIA Authoring Practices Guide accordion with show/hide pattern.",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/accordion/",
@@ -101,7 +102,7 @@
             ]
         },
         {
-            "description": "Pressing Enter key on trigger expands a collapsed panel.",
+            "description": "Pressing Enter on trigger expands a collapsed panel.",
             "action": [
                 { "type": "keypress", "target": "trigger", "key": "Enter" }
             ],
@@ -116,12 +117,12 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "true",
-                    "failureMessage": "Trigger's aria-expanded should be true after pressing Enter."
+                    "failureMessage": "Trigger's should have aria-expanded=true after pressing Enter."
                 }
             ]
         },
         {
-            "description": "Pressing Space key on trigger expands a collapsed panel.",
+            "description": "Pressing Space on trigger expands a collapsed panel.",
             "action": [
                 { "type": "keypress", "target": "trigger", "key": "Space" }
             ],
@@ -136,12 +137,12 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "true",
-                    "failureMessage": "Trigger's aria-expanded should be true after pressing Space."
+                    "failureMessage": "Trigger's should have aria-expanded=true after pressing Space."
                 }
             ]
         },
         {
-            "description": "Pressing Enter key on trigger collapses an expanded panel.",
+            "description": "Pressing Enter on trigger collapses an expanded panel.",
             "action": [
                 { "type": "keypress", "target": "trigger", "key": "Enter" },
                 { "type": "keypress", "target": "trigger", "key": "Enter" }
@@ -162,7 +163,7 @@
             ]
         },
         {
-            "description": "Pressing Space key on trigger collapses an expanded panel.",
+            "description": "Pressing Space on trigger collapses an expanded panel.",
             "action": [
                 { "type": "keypress", "target": "trigger", "key": "Space" },
                 { "type": "keypress", "target": "trigger", "key": "Space" }
@@ -183,7 +184,7 @@
             ]
         },
         {
-            "description": "Arrow Down key moves focus to next accordion trigger.",
+            "description": "Down Arrow moves focus to next accordion trigger.",
             "isMultiple": true,
             "isOptional": true,
             "action": [
@@ -194,12 +195,12 @@
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "second",
-                    "failureMessage": "Focus should move to the next accordion trigger after pressing ArrowDown."
+                    "failureMessage": "Focus should move to the next accordion trigger after pressing Down Arrow."
                 }
             ]
         },
         {
-            "description": "Arrow Up key moves focus to previous accordion trigger.",
+            "description": "Up Arrow moves focus to previous accordion trigger.",
             "isMultiple": true,
             "isOptional": true,
             "action": [
@@ -210,12 +211,12 @@
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "first",
-                    "failureMessage": "Focus should move to the previous accordion trigger after pressing ArrowUp."
+                    "failureMessage": "Focus should move to the previous accordion trigger after pressing Up Arrow."
                 }
             ]
         },
         {
-            "description": "Home key moves focus to first accordion trigger.",
+            "description": "Home moves focus to first accordion trigger.",
             "isMultiple": true,
             "isOptional": true,
             "action": [
@@ -231,7 +232,7 @@
             ]
         },
         {
-            "description": "End key moves focus to last accordion trigger.",
+            "description": "End moves focus to last accordion trigger.",
             "isMultiple": true,
             "isOptional": true,
             "action": [
@@ -247,7 +248,7 @@
             ]
         },
         {
-            "description": "Arrow Down wraps focus from last trigger to first trigger.",
+            "description": "Down Arrow wraps focus from last trigger to first trigger.",
             "isMultiple": true,
             "isOptional": true,
             "action": [
@@ -258,12 +259,12 @@
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "first",
-                    "failureMessage": "Focus should wrap from last to first accordion trigger after pressing ArrowDown."
+                    "failureMessage": "Focus should wrap from last to first accordion trigger after pressing Down Arrow."
                 }
             ]
         },
         {
-            "description": "Arrow Up wraps focus from first trigger to last trigger.",
+            "description": "Up Arrow wraps focus from first trigger to last trigger.",
             "isMultiple": true,
             "isOptional": true,
             "action": [
@@ -274,7 +275,7 @@
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "last",
-                    "failureMessage": "Focus should wrap from first to last accordion trigger after pressing ArrowUp."
+                    "failureMessage": "Focus should wrap from first to last accordion trigger after pressing Up Arrow."
                 }
             ]
         }

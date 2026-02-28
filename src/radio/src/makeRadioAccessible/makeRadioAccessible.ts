@@ -1,5 +1,5 @@
 /**
- * Makes a radio group accessible by managing ARIA attributes, keyboard navigation, and state.
+ * Makes a radio group accessible by managing ARIA attributes, keyboard interaction, and state.
  * Handles radio button selection with proper focus management and keyboard interactions.
  * @param {string} radioGroupId - The id of the radio group container.
  * @param {string} radiosClass - The shared class of all radio buttons.
