@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.3.0](https://github.com/aria-ease/aria-ease/compare/v6.2.3...v6.3.0) (2026-02-28)
+
+
+### Features
+
+* added Tabs component utility and contract ([2453ba1](https://github.com/aria-ease/aria-ease/commit/2453ba187c8672eca01adb9101ead193ed8cfcf0))
+
 ### [6.2.3](https://github.com/aria-ease/aria-ease/compare/v6.2.2...v6.2.3) (2026-02-27)
 
 
