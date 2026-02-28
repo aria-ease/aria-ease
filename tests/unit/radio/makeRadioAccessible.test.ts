@@ -204,25 +204,6 @@ describe("makeRadioAccessible", () => {
       expect(radio1.getAttribute("aria-checked")).toBe("true");
     });
 
-    it("selects first radio on Home", () => {
-      radioInstance.selectRadio!(2);
-      const radio2 = radioGroup.querySelectorAll(".radio-button")[2] as HTMLElement;
-      radio2.dispatchEvent(new KeyboardEvent("keydown", { key: "Home", bubbles: true }));
-
-      const radios = radioGroup.querySelectorAll(".radio-button");
-      expect(radios[0].getAttribute("aria-checked")).toBe("true");
-      expect(document.activeElement).toBe(radios[0]);
-    });
-
-    it("selects last radio on End", () => {
-      const radio0 = radioGroup.querySelectorAll(".radio-button")[0] as HTMLElement;
-      radio0.dispatchEvent(new KeyboardEvent("keydown", { key: "End", bubbles: true }));
-
-      const radios = radioGroup.querySelectorAll(".radio-button");
-      expect(radios[2].getAttribute("aria-checked")).toBe("true");
-      expect(document.activeElement).toBe(radios[2]);
-    });
-
     it("wraps around from last to first on ArrowDown", () => {
       radioInstance.selectRadio!(2);
       const radio2 = radioGroup.querySelectorAll(".radio-button")[2] as HTMLElement;

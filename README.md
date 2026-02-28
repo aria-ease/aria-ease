@@ -11,7 +11,7 @@ Out of the box accessibility utility package to develop production ready applica
 
 - 🎯 **Tree-shakable** - Import only what you need (1.4KB - 3.7KB per component)
 - ♿ **WCAG Compliant** - Follows WAI-ARIA best practices
-- ⌨️ **Keyboard Navigation** - Full keyboard support out of the box
+- ⌨️ **Keyboard Interaction** - Full keyboard support out of the box
 - 🧪 **Contract Testing** - Built-in accessibility testing framework
 - 🎭 **Framework Agnostic** - Works with React, Vue, vanilla JS, etc.
 - 🔍 **CLI Audit Tool** - Automated accessibility testing for your sites
@@ -82,7 +82,7 @@ The CLI will automatically find and load your config file, with validation to ca
 
 ### 🍔 Menu (Dropdowns)
 
-Creates accessible menus with focus trapping and keyboard navigation. Works for dropdowns that toggles display with interactive items.
+Creates accessible menus with aria attribute management, focus trapping, and keyboard interaction. Works for dropdowns that toggles display with interactive items.
 
 **Features:**
 
@@ -138,13 +138,97 @@ menu.refresh();
 
 ## 🎮 Live Demo
 
-- [Menu Component](https://codesandbox.io/p/sandbox/szsclq) - Dropdown with keyboard navigation
+- [Menu Component](https://codepen.io/aria-ease/pen/PwGqdzp) - Menu dropdown with keyboard interaction
+
+---
+
+### 🍔 Combobox (Listbox)
+
+Creates accessible listbox combobox with aria attribute management, focus trapping, and keyboard interaction.
+
+**Features:**
+
+- Arrow key navigation
+- Escape key closes listbox
+- ARIA attribute management (aria-expanded, aria-activedescendant, aria-controls, roles)
+- Focus management with aria-activedescendant pattern
+
+```javascript
+import * as Combobox from "aria-ease/combobox";
+
+// React Example
+useEffect(() => {
+  comboboxRef.current = Combobox.makeComboboxAccessible({
+    comboboxInputId: "search-input",
+    listBoxId: "suggestions-list",
+    listBoxItemsClass: "suggestion-item",
+  });
+
+  return () => {
+    if (comboboxRef.current) {
+      comboboxRef.current.cleanup();
+    }
+  };
+}, []);
+
+// Programmatically control
+comboboxRef.current.openListbox(); // Open the listbox
+comboboxRef.current.refresh(); // Refresh the cache after dynamically adding/removing a listbox option item
+
+// Vanilla JS Example
+const combobox = Combobox.makeComboboxAccessible({
+  comboboxInputId: "fruit",
+  comboboxButtonId: "show-list-button",
+  listBoxId: "fruits-listbox",
+  listBoxItemsClass: "list-option",
+  callback: {
+    onSelect: (option) => {
+      input.value = option.textContent;
+      // Show all options after selection
+      options.forEach((opt) => (opt.hidden = false));
+    },
+    onOpenChange: (isOpen) => {
+      console.log("Listbox is", isOpen ? "open" : "closed");
+    },
+  },
+});
+
+// Programmatically control
+combobox.openListbox();
+combobox.closeListbox();
+
+// If you dynamically add/remove listbox option items, refresh the cache
+combobox.refresh();
+```
+
+**Required HTML structure:**
+
+```html
+<div id="combo-wrapper">
+  <label for="fruit">Select a fruit</label>
+  <div class="input-wrapper">
+    <input type="text" id="fruit" placeholder="Search fruits..." />
+    <button id="show-list-button" tabindex="-1">▼</button>
+  </div>
+
+  <ul id="fruits-listbox">
+    <li id="apple" class="list-option">Apple</li>
+    <li id="mango" class="list-option">Mango</li>
+    <li id="orange" class="list-option">Orange</li>
+    <li id="banana" class="list-option">Banana</li>
+  </ul>
+</div>
+```
+
+## 🎮 Live Demo
+
+- [Combobox Component](https://codepen.io/aria-ease/pen/ByLNqOE) - Listbox combobox with keyboard interaction
 
 ---
 
 ### 🪗 Accordion
 
-Creates accessible accordions with keyboard navigation and automatic state management.
+Creates accessible accordions with keyboard interaction and automatic state management.
 
 **Features:**
 
@@ -212,14 +296,12 @@ makeAccordionAccessible({
 
 ### ✅ Checkbox
 
-Creates accessible checkbox groups with keyboard navigation and state management.
+Creates accessible checkbox groups with keyboard interaction and state management.
 
 **Features:**
 
-- Arrow key navigation
 - Space to toggle
 - Independent state tracking
-- Home/End key support
 - Query checked states
 
 ```javascript
@@ -270,14 +352,13 @@ makeCheckboxAccessible({
 
 ### 🔘 Radio Button
 
-Creates accessible radio groups with keyboard navigation and automatic selection management.
+Creates accessible radio groups with keyboard interaction and automatic selection management.
 
 **Features:**
 
 - Arrow key navigation (all directions)
 - Automatic unchecking of other radios
 - Space to select
-- Home/End key support
 - Single selection enforcement
 
 ```javascript
@@ -334,8 +415,6 @@ Creates accessible toggle buttons with keyboard interactions and state managemen
 
 - Enter/Space to toggle
 - Single toggle or toggle groups
-- Arrow key navigation (groups)
-- Home/End support (groups)
 - Query pressed states
 
 ```javascript
@@ -492,7 +571,7 @@ useEffect(() => {
 
 ## 🎨 Focus Styling
 
-Aria-Ease handles ARIA attributes and keyboard navigation, but **you must provide visible focus styles**:
+Aria-Ease handles ARIA attributes and keyboard interaction, but **you must provide visible focus styles**:
 
 ```css
 :focus {

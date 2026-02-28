@@ -1,0 +1,348 @@
+{
+    "meta": {
+        "id": "aria-ease.tabs",
+        "version": "1.0.0",
+        "created": "28-02-2026",
+        "lastUpdated": "28-02-2026",
+        "description": "ARIA tabs interaction contract. Validates the ARIA and interaction contract for a custom tabs component following the ARIA Authoring Practices Guide pattern.",
+        "source": {
+            "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/",
+            "wcag": ["2.2 AA"]
+        },
+        "W3CName": "Tabs"
+    },
+
+    "selectors": {
+        "tablist": "[role=tablist]",
+        "tab": "[role=tab]",
+        "panel": "[role=tabpanel]",
+        "focusable": "[role=tab]",
+        "relative": "[role=tab]"
+    },
+
+    "observables": {
+        "observable": "focus | visible | attribute | role",
+        "target": "tab | relative | panel | tablist",
+        "relative": "first | last | next | previous"
+    }, 
+
+    "static": [
+        {
+            "assertions": [
+                {
+                    "target": "tablist",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-label | aria-labelledby",
+                    "failureMessage": "Tab list doesn't conform to the ARIA Tab pattern as specified in APG 1.2. Tablist should have 'aria-label' or 'aria-labelledby' attribute to provide an accessible label for assistive technology."
+                },
+                {
+                    "target": "tab",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true | false",
+                    "failureMessage": "Tab element doesn't conform to the ARIA Tab pattern as specified in APG 1.2. Tab element should have 'aria-selected=true | false' attribute. This helps assistive technology to keep track of the active state of the tab panel that the tab controls."
+                },
+                {
+                    "target": "tab",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-controls",
+                    "failureMessage": "Tab element doesn't conform to the ARIA Tab pattern as specified in APG 1.2. Tab element should have 'aria-controls' attribute that points to the id of the tab panel it controls. This helps assistive technology to associate the tab with its corresponding tab panel."
+                },
+                {
+                    "target": "panel",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "role",
+                    "expectedValue": "tabpanel",
+                    "failureMessage": "Tab panel doesn't conform to the ARIA Tab pattern as specified in APG 1.2. Each tab panel should have 'role=tabpanel' attribute. This helps assistive technology identify the panel as a significant region of the page."
+                },
+                {
+                    "target": "panel",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-labelledby",
+                    "failureMessage": "Tab panel doesn't conform to the ARIA Tab pattern as specified in APG 1.2. Each tab panel should have 'aria-labelledby' attribute that points to the id of the tab that controls it. This helps assistive technology associate the tab panel with its corresponding tab."
+                },
+                {
+                    "target": "tab",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "tabindex",
+                    "expectedValue": "0 | -1",
+                    "failureMessage": "Tab element doesn't conform to the ARIA Tab pattern. Tab should have 'tabindex' to enable roving tabindex keyboard navigation. Active tab should have tabindex='0', inactive tabs should have tabindex='-1'."
+                },
+                {
+                    "target": "tablist",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-orientation",
+                    "expectedValue": "horizontal | vertical",
+                    "failureMessage": "Tab list doesn't conform to the ARIA Tab pattern as specified in APG 1.2. Tab list should have 'aria-orientation' attribute set to 'horizontal' or 'vertical'."
+                }
+            ]
+        }
+    ],
+
+    "dynamic": [
+        {
+            "description": "Only one tab panel is visible at a time.",
+            "action": [],
+            "assertions": [
+                {
+                    "target": "panel",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "At least one tab panel should be visible initially."
+                }
+            ]
+        },
+        {
+            "description": "Right Arrow moves focus to next tab and activates it (automatic activation).",
+            "isVertical": false,
+            "action": [
+                { "type": "focus", "target": "focusable" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowRight" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "second",
+                    "failureMessage": "Focus should move to the second tab after pressing Right Arrow."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true",
+                    "relativeTarget": "second",
+                    "failureMessage": "Second tab should be activated (aria-selected=true) after Right Arrow press."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "tabindex",
+                    "expectedValue": "0",
+                    "relativeTarget": "second",
+                    "failureMessage": "Second tab should have tabindex='0' after activation."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "false",
+                    "relativeTarget": "first",
+                    "failureMessage": "Previous tab should have aria-selected=false after moving to another tab."
+                }
+            ]
+        },
+        {
+            "description": "Left Arrow moves focus to previous tab and activates it (wraps to last).",
+            "isVertical": false,
+            "action": [
+                { "type": "focus", "target": "focusable" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowLeft" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "last",
+                    "failureMessage": "Focus should wrap to last tab after pressing Left Arrow on first tab."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true",
+                    "relativeTarget": "last",
+                    "failureMessage": "Last tab should be activated (aria-selected=true) after Left Arrow press."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "tabindex",
+                    "expectedValue": "0",
+                    "relativeTarget": "last",
+                    "failureMessage": "Last tab should have tabindex='0' after activation."
+                }
+            ]
+        },
+        {
+            "description": "Down Arrow moves focus to next tab and activates it (vertical tabs).",
+            "isVertical": true,
+            "action": [
+                { "type": "focus", "target": "focusable" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowDown" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "second",
+                    "failureMessage": "Focus should move to second tab after pressing Down Arrow (vertical orientation)."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true",
+                    "relativeTarget": "second",
+                    "failureMessage": "Second tab should be activated after Down Arrow press."
+                }
+            ]
+        },
+        {
+            "description": "Up Arrow moves focus to previous tab and activates it (wraps to last, vertical tabs).",
+            "isVertical": true,
+            "action": [
+                { "type": "focus", "target": "focusable" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowUp" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "last",
+                    "failureMessage": "Focus should wrap to last tab after pressing Up Arrow on first tab (vertical orientation)."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true",
+                    "relativeTarget": "last",
+                    "failureMessage": "Last tab should be activated after Up Arrow press."
+                }
+            ]
+        },
+        {
+            "description": "Home moves focus to first tab and activates it.",
+            "isOptional": true,
+            "action": [
+                { "type": "keypress", "target": "focusable", "key": "ArrowRight" },
+                { "type": "keypress", "target": "focusable", "key": "Home" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "Focus should move to first tab after pressing Home."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true",
+                    "relativeTarget": "first",
+                    "failureMessage": "First tab should be activated after Home press."
+                }
+            ]
+        },
+        {
+            "description": "End moves focus to last tab and activates it.",
+            "isOptional": true,
+            "action": [
+                { "type": "keypress", "target": "focusable", "key": "End" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "last",
+                    "failureMessage": "Focus should move to last tab after pressing End."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true",
+                    "relativeTarget": "last",
+                    "failureMessage": "Last tab should be activated after End press."
+                }
+            ]
+        },
+        {
+            "description": "Clicking a tab activates it and displays its panel.",
+            "action": [
+                { "type": "click", "target": "relative", "relativeTarget": "second" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true",
+                    "relativeTarget": "second",
+                    "failureMessage": "Clicked tab should have aria-selected=true."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "tabindex",
+                    "expectedValue": "0",
+                    "relativeTarget": "second",
+                    "failureMessage": "Clicked tab should have tabindex='0'."
+                },
+                {
+                    "target": "relative",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "false",
+                    "relativeTarget": "first",
+                    "failureMessage": "Previous tab should have aria-selected=false after clicking another tab."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Enter on tab element activates its associated tab panel.",
+            "action": [
+                { "type": "keypress", "target": "tab", "key": "Enter" }
+            ],
+            "assertions": [
+                {
+                    "target": "panel",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "Panel should be visible after pressing Enter on trigger."
+                },
+                {
+                    "target": "tab",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true",
+                    "failureMessage": "Tab element's should have aria-selected=true after pressing Enter."
+                },
+                {
+                    "target": "tab",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "tabindex",
+                    "expectedValue": "0",
+                    "failureMessage": "Tab element's should have tabindex='0' after pressing Enter."
+                }
+            ]
+        },
+        {
+            "description": "Pressing Space on tab element activates its associated tab panel.",
+            "action": [
+                { "type": "keypress", "target": "tab", "key": "Space" }
+            ],
+            "assertions": [
+                {
+                    "target": "panel",
+                    "assertion": "toBeVisible",
+                    "failureMessage": "Panel should be visible after pressing Space on trigger."
+                },
+                {
+                    "target": "tab",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-selected",
+                    "expectedValue": "true",
+                    "failureMessage": "Tab element's should have aria-selected=true after pressing Space."
+                },
+                {
+                    "target": "tab",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "tabindex",
+                    "expectedValue": "0",
+                    "failureMessage": "Tab element's should have tabindex='0' after pressing Enter."
+                }
+            ]
+        }
+    ]
+}

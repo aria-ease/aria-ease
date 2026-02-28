@@ -137,7 +137,7 @@ export class ContractReporter {
     this.log(`\n${'─'.repeat(60)}`);
     this.log(`💡 Optional Enhancements (${suggestions.length}):\n`);
     this.log(`These features are optional per APG guidelines but recommended`);
-    this.log(`for improved user experience and keyboard navigation:\n`);
+    this.log(`for improved user experience and keyboard interaction:\n`);
     
     suggestions.forEach((test, index) => {
       this.log(`${index + 1}. ${test.description}`);

@@ -60,6 +60,8 @@ interface Selector {
     button?: string;
     popup?: string;
     panel?: string;
+    tablist?: string;
+    tab?: string;
 }
 
 interface Prerequisite {
@@ -96,6 +98,7 @@ interface ComponentContract {
         requiresBrowser?: boolean;
         isOptional?: boolean;
         isMultiple?: boolean;
+        isVertical?: boolean;
         prerequisite: Array<Prerequisite>;
         action: Array<{
             type: string;
@@ -144,6 +147,9 @@ interface AccessibilityInstance {
   collapseItem?: (index: number) => void;
   toggleItem?: (index: number) => void;
 
+  // Tabs methods
+  activateTab?: (index: number, shouldFocus?: boolean) => void;
+
   // Radio methods
   selectRadio?: (index: number) => void;
   getSelectedIndex?: () => number;
@@ -176,6 +182,20 @@ interface AccordionConfig {
 interface AccordionCallback {
     onExpand?: (index: number) => void;
     onCollapse?: (index: number) => void;
+}
+
+interface TabsConfig {
+  tabListId: string;
+  tabsClass: string;
+  tabPanelsClass: string;
+  orientation?: "horizontal" | "vertical";
+  activateOnFocus?: boolean;
+  callback?: TabsCallback;
+}
+
+interface TabsCallback {
+  onTabChange?: (activeIndex: number, previousIndex: number) => void;
+  onContextMenu?: (tabIndex: number, tabElement: HTMLElement) => void;
 }
 
 interface ComboboxConfig {
@@ -226,7 +246,9 @@ export {
     ComboboxConfig,
     ContractTestResult,
     AccordionConfig,
-    MenuConfig
+    MenuConfig,
+    TabsConfig,
+    TabsCallback
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;

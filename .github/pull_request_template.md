@@ -18,15 +18,16 @@
 ## Related Issue
 
 <!-- Link to the issue this PR addresses -->
+
 Closes #(issue number)
 
 ## Changes Made
 
 <!-- List the specific changes made in this PR -->
 
-- 
-- 
-- 
+-
+-
+-
 
 ## Testing
 
@@ -36,7 +37,7 @@ Closes #(issue number)
 - [ ] Added/updated unit tests
 - [ ] Added/updated integration tests
 - [ ] Manual testing with screen reader (specify which: VoiceOver/NVDA/JAWS)
-- [ ] Tested keyboard navigation
+- [ ] Tested keyboard interaction
 
 ### Test Instructions
 
@@ -63,7 +64,7 @@ npm run dev
 - [ ] I have added tests that prove my fix is effective or that my feature works
 - [ ] New and existing unit tests pass locally with my changes
 - [ ] Any dependent changes have been merged and published
-- [ ] I have checked that my changes are accessible (keyboard navigation, screen reader compatible)
+- [ ] I have checked that my changes are accessible (keyboard interaction, screen reader compatible)
 
 ## Breaking Changes
 
@@ -73,8 +74,8 @@ npm run dev
 
 OR
 
-- **What breaks:** 
-- **Migration path:** 
+- **What breaks:**
+- **Migration path:**
 
 ## Screenshots/Videos (if applicable)
 
@@ -88,7 +89,7 @@ OR
 
 <!-- Describe how you tested accessibility -->
 
-- [ ] Keyboard navigation works correctly
+- [ ] Keyboard interaction works correctly
 - [ ] Focus management is appropriate
 - [ ] ARIA attributes are correctly set
 - [ ] Screen reader announcements are clear and helpful

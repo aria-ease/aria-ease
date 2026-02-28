@@ -98,38 +98,6 @@ export function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = 
           event.preventDefault();
           toggleButton(index);
           break;
-
-        case "ArrowDown":
-        case "ArrowRight":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            const nextIndex = (index + 1) % toggles.length;
-            toggles[nextIndex].focus();
-          }
-          break;
-
-        case "ArrowUp":
-        case "ArrowLeft":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            const prevIndex = (index - 1 + toggles.length) % toggles.length;
-            toggles[prevIndex].focus();
-          }
-          break;
-
-        case "Home":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            toggles[0].focus();
-          }
-          break;
-
-        case "End":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            toggles[toggles.length - 1].focus();
-          }
-          break;
       }
     };
   }

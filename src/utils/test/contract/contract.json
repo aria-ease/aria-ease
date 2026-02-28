@@ -10,5 +10,9 @@
     "accordion": {
         "path": "./contracts/AccordionContract.json",
         "component": "accordion"
+    },
+    "tabs": {
+        "path": "./contracts/TabsContract.json",
+        "component": "tabs"
     }
 }

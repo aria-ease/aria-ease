@@ -1,5 +1,5 @@
 /**
- * Makes a checkbox group accessible by managing ARIA attributes and keyboard navigation.
+ * Makes a checkbox group accessible by managing ARIA attributes and keyboard interaction.
  * Handles multiple independent checkboxes with proper focus management and keyboard interactions.
  * @param {string} checkboxGroupId - The id of the checkbox group container.
  * @param {string} checkboxesClass - The shared class of all checkboxes.
@@ -84,32 +84,6 @@ export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: Che
         case " ":
           event.preventDefault();
           toggleCheckbox(index);
-          break;
-
-        case "ArrowDown":
-          event.preventDefault();
-          {
-            const nextIndex = (index + 1) % checkboxes.length;
-            checkboxes[nextIndex].focus();
-          }
-          break;
-
-        case "ArrowUp":
-          event.preventDefault();
-          {
-            const prevIndex = (index - 1 + checkboxes.length) % checkboxes.length;
-            checkboxes[prevIndex].focus();
-          }
-          break;
-
-        case "Home":
-          event.preventDefault();
-          checkboxes[0].focus();
-          break;
-
-        case "End":
-          event.preventDefault();
-          checkboxes[checkboxes.length - 1].focus();
           break;
       }
     };

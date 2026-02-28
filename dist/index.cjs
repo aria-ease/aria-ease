@@ -47,6 +47,10 @@ var init_contract = __esm({
       accordion: {
         path: "./contracts/AccordionContract.json",
         component: "accordion"
+      },
+      tabs: {
+        path: "./contracts/TabsContract.json",
+        component: "tabs"
       }
     };
   }
@@ -167,7 +171,7 @@ ${"\u2500".repeat(60)}`);
         this.log(`\u{1F4A1} Optional Enhancements (${suggestions.length}):
 `);
         this.log(`These features are optional per APG guidelines but recommended`);
-        this.log(`for improved user experience and keyboard navigation:
+        this.log(`for improved user experience and keyboard interaction:
 `);
         suggestions.forEach((test, index) => {
           this.log(`${index + 1}. ${test.description}`);
@@ -385,9 +389,9 @@ async function runContractTestsPlaywright(componentName, url) {
       }
       await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     }
-    const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container;
+    const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container || componentContract.selectors.tablist || componentContract.selectors.tab;
     if (!mainSelector) {
-      throw new Error(`CRITICAL: No main selector (trigger, input, or container) found in contract for ${componentName}`);
+      throw new Error(`CRITICAL: No main selector (trigger, input, container, tablist, or tab) found in contract for ${componentName}`);
     }
     try {
       await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: 3e4 });
@@ -449,28 +453,52 @@ async function runContractTestsPlaywright(componentName, url) {
         failures.push(`Target ${test.target} not found.`);
         continue;
       }
+      const isRedundantCheck = (selector, attrName, expectedVal) => {
+        const attrPattern = new RegExp(`\\[${attrName}(?:=["']?([^\\]"']+)["']?)?\\]`);
+        const match = selector.match(attrPattern);
+        if (!match) return false;
+        if (!expectedVal) return true;
+        const selectorValue = match[1];
+        if (selectorValue) {
+          const expectedValues = expectedVal.split(" | ");
+          return expectedValues.includes(selectorValue);
+        }
+        return false;
+      };
       if (!test.expectedValue) {
         const attributes = test.attribute.split(" | ");
         let hasAny = false;
+        let allRedundant = true;
         for (const attr of attributes) {
-          const value = await target.getAttribute(attr.trim());
+          const attrTrimmed = attr.trim();
+          if (isRedundantCheck(targetSelector, attrTrimmed)) {
+            passes.push(`${attrTrimmed} on ${test.target} verified by selector (already present in: ${targetSelector}).`);
+            hasAny = true;
+            continue;
+          }
+          allRedundant = false;
+          const value = await target.getAttribute(attrTrimmed);
           if (value !== null) {
             hasAny = true;
             break;
           }
         }
-        if (!hasAny) {
+        if (!hasAny && !allRedundant) {
           failures.push(test.failureMessage + ` None of the attributes "${test.attribute}" are present.`);
-        } else {
+        } else if (!allRedundant && hasAny) {
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
         }
       } else {
-        const attributeValue = await target.getAttribute(test.attribute);
-        const expectedValues = test.expectedValue.split(" | ");
-        if (!attributeValue || !expectedValues.includes(attributeValue)) {
-          failures.push(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
+        if (isRedundantCheck(targetSelector, test.attribute, test.expectedValue)) {
+          passes.push(`${test.attribute}="${test.expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
         } else {
-          passes.push(`Attribute value matches expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
+          const attributeValue = await target.getAttribute(test.attribute);
+          const expectedValues = test.expectedValue.split(" | ");
+          if (!attributeValue || !expectedValues.includes(attributeValue)) {
+            failures.push(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
+          } else {
+            passes.push(`Attribute value matches expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
+          }
         }
       }
     }
@@ -578,6 +606,19 @@ This indicates a problem with the menu component's close functionality.`
       }
       if (shouldSkipTest) {
         continue;
+      }
+      if (componentContract.selectors.panel && componentContract.selectors.tab && componentContract.selectors.tablist) {
+        if (dynamicTest.isVertical !== void 0 && componentContract.selectors.tablist) {
+          const tablistSelector = componentContract.selectors.tablist;
+          const tablist = page.locator(tablistSelector).first();
+          const orientation = await tablist.getAttribute("aria-orientation");
+          const isVertical = orientation === "vertical";
+          if (dynamicTest.isVertical !== isVertical) {
+            const skipReason = dynamicTest.isVertical ? `Skipping vertical tabs test - component has horizontal orientation` : `Skipping horizontal tabs test - component has vertical orientation`;
+            reporter.reportTest(dynamicTest, "skip", skipReason);
+            continue;
+          }
+        }
       }
       for (const act of action) {
         if (!page || page.isClosed()) {
@@ -938,6 +979,7 @@ __export(index_exports, {
   makeComboboxAccessible: () => makeComboboxAccessible,
   makeMenuAccessible: () => makeMenuAccessible,
   makeRadioAccessible: () => makeRadioAccessible,
+  makeTabsAccessible: () => makeTabsAccessible,
   makeToggleAccessible: () => makeToggleAccessible,
   testUiComponent: () => testUiComponent
 });
@@ -1362,28 +1404,6 @@ function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }) {
           event.preventDefault();
           toggleCheckbox(index);
           break;
-        case "ArrowDown":
-          event.preventDefault();
-          {
-            const nextIndex = (index + 1) % checkboxes.length;
-            checkboxes[nextIndex].focus();
-          }
-          break;
-        case "ArrowUp":
-          event.preventDefault();
-          {
-            const prevIndex = (index - 1 + checkboxes.length) % checkboxes.length;
-            checkboxes[prevIndex].focus();
-          }
-          break;
-        case "Home":
-          event.preventDefault();
-          checkboxes[0].focus();
-          break;
-        case "End":
-          event.preventDefault();
-          checkboxes[checkboxes.length - 1].focus();
-          break;
       }
     };
   }
@@ -1730,14 +1750,6 @@ function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex =
           event.preventDefault();
           selectRadio(index);
           break;
-        case "Home":
-          event.preventDefault();
-          selectRadio(0);
-          break;
-        case "End":
-          event.preventDefault();
-          selectRadio(radios.length - 1);
-          break;
       }
     };
   }
@@ -1848,34 +1860,6 @@ function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true })
         case " ":
           event.preventDefault();
           toggleButton(index);
-          break;
-        case "ArrowDown":
-        case "ArrowRight":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            const nextIndex = (index + 1) % toggles.length;
-            toggles[nextIndex].focus();
-          }
-          break;
-        case "ArrowUp":
-        case "ArrowLeft":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            const prevIndex = (index - 1 + toggles.length) % toggles.length;
-            toggles[prevIndex].focus();
-          }
-          break;
-        case "Home":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            toggles[0].focus();
-          }
-          break;
-        case "End":
-          if (!isSingleToggle && toggles.length > 1) {
-            event.preventDefault();
-            toggles[toggles.length - 1].focus();
-          }
           break;
       }
     };
@@ -2168,6 +2152,268 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   return { cleanup, refresh, openListbox, closeListbox };
 }
 
+// src/tabs/src/makeTabsAccessible/makeTabsAccessible.ts
+function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation = "horizontal", activateOnFocus = true, callback }) {
+  const tabList = document.querySelector(`#${tabListId}`);
+  if (!tabList) {
+    console.error(`[aria-ease] Element with id="${tabListId}" not found. Make sure the tab list container exists before calling makeTabsAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const tabs = Array.from(tabList.querySelectorAll(`.${tabsClass}`));
+  if (tabs.length === 0) {
+    console.error(`[aria-ease] No elements with class="${tabsClass}" found. Make sure tab buttons exist before calling makeTabsAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  const tabPanels = Array.from(document.querySelectorAll(`.${tabPanelsClass}`));
+  if (tabPanels.length === 0) {
+    console.error(`[aria-ease] No elements with class="${tabPanelsClass}" found. Make sure tab panels exist before calling makeTabsAccessible.`);
+    return { cleanup: () => {
+    } };
+  }
+  if (tabs.length !== tabPanels.length) {
+    console.error(`[aria-ease] Tab/panel mismatch: found ${tabs.length} tabs but ${tabPanels.length} panels.`);
+    return { cleanup: () => {
+    } };
+  }
+  const handlerMap = /* @__PURE__ */ new WeakMap();
+  const clickHandlerMap = /* @__PURE__ */ new WeakMap();
+  const contextMenuHandlerMap = /* @__PURE__ */ new WeakMap();
+  let activeTabIndex = 0;
+  function initialize() {
+    tabList.setAttribute("role", "tablist");
+    tabList.setAttribute("aria-orientation", orientation);
+    tabs.forEach((tab, index) => {
+      const panel = tabPanels[index];
+      if (!tab.id) {
+        tab.id = `${tabListId}-tab-${index}`;
+      }
+      if (!panel.id) {
+        panel.id = `${tabListId}-panel-${index}`;
+      }
+      tab.setAttribute("role", "tab");
+      tab.setAttribute("aria-controls", panel.id);
+      tab.setAttribute("aria-selected", "false");
+      tab.setAttribute("tabindex", "-1");
+      panel.setAttribute("role", "tabpanel");
+      panel.setAttribute("aria-labelledby", tab.id);
+      panel.hidden = true;
+      const hasFocusableContent = panel.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+      if (!hasFocusableContent) {
+        panel.setAttribute("tabindex", "0");
+      }
+    });
+    activateTab(0, false);
+  }
+  function activateTab(index, shouldFocus = true) {
+    if (index < 0 || index >= tabs.length) {
+      console.error(`[aria-ease] Invalid tab index: ${index}`);
+      return;
+    }
+    const previousIndex = activeTabIndex;
+    tabs.forEach((tab, i) => {
+      const panel = tabPanels[i];
+      tab.setAttribute("aria-selected", "false");
+      tab.setAttribute("tabindex", "-1");
+      panel.hidden = true;
+    });
+    const activeTab = tabs[index];
+    const activePanel = tabPanels[index];
+    activeTab.setAttribute("aria-selected", "true");
+    activeTab.setAttribute("tabindex", "0");
+    activePanel.hidden = false;
+    if (shouldFocus) {
+      activeTab.focus();
+    }
+    activeTabIndex = index;
+    if (callback?.onTabChange && previousIndex !== index) {
+      try {
+        callback.onTabChange(index, previousIndex);
+      } catch (error) {
+        console.error("[aria-ease] Error in tabs onTabChange callback:", error);
+      }
+    }
+  }
+  function moveFocus2(direction) {
+    const currentFocusedIndex = tabs.findIndex((tab) => tab === document.activeElement);
+    const currentIndex = currentFocusedIndex !== -1 ? currentFocusedIndex : activeTabIndex;
+    let newIndex = currentIndex;
+    switch (direction) {
+      case "first":
+        newIndex = 0;
+        break;
+      case "last":
+        newIndex = tabs.length - 1;
+        break;
+      case "next":
+        newIndex = (currentIndex + 1) % tabs.length;
+        break;
+      case "prev":
+        newIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+        break;
+    }
+    tabs[newIndex].focus();
+    tabs[newIndex].setAttribute("tabindex", "0");
+    tabs[activeTabIndex].setAttribute("tabindex", "-1");
+    if (activateOnFocus) {
+      activateTab(newIndex, false);
+    } else {
+      const currentActive = activeTabIndex;
+      tabs.forEach((tab, i) => {
+        if (i === newIndex) {
+          tab.setAttribute("tabindex", "0");
+        } else if (i !== currentActive) {
+          tab.setAttribute("tabindex", "-1");
+        }
+      });
+    }
+  }
+  function handleTabClick(index) {
+    return () => {
+      activateTab(index);
+    };
+  }
+  function handleTabKeydown(index) {
+    return (event) => {
+      const { key } = event;
+      let handled = false;
+      if (orientation === "horizontal") {
+        switch (key) {
+          case "ArrowLeft":
+            event.preventDefault();
+            moveFocus2("prev");
+            handled = true;
+            break;
+          case "ArrowRight":
+            event.preventDefault();
+            moveFocus2("next");
+            handled = true;
+            break;
+        }
+      } else {
+        switch (key) {
+          case "ArrowUp":
+            event.preventDefault();
+            moveFocus2("prev");
+            handled = true;
+            break;
+          case "ArrowDown":
+            event.preventDefault();
+            moveFocus2("next");
+            handled = true;
+            break;
+        }
+      }
+      if (!handled) {
+        switch (key) {
+          case "Home":
+            event.preventDefault();
+            moveFocus2("first");
+            break;
+          case "End":
+            event.preventDefault();
+            moveFocus2("last");
+            break;
+          case " ":
+          case "Enter":
+            if (!activateOnFocus) {
+              event.preventDefault();
+              activateTab(index);
+            }
+            break;
+          case "F10":
+            if (event.shiftKey && callback?.onContextMenu) {
+              event.preventDefault();
+              try {
+                callback.onContextMenu(index, tabs[index]);
+              } catch (error) {
+                console.error("[aria-ease] Error in tabs onContextMenu callback:", error);
+              }
+            }
+            break;
+        }
+      }
+    };
+  }
+  function handleTabContextMenu(index) {
+    return (event) => {
+      if (callback?.onContextMenu) {
+        event.preventDefault();
+        try {
+          callback.onContextMenu(index, tabs[index]);
+        } catch (error) {
+          console.error("[aria-ease] Error in tabs onContextMenu callback:", error);
+        }
+      }
+    };
+  }
+  function addListeners() {
+    tabs.forEach((tab, index) => {
+      const clickHandler = handleTabClick(index);
+      const keydownHandler = handleTabKeydown(index);
+      const contextMenuHandler = handleTabContextMenu(index);
+      tab.addEventListener("click", clickHandler);
+      tab.addEventListener("keydown", keydownHandler);
+      if (callback?.onContextMenu) {
+        tab.addEventListener("contextmenu", contextMenuHandler);
+        contextMenuHandlerMap.set(tab, contextMenuHandler);
+      }
+      handlerMap.set(tab, keydownHandler);
+      clickHandlerMap.set(tab, clickHandler);
+    });
+  }
+  function removeListeners() {
+    tabs.forEach((tab) => {
+      const keydownHandler = handlerMap.get(tab);
+      const clickHandler = clickHandlerMap.get(tab);
+      const contextMenuHandler = contextMenuHandlerMap.get(tab);
+      if (keydownHandler) {
+        tab.removeEventListener("keydown", keydownHandler);
+        handlerMap.delete(tab);
+      }
+      if (clickHandler) {
+        tab.removeEventListener("click", clickHandler);
+        clickHandlerMap.delete(tab);
+      }
+      if (contextMenuHandler) {
+        tab.removeEventListener("contextmenu", contextMenuHandler);
+        contextMenuHandlerMap.delete(tab);
+      }
+    });
+  }
+  function cleanup() {
+    removeListeners();
+    tabs.forEach((tab, index) => {
+      const panel = tabPanels[index];
+      tab.removeAttribute("role");
+      tab.removeAttribute("aria-selected");
+      tab.removeAttribute("aria-controls");
+      tab.removeAttribute("tabindex");
+      panel.removeAttribute("role");
+      panel.removeAttribute("aria-labelledby");
+      panel.removeAttribute("tabindex");
+      panel.hidden = false;
+    });
+    tabList.removeAttribute("role");
+    tabList.removeAttribute("aria-orientation");
+  }
+  function refresh() {
+    removeListeners();
+    const newTabs = Array.from(tabList.querySelectorAll(`.${tabsClass}`));
+    const newPanels = Array.from(document.querySelectorAll(`.${tabPanelsClass}`));
+    tabs.length = 0;
+    tabs.push(...newTabs);
+    tabPanels.length = 0;
+    tabPanels.push(...newPanels);
+    initialize();
+    addListeners();
+  }
+  initialize();
+  addListeners();
+  return { activateTab, cleanup, refresh };
+}
+
 // src/utils/test/src/test.ts
 var import_jest_axe = require("jest-axe");
 
@@ -2371,6 +2617,7 @@ async function cleanupTests() {
   makeComboboxAccessible,
   makeMenuAccessible,
   makeRadioAccessible,
+  makeTabsAccessible,
   makeToggleAccessible,
   testUiComponent
 });

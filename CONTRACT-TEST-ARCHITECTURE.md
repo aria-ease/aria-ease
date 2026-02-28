@@ -18,7 +18,11 @@ This refactor dramatically improves test performance and reliability by using a 
 
 test("menu test", async () => {
   const { container } = render(<Menu />);
-  await testUiComponent("menu", container, "http://localhost:5173/examples/menu");
+  await testUiComponent(
+    "menu",
+    container,
+    "http://localhost:5173/examples/menu",
+  );
 }, 90000);
 ```
 
@@ -50,7 +54,7 @@ afterAll(async () => {
 
 test("menu test", async () => {
   await testUiComponent("menu", null, "http://localhost:5173/test-harness?component=menu");
-}, 6000);
+);
 ```
 
 **Benefits:**
@@ -71,7 +75,7 @@ Create a dedicated route that renders components in isolation:
 
 ```jsx
 // src/pages/ComponentTestHarness.jsx
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams } from "react-router-dom";
 
 const COMPONENT_REGISTRY = {
   menu: ShopifyUserMenu,
@@ -81,9 +85,9 @@ const COMPONENT_REGISTRY = {
 
 export default function ComponentTestHarness() {
   const [searchParams] = useSearchParams();
-  const componentName = searchParams.get('component');
+  const componentName = searchParams.get("component");
   const Component = COMPONENT_REGISTRY[componentName];
-  
+
   // Render ONLY the component - no app layout, no state, no routing
   return Component ? <Component /> : <div>Invalid component</div>;
 }
@@ -137,9 +141,9 @@ export async function closeSharedBrowser(): Promise<void>;
 
 ```jsx
 // src/pages/ComponentTestHarness.jsx
-import { useSearchParams } from 'react-router-dom';
-import Menu from '../components/Menu';
-import Combobox from '../components/Combobox';
+import { useSearchParams } from "react-router-dom";
+import Menu from "../components/Menu";
+import Combobox from "../components/Combobox";
 
 const COMPONENT_REGISTRY = {
   menu: Menu,
@@ -148,7 +152,7 @@ const COMPONENT_REGISTRY = {
 
 export default function ComponentTestHarness() {
   const [searchParams] = useSearchParams();
-  const Component = COMPONENT_REGISTRY[searchParams.get('component')];
+  const Component = COMPONENT_REGISTRY[searchParams.get("component")];
   return Component ? <Component /> : <div>Component not found</div>;
 }
 ```
@@ -181,10 +185,10 @@ test("menu test", async () => {
   // Point to test harness with component query param
   await testUiComponent(
     "menu",
-    null, 
+    null,
     "http://localhost:5173/test-harness?component=menu"
   );
-}, 6000);
+);
 
 test("combobox test", async () => {
   // Browser reuses same page, just changes query param
@@ -193,7 +197,7 @@ test("combobox test", async () => {
     null,
     "http://localhost:5173/test-harness?component=combobox"
   );
-}, 6000);
+);
 ```
 
 #### JSDOM Mode (Fast Static Testing)
@@ -217,7 +221,7 @@ test("my component test", async () => {
 await testUiComponent(
   "menu",
   null,
-  "http://localhost:5173/test-harness?component=menu"
+  "http://localhost:5173/test-harness?component=menu",
 );
 ```
 
@@ -229,7 +233,7 @@ await testUiComponent(
 await testUiComponent(
   "menu",
   null,
-  "http://localhost:5173/examples/menu"  // Full app page
+  "http://localhost:5173/examples/menu", // Full app page
 );
 ```
 
@@ -276,9 +280,9 @@ await testUiComponent(
 
 ```jsx
 // src/pages/ComponentTestHarness.jsx
-import { useSearchParams } from 'react-router-dom';
-import Menu from '../components/Menu';
-import Combobox from '../components/Combobox';
+import { useSearchParams } from "react-router-dom";
+import Menu from "../components/Menu";
+import Combobox from "../components/Combobox";
 
 const COMPONENT_REGISTRY = {
   menu: Menu,
@@ -287,7 +291,7 @@ const COMPONENT_REGISTRY = {
 
 export default function ComponentTestHarness() {
   const [searchParams] = useSearchParams();
-  const Component = COMPONENT_REGISTRY[searchParams.get('component')];
+  const Component = COMPONENT_REGISTRY[searchParams.get("component")];
   return Component ? <Component /> : <div>Component not found</div>;
 }
 ```
@@ -308,7 +312,11 @@ import { testUiComponent } from "aria-ease/test";
 
 test("menu test", async () => {
   const { container } = render(<Menu />);
-  await testUiComponent("menu", container, "http://localhost:5173/examples/menu");
+  await testUiComponent(
+    "menu",
+    container,
+    "http://localhost:5173/examples/menu",
+  );
 }, 90000);
 ```
 
@@ -327,7 +335,7 @@ test("menu test", async () => {
     null,
     "http://localhost:5173/test-harness?component=menu"
   );
-}, 6000); // 15x faster!
+); // 15x faster!
 ```
 
 ### Migration Checklist:
@@ -368,12 +376,8 @@ test("menu test", async () => {
 // ✅ GOOD - Component is immediately interactive
 export default function Menu() {
   const [isOpen, setIsOpen] = useState(false);
-  
-  return (
-    <button onClick={() => setIsOpen(!isOpen)}>
-      Toggle
-    </button>
-  );
+
+  return <button onClick={() => setIsOpen(!isOpen)}>Toggle</button>;
 }
 ```
 
@@ -383,11 +387,11 @@ export default function Menu() {
 // ❌ BAD - Component has async loading
 export default function Menu() {
   const [data, setData] = useState(null);
-  
+
   useEffect(() => {
-    fetch('/api/menu').then(setData); // Tests will start before this completes!
+    fetch("/api/menu").then(setData); // Tests will start before this completes!
   }, []);
-  
+
   if (!data) return <div>Loading...</div>; // Component not ready
   return <button>{data.title}</button>;
 }
