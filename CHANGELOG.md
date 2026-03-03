@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.3.1](https://github.com/aria-ease/aria-ease/compare/v6.3.0...v6.3.1) (2026-03-03)
+
+
+### Bug Fixes
+
+* prevent region role proliferation prevention in accordion ([ca0bb33](https://github.com/aria-ease/aria-ease/commit/ca0bb338eb5854d392c37c181a942198941763b6))
+
 ## [6.3.0](https://github.com/aria-ease/aria-ease/compare/v6.2.3...v6.3.0) (2026-02-28)
 
 
