@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.4.2](https://github.com/aria-ease/aria-ease/compare/v6.4.1...v6.4.2) (2026-03-08)
+
+
+### Bug Fixes
+
+* fixed badges SVG not rendering. moved badges to jsdelivr CDN ([22d133c](https://github.com/aria-ease/aria-ease/commit/22d133c9986ec6c706ebf4c0456626e0fd2a70d8))
+* move badges to repo root for GitHub raw URLs ([691f1c9](https://github.com/aria-ease/aria-ease/commit/691f1c9baa0469cb122cfc0fc80e7e0046f36ca6))
+
 ### [6.4.1](https://github.com/aria-ease/aria-ease/compare/v6.4.0...v6.4.1) (2026-03-08)
 
 
