@@ -2,7 +2,8 @@ import {
   ContractReporter,
   closeSharedBrowser,
   contract_default
-} from "./chunk-RDEAG4KE.js";
+} from "./chunk-XLG3MIPQ.js";
+import "./chunk-I2KLQ2HA.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
 function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false, callback }) {
@@ -1538,7 +1539,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-EUXD6ZZK.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-JXQUUKFO.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl);
       } else {
         throw new Error(
@@ -1599,15 +1600,30 @@ if (typeof window === "undefined") {
     console.log(`\u{1F680} Running component accessibility tests...
 `);
     const { exec } = await import("child_process");
+    const chalk = (await import("chalk")).default;
     exec(
       `npx vitest --run --reporter verbose`,
       { cwd: process.cwd() },
-      (error, stdout, stderr) => {
+      async (error, stdout, stderr) => {
         if (stdout) {
           console.log(stdout);
         }
         if (stderr) {
           console.error(stderr);
+        }
+        if (!error || error.code === 0) {
+          try {
+            const { displayBadgeInfo, promptAddBadge } = await import("./badgeHelper-Z2LF5OYS.js");
+            displayBadgeInfo("component");
+            await promptAddBadge("component", process.cwd());
+            console.log(chalk.dim("\n" + "\u2500".repeat(60)));
+            console.log(chalk.cyan("\u{1F499} Found aria-ease helpful?"));
+            console.log(chalk.white("   \u2022 Star us on GitHub: ") + chalk.blue.underline("https://github.com/aria-ease/aria-ease"));
+            console.log(chalk.white("   \u2022 Share feedback: ") + chalk.blue.underline("https://github.com/aria-ease/aria-ease/discussions"));
+            console.log(chalk.dim("\u2500".repeat(60) + "\n"));
+          } catch (badgeError) {
+            console.error("Warning: Could not display badge prompt:", badgeError);
+          }
         }
         if (error && error.code) {
           process.exit(error.code);
