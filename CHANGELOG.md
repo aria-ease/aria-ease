@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.4.1](https://github.com/aria-ease/aria-ease/compare/v6.4.0...v6.4.1) (2026-03-08)
+
+
+### Bug Fixes
+
+* fixed badges SVG wrong path and data-v-* attributes not letting badge render ([6060748](https://github.com/aria-ease/aria-ease/commit/6060748dbfe3308e8f54dcfac1e08ab665b63977))
+
 ## [6.4.0](https://github.com/aria-ease/aria-ease/compare/v6.3.1...v6.4.0) (2026-03-08)
 
 
