@@ -105,6 +105,7 @@ After auditing your project, show the world you care about accessibility! Add a 
 ```
 
 **Why add the badge?**
+
 - ✅ Shows your commitment to accessibility
 - 🔍 Helps us discover projects using aria-ease
 - 🌟 Promotes accessibility best practices in the community

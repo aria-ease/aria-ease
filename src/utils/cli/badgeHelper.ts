@@ -17,19 +17,19 @@ export const BADGE_CONFIGS: Record<BadgeType, BadgeConfig> = {
     type: 'audit',
     fileName: 'audited-by-aria-ease.svg',
     label: 'Audited by aria-ease',
-    markdownUrl: 'https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/audited-by-aria-ease.svg'
+    markdownUrl: 'https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/audited-by-aria-ease.svg'
   },
   component: {
     type: 'component',
     fileName: 'components-tested-aria-ease.svg',
     label: 'Components tested: aria-ease',
-    markdownUrl: 'https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/components-tested-aria-ease.svg'
+    markdownUrl: 'https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/components-tested-aria-ease.svg'
   },
   verified: {
     type: 'verified',
     fileName: 'verified-by-aria-ease.svg',
     label: 'Verified by aria-ease',
-    markdownUrl: 'https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/verified-aria-ease.svg'
+    markdownUrl: 'https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/verified-by-aria-ease.svg'
   }
 };
 
