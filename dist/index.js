@@ -1613,7 +1613,7 @@ if (typeof window === "undefined") {
         }
         if (!error || error.code === 0) {
           try {
-            const { displayBadgeInfo, promptAddBadge } = await import("./badgeHelper-Z2LF5OYS.js");
+            const { displayBadgeInfo, promptAddBadge } = await import("./badgeHelper-KNZFIKXE.js");
             displayBadgeInfo("component");
             await promptAddBadge("component", process.cwd());
             console.log(chalk.dim("\n" + "\u2500".repeat(60)));

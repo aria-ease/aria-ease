@@ -1065,19 +1065,19 @@ var init_badgeHelper = __esm({
         type: "audit",
         fileName: "audited-by-aria-ease.svg",
         label: "Audited by aria-ease",
-        markdownUrl: "https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/audited-by-aria-ease.svg"
+        markdownUrl: "https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/audited-by-aria-ease.svg"
       },
       component: {
         type: "component",
         fileName: "components-tested-aria-ease.svg",
         label: "Components tested: aria-ease",
-        markdownUrl: "https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/components-tested-aria-ease.svg"
+        markdownUrl: "https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/components-tested-aria-ease.svg"
       },
       verified: {
         type: "verified",
         fileName: "verified-by-aria-ease.svg",
         label: "Verified by aria-ease",
-        markdownUrl: "https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/verified-aria-ease.svg"
+        markdownUrl: "https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/verified-aria-ease.svg"
       }
     };
   }

@@ -1,1 +1,21 @@
-<svg data-v-3c87b7b4="" xmlns="http://www.w3.org/2000/svg" width="183.3913803100586" height="35" viewBox="0 0 183.3913803100586 35" class="badge-svg"><defs data-v-3c87b7b4=""><!----><!----><!----></defs><path data-v-3c87b7b4="" d="M 5 0 L 95.3683853149414 0 L 95.3683853149414 35 L 5 35 Q 0 35 0 30 L 0 5 Q 0 0 5 0 Z" fill="#394346"/><path data-v-3c87b7b4="" d="M 95.3683853149414 0 L 178.3913803100586 0 Q 183.3913803100586 0 183.3913803100586 5 L 183.3913803100586 30 Q 183.3913803100586 35 178.3913803100586 35 L 95.3683853149414 35 Z" fill="#1576b2"/><!----><text data-v-3c87b7b4="" x="47.6841926574707" y="17.5" dy="0.35em" font-size="12" font-family="Roboto, sans-serif" fill="#FFFFFF" text-anchor="middle" letter-spacing="2" font-weight="400" font-style="normal" text-decoration="none" fill-opacity="1" font-variant="normal" style="text-transform: lowercase;">audited by</text><!----><text data-v-3c87b7b4="" x="139.3798828125" y="17.5" dy="0.35em" font-size="12" font-family="Montserrat, sans-serif" fill="#FFFFFF" text-anchor="middle" font-weight="400" letter-spacing="2" font-style="normal" text-decoration="none" fill-opacity="1" font-variant="normal" style="text-transform: lowercase;">aria-ease</text><!----></svg>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="184" height="20" role="img" aria-label="audited by: aria-ease">
+  <title>audited by: aria-ease</title>
+  <linearGradient id="s" x2="0" y2="100%">
+    <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
+    <stop offset="1" stop-opacity=".1"/>
+  </linearGradient>
+  <clipPath id="r">
+    <rect width="184" height="20" rx="3" fill="#fff"/>
+  </clipPath>
+  <g clip-path="url(#r)">
+    <rect width="77" height="20" fill="#555"/>
+    <rect x="77" width="107" height="20" fill="#4c1"/>
+    <rect width="184" height="20" fill="url(#s)"/>
+  </g>
+  <g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" text-rendering="geometricPrecision" font-size="110">
+    <text aria-hidden="true" x="395" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="670">audited by</text>
+    <text x="395" y="140" transform="scale(.1)" fill="#fff" textLength="670">audited by</text>
+    <text aria-hidden="true" x="1295" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="970">aria-ease</text>
+    <text x="1295" y="140" transform="scale(.1)" fill="#fff" textLength="970">aria-ease</text>
+  </g>
+</svg>

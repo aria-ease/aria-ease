@@ -82,31 +82,27 @@ After auditing your project, show the world you care about accessibility! Add a 
 
 **For projects audited with aria-ease:**
 
-[![Audited by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Audited by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 
 ```markdown
-[![Audited by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Audited by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 ```
 
 **For projects with tested components:**
 
-[![Components tested: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Components tested: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 
 ```markdown
-[![Components tested: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Components tested: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 ```
 
 **For projects using both audits and component tests:**
 
-[![Verified by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/verified-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Verified by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/verified-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 
 ```markdown
-[![Verified by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/verified-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Verified by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/verified-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 ```
-
-**Alternative styles:**
-
-[![accessibility: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/accessibility-aria-ease.svg)](https://github.com/aria-ease/aria-ease) [![a11y audited: ✓ aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/a11y-audited-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 
 **Why add the badge?**
 - ✅ Shows your commitment to accessibility
