@@ -969,6 +969,120 @@ var init_contractTestRunnerPlaywright = __esm({
   }
 });
 
+// src/utils/cli/badgeHelper.ts
+var badgeHelper_exports = {};
+__export(badgeHelper_exports, {
+  BADGE_CONFIGS: () => BADGE_CONFIGS,
+  displayAllBadges: () => displayAllBadges,
+  displayBadgeInfo: () => displayBadgeInfo,
+  getBadgeMarkdown: () => getBadgeMarkdown,
+  promptAddBadge: () => promptAddBadge
+});
+function getBadgeMarkdown(badgeType) {
+  const config = BADGE_CONFIGS[badgeType];
+  return `[![${config.label}](${config.markdownUrl})](https://github.com/aria-ease/aria-ease)`;
+}
+function displayBadgeInfo(badgeType) {
+  const markdown = getBadgeMarkdown(badgeType);
+  console.log(import_chalk.default.cyan("\n\u{1F3C5} Show your accessibility commitment!"));
+  console.log(import_chalk.default.white("   Add this badge to your README.md:\n"));
+  console.log(import_chalk.default.green("   " + markdown));
+  console.log(import_chalk.default.dim("\n   This helps others discover accessibility tools and shows you care!\n"));
+}
+async function promptAddBadge(badgeType, cwd = process.cwd()) {
+  const readmePath = import_path.default.join(cwd, "README.md");
+  const readmeExists = await import_fs_extra.default.pathExists(readmePath);
+  if (!readmeExists) {
+    console.log(import_chalk.default.yellow("   \u2139\uFE0F  No README.md found in current directory"));
+    return;
+  }
+  const readmeContent = await import_fs_extra.default.readFile(readmePath, "utf-8");
+  const markdown = getBadgeMarkdown(badgeType);
+  if (readmeContent.includes(markdown) || readmeContent.includes(BADGE_CONFIGS[badgeType].fileName)) {
+    console.log(import_chalk.default.gray("   \u2713 Badge already in README.md"));
+    return;
+  }
+  const rl = import_readline.default.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+  const answer = await new Promise((resolve) => {
+    rl.question(import_chalk.default.cyan("   Add badge to README.md now? (y/n): "), (ans) => {
+      rl.close();
+      resolve(ans.toLowerCase().trim());
+    });
+  });
+  if (answer === "y" || answer === "yes") {
+    await addBadgeToReadme(readmePath, readmeContent, markdown);
+    console.log(import_chalk.default.green("   \u2713 Badge added to README.md!"));
+  } else {
+    console.log(import_chalk.default.gray("   Skipped. You can add it manually anytime."));
+  }
+}
+async function addBadgeToReadme(readmePath, content, badge) {
+  const lines = content.split("\n");
+  let insertIndex = 0;
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (line.startsWith("[![") || line.startsWith("[!")) {
+      insertIndex = i + 1;
+      continue;
+    }
+    if (insertIndex > 0 && !line.startsWith("[![") && !line.startsWith("[!") && line.length > 0) {
+      break;
+    }
+    if (insertIndex === 0 && line.startsWith("#")) {
+      insertIndex = i + 2;
+      break;
+    }
+  }
+  if (insertIndex === 0) {
+    insertIndex = 1;
+  }
+  lines.splice(insertIndex, 0, badge);
+  await import_fs_extra.default.writeFile(readmePath, lines.join("\n"), "utf-8");
+}
+function displayAllBadges() {
+  console.log(import_chalk.default.cyan("\n\u{1F4CD} Available badges:"));
+  console.log(import_chalk.default.white("\n   For audits:"));
+  console.log(import_chalk.default.green("   " + getBadgeMarkdown("audit")));
+  console.log(import_chalk.default.white("\n   For component testing:"));
+  console.log(import_chalk.default.green("   " + getBadgeMarkdown("component")));
+  console.log(import_chalk.default.white("\n   For both (verified):"));
+  console.log(import_chalk.default.green("   " + getBadgeMarkdown("verified")));
+  console.log("");
+}
+var import_fs_extra, import_path, import_chalk, import_readline, BADGE_CONFIGS;
+var init_badgeHelper = __esm({
+  "src/utils/cli/badgeHelper.ts"() {
+    "use strict";
+    import_fs_extra = __toESM(require("fs-extra"), 1);
+    import_path = __toESM(require("path"), 1);
+    import_chalk = __toESM(require("chalk"), 1);
+    import_readline = __toESM(require("readline"), 1);
+    BADGE_CONFIGS = {
+      audit: {
+        type: "audit",
+        fileName: "audited-by-aria-ease.svg",
+        label: "Audited by aria-ease",
+        markdownUrl: "https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/audited-by-aria-ease.svg"
+      },
+      component: {
+        type: "component",
+        fileName: "components-tested-aria-ease.svg",
+        label: "Components tested: aria-ease",
+        markdownUrl: "https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/components-tested-aria-ease.svg"
+      },
+      verified: {
+        type: "verified",
+        fileName: "verified-by-aria-ease.svg",
+        label: "Verified by aria-ease",
+        markdownUrl: "https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/verified-aria-ease.svg"
+      }
+    };
+  }
+});
+
 // index.ts
 var index_exports = {};
 __export(index_exports, {
@@ -1023,7 +1137,9 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
       }
       trigger.setAttribute("aria-controls", panel.id);
       trigger.setAttribute("aria-expanded", "false");
-      panel.setAttribute("role", "region");
+      if (!allowMultipleOpen || triggers.length <= 6) {
+        panel.setAttribute("role", "region");
+      }
       panel.setAttribute("aria-labelledby", trigger.id);
       panel.style.display = "none";
     });
@@ -1160,13 +1276,7 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
   }
   initialize();
   addListeners();
-  return {
-    expandItem,
-    collapseItem,
-    toggleItem,
-    cleanup,
-    refresh
-  };
+  return { expandItem, collapseItem, toggleItem, cleanup, refresh };
 }
 
 // src/utils/handleKeyPress/handleKeyPress.ts
@@ -2588,15 +2698,30 @@ if (typeof window === "undefined") {
     console.log(`\u{1F680} Running component accessibility tests...
 `);
     const { exec } = await import("child_process");
+    const chalk2 = (await import("chalk")).default;
     exec(
       `npx vitest --run --reporter verbose`,
       { cwd: process.cwd() },
-      (error, stdout, stderr) => {
+      async (error, stdout, stderr) => {
         if (stdout) {
           console.log(stdout);
         }
         if (stderr) {
           console.error(stderr);
+        }
+        if (!error || error.code === 0) {
+          try {
+            const { displayBadgeInfo: displayBadgeInfo2, promptAddBadge: promptAddBadge2 } = await Promise.resolve().then(() => (init_badgeHelper(), badgeHelper_exports));
+            displayBadgeInfo2("component");
+            await promptAddBadge2("component", process.cwd());
+            console.log(chalk2.dim("\n" + "\u2500".repeat(60)));
+            console.log(chalk2.cyan("\u{1F499} Found aria-ease helpful?"));
+            console.log(chalk2.white("   \u2022 Star us on GitHub: ") + chalk2.blue.underline("https://github.com/aria-ease/aria-ease"));
+            console.log(chalk2.white("   \u2022 Share feedback: ") + chalk2.blue.underline("https://github.com/aria-ease/aria-ease/discussions"));
+            console.log(chalk2.dim("\u2500".repeat(60) + "\n"));
+          } catch (badgeError) {
+            console.error("Warning: Could not display badge prompt:", badgeError);
+          }
         }
         if (error && error.code) {
           process.exit(error.code);

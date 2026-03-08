@@ -133,11 +133,12 @@ if (typeof window === "undefined") {
         console.log(`🚀 Running component accessibility tests...\n`);
 
         const { exec } = await import("child_process");
+        const chalk = (await import("chalk")).default;
 
         exec(
             `npx vitest --run --reporter verbose`,
             { cwd: process.cwd() },
-            (error, stdout, stderr) => {
+            async (error, stdout, stderr) => {
                 // Always output stdout (test results)
                 if (stdout) {
                     console.log(stdout);
@@ -146,6 +147,25 @@ if (typeof window === "undefined") {
                 // Always output stderr (ContractReporter output)
                 if (stderr) {
                     console.error(stderr);
+                }
+                
+                // If tests passed, show badge prompt
+                if (!error || error.code === 0) {
+                    try {
+                        const { displayBadgeInfo, promptAddBadge } = await import("../../cli/badgeHelper.js");
+                        displayBadgeInfo('component');
+                        await promptAddBadge('component', process.cwd());
+                        
+                        // Call to action
+                        console.log(chalk.dim('\n' + '─'.repeat(60)));
+                        console.log(chalk.cyan('💙 Found aria-ease helpful?'));
+                        console.log(chalk.white('   • Star us on GitHub: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease'));
+                        console.log(chalk.white('   • Share feedback: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease/discussions'));
+                        console.log(chalk.dim('─'.repeat(60) + '\n'));
+                    } catch (badgeError) {
+                        // Badge prompt failed, but don't fail the tests
+                        console.error('Warning: Could not display badge prompt:', badgeError);
+                    }
                 }
                 
                 // Exit with proper code (error.code will be set if vitest failed)

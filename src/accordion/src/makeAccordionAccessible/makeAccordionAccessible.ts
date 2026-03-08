@@ -56,7 +56,9 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
       trigger.setAttribute("aria-expanded", "false");
 
       // Set attributes on panel
-      panel.setAttribute("role", "region");
+      if(!allowMultipleOpen || triggers.length <= 6) {
+        panel.setAttribute("role", "region");
+      }
       panel.setAttribute("aria-labelledby", trigger.id);
       panel.style.display = "none";
     });
@@ -231,11 +233,5 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
   initialize();
   addListeners();
 
-  return {
-    expandItem,
-    collapseItem,
-    toggleItem,
-    cleanup,
-    refresh
-  };
+  return { expandItem, collapseItem, toggleItem, cleanup, refresh };
 }

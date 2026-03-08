@@ -36,7 +36,9 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
       }
       trigger.setAttribute("aria-controls", panel.id);
       trigger.setAttribute("aria-expanded", "false");
-      panel.setAttribute("role", "region");
+      if (!allowMultipleOpen || triggers.length <= 6) {
+        panel.setAttribute("role", "region");
+      }
       panel.setAttribute("aria-labelledby", trigger.id);
       panel.style.display = "none";
     });
@@ -173,13 +175,7 @@ function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allo
   }
   initialize();
   addListeners();
-  return {
-    expandItem,
-    collapseItem,
-    toggleItem,
-    cleanup,
-    refresh
-  };
+  return { expandItem, collapseItem, toggleItem, cleanup, refresh };
 }
 
 export { makeAccordionAccessible };

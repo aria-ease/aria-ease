@@ -6,6 +6,7 @@ import path from "path";
 import fs from "fs-extra";
 import { AxeResult } from "Types";
 import { loadConfig } from "./configLoader.js";
+import { displayBadgeInfo, promptAddBadge } from "./badgeHelper.js";
 
 const program = new Command();
 
@@ -86,6 +87,18 @@ program.command('audit')
     }
     console.log(chalk.green('\n🎉 Great news! No static accessibility violations found!'));
     console.log(chalk.gray(`   Audited ${auditedCount} page${auditedCount > 1 ? 's' : ''} successfully.\n`));
+    
+    // Badge prompt - show even when no violations found (success case!)
+    displayBadgeInfo('audit');
+    await promptAddBadge('audit', process.cwd());
+    
+    // Call to action
+    console.log(chalk.dim('\n' + '─'.repeat(60)));
+    console.log(chalk.cyan('💙 Found aria-ease helpful?'));
+    console.log(chalk.white('   • Star us on GitHub: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease'));
+    console.log(chalk.white('   • Share feedback: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease/discussions'));
+    console.log(chalk.dim('─'.repeat(60) + '\n'));
+    
     process.exit(0);
   }
 
@@ -112,6 +125,17 @@ program.command('audit')
   }
 
   console.log(chalk.green('\n🎉 All audits completed.'));
+  
+  // Badge prompt
+  displayBadgeInfo('audit');
+  await promptAddBadge('audit', process.cwd());
+  
+  // Call to action - help grow the community
+  console.log(chalk.dim('\n' + '─'.repeat(60)));
+  console.log(chalk.cyan('💙 Found aria-ease helpful?'));
+  console.log(chalk.white('   • Star us on GitHub: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease'));
+  console.log(chalk.white('   • Share feedback: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease/discussions'));
+  console.log(chalk.dim('─'.repeat(60) + '\n'));
 })
 
 program.command('test')

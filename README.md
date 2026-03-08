@@ -76,6 +76,46 @@ The CLI will automatically find and load your config file, with validation to ca
 
 **Perfect for CI/CD pipelines** to catch accessibility issues before production!
 
+#### 🏅 Show Your Accessibility Commitment
+
+After auditing your project, show the world you care about accessibility! Add a badge to your README:
+
+**For projects audited with aria-ease:**
+
+[![Audited by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+
+```markdown
+[![Audited by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+```
+
+**For projects with tested components:**
+
+[![Components tested: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+
+```markdown
+[![Components tested: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+```
+
+**For projects using both audits and component tests:**
+
+[![Verified by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/verified-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+
+```markdown
+[![Verified by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/verified-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+```
+
+**Alternative styles:**
+
+[![accessibility: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/accessibility-aria-ease.svg)](https://github.com/aria-ease/aria-ease) [![a11y audited: ✓ aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/package/badges/a11y-audited-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+
+**Why add the badge?**
+- ✅ Shows your commitment to accessibility
+- 🔍 Helps us discover projects using aria-ease
+- 🌟 Promotes accessibility best practices in the community
+- 📈 Free marketing for both your project and aria-ease!
+
+> **Tip:** The CLI will prompt you to add the appropriate badge automatically after running audits or tests!
+
 ---
 
 ## 📚 Component API
