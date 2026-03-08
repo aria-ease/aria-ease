@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.4.0](https://github.com/aria-ease/aria-ease/compare/v6.3.1...v6.4.0) (2026-03-08)
+
+
+### Features
+
+* add badge system and community growth features ([9df31d2](https://github.com/aria-ease/aria-ease/commit/9df31d278b4d4fc8dad33443c6f826db3d88e15e))
+
 ### [6.3.1](https://github.com/aria-ease/aria-ease/compare/v6.3.0...v6.3.1) (2026-03-03)
 
 
