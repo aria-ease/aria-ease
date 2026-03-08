@@ -29,7 +29,7 @@ export const BADGE_CONFIGS: Record<BadgeType, BadgeConfig> = {
     type: 'verified',
     fileName: 'verified-by-aria-ease.svg',
     label: 'Verified by aria-ease',
-    markdownUrl: 'https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/verified-aria-ease.svg'
+    markdownUrl: 'https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/verified-by-aria-ease.svg'
   }
 };
 
