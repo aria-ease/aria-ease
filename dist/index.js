@@ -2,7 +2,7 @@ import {
   ContractReporter,
   closeSharedBrowser,
   contract_default
-} from "./chunk-XLG3MIPQ.js";
+} from "./chunk-TQBS54MM.js";
 import "./chunk-I2KLQ2HA.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
@@ -1539,7 +1539,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-JXQUUKFO.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-D57V4RSU.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl);
       } else {
         throw new Error(

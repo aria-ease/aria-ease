@@ -176,7 +176,7 @@
             ]
         },
         {
-            "description": "ArrowUp navigates to previous option when listbox is open.",
+            "description": "Up Arrow navigates to previous option when listbox is open.",
             "action": [
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },
                 { "type": "keypress", "target": "input", "key": "ArrowDown" },

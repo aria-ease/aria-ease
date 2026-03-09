@@ -110,7 +110,7 @@ program.command('audit')
     await fs.ensureDir(out);
     const d = new Date();
     const pad = (n: number) => String(n).padStart(2, '0');
-    const timestamp = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    const timestamp = `${pad(d.getDate())}-${pad(d.getMonth() + 1)}-${d.getFullYear()} ${pad(d.getHours())}h ${pad(d.getMinutes())}m ${pad(d.getSeconds())}s`;
     const fileName = `ariaease-report-${timestamp}.${format}`;
     const filePath = path.join(out, fileName);
 
