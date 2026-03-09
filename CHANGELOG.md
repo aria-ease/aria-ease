@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.4.3](https://github.com/aria-ease/aria-ease/compare/v6.4.2...v6.4.3) (2026-03-09)
+
+
+### Bug Fixes
+
+* fixed audit report filename breaking GitHub action artifact job ([c4c4fc5](https://github.com/aria-ease/aria-ease/commit/c4c4fc5732da1ad6970893a621702256cb2e86bc))
+
 ### [6.4.2](https://github.com/aria-ease/aria-ease/compare/v6.4.1...v6.4.2) (2026-03-08)
 
 
