@@ -228,7 +228,7 @@ ${"\u2550".repeat(60)}`);
 `);
         if (totalFailures === 0 && this.skipped === 0 && this.optionalSuggestions === 0) {
           this.log(`\u2705 All ${totalRun} tests passed!`);
-          this.log(`   ${this.componentName} component meets APG and WCAG guidelines \u2713`);
+          this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interaction \u2713`);
         } else if (totalFailures === 0) {
           this.log(`\u2705 ${totalPasses}/${totalRun} required tests passed`);
           if (this.skipped > 0) {
@@ -237,7 +237,7 @@ ${"\u2550".repeat(60)}`);
           if (this.optionalSuggestions > 0) {
             this.log(`\u{1F4A1} ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? "s" : ""} suggested`);
           }
-          this.log(`   ${this.componentName} component meets required standards \u2713`);
+          this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interaction \u2713`);
         } else {
           this.log(`\u274C ${totalFailures} test${totalFailures > 1 ? "s" : ""} failed`);
           this.log(`\u2705 ${totalPasses} test${totalPasses > 1 ? "s" : ""} passed`);

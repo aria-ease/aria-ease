@@ -203,7 +203,7 @@ export class ContractReporter {
     
     if (totalFailures === 0 && this.skipped === 0 && this.optionalSuggestions === 0) {
       this.log(`✅ All ${totalRun} tests passed!`);
-      this.log(`   ${this.componentName} component meets APG and WCAG guidelines ✓`);
+      this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interaction ✓`);
     } else if (totalFailures === 0) {
       this.log(`✅ ${totalPasses}/${totalRun} required tests passed`);
       if (this.skipped > 0) {
@@ -212,7 +212,7 @@ export class ContractReporter {
       if (this.optionalSuggestions > 0) {
         this.log(`💡 ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? 's' : ''} suggested`);
       }
-      this.log(`   ${this.componentName} component meets required standards ✓`);
+      this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interaction ✓`);
     } else {
       this.log(`❌ ${totalFailures} test${totalFailures > 1 ? 's' : ''} failed`);
       this.log(`✅ ${totalPasses} test${totalPasses > 1 ? 's' : ''} passed`);
