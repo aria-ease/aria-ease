@@ -24,23 +24,33 @@ program.command('audit')
   const { runAudit } = await import("../audit/src/audit/audit.js");
   const { formatResults } = await import("../audit/src/formatters/formatters.js");
 
+  // Determine if we need config (only if URL not provided via CLI)
+  const needsConfig = !opts.url;
+  
   // Load config with robust discovery and validation
   const { config, configPath, errors } = await loadConfig(process.cwd());
   
   if (configPath) {
     console.log(chalk.green(`✅ Loaded config from ${path.basename(configPath)}\n`));
-  } else if (errors.length > 0) {
+  } else if (errors.length > 0 && needsConfig) {
+    // Only fail on config errors if we actually need the config for URLs
     console.log(chalk.red('❌ Config file errors:\n'));
     errors.forEach(err => console.log(chalk.red(`   ${err}`)));
     console.log('');
     process.exit(1);
-  } else {
+  } else if (errors.length > 0) {
+    // Config has errors but we don't need it (URL provided via CLI)
+    console.log(chalk.yellow('⚠️  Config file has errors (ignored, using CLI options)\n'));
+  } else if (!configPath && needsConfig) {
     console.log(chalk.yellow('ℹ️  No config file found, using CLI options.\n'));
   }
 
   const urls: string[] = [];
-  if(opts.url) urls.push(opts.url);
-  if(config.audit?.urls && Array.isArray(config.audit.urls)) urls.push(...config.audit.urls);
+  if(opts.url) {
+    urls.push(opts.url);
+  } else if(config.audit?.urls && Array.isArray(config.audit.urls)) {
+    urls.push(...config.audit.urls);
+  }
 
   const format: string = (config.audit?.output && (config.audit.output as { format?: string }).format) || opts.format;
   if(!['json', 'csv', 'html', 'all'].includes(format)) {

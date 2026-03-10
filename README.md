@@ -1,6 +1,6 @@
 # Aria-Ease
 
-Out of the box accessibility utility package to develop production ready applications.
+Design, verify, and enforce accessible web development with ARIA component utilities, automated audits, component interaction testing, and CI/CD pipelines — all in one infrastructure.
 
 [![npm version](https://img.shields.io/npm/v/aria-ease.svg)](https://www.npmjs.com/package/aria-ease)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
@@ -82,26 +82,26 @@ After auditing your project, show the world you care about accessibility! Add a 
 
 **For projects audited with aria-ease:**
 
-[![Audited by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Audited by aria-ease](https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 
 ```markdown
-[![Audited by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Audited by aria-ease](https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/audited-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 ```
 
 **For projects with tested components:**
 
-[![Components tested: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Components tested: aria-ease](https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 
 ```markdown
-[![Components tested: aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Components tested: aria-ease](https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/components-tested-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 ```
 
 **For projects using both audits and component tests:**
 
-[![Verified by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/verified-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Verified by aria-ease](https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/verified-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 
 ```markdown
-[![Verified by aria-ease](https://raw.githubusercontent.com/aria-ease/aria-ease/main/badges/verified-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Verified by aria-ease](https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/verified-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 ```
 
 **Why add the badge?**
