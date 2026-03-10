@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.4.4](https://github.com/aria-ease/aria-ease/compare/v6.4.3...v6.4.4) (2026-03-10)
+
+
+### Bug Fixes
+
+* make --url option work independently of config errors ([3cb8965](https://github.com/aria-ease/aria-ease/commit/3cb8965cc3f909560eec69de8c7d08e69a31e53d))
+
 ### [6.4.3](https://github.com/aria-ease/aria-ease/compare/v6.4.2...v6.4.3) (2026-03-09)
 
 
