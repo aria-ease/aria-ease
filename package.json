@@ -1,7 +1,7 @@
 {
   "name": "aria-ease",
-  "version": "6.4.3",
-  "description": "Out-of-the-box accessibility utility package to develop production ready applications.",
+  "version": "6.4.4",
+  "description": "Design, verify, and enforce accessible web development with ARIA component utilities, automated audits, component interaction testing, and CI/CD pipelines — all in one infrastructure.",
   "main": "dist/index.cjs",
   "type": "module",
   "module": "dist/index.js",
