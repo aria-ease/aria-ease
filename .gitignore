@@ -1,6 +1,6 @@
 node_modules
 changes.txt
-dist/
-bin/
+dist
+bin
 *.map
 TODO.txt

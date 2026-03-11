@@ -2,62 +2,60 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
-### [6.4.4](https://github.com/aria-ease/aria-ease/compare/v6.4.3...v6.4.4) (2026-03-10)
-
+### [6.4.5](https://github.com/aria-ease/aria-ease/compare/v6.4.6...v6.4.5) (2026-03-11)
 
 ### Bug Fixes
 
-* make --url option work independently of config errors ([3cb8965](https://github.com/aria-ease/aria-ease/commit/3cb8965cc3f909560eec69de8c7d08e69a31e53d))
+- fixed audit CLI not exiting in CI when audit fails ([e3dc94b](https://github.com/aria-ease/aria-ease/commit/e3dc94b76b0d9b38179549bfce87733ed67ddbe4))
+
+### [6.4.4](https://github.com/aria-ease/aria-ease/compare/v6.4.3...v6.4.4) (2026-03-10)
+
+### Bug Fixes
+
+- make --url option work independently of config errors ([3cb8965](https://github.com/aria-ease/aria-ease/commit/3cb8965cc3f909560eec69de8c7d08e69a31e53d))
 
 ### [6.4.3](https://github.com/aria-ease/aria-ease/compare/v6.4.2...v6.4.3) (2026-03-09)
 
-
 ### Bug Fixes
 
-* fixed audit report filename breaking GitHub action artifact job ([c4c4fc5](https://github.com/aria-ease/aria-ease/commit/c4c4fc5732da1ad6970893a621702256cb2e86bc))
+- fixed audit report filename breaking GitHub action artifact job ([c4c4fc5](https://github.com/aria-ease/aria-ease/commit/c4c4fc5732da1ad6970893a621702256cb2e86bc))
 
 ### [6.4.2](https://github.com/aria-ease/aria-ease/compare/v6.4.1...v6.4.2) (2026-03-08)
 
-
 ### Bug Fixes
 
-* fixed badges SVG not rendering. moved badges to jsdelivr CDN ([22d133c](https://github.com/aria-ease/aria-ease/commit/22d133c9986ec6c706ebf4c0456626e0fd2a70d8))
-* move badges to repo root for GitHub raw URLs ([691f1c9](https://github.com/aria-ease/aria-ease/commit/691f1c9baa0469cb122cfc0fc80e7e0046f36ca6))
+- fixed badges SVG not rendering. moved badges to jsdelivr CDN ([22d133c](https://github.com/aria-ease/aria-ease/commit/22d133c9986ec6c706ebf4c0456626e0fd2a70d8))
+- move badges to repo root for GitHub raw URLs ([691f1c9](https://github.com/aria-ease/aria-ease/commit/691f1c9baa0469cb122cfc0fc80e7e0046f36ca6))
 
 ### [6.4.1](https://github.com/aria-ease/aria-ease/compare/v6.4.0...v6.4.1) (2026-03-08)
 
-
 ### Bug Fixes
 
-* fixed badges SVG wrong path and data-v-* attributes not letting badge render ([6060748](https://github.com/aria-ease/aria-ease/commit/6060748dbfe3308e8f54dcfac1e08ab665b63977))
+- fixed badges SVG wrong path and data-v-\* attributes not letting badge render ([6060748](https://github.com/aria-ease/aria-ease/commit/6060748dbfe3308e8f54dcfac1e08ab665b63977))
 
 ## [6.4.0](https://github.com/aria-ease/aria-ease/compare/v6.3.1...v6.4.0) (2026-03-08)
 
-
 ### Features
 
-* add badge system and community growth features ([9df31d2](https://github.com/aria-ease/aria-ease/commit/9df31d278b4d4fc8dad33443c6f826db3d88e15e))
+- add badge system and community growth features ([9df31d2](https://github.com/aria-ease/aria-ease/commit/9df31d278b4d4fc8dad33443c6f826db3d88e15e))
 
 ### [6.3.1](https://github.com/aria-ease/aria-ease/compare/v6.3.0...v6.3.1) (2026-03-03)
 
-
 ### Bug Fixes
 
-* prevent region role proliferation prevention in accordion ([ca0bb33](https://github.com/aria-ease/aria-ease/commit/ca0bb338eb5854d392c37c181a942198941763b6))
+- prevent region role proliferation prevention in accordion ([ca0bb33](https://github.com/aria-ease/aria-ease/commit/ca0bb338eb5854d392c37c181a942198941763b6))
 
 ## [6.3.0](https://github.com/aria-ease/aria-ease/compare/v6.2.3...v6.3.0) (2026-02-28)
 
-
 ### Features
 
-* added Tabs component utility and contract ([2453ba1](https://github.com/aria-ease/aria-ease/commit/2453ba187c8672eca01adb9101ead193ed8cfcf0))
+- added Tabs component utility and contract ([2453ba1](https://github.com/aria-ease/aria-ease/commit/2453ba187c8672eca01adb9101ead193ed8cfcf0))
 
 ### [6.2.3](https://github.com/aria-ease/aria-ease/compare/v6.2.2...v6.2.3) (2026-02-27)
 
-
 ### Bug Fixes
 
-* remove non-APG keyboard interactions from checkbox, radio, and toggle ([c98c5ea](https://github.com/aria-ease/aria-ease/commit/c98c5ea190137754f4bc0ca01bf81dbcc19be23f))
+- remove non-APG keyboard interactions from checkbox, radio, and toggle ([c98c5ea](https://github.com/aria-ease/aria-ease/commit/c98c5ea190137754f4bc0ca01bf81dbcc19be23f))
 
 ### [6.2.2](https://github.com/aria-ease/aria-ease/compare/v6.2.1...v6.2.2) (2026-02-24)
 
