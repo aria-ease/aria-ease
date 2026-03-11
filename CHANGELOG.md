@@ -2,6 +2,8 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.4.5](https://github.com/aria-ease/aria-ease/compare/v6.4.6...v6.4.5) (2026-03-11)
+
 ### [6.4.6](https://github.com/aria-ease/aria-ease/compare/v6.4.4...v6.4.6) (2026-03-11)
 
 
