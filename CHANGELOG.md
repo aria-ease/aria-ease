@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.4.6](https://github.com/aria-ease/aria-ease/compare/v6.4.4...v6.4.6) (2026-03-11)
+
+
+### Bug Fixes
+
+* fixed audit CLI not exiting in CI when audit fails ([e3dc94b](https://github.com/aria-ease/aria-ease/commit/e3dc94b76b0d9b38179549bfce87733ed67ddbe4))
+
 ### [6.4.4](https://github.com/aria-ease/aria-ease/compare/v6.4.3...v6.4.4) (2026-03-10)
 
 
