@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.4.7](https://github.com/aria-ease/aria-ease/compare/v6.4.5...v6.4.7) (2026-03-11)
+
+
+### Bug Fixes
+
+* fixed test CLI not exiting in CI when test fails ([79a25f6](https://github.com/aria-ease/aria-ease/commit/79a25f6571d1de904b8d68f760ce3c5f3ecd0f57))
+
 ### [6.4.6](https://github.com/aria-ease/aria-ease/compare/v6.4.5...v6.4.6) (2026-03-11)
 
 
