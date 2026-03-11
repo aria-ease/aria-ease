@@ -823,15 +823,25 @@ jobs:
         # ⬆️ If audit fails, workflow stops here
 
       - name: Run component contract tests
-        run: npx aria-ease test
+        run: |
+          set -o pipefail
+          npm run test 2>&1 | tee component-contract-test-output.txt
         # ⬆️ If interaction tests fail, workflow stops here
 
       - name: Upload audit reports
-        if: always()
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: accessibility-reports
           path: accessibility-reports/
+          retention-days: 30
+
+      - name: Upload component contract tests report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-contract-test-output
+          path: component-contract-test-output.txt
           retention-days: 30
 
   deploy:
