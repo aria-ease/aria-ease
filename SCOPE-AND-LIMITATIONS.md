@@ -2,11 +2,33 @@
 
 ## Our Commitment to Transparency
 
-**Aria-Ease is powerful, but it's not a complete accessibility solution on its own.**
+**Aria-Ease is powerful infrastructure, but it's not a complete accessibility solution on its own.**
 
 We believe the biggest problem in accessibility tooling isn't a lack of tools—it's a lack of transparency about what those tools actually cover. Too many tools present themselves as comprehensive solutions without clearly communicating their limitations. This leads to false confidence, missed issues, and real legal/ethical consequences.
 
 **We're different. We're honest about what we do AND what we don't do.**
+
+---
+
+## 🏗️ What Aria-Ease Is
+
+Aria-Ease is **accessibility infrastructure for the entire frontend engineering lifecycle**, not just a utility library.
+
+### The Complete Lifecycle Coverage
+
+| Phase | What We Provide | Status |
+|-------|----------------|--------|
+| **Development** | Component utilities implementing WAI-ARIA APG patterns | ✅ Available |
+| **Linting** | ESLint rules to enforce accessible coding patterns | 🚧 Roadmap |
+| **Pre-Deploy** | Axe-core powered static accessibility audit CLI | ✅ Available |
+| **Testing** | WAI-ARIA APG contract testing with Playwright | ✅ Available |
+| **CI/CD** | Accessibility as deployment gatekeeper | ✅ Available |
+| **Production** | Real user signal monitoring and interaction replay | 🚧 Roadmap |
+| **Insights** | Dashboard for reporting and analytics | 🚧 Roadmap |
+
+**Philosophy:** By the time your app reaches manual testing, there should only be minute, non-automatable aspects left to verify.
+
+**Reality:** Code that fails accessibility checks cannot reach production.
 
 ---
 
@@ -281,6 +303,49 @@ We recommend a **layered approach** to accessibility:
 ```
 
 **You need all layers.** Aria-Ease is one critical piece, not the whole puzzle.
+
+---
+
+## 🚧 What's Coming: Roadmap
+
+We're expanding the infrastructure to cover even more of the lifecycle:
+
+### Linting (Roadmap)
+
+**What:** ESLint rules that enforce accessible coding patterns as you type.
+
+**Impact:** Catch accessibility mistakes in development, before they compile. Enforce patterns like:
+- Requiring `alt` attributes on images
+- Warning about non-semantic HTML (`<div>` with `onClick` instead of `<button>`)
+- Flagging missing ARIA labels
+- Detecting keyboard traps
+
+**Why this matters:** Prevention is better than detection. If your editor won't let you write inaccessible code, you can't ship it.
+
+### Production Monitoring (Roadmap)
+
+**What:** Real user signal monitoring, interaction replay, and analytics.
+
+**Impact:** See how assistive technology users actually experience your app in production:
+- Track keyboard navigation patterns
+- Monitor screen reader usage
+- Replay user sessions to identify pain points
+- Detect accessibility regressions in production
+
+**Why this matters:** Automated testing can't catch everything. Real user behavior reveals issues that only emerge in production.
+
+### Insights Dashboard (Roadmap)
+
+**What:** Centralized dashboard for accessibility health and reporting.
+
+**Impact:**
+- Visualize accessibility metrics across your entire application
+- Track progress over time (% of violations fixed)
+- Generate executive reports for stakeholders
+- Identify patterns and high-impact areas
+- Monitor compliance with organizational policies
+
+**Why this matters:** Accessibility isn't one-and-done. You need ongoing visibility into your accessibility health to maintain it.
 
 ---
 

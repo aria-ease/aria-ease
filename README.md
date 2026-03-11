@@ -1,11 +1,113 @@
 # Aria-Ease
 
-Design, verify, and enforce accessible web development with ARIA component utilities, automated audits, component interaction testing, and CI/CD pipelines — all in one infrastructure.
+**Accessibility infrastructure for the entire frontend engineering lifecycle.**
+
+Stop treating accessibility as an afterthought. Aria-Ease engineers technical integrity into every phase of frontend development — from local development to production monitoring — so accessibility violations never reach your users.
 
 [![npm version](https://img.shields.io/npm/v/aria-ease.svg)](https://www.npmjs.com/package/aria-ease)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
 [![Bundle Size](https://img.shields.io/bundlephobia/minzip/aria-ease)](https://bundlephobia.com/package/aria-ease)
 [![npm downloads](https://img.shields.io/npm/dm/aria-ease.svg)](https://www.npmjs.com/package/aria-ease)
+
+## 🏗️ Infrastructure, Not Just Utilities
+
+Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that integrates into every phase of your frontend engineering lifecycle:
+
+| Phase              | Feature                                       | Status       | Impact                                  |
+| ------------------ | --------------------------------------------- | ------------ | --------------------------------------- |
+| **🔧 Development** | Component utilities for accessible patterns   | ✅ Available | Build it right from the start           |
+| **⚡ Linting**     | ESLint rules to enforce accessible coding     | 🚧 Roadmap   | Catch mistakes as you type              |
+| **🔍 Pre-Deploy**  | Axe-core powered static accessibility audit   | ✅ Available | Verify before it ships                  |
+| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | ✅ Available | 26 combobox assertions in ~4 seconds    |
+| **🚀 CI/CD**       | Accessibility as deployment gatekeeper        | ✅ Available | Block inaccessible code from production |
+| **📊 Production**  | Real user signal monitoring and replay        | 🚧 Roadmap   | Understand how users actually interact  |
+| **📈 Insights**    | Dashboard for reporting and analytics         | 🚧 Roadmap   | Visualize accessibility health          |
+
+**The philosophy:** By the time your app reaches manual testing, there should only be minute, non-automatable aspects left to verify.
+
+**The reality:** Code that fails accessibility checks cannot reach production. Period.
+
+---
+
+## 🎯 The Complete Lifecycle
+
+### From Development to Production
+
+**Traditional approach:** Build features → Manual testing → Find accessibility issues → Fix them → Manual testing again → Ship (maybe)
+
+**Aria-Ease approach:** Build with accessible utilities → Automated audits catch issues → Contract tests verify behavior → CI/CD gates deployment → Ship with confidence
+
+### What Makes This Different?
+
+#### 1. **Component Utilities** (Available Now)
+
+Reusable accessible interaction patterns that implement WAI-ARIA APG specifications. Tree-shakable, framework-agnostic, production-ready.
+
+```javascript
+// Instead of 50+ lines managing ARIA attributes and keyboard events...
+import { makeMenuAccessible } from "aria-ease/menu";
+
+const menu = makeMenuAccessible({
+  menuId: "user-menu",
+  triggerId: "profile-button",
+  menuItemsClass: "menu-item",
+}); // Arrow keys, Escape, focus management — all handled
+```
+
+#### 2. **Static Audit** (Available Now)
+
+Axe-core powered CLI that scans your entire site and generates comprehensive reports. Run it locally or in CI/CD.
+
+```bash
+npx aria-ease audit --url https://yoursite.com
+```
+
+#### 3. **Contract Testing** (Available Now)
+
+This is the game-changer. We encoded the WAI-ARIA APG into deterministic JSON "contracts" and built a custom Playwright runner with isolated test-harness architecture.
+
+**The result?** Component interaction testing that feels closer to unit testing than manual QA.
+
+```bash
+npx aria-ease test --component combobox --url http://localhost:3000
+# ✓ 26 assertions in ~4 seconds
+```
+
+**Why this matters:** Before, verifying a combobox meant manual keyboard testing across browsers. Now, it's automated, fast, and repeatable. You can boast about executing 26 combobox interaction assertions in ~4 seconds.
+
+#### 4. **CI/CD Integration** (Available Now)
+
+Turn accessibility into a deployment invariant. Add audit and test commands to your pipeline — if they fail, deployment is blocked.
+
+```yaml
+# .github/workflows/deploy.yml
+jobs:
+  accessibility-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: npm run build
+      - run: npx aria-ease audit # Static checks
+      - run: npx aria-ease test # Interaction tests
+      # Only deploy if both pass ☝️
+```
+
+Real example from our docs site: Push to branch → Accessibility checks run → Green check mark → Deploys to Firebase. Red X → Deploy blocked.
+
+**No one has any excuse to ship inaccessible code anymore.**
+
+#### 5. **Linting** (Roadmap)
+
+ESLint rules that enforce accessible coding patterns as you type. Catch issues before they compile.
+
+#### 6. **Production Monitoring** (Roadmap)
+
+Real user signal monitoring, interaction replay, and analytics. Understand how assistive technology users actually experience your app.
+
+#### 7. **Insights Dashboard** (Roadmap)
+
+Visualize accessibility health across your entire application. Track progress, identify patterns, generate reports.
+
+---
 
 ## ✨ Features
 
@@ -98,7 +200,7 @@ After auditing your project, show the world you care about accessibility! Add a 
 
 **For projects using both audits and component tests:**
 
-[![Verified by aria-ease](https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/verified-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
+[![Verified by aria-ease](https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/verified-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
 
 ```markdown
 [![Verified by aria-ease](https://cdn.jsdelivr.net/gh/aria-ease/aria-ease@main/badges/verified-by-aria-ease.svg)](https://github.com/aria-ease/aria-ease)
@@ -651,7 +753,253 @@ For older browser support, use a polyfill service or transpile with appropriate 
 
 ---
 
-## 📖 More Resources
+## � CI/CD Integration: Accessibility as a Deployment Gatekeeper
+
+**The game-changer:** Turn accessibility into a deployment invariant. Code that fails accessibility checks cannot reach production.
+
+### Why This Matters
+
+Until now, accessibility testing often happened manually, late in the cycle, or not at all. Even with good intentions, inaccessible code slips through when testing is manual and optional.
+
+**Aria-Ease changes the equation:**
+
+- ✅ Automated = no human bottleneck
+- ✅ Fast = ~4 seconds for comprehensive component testing
+- ✅ Deterministic = same results every time
+- ✅ Blocking = deploy fails if tests fail
+
+**Real example:** The aria-ease docs site has a pipeline that:
+
+1. Runs `aria-ease audit` on every push
+2. Runs `aria-ease test` for component interaction verification
+3. Only deploys to Firebase if both pass
+4. Blocks deployment if either fails
+
+**Result:** Green check ✓ = live docs. Red X ✗ = deploy blocked. No exceptions.
+
+### GitHub Actions Example
+
+Here's a complete workflow that gates deployment on accessibility:
+
+```yaml
+name: Accessibility Gate + Deploy
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  accessibility-checks:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start dev server
+        run: |
+          npm run dev &
+          npx wait-on http://localhost:5173 -t 30000
+
+      - name: Run accessibility audit
+        run: npx aria-ease audit
+        # ⬆️ If audit fails, workflow stops here
+
+      - name: Run component contract tests
+        run: npx aria-ease test
+        # ⬆️ If interaction tests fail, workflow stops here
+
+      - name: Upload audit reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: accessibility-reports
+          path: accessibility-reports/
+          retention-days: 30
+
+  deploy:
+    needs: accessibility-checks # ⬅️ This is the key
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build for production
+        run: npm run build
+
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+      # Deployment only happens if accessibility-checks job passes ✅
+```
+
+### Configuration for CI/CD
+
+Create `ariaease.config.js` in your project root:
+
+```javascript
+export default {
+  audit: {
+    urls: [
+      "http://localhost:5173", // Homepage
+      "http://localhost:5173/docs", // Docs
+      "http://localhost:5173/examples", // Examples
+    ],
+    output: {
+      format: "all", // Generate JSON, CSV, and HTML reports
+      out: "./accessibility-reports",
+    },
+  },
+  test: {
+    components: ["menu", "accordion", "tabs", "combobox"], // Components to test
+    baseUrl: "http://localhost:5173/test-harness",
+    browser: "chromium",
+  },
+};
+```
+
+Add to `package.json`:
+
+```json
+{
+  "scripts": {
+    "audit": "aria-ease audit",
+    "test:a11y": "aria-ease test",
+    "ci": "npm run audit && npm run test:a11y"
+  }
+}
+```
+
+### Other CI Platforms
+
+**GitLab CI:**
+
+```yaml
+accessibility:
+  stage: test
+  script:
+    - npm install
+    - npm run build
+    - npm run dev &
+    - npx wait-on http://localhost:5173
+    - npx aria-ease audit
+    - npx aria-ease test
+  artifacts:
+    paths:
+      - accessibility-reports/
+    when: always
+
+deploy:
+  stage: deploy
+  needs: [accessibility] # Gates deployment
+  script:
+    - npm run deploy
+  only:
+    - main
+```
+
+**CircleCI:**
+
+```yaml
+version: 2.1
+
+jobs:
+  accessibility:
+    docker:
+      - image: mcr.microsoft.com/playwright:v1.40.0-focal
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm run build
+      - run: npm run dev &
+      - run: npx wait-on http://localhost:5173
+      - run: npx aria-ease audit
+      - run: npx aria-ease test
+      - store_artifacts:
+          path: accessibility-reports
+
+  deploy:
+    docker:
+      - image: node:20
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm run deploy
+
+workflows:
+  build-test-deploy:
+    jobs:
+      - accessibility
+      - deploy:
+          requires:
+            - accessibility # Gates deployment
+          filters:
+            branches:
+              only: main
+```
+
+### Performance & Speed
+
+One of the biggest blockers to adding accessibility testing to CI/CD is **speed**. Nobody wants pipelines that take 30 minutes.
+
+**Aria-Ease contract testing is fast:**
+
+```bash
+npx aria-ease test --component combobox
+# ✓ 26 interaction assertions in ~4 seconds
+
+npx aria-ease test --component menu
+# ✓ 15 interaction assertions in ~2.8 seconds
+
+npx aria-ease test  # All components
+# ✓ 80+ assertions in ~12 seconds
+```
+
+**Why so fast?**
+
+- Custom Playwright runner optimized for component testing
+- Isolated test-harness architecture (no full app bootstrapping)
+- Deterministic JSON contracts (no flaky selectors)
+- Runs headless in CI
+
+**Compare to manual testing:** Manually verifying keyboard interactions for a combobox (arrow keys, typing, Enter, Escape, Home/End, etc.) across browsers, verifying WAI-ARIA roles, states and properties = 20-30 minutes. Aria-Ease = 4 seconds.
+
+### The Moment of Truth
+
+The first time you see that green check mark in your CI/CD pipeline—knowing that both static accessibility violations AND interaction behavior have been verified automatically—that's when it clicks.
+
+**No one has any excuse to ship inaccessible code anymore.**
+
+You've shifted accessibility left (into development), automated the verification, and made it a deployment gatekeeper. By the time code reaches manual testing, there should only be minute, non-automatable aspects left to verify.
+
+---
+
+## �📖 More Resources
 
 - [Full Documentation](https://ariaease.site/docs)
 - [GitHub Repository](https://github.com/aria-ease/aria-ease)

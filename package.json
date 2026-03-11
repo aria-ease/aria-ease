@@ -1,7 +1,7 @@
 {
   "name": "aria-ease",
-  "version": "6.4.4",
-  "description": "Design, verify, and enforce accessible web development with ARIA component utilities, automated audits, component interaction testing, and CI/CD pipelines — all in one infrastructure.",
+  "version": "6.4.5",
+  "description": "Accessibility infrastructure for the entire frontend engineering lifecycle. Build accessible patterns, run automated audits, verify component interactions, and gate deployments — all in one system.",
   "main": "dist/index.cjs",
   "type": "module",
   "module": "dist/index.js",

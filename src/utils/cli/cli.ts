@@ -134,7 +134,14 @@ program.command('audit')
     await Promise.all(['json', 'csv', 'html'].map((format) => createReport(format)));
   }
 
-  console.log(chalk.green('\n🎉 All audits completed.'));
+  // Count total violations
+  const totalViolations = allResults.reduce((sum, r) => {
+    return sum + (r.result?.violations?.length || 0);
+  }, 0);
+  
+  console.log(chalk.red(`\n❌ Accessibility violations found!`));
+  console.log(chalk.yellow(`   ${totalViolations} violation${totalViolations !== 1 ? 's' : ''} detected across ${allResults.length} page${allResults.length !== 1 ? 's' : ''}.`));
+  console.log(chalk.gray(`   Review the generated report for details.\n`));
   
   // Badge prompt
   displayBadgeInfo('audit');
@@ -146,6 +153,9 @@ program.command('audit')
   console.log(chalk.white('   • Star us on GitHub: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease'));
   console.log(chalk.white('   • Share feedback: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease/discussions'));
   console.log(chalk.dim('─'.repeat(60) + '\n'));
+  
+  // Exit with error code to fail CI/CD when violations found
+  process.exit(1);
 })
 
 program.command('test')
