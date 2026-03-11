@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.4.8](https://github.com/aria-ease/aria-ease/compare/v6.4.7...v6.4.8) (2026-03-11)
+
+
+### Bug Fixes
+
+* fixed badge prompting showing when audit fails ([6b1202a](https://github.com/aria-ease/aria-ease/commit/6b1202ab66338b46300d19f35cdcadfd7135a22d))
+
 ### [6.4.7](https://github.com/aria-ease/aria-ease/compare/v6.4.5...v6.4.7) (2026-03-11)
 
 

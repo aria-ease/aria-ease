@@ -143,10 +143,6 @@ program.command('audit')
   console.log(chalk.yellow(`   ${totalViolations} violation${totalViolations !== 1 ? 's' : ''} detected across ${allResults.length} page${allResults.length !== 1 ? 's' : ''}.`));
   console.log(chalk.gray(`   Review the generated report for details.\n`));
   
-  // Badge prompt
-  displayBadgeInfo('audit');
-  await promptAddBadge('audit', process.cwd());
-  
   // Call to action - help grow the community
   console.log(chalk.dim('\n' + '─'.repeat(60)));
   console.log(chalk.cyan('💙 Found aria-ease helpful?'));
