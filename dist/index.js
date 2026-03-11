@@ -1624,9 +1624,10 @@ if (typeof window === "undefined") {
           } catch (badgeError) {
             console.error("Warning: Could not display badge prompt:", badgeError);
           }
-        }
-        if (error && error.code) {
-          process.exit(error.code);
+          process.exit(0);
+        } else {
+          const exitCode = error?.code || 1;
+          process.exit(exitCode);
         }
       }
     );

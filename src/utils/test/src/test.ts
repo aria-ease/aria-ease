@@ -166,11 +166,13 @@ if (typeof window === "undefined") {
                         // Badge prompt failed, but don't fail the tests
                         console.error('Warning: Could not display badge prompt:', badgeError);
                     }
-                }
-                
-                // Exit with proper code (error.code will be set if vitest failed)
-                if (error && error.code) {
-                    process.exit(error.code);
+                    
+                    // Exit successfully
+                    process.exit(0);
+                } else {
+                    // Tests failed - exit with error code
+                    const exitCode = error?.code || 1;
+                    process.exit(exitCode);
                 }
             }
         );
