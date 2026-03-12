@@ -8,7 +8,7 @@ class TabsComponentStrategy implements ComponentStrategy {
         private selectors: ComponentContract["selectors"]
     ) {}
 
-    async resetState(_page: Page): Promise<void> {
+    async resetState(): Promise<void> {
         // Tabs component typically doesn't need state reset between tests
         // Each test specifies which tab to interact with
     }

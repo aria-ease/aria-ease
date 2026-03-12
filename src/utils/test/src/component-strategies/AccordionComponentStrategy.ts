@@ -1,4 +1,4 @@
-import { ComponentStrategy, DynamicTest } from "Types";
+import { ComponentStrategy } from "Types";
 import { Page, expect } from "@playwright/test";
 import type { ComponentContract } from "Types";
 
@@ -38,7 +38,7 @@ class AccordionComponentStrategy implements ComponentStrategy {
         }
     }
 
-    async shouldSkipTest(_test: DynamicTest, _page: Page): Promise<boolean> {
+    async shouldSkipTest(): Promise<boolean> {
         // Accordion doesn't need to skip tests based on optional elements
         return false;
     }

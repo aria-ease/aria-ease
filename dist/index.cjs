@@ -401,7 +401,7 @@ This indicates a problem with the combobox component's close functionality.`
           await page.locator(this.selectors.input).first().clear();
         }
       }
-      async shouldSkipTest(_test, _page) {
+      async shouldSkipTest() {
         return false;
       }
       getMainSelector() {
@@ -443,7 +443,7 @@ var init_AccordionComponentStrategy = __esm({
           }
         }
       }
-      async shouldSkipTest(_test, _page) {
+      async shouldSkipTest() {
         return false;
       }
       getMainSelector() {
@@ -553,7 +553,7 @@ var init_TabsComponentStrategy = __esm({
         this.mainSelector = mainSelector;
         this.selectors = selectors;
       }
-      async resetState(_page) {
+      async resetState() {
       }
       async shouldSkipTest(test, page) {
         if (test.isVertical !== void 0 && this.selectors.tablist) {
@@ -1341,7 +1341,7 @@ This usually means:
 Make sure your dev server is running at ${url}`);
       } else if (error.message.includes("Timeout") && error.message.includes("waitFor")) {
         throw new Error(
-          "\n\u274C CRITICAL: Component not found on page!\nThe component selector could not be found within 30 seconds.\nThis usually means:\n  - The component didn't render\n  - The URL is incorrect\n  - The component selector was not provided to the component utility"
+          "\n\u274C CRITICAL: Component not found on page!\nThe component selector could not be found within 30 seconds.\nThis usually means:\n  - The component didn't render\n  - The URL is incorrect\n  - The component selector was not provided to the component utility, or a wrong selector was used\n"
         );
       } else if (error.message.includes("Target page, context or browser has been closed")) {
         throw new Error(
