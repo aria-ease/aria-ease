@@ -2,7 +2,7 @@ import {
   ContractReporter,
   closeSharedBrowser,
   contract_default
-} from "./chunk-TQBS54MM.js";
+} from "./chunk-GFKAJHCS.js";
 import "./chunk-I2KLQ2HA.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
@@ -1539,7 +1539,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-D57V4RSU.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-OCCW2W2B.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl);
       } else {
         throw new Error(
@@ -1594,6 +1594,11 @@ ${violationDetails}
   return result;
 }
 var runTest = async () => {
+  return {
+    passes: [],
+    failures: [],
+    skipped: []
+  };
 };
 if (typeof window === "undefined") {
   runTest = async () => {
@@ -1601,36 +1606,36 @@ if (typeof window === "undefined") {
 `);
     const { exec } = await import("child_process");
     const chalk = (await import("chalk")).default;
-    exec(
-      `npx vitest --run --reporter verbose`,
-      { cwd: process.cwd() },
-      async (error, stdout, stderr) => {
-        if (stdout) {
+    return new Promise((resolve, reject) => {
+      exec(
+        `npx vitest --run --reporter verbose`,
+        async (error, stdout, stderr) => {
           console.log(stdout);
-        }
-        if (stderr) {
-          console.error(stderr);
-        }
-        if (!error || error.code === 0) {
-          try {
-            const { displayBadgeInfo, promptAddBadge } = await import("./badgeHelper-RDOMCC6E.js");
-            displayBadgeInfo("component");
-            await promptAddBadge("component", process.cwd());
-            console.log(chalk.dim("\n" + "\u2500".repeat(60)));
-            console.log(chalk.cyan("\u{1F499} Found aria-ease helpful?"));
-            console.log(chalk.white("   \u2022 Star us on GitHub: ") + chalk.blue.underline("https://github.com/aria-ease/aria-ease"));
-            console.log(chalk.white("   \u2022 Share feedback: ") + chalk.blue.underline("https://github.com/aria-ease/aria-ease/discussions"));
-            console.log(chalk.dim("\u2500".repeat(60) + "\n"));
-          } catch (badgeError) {
-            console.error("Warning: Could not display badge prompt:", badgeError);
+          if (stderr) console.error(stderr);
+          const testsPassed = !error || error.code === 0;
+          if (testsPassed) {
+            try {
+              const { displayBadgeInfo, promptAddBadge } = await import("./badgeHelper-RDOMCC6E.js");
+              displayBadgeInfo("component");
+              await promptAddBadge("component", process.cwd());
+              console.log(chalk.dim("\n" + "\u2500".repeat(60)));
+              console.log(chalk.cyan("\u{1F499} Found aria-ease helpful?"));
+              console.log(chalk.white("   \u2022 Star us on GitHub: ") + chalk.blue.underline("https://github.com/aria-ease/aria-ease"));
+              console.log(chalk.white("   \u2022 Share feedback: ") + chalk.blue.underline("https://github.com/aria-ease/aria-ease/discussions"));
+              console.log(chalk.dim("\u2500".repeat(60) + "\n"));
+            } catch (badgeError) {
+              console.error("Warning: Could not display badge prompt:", badgeError);
+            }
+            resolve({ passes: [], failures: [], skipped: [] });
+            process.exit(0);
+          } else {
+            const exitCode = error?.code || 1;
+            reject(new Error(`Tests failed with code ${exitCode}`));
+            process.exit(exitCode);
           }
-          process.exit(0);
-        } else {
-          const exitCode = error?.code || 1;
-          process.exit(exitCode);
         }
-      }
-    );
+      );
+    });
   };
 }
 async function cleanupTests() {

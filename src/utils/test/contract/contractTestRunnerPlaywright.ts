@@ -5,41 +5,30 @@
  */
 
 import { Page } from "playwright";
-import { expect } from "@playwright/test";
 import { readFileSync } from "fs";
 import contract from "./contract.json";
 import type { ComponentContract, Contract, ContractTestResult } from "Types";
-import { ContractReporter } from "./ContractReporter";
 import { createTestPage } from "./playwrightTestHarness";
+import { ComponentDetector } from "../src/ComponentDetector";
+import { ContractReporter } from "./ContractReporter";
+import { ActionExecutor } from "../src/ActionExecutor";
+import { AssertionRunner } from "../src/AssertionRunner";
 
 export async function runContractTestsPlaywright( componentName: string,  url?: string ): Promise<ContractTestResult> {
   const reporter = new ContractReporter(true);
   const actionTimeoutMs = 400;
   const assertionTimeoutMs = 400;
-
-  function isBrowserClosedError(error: unknown): boolean {
-    return error instanceof Error && error.message.includes("Target page, context or browser has been closed");
-  }
-  
   const contractTyped: Contract = contract;
   const contractPath = contractTyped[componentName]?.path;
-
-    if (!contractPath) {
-      throw new Error(`Contract path not found for component: ${componentName}`);
-    }
-
-    const resolvedPath = new URL(contractPath, import.meta.url).pathname;
-    const contractData = readFileSync(resolvedPath, "utf-8");
-    const componentContract: ComponentContract = JSON.parse(contractData);
-
-    const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
-    const apgUrl = componentContract.meta?.source?.apg;
-    reporter.start(componentName, totalTests, apgUrl);
-
-    const failures: string[] = [];
-    const passes: string[] = [];
-    const skipped: string[] = [];
-    let page: Page | null = null;
+  const resolvedPath = new URL(contractPath, import.meta.url).pathname;
+  const contractData = readFileSync(resolvedPath, "utf-8");
+  const componentContract: ComponentContract = JSON.parse(contractData);
+  const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
+  const apgUrl = componentContract.meta?.source?.apg;
+  const failures: string[] = [];
+  const passes: string[] = [];
+  const skipped: string[] = [];
+  let page: Page | null = null;
 
   try {
     page = await createTestPage();
@@ -60,23 +49,35 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       
       await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     }
+
+    const strategy = ComponentDetector.detect(componentName, actionTimeoutMs, assertionTimeoutMs);
+    if (!strategy) {
+      throw new Error(`Unsupported component: ${componentName}`);
+    }
     
-    const mainSelector = componentContract.selectors.trigger || componentContract.selectors.input || componentContract.selectors.container || componentContract.selectors.tablist || componentContract.selectors.tab;
+    const mainSelector = strategy.getMainSelector();
     
     if (!mainSelector) {
-      throw new Error(`CRITICAL: No main selector (trigger, input, container, tablist, or tab) found in contract for ${componentName}`);
+      throw new Error(`CRITICAL: No selector found in contract for ${componentName}`);
     }
     
     try {
-      await page.locator(mainSelector).first().waitFor({ state: 'attached', timeout: 30000 });
+      await page.locator(mainSelector as string).first().waitFor({ state: 'attached', timeout: 28000 });
     } catch (error) {
       throw new Error(
-        `CRITICAL: Component element '${mainSelector}' not found on page within 30s. ` +
-        `This usually means the component didn't render or the contract selector is incorrect. ` +
-        `Original error: ${error instanceof Error ? error.message : String(error)}`
+        "\n❌ CRITICAL: Component not found on page!\n" +
+        "This usually means:\n" +
+        "  - The component didn't render\n" +
+        "  - The URL is incorrect\n" +
+        `  - The component selector '${mainSelector}' in the contract is wrong\n` +
+        `  - Original error: ${error}`
       );
     }
 
+    // Component exists - now we can start the test reporter
+    reporter.start(componentName, totalTests, apgUrl);
+
+    // Menu-specific: Wait for trigger to be visible
     if (componentName === 'menu' && componentContract.selectors.trigger) {
       await page.locator(componentContract.selectors.trigger).first().waitFor({ 
         state: 'visible',
@@ -86,41 +87,9 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       });
     }
 
-    async function resolveRelativeTarget(selector: string, relative: string) {
-      if (!page) {
-        throw new Error('Page is not initialized');
-      }
-      const items = await page.locator(selector).all();
-      
-      switch (relative) {
-        case "first":
-          return items[0];
-        case "second":
-          return items[1];
-        case "last":
-          return items[items.length - 1];
-        case "next": {
-          const currentIndex = await page.evaluate(([sel]) => {
-            const items = Array.from(document.querySelectorAll(sel as string));
-            return items.indexOf(document.activeElement as Element);
-          }, [selector]);
-          const nextIndex = (currentIndex + 1) % items.length;
-          return items[nextIndex];
-        }
-        case "previous": {
-          const currentIndex = await page.evaluate(([sel]) => {
-            const items = Array.from(document.querySelectorAll(sel as string));
-            return items.indexOf(document.activeElement as Element);
-          }, [selector]);
-          const prevIndex = (currentIndex - 1 + items.length) % items.length;
-          return items[prevIndex];
-        }
-        default:
-          return null;
-      }
-    }
-
-    // Run static tests
+    // Run static tests using AssertionRunner
+    const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
+    
     for (const test of componentContract.static[0]?.assertions || []) {
       if (test.target === "relative") continue;
 
@@ -155,6 +124,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       };
 
       if (!test.expectedValue) {
+        // Handle attribute existence check (no expected value)
         const attributes = test.attribute.split(" | ");
         let hasAny = false;
         let allRedundant = true;
@@ -182,15 +152,23 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
         }
       } else {
+        // Handle attribute value check using AssertionRunner
         if (isRedundantCheck(targetSelector, test.attribute, test.expectedValue)) {
           passes.push(`${test.attribute}="${test.expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
         } else {
-          const attributeValue = await target.getAttribute(test.attribute);
-          const expectedValues = test.expectedValue.split(" | ");
-          if (!attributeValue || !expectedValues.includes(attributeValue)) {
-            failures.push(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
-          } else {
-            passes.push(`Attribute value matches expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
+          const result = await staticAssertionRunner.validateAttribute(
+            target, 
+            test.target, 
+            test.attribute, 
+            test.expectedValue, 
+            test.failureMessage, 
+            'Static ARIA Test'
+          );
+          
+          if (result.success && result.passMessage) {
+            passes.push(result.passMessage);
+          } else if (!result.success && result.failMessage) {
+            failures.push(result.failMessage);
           }
         }
       }
@@ -208,151 +186,25 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       
       const failuresBeforeTest = failures.length;
 
-      // Reset component state before each test for proper isolation
-      // For components with listbox/popup (menu, combobox, etc), close if open
-      if (componentContract.selectors.popup) {
-        const popupSelector = componentContract.selectors.popup;
-        if (!popupSelector) continue;
-        const popupElement = page.locator(popupSelector).first();
-        
-        const isPopupVisible = await popupElement.isVisible().catch(() => false);
-        
-        if (isPopupVisible) {
-          let menuClosed = false;
-          
-          let closeSelector = componentContract.selectors.input; // For combobox
-          if (!closeSelector && componentContract.selectors.focusable) {
-            closeSelector = componentContract.selectors.focusable;
-          } else if (!closeSelector) {
-            closeSelector = componentContract.selectors.trigger;
-          }
-          
-          if (closeSelector) {
-            const closeElement = page.locator(closeSelector).first();
-            await closeElement.focus();
-            await page.keyboard.press('Escape');
-            
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: assertionTimeoutMs })
-              .then(() => true)
-              .catch(() => false);
-          }
-          
-          if (!menuClosed && componentContract.selectors.trigger) {
-            const triggerElement = page.locator(componentContract.selectors.trigger).first();
-            await triggerElement.click({ timeout: actionTimeoutMs });
-            
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: assertionTimeoutMs })
-              .then(() => true)
-              .catch(() => false);
-          }
-          
-          if (!menuClosed) {
-            await page.mouse.click(10, 10);
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: assertionTimeoutMs })
-              .then(() => true)
-              .catch(() => false);
-          }
-          
-          if (!menuClosed) {
-            throw new Error(
-                `❌ FATAL: Cannot close menu between tests. Menu remains visible after trying:\n` +
-                `  1. Escape key\n` +
-                `  2. Clicking trigger\n` +
-                `  3. Clicking outside\n` +
-                `This indicates a problem with the menu component's close functionality.`
-              );
-          }
-          
-          if (componentContract.selectors.input) {
-            await page.locator(componentContract.selectors.input).first().clear();
-          }
-          
-          if (componentName === 'menu' && componentContract.selectors.trigger) {
-            const triggerElement = page.locator(componentContract.selectors.trigger).first();
-            await triggerElement.focus();
-          }
-        }
-      }
-      
-      // For accordion components, collapse all expanded panels
-      if (componentContract.selectors.panel && componentContract.selectors.trigger && !componentContract.selectors.popup) {
-        const triggerSelector = componentContract.selectors.trigger;
-        const panelSelector = componentContract.selectors.panel;
-        
-        if (triggerSelector && panelSelector) {
-          const allTriggers = await page.locator(triggerSelector).all();
-          
-          for (const trigger of allTriggers) {
-            const isExpanded = await trigger.getAttribute('aria-expanded') === 'true';
-            const triggerPanel = await trigger.getAttribute('aria-controls');
-            
-            if (isExpanded && triggerPanel) {
-              await trigger.click({ timeout: actionTimeoutMs });
-              
-              const panel = page.locator(`#${triggerPanel}`);
-              await expect(panel).toBeHidden({ timeout: assertionTimeoutMs }).catch(() => {
-                // Silent catch - test will fail if panel state is wrong
-              });
-            }
-          }
-        }
+      // Reset component state before each test using strategy pattern
+      try {
+        await strategy.resetState(page);
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        reporter.error(errorMessage);
+        throw error;
       }
 
-      // Check if test requires submenu elements that don't exist - skip early
-      let shouldSkipTest = false;
-      for (const act of action) {
-        if (act.type === 'keypress' && (act.target === 'submenuTrigger' || act.target === 'submenu')) {
-          const submenuSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-          if (submenuSelector) {
-            const submenuCount = await page.locator(submenuSelector).count();
-            if (submenuCount === 0) {
-              reporter.reportTest(dynamicTest, 'skip', `Skipping test - ${act.target} element not found (optional submenu test)`);
-              shouldSkipTest = true;
-              break;
-            }
-          }
-        }
-      }
-      
-      // Also check assertions for submenu requirements
-      if (!shouldSkipTest) {
-        for (const assertion of assertions) {
-          if (assertion.target === 'submenu' || assertion.target === 'submenuTrigger') {
-            const submenuSelector = componentContract.selectors[assertion.target as keyof typeof componentContract.selectors];
-            if (submenuSelector) {
-              const submenuCount = await page.locator(submenuSelector).count();
-              if (submenuCount === 0) {
-                reporter.reportTest(dynamicTest, 'skip', `Skipping test - ${assertion.target} element not found (optional submenu test)`);
-                shouldSkipTest = true;
-                break;
-              }
-            }
-          }
-        }
-      }
-      
+      // Check if test should be skipped using strategy pattern
+      const shouldSkipTest = await strategy.shouldSkipTest(dynamicTest, page);
       if (shouldSkipTest) {
-        continue; // Skip to next test
+        reporter.reportTest(dynamicTest, 'skip', `Skipping test - component-specific conditions not met`);
+        continue;
       }
 
-      // For Tabs component
-      if(componentContract.selectors.panel && componentContract.selectors.tab && componentContract.selectors.tablist) {
-        if (dynamicTest.isVertical !== undefined && componentContract.selectors.tablist) {
-          const tablistSelector = componentContract.selectors.tablist;
-          const tablist = page.locator(tablistSelector).first();
-          const orientation = await tablist.getAttribute('aria-orientation');
-          
-          const isVertical = orientation === 'vertical';
-          
-          if (dynamicTest.isVertical !== isVertical) {
-            const skipReason = dynamicTest.isVertical 
-              ? `Skipping vertical tabs test - component has horizontal orientation`
-              : `Skipping horizontal tabs test - component has vertical orientation`;
-            reporter.reportTest(dynamicTest, 'skip', skipReason);
-            continue;
-          }
-        }
-      }
+      // Create action executor for this test
+      const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+      const assertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
 
       for (const act of action) {
         if (!page || page.isClosed()) {
@@ -360,291 +212,44 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
           break;
         }
 
+        let result;
+        
         if (act.type === "focus") {
-          try {
-            const focusSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-            if (!focusSelector) {
-              failures.push(`Selector for focus target ${act.target} not found.`);
-              continue;
-            }
-            await page.locator(focusSelector).first().focus({ timeout: actionTimeoutMs });
-          } catch (error) {
-            if (isBrowserClosedError(error)) {
-              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
-              break;
-            }
-            failures.push(`Failed to focus ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
-            continue;
-          }
+          result = await actionExecutor.focus(act.target);
+        } else if (act.type === "type" && act.value) {
+          result = await actionExecutor.type(act.target, act.value);
+        } else if (act.type === "click") {
+          result = await actionExecutor.click(act.target, act.relativeTarget);
+        } else if (act.type === "keypress" && act.key) {
+          result = await actionExecutor.keypress(act.target, act.key);
+        } else if (act.type === "hover") {
+          result = await actionExecutor.hover(act.target, act.relativeTarget);
+        } else {
+          continue; // Unknown action type
         }
 
-        if (act.type === "type" && act.value) {
-          try {
-            const typeSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-            if (!typeSelector) {
-              failures.push(`Selector for type target ${act.target} not found.`);
-              continue;
-            }
-            await page.locator(typeSelector).first().fill(act.value, { timeout: actionTimeoutMs });
-          } catch (error) {
-            if (isBrowserClosedError(error)) {
-              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
-              break;
-            }
-            failures.push(`Failed to type into ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
-            continue;
+        if (!result.success) {
+          if (result.error) {
+            failures.push(result.error);
           }
-        }
-
-        if (act.type === "click") {
-          try {
-            if (act.target === "document") {
-              await page.mouse.click(10, 10);
-            } else if (act.target === "relative" && act.relativeTarget) {
-              const relativeSelector = componentContract.selectors.relative;
-              if (!relativeSelector) {
-                failures.push(`Relative selector not defined for click action.`);
-                continue;
-              }
-
-              const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
-              if (!relativeElement) {
-                failures.push(`Could not resolve relative target ${act.relativeTarget} for click.`);
-                continue;
-              }
-              await relativeElement.click({ timeout: actionTimeoutMs });
-            } else {
-              const actionSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-              if (!actionSelector) {
-                failures.push(`Selector for action target ${act.target} not found.`);
-                continue;
-              }
-              await page.locator(actionSelector).first().click({ timeout: actionTimeoutMs });
+          if (result.shouldBreak) {
+            if (result.error?.includes('optional submenu test')) {
+              reporter.reportTest(dynamicTest, 'skip', result.error);
             }
-          } catch (error) {
-            if (isBrowserClosedError(error)) {
-              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
-              break;
-            }
-            failures.push(`Failed to click ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
-            continue;
+            break;
           }
-        }
-
-        if (act.type === "keypress" && act.key) {
-          try {
-            const keyMap: Record<string, string> = {
-              "Space": "Space",
-              "Enter": "Enter",
-              "Escape": "Escape",
-              "Arrow Up": "ArrowUp",
-              "Arrow Down": "ArrowDown",
-              "Arrow Left": "ArrowLeft",
-              "Arrow Right": "ArrowRight",
-              "Home": "Home",
-              "End": "End",
-              "Tab": "Tab"
-            };
-
-            let keyValue = keyMap[act.key] || act.key;
-            if (keyValue === "Space") {
-              keyValue = " ";
-            } else if (keyValue.includes(" ")) {
-              keyValue = keyValue.replace(/ /g, "");
-            }
-
-            if (act.target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
-              await page.keyboard.press(keyValue);
-            } else {
-              const keypressSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-              if (!keypressSelector) {
-                failures.push(`Selector for keypress target ${act.target} not found.`);
-                continue;
-              }
-
-              const target = page.locator(keypressSelector).first();
-              const elementCount = await target.count();
-              if (elementCount === 0) {
-                reporter.reportTest(dynamicTest, 'skip', `Skipping test - ${act.target} element not found (optional submenu test)`);
-                break;
-              }
-              await target.press(keyValue, { timeout: actionTimeoutMs });
-            }
-          } catch (error) {
-            if (isBrowserClosedError(error)) {
-              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
-              break;
-            }
-            failures.push(`Failed to press ${act.key} on ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
-            continue;
-          }
-        }
-
-        if (act.type === "hover") {
-          try {
-            if (act.target === "relative" && act.relativeTarget) {
-              const relativeSelector = componentContract.selectors.relative;
-              if (!relativeSelector) {
-                failures.push(`Relative selector not defined for hover action.`);
-                continue;
-              }
-
-              const relativeElement = await resolveRelativeTarget(relativeSelector, act.relativeTarget);
-              if (!relativeElement) {
-                failures.push(`Could not resolve relative target ${act.relativeTarget} for hover.`);
-                continue;
-              }
-              await relativeElement.hover({ timeout: actionTimeoutMs });
-            } else {
-              const hoverSelector = componentContract.selectors[act.target as keyof typeof componentContract.selectors];
-              if (!hoverSelector) {
-                failures.push(`Selector for hover target ${act.target} not found.`);
-                continue;
-              }
-              await page.locator(hoverSelector).first().hover({ timeout: actionTimeoutMs });
-            }
-          } catch (error) {
-            if (isBrowserClosedError(error)) {
-              failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
-              break;
-            }
-            failures.push(`Failed to hover ${act.target}: ${error instanceof Error ? error.message : String(error)}`);
-            continue;
-          }
+          continue;
         }
       }
 
+      // Run assertions for this test
       for (const assertion of assertions) {
-        if (!page || page.isClosed()) {
-          failures.push(`CRITICAL: Browser/page closed before completing all tests. Increase test timeout or reduce test complexity.`);
-          break;
-        }
-
-        let target;
-
-        try {
-          if (assertion.target === "relative") {
-            const relativeSelector = componentContract.selectors.relative;
-            if (!relativeSelector) {
-              failures.push("Relative selector is not defined in the contract.");
-              continue;
-            }
-            const relativeTargetValue = assertion.relativeTarget || assertion.expectedValue;
-            if (!relativeTargetValue) {
-              failures.push("Relative target or expected value is not defined.");
-              continue;
-            }
-            target = await resolveRelativeTarget(relativeSelector, relativeTargetValue);
-          } else {
-            const assertionSelector = componentContract.selectors[assertion.target as keyof typeof componentContract.selectors];
-            if (!assertionSelector) {
-              failures.push(`Selector for assertion target ${assertion.target} not found.`);
-              continue;
-            }
-            target = page.locator(assertionSelector).first();
-          }
-
-          if (!target) {
-            failures.push(`Target ${assertion.target} not found.`);
-            continue;
-          }
-        } catch (error) {
-          failures.push(`Failed to resolve target ${assertion.target}: ${error instanceof Error ? error.message : String(error)}`);
-          continue;
-        }
-
-        if (assertion.assertion === "toBeVisible") {
-          try {
-            await expect(target).toBeVisible({ timeout: assertionTimeoutMs });
-            passes.push(`${assertion.target} is visible as expected. Test: "${dynamicTest.description}".`);
-          } catch {
-            const debugState = await page.evaluate((sel) => {
-              const el = sel ? document.querySelector(sel) : null;
-              if (!el) return 'element not found';
-              const styles = window.getComputedStyle(el);
-              return `display:${styles.display}, visibility:${styles.visibility}, opacity:${styles.opacity}`;
-            }, componentContract.selectors[assertion.target as keyof typeof componentContract.selectors] || '');
-            failures.push(`${assertion.failureMessage} (actual: ${debugState})`);
-          }
-        }
-
-        if (assertion.assertion === "notToBeVisible") {
-          try {
-            await expect(target).toBeHidden({ timeout: assertionTimeoutMs });
-            passes.push(`${assertion.target} is not visible as expected. Test: "${dynamicTest.description}".`);
-          } catch{
-            const debugState = await page.evaluate((sel) => {
-              const el = sel ? document.querySelector(sel) : null;
-              if (!el) return 'element not found';
-              const styles = window.getComputedStyle(el);
-              return `display:${styles.display}, visibility:${styles.visibility}, opacity:${styles.opacity}`;
-            }, componentContract.selectors[assertion.target as keyof typeof componentContract.selectors] || '');
-            failures.push(assertion.failureMessage + ` ${assertion.target} is still visible (actual: ${debugState}).`);
-          }
-        }
-
-        if (assertion.assertion === "toHaveAttribute" && assertion.attribute && assertion.expectedValue) {
-          try {
-            // Handle special case: !empty means attribute should have any non-empty value
-            if (assertion.expectedValue === "!empty") {
-              const attributeValue = await target.getAttribute(assertion.attribute);
-              if (attributeValue && attributeValue.trim() !== "") {
-                passes.push(`${assertion.target} has non-empty "${assertion.attribute}". Test: "${dynamicTest.description}".`);
-              } else {
-                failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should not be empty, found "${attributeValue}".`);
-              }
-            } else {
-              await expect(target).toHaveAttribute(assertion.attribute, assertion.expectedValue, { timeout: assertionTimeoutMs });
-              passes.push(`${assertion.target} has expected "${assertion.attribute}". Test: "${dynamicTest.description}".`);
-            }
-          } catch {
-            const attributeValue = await target.getAttribute(assertion.attribute);
-            failures.push(assertion.failureMessage + ` ${assertion.target} "${assertion.attribute}" should be "${assertion.expectedValue}", found "${attributeValue}".`);
-          }
-        }
-
-        if (assertion.assertion === "toHaveValue") {
-          const inputValue = await target.inputValue().catch(() => "");
-          
-          if (assertion.expectedValue === "!empty") {
-            if (inputValue && inputValue.trim() !== "") {
-              passes.push(`${assertion.target} has non-empty value. Test: "${dynamicTest.description}".`);
-            } else {
-              failures.push(assertion.failureMessage + ` ${assertion.target} value should not be empty, found "${inputValue}".`);
-            }
-          } else if (assertion.expectedValue === "") {
-            if (inputValue === "") {
-              passes.push(`${assertion.target} has empty value. Test: "${dynamicTest.description}".`);
-            } else {
-              failures.push(assertion.failureMessage + ` ${assertion.target} value should be empty, found "${inputValue}".`);
-            }
-          } else if (inputValue === assertion.expectedValue) {
-            passes.push(`${assertion.target} has expected value. Test: "${dynamicTest.description}".`);
-          } else {
-            failures.push(assertion.failureMessage + ` ${assertion.target} value should be "${assertion.expectedValue}", found "${inputValue}".`);
-          }
-        }
-
-        if (assertion.assertion === "toHaveFocus") {
-          try {
-            await expect(target).toBeFocused({ timeout: assertionTimeoutMs });
-            passes.push(`${assertion.target} has focus as expected. Test: "${dynamicTest.description}".`);
-          } catch {
-            const actualFocus = await page.evaluate(() => {
-              const focused = document.activeElement;
-              return focused ? `${focused.tagName}#${focused.id || 'no-id'}.${focused.className || 'no-class'}` : 'no element focused';
-            });
-            failures.push(`${assertion.failureMessage} (actual focus: ${actualFocus})`);
-          }
-        }
-
-        if (assertion.assertion === "toHaveRole" && assertion.expectedValue) {
-          const roleValue = await target.getAttribute("role");
-          if (roleValue === assertion.expectedValue) {
-            passes.push(`${assertion.target} has role "${assertion.expectedValue}". Test: "${dynamicTest.description}".`);
-          } else {
-            failures.push(assertion.failureMessage + ` Expected role "${assertion.expectedValue}", found "${roleValue}".`);
-          }
+        const result = await assertionRunner.validate(assertion, dynamicTest.description);
+        
+        if (result.success && result.passMessage) {
+          passes.push(result.passMessage);
+        } else if (!result.success && result.failMessage) {
+          failures.push(result.failMessage);
         }
       }
       
@@ -672,40 +277,32 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
     reporter.summary(failures);
 
   } catch (error: unknown) {
+    // For critical errors, just re-throw and let the test framework handle attribution
     if (error instanceof Error) {
-      // Critical errors that should stop the entire test
       if (error.message.includes("Executable doesn't exist") || error.message.includes("browserType.launch")) {
-        console.error("\n❌ CRITICAL: Playwright browsers not found!\n");
-        console.log("📦 Run: npx playwright install chromium\n");
-        failures.push("CRITICAL: Playwright browser not installed. Run: npx playwright install chromium");
+        throw new Error("\n❌ CRITICAL: Playwright browsers not found!\n📦 Run: npx playwright install chromium");
       } else if (error.message.includes("net::ERR_CONNECTION_REFUSED") || error.message.includes("NS_ERROR_CONNECTION_REFUSED")) {
-        console.error("\n❌ CRITICAL: Cannot connect to dev server!\n");
-        console.log(`   Make sure your dev server is running at ${url}\n`);
-        failures.push(`CRITICAL: Dev server not running at ${url}`);
+        throw new Error(`\n❌ CRITICAL: Cannot connect to dev server!\nMake sure your dev server is running at ${url}`);
       } else if (error.message.includes("Timeout") && error.message.includes("waitFor")) {
-        console.error("\n❌ CRITICAL: Component not found on page!\n");
-        console.log(`   The component selector could not be found within 30 seconds.\n`);
-        console.log(`   This usually means:\n`);
-        console.log(`   - The component didn't render\n`);
-        console.log(`   - The URL is incorrect\n`);
-        console.log(`   - The component selector in the contract is wrong\n`);
-        failures.push(`CRITICAL: Component element not found on page - ${error.message}`);
+        throw new Error(
+          "\n❌ CRITICAL: Component not found on page!\n" +
+          "The component selector could not be found within 30 seconds.\n" +
+          "This usually means:\n" +
+          "  - The component didn't render\n" +
+          "  - The URL is incorrect\n" +
+          "  - The component selector was not provided to the component utility, or a wrong selector was used\n"
+        );
       } else if (error.message.includes("Target page, context or browser has been closed")) {
-        console.error("\n❌ CRITICAL: Browser/page was closed unexpectedly!\n");
-        console.log(`   This usually means:\n`);
-        console.log(`   - The test timeout was too short\n`);
-        console.log(`   - The browser crashed\n`);
-        console.log(`   - An external process killed the browser\n`);
-        failures.push(`CRITICAL: Browser/page closed unexpectedly - ${error.message}`);
-      } else if (error.message.includes("FATAL")) {
-        // Re-throw FATAL errors (like menu not closing between tests)
-        console.error(`\n${error.message}\n`);
-        failures.push(error.message);
+        throw new Error(
+          "\n❌ CRITICAL: Browser/page was closed unexpectedly!\n" +
+          "This usually means:\n" +
+          "  - The test timeout was too short\n" +
+          "  - The browser crashed\n" +
+          "  - An external process killed the browser"
+        );
       } else {
-        // Unexpected errors - these are bugs
-        console.error("\n❌ UNEXPECTED ERROR:", error.message);
-        console.error("Stack:", error.stack);
-        failures.push(`UNEXPECTED ERROR: ${error.message}`);
+        // Re-throw all other errors (including FATAL) for proper test attribution
+        throw error;
       }
     }
   } finally {

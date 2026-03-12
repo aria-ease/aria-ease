@@ -95,7 +95,6 @@ interface ComponentContract {
     }>;
     dynamic: Array<{
         description: string;
-        requiresBrowser?: boolean;
         isOptional?: boolean;
         isMultiple?: boolean;
         isVertical?: boolean;
@@ -229,6 +228,14 @@ interface ContractTestResult {
   skipped: string[];
 }
 
+type DynamicTest = ComponentContract['dynamic'][number];
+
+interface ComponentStrategy {
+  resetState(page: Page): Promise<void>;
+  shouldSkipTest(test: DynamicTest, page: Page): Promise<boolean>;
+  getMainSelector(): string; 
+}
+
 export {
     AccordionStates,
     CheckboxStates,
@@ -248,7 +255,9 @@ export {
     AccordionConfig,
     MenuConfig,
     TabsConfig,
-    TabsCallback
+    TabsCallback,
+    ComponentStrategy,
+    DynamicTest
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;
