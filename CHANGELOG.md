@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.4.9](https://github.com/aria-ease/aria-ease/compare/v6.4.8...v6.4.9) (2026-03-12)
+
+
+### Bug Fixes
+
+* fixed component test failure report bleeding into next component test report ([0826fc7](https://github.com/aria-ease/aria-ease/commit/0826fc797677e53227346b532a1fbeb808e02a95))
+
 ### [6.4.8](https://github.com/aria-ease/aria-ease/compare/v6.4.7...v6.4.8) (2026-03-11)
 
 
