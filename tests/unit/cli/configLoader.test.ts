@@ -95,24 +95,4 @@ describe("Config Loader", () => {
     expect(errors.length).toBeGreaterThan(0);
     expect(config).toEqual({});
   });
-
-  it("validates test.components structure", async () => {
-    const configContent = {
-      test: {
-        components: [
-          { name: 'MyComponent', path: './src/MyComponent' },
-          { name: 123 } // Invalid: name should be string, path is missing
-        ]
-      }
-    };
-    await fs.writeFile(
-      path.join(testDir, 'ariaease.config.json'),
-      JSON.stringify(configContent)
-    );
-
-    const { errors } = await loadConfig(testDir);
-
-    expect(errors.length).toBeGreaterThan(0);
-    expect(errors.some(e => e.includes('test.components'))).toBe(true);
-  });
 });

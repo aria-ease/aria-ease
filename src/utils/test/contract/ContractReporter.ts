@@ -71,7 +71,7 @@ export class ContractReporter {
   /**
    * Report individual dynamic test result
    */
-  reportTest(test: { description: string; requiresBrowser?: boolean; isOptional?: boolean }, status: 'pass' | 'fail' | 'skip' | 'optional-fail', failureMessage?: string) {
+  reportTest(test: { description: string; isOptional?: boolean }, status: 'pass' | 'fail' | 'skip' | 'optional-fail', failureMessage?: string) {
     const result: TestResult = {
       description: test.description,
       status,
@@ -79,7 +79,7 @@ export class ContractReporter {
       isOptional: test.isOptional,
     };
 
-    if (status === 'skip' && test.requiresBrowser) {
+    if (status === 'skip') {
       result.skipReason = 'Requires real browser (addEventListener events)';
     }
 
@@ -203,7 +203,7 @@ export class ContractReporter {
     
     if (totalFailures === 0 && this.skipped === 0 && this.optionalSuggestions === 0) {
       this.log(`✅ All ${totalRun} tests passed!`);
-      this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interaction ✓`);
+      this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions ✓`);
     } else if (totalFailures === 0) {
       this.log(`✅ ${totalPasses}/${totalRun} required tests passed`);
       if (this.skipped > 0) {
@@ -212,7 +212,7 @@ export class ContractReporter {
       if (this.optionalSuggestions > 0) {
         this.log(`💡 ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? 's' : ''} suggested`);
       }
-      this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interaction ✓`);
+      this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions ✓`);
     } else {
       this.log(`❌ ${totalFailures} test${totalFailures > 1 ? 's' : ''} failed`);
       this.log(`✅ ${totalPasses} test${totalPasses > 1 ? 's' : ''} passed`);

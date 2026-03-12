@@ -49,6 +49,7 @@
                     "target": "input",
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-controls",
+                    "expectedValue": "!empty",
                     "failureMessage": "Combobox input doesn't conform to the ARIA Combobox pattern. Input should have 'aria-controls' attribute that points to the id of the listbox it controls."
                 },
                 {

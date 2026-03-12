@@ -1,8 +1,8 @@
 # Aria-Ease
 
-**Accessibility infrastructure for the entire frontend engineering lifecycle.**
+### Accessibility infrastructure for the entire frontend engineering lifecycle.
 
-Stop treating accessibility as an afterthought. Aria-Ease engineers technical integrity into every phase of frontend development — from local development to production monitoring — so accessibility violations never reach your users.
+Stop treating accessibility as an afterthought. Aria-Ease engineers accessibility integrity into every phase of frontend development lifecycle — from local development to production monitoring — so accessibility violations never reach your users.
 
 [![npm version](https://img.shields.io/npm/v/aria-ease.svg)](https://www.npmjs.com/package/aria-ease)
 [![License: ISC](https://img.shields.io/badge/License-ISC-blue.svg)](https://opensource.org/licenses/ISC)
@@ -64,13 +64,14 @@ npx aria-ease audit --url https://yoursite.com
 
 #### 3. **Contract Testing** (Available Now)
 
-This is the game-changer. We encoded the WAI-ARIA APG into deterministic JSON "contracts" and built a custom Playwright runner with isolated test-harness architecture.
+This is the game-changer. We encoded the WAI-ARIA APG into deterministic JSON "contracts" and built a custom Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
 
 **The result?** Component interaction testing that feels closer to unit testing than manual QA.
 
 ```bash
-npx aria-ease test --component combobox --url http://localhost:3000
+npx aria-ease test
 # ✓ 26 assertions in ~4 seconds
+# ✓ 26 assertions in ~1 second in CI
 ```
 
 **Why this matters:** Before, verifying a combobox meant manual keyboard testing across browsers. Now, it's automated, fast, and repeatable. You can boast about executing 26 combobox interaction assertions in ~4 seconds.
@@ -650,7 +651,7 @@ describe("Shopify User Menu Accessibility Test", () => {
       null,
       "http://localhost:5173/test-harness?component=menu",
     ); // For full component interaction test. Uses Playwright to test interaction and behaviors
-  }, 6000);
+  });
 });
 
 describe("Shopify User Menu Accessibility Test", () => {
@@ -764,7 +765,7 @@ Until now, accessibility testing often happened manually, late in the cycle, or 
 **Aria-Ease changes the equation:**
 
 - ✅ Automated = no human bottleneck
-- ✅ Fast = ~4 seconds for comprehensive component testing
+- ✅ Fast = ~6 seconds for 90 accessibility interaction assertions
 - ✅ Deterministic = same results every time
 - ✅ Blocking = deploy fails if tests fail
 
@@ -875,20 +876,11 @@ Create `ariaease.config.js` in your project root:
 ```javascript
 export default {
   audit: {
-    urls: [
-      "http://localhost:5173", // Homepage
-      "http://localhost:5173/docs", // Docs
-      "http://localhost:5173/examples", // Examples
-    ],
+    urls: ["http://localhost:5173/", "http://localhost:5173/changelog"],
     output: {
-      format: "all", // Generate JSON, CSV, and HTML reports
-      out: "./accessibility-reports",
+      format: "html",
+      out: "./accessibility-reports/audit",
     },
-  },
-  test: {
-    components: ["menu", "accordion", "tabs", "combobox"], // Components to test
-    baseUrl: "http://localhost:5173/test-harness",
-    browser: "chromium",
   },
 };
 ```
@@ -898,8 +890,8 @@ Add to `package.json`:
 ```json
 {
   "scripts": {
-    "audit": "aria-ease audit",
-    "test:a11y": "aria-ease test",
+    "audit": "npx aria-ease audit -f html",
+    "test:a11y": "npx aria-ease test",
     "ci": "npm run audit && npm run test:a11y"
   }
 }
@@ -980,14 +972,10 @@ One of the biggest blockers to adding accessibility testing to CI/CD is **speed*
 **Aria-Ease contract testing is fast:**
 
 ```bash
-npx aria-ease test --component combobox
-# ✓ 26 interaction assertions in ~4 seconds
+npx aria-ease test
+# ✓ 26 combobox interaction assertions in ~1 seconds in CI
+# ✓ 90 accessibility interaction assertions in ~6 seconds in CI
 
-npx aria-ease test --component menu
-# ✓ 15 interaction assertions in ~2.8 seconds
-
-npx aria-ease test  # All components
-# ✓ 80+ assertions in ~12 seconds
 ```
 
 **Why so fast?**

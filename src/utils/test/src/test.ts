@@ -6,7 +6,7 @@
  */
 
 import { axe } from "jest-axe";
-import type { JestAxeResult } from "Types";
+import type { JestAxeResult, ContractTestResult } from "Types";
 import { runContractTests } from "../contract/contractTestRunner";
 import { closeSharedBrowser } from "../contract/playwrightTestHarness";
 
@@ -126,7 +126,13 @@ export async function testUiComponent(componentName: string, component: HTMLElem
     return result;
 }
 
-let runTest = async () => {}
+let runTest = async (): Promise<ContractTestResult> => {
+    return {
+        passes: [],
+        failures: [],
+        skipped: []
+    }
+};
 
 if (typeof window === "undefined") {
     runTest = async () => {
@@ -135,47 +141,42 @@ if (typeof window === "undefined") {
         const { exec } = await import("child_process");
         const chalk = (await import("chalk")).default;
 
-        exec(
-            `npx vitest --run --reporter verbose`,
-            { cwd: process.cwd() },
-            async (error, stdout, stderr) => {
-                // Always output stdout (test results)
-                if (stdout) {
+        return new Promise<ContractTestResult>((resolve, reject) => {
+            exec(
+                `npx vitest --run --reporter verbose`,
+                async (error, stdout, stderr) => {
                     console.log(stdout);
-                }
-                
-                // Always output stderr (ContractReporter output)
-                if (stderr) {
-                    console.error(stderr);
-                }
-                
-                // If tests passed, show badge prompt
-                if (!error || error.code === 0) {
-                    try {
-                        const { displayBadgeInfo, promptAddBadge } = await import("../../cli/badgeHelper.js");
-                        displayBadgeInfo('component');
-                        await promptAddBadge('component', process.cwd());
-                        
-                        // Call to action
-                        console.log(chalk.dim('\n' + '─'.repeat(60)));
-                        console.log(chalk.cyan('💙 Found aria-ease helpful?'));
-                        console.log(chalk.white('   • Star us on GitHub: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease'));
-                        console.log(chalk.white('   • Share feedback: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease/discussions'));
-                        console.log(chalk.dim('─'.repeat(60) + '\n'));
-                    } catch (badgeError) {
-                        // Badge prompt failed, but don't fail the tests
-                        console.error('Warning: Could not display badge prompt:', badgeError);
-                    }
+                    if (stderr) console.error(stderr);
+
+                    const testsPassed = !error || error.code === 0;
                     
-                    // Exit successfully
-                    process.exit(0);
-                } else {
-                    // Tests failed - exit with error code
-                    const exitCode = error?.code || 1;
-                    process.exit(exitCode);
+                    if (testsPassed) {
+                        try {
+                            const { displayBadgeInfo, promptAddBadge } = await import("../../cli/badgeHelper.js");
+                            displayBadgeInfo('component');
+                            await promptAddBadge('component', process.cwd());
+                            
+                            // Call to action
+                            console.log(chalk.dim('\n' + '─'.repeat(60)));
+                            console.log(chalk.cyan('💙 Found aria-ease helpful?'));
+                            console.log(chalk.white('   • Star us on GitHub: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease'));
+                            console.log(chalk.white('   • Share feedback: ') + chalk.blue.underline('https://github.com/aria-ease/aria-ease/discussions'));
+                            console.log(chalk.dim('─'.repeat(60) + '\n'));
+                        } catch (badgeError) {
+                            console.error('Warning: Could not display badge prompt:', badgeError);
+                        }
+                        
+                        resolve({ passes: [], failures: [], skipped: [] });
+                        process.exit(0);
+                    } else {
+                        // Tests failed
+                        const exitCode = error?.code || 1;
+                        reject(new Error(`Tests failed with code ${exitCode}`));
+                        process.exit(exitCode);
+                    }
                 }
-            }
-        );
+            );
+        });
     }
 }
 
