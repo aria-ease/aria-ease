@@ -1,18 +1,18 @@
 {
     "menu": {
-        "path": "./contracts/MenuContract.json",
+        "path": "./aria-contracts/menu/menu.contract.json",
         "component": "menu"
     },
-    "combobox": {
-        "path": "./contracts/ComboboxContract.json",
-        "component": "combobox"
+    "combobox.listbox": {
+        "path": "./aria-contracts/combobox/combobox.listbox.contract.json",
+        "component": "combobox.listbox"
     },
     "accordion": {
-        "path": "./contracts/AccordionContract.json",
+        "path": "./aria-contracts/accordion/accordion.contract.json",
         "component": "accordion"
     },
     "tabs": {
-        "path": "./contracts/TabsContract.json",
+        "path": "./aria-contracts/tabs/tabs.contract.json",
         "component": "tabs"
     }
 }

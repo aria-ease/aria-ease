@@ -198,6 +198,18 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     };
     return nodeListLike;
   }
+  function intializeMenuItems() {
+    const items = getItems();
+    items.forEach((item) => {
+      item.setAttribute("role", "menuitem");
+      const submenuId = item.getAttribute("data-submenu-id");
+      if (submenuId) {
+        item.setAttribute("aria-controls", submenuId);
+        item.setAttribute("aria-haspopup", "menu");
+      }
+    });
+  }
+  intializeMenuItems();
   function isItemInNestedSubmenu(item) {
     let parent = item.parentElement;
     while (parent && parent !== menuDiv) {
@@ -310,13 +322,6 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
       }
     }
   }
-  function intializeMenuItems() {
-    const items = getItems();
-    items.forEach((item) => {
-      item.setAttribute("role", "menuitem");
-    });
-  }
-  intializeMenuItems();
   function handleTriggerClick() {
     const isOpen = triggerButton.getAttribute("aria-expanded") === "true";
     if (isOpen) {

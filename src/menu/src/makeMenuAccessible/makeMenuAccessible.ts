@@ -86,6 +86,15 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
     return nodeListLike as NodeListOfHTMLElement;
   }
 
+  function intializeMenuItems() {
+    const items = getItems();
+    items.forEach((item: HTMLElement) => {
+      item.setAttribute("role", "menuitem");
+    });
+  }
+
+  intializeMenuItems();
+
   function isItemInNestedSubmenu(item: HTMLElement): boolean {
     let parent = item.parentElement;
     while (parent && parent !== menuDiv) {
@@ -216,15 +225,6 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
       }
     }
   }
-
-  function intializeMenuItems() {
-    const items = getItems();
-    items.forEach((item: HTMLElement) => {
-      item.setAttribute("role", "menuitem");
-    });
-  }
-
-  intializeMenuItems();
 
   function handleTriggerClick() {
     const isOpen = triggerButton.getAttribute("aria-expanded") === "true";

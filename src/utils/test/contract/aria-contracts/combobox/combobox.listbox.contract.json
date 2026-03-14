@@ -1,15 +1,15 @@
 {
     "meta": {
-        "id": "aria-ease.combobox",
+        "id": "aria-ease.combobox.listbox",
         "version": "1.0.0",
         "created": "11-02-2026",
         "lastUpdated": "28-02-2026",
-        "description": "ARIA Combobox interaction contract. Validates the ARIA and interaction contract for a custom combobox component following the ARIA Authoring Practices Guide combobox with listbox popup pattern.",
+        "description": "ARIA Combobox with Listbox popup interaction contract. Validates the ARIA and interaction contract for a custom combobox with listbox component following the ARIA Authoring Practices Guide combobox with listbox popup pattern.",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/",
             "wcag": ["2.2 AA"]
         },
-        "W3CName": "Combobox"
+        "W3CName": "Combobox Listbox Popup"
     },
 
     "selectors": {
@@ -27,6 +27,20 @@
         "target": "input | button | listbox | options | relative",
         "relative": "first | last | next | previous"
     },
+
+    "relationships": [
+        {
+            "type": "aria-reference",
+            "from": "input",
+            "attribute": "aria-controls",
+            "to": "listbox"
+        },
+        {
+            "type": "contains",
+            "parent": "listbox",
+            "child": "options"
+        }
+    ],
 
     "static": [
         {
@@ -65,20 +79,6 @@
                     "attribute": "aria-haspopup",
                     "expectedValue": "listbox",
                     "failureMessage": "Combobox input should have 'aria-haspopup=listbox' to indicate that it can trigger a listbox popup."
-                },
-                {
-                    "target": "listbox",
-                    "assertion": "toHaveAttribute",
-                    "attribute": "role",
-                    "expectedValue": "listbox",
-                    "failureMessage": "Listbox element should have 'role=listbox' attribute."
-                },
-                {
-                    "target": "options",
-                    "assertion": "toHaveAttribute",
-                    "attribute": "role",
-                    "expectedValue": "option",
-                    "failureMessage": "Each option in the listbox should have 'role=option' attribute."
                 },
                 {
                     "target": "options",

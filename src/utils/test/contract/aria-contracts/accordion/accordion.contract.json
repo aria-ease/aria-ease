@@ -26,6 +26,26 @@
         "relative": "first | last | next | previous"
     },
 
+    "relationships": [
+        {
+            "type": "aria-reference",
+            "from": "trigger",
+            "attribute": "aria-controls",
+            "to": "panel"
+        },
+        {
+            "type": "aria-reference",
+            "from": "panel",
+            "attribute": "aria-labelledby",
+            "to": "trigger"
+        },
+        {
+            "type": "contains",
+            "parent": "container",
+            "child": "trigger"
+        }
+    ],
+
     "static": [
         {
             "assertions": [
@@ -41,13 +61,6 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-controls",
                     "failureMessage": "Accordion trigger button doesn't conform to the ARIA Accordion Button pattern as specified in APG 1.2. Accordion trigger button should have 'aria-controls' attribute that points to the id of the accordion panel div it controls with 'role=region'. This helps assistive technology to identify the accordion panel div that the button controls."
-                },
-                {
-                    "target": "panel",
-                    "assertion": "toHaveAttribute",
-                    "attribute": "role",
-                    "expectedValue": "region",
-                    "failureMessage": "Accordion panel doesn't conform to the ARIA Accordion pattern as specified in APG 1.2. Each accordion panel should have 'role=region' attribute. This helps assistive technology identify the panel as a significant region of the page."
                 },
                 {
                     "target": "panel",

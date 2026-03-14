@@ -1,5 +1,5 @@
-import contract from "./contract.json";
-//import contractSchema from "./contract-schema.json";
+import contract from "../contract/contract.json";
+//import contractSchema from "./contract.schema.json";
 import type { Contract, ComponentContract, Selector, ContractTestResult } from "Types";
 import fs from "fs/promises";
 import { ContractReporter } from "./ContractReporter";
@@ -26,6 +26,7 @@ export async function runContractTests(componentName: string, component: HTMLEle
     const passes: string[] = [];
     const skipped: string[] = [];
 
+    const failuresBeforeStatic = failures.length;
     for (const test of componentContract.static[0].assertions) {
         if(test.target !== "relative") {
             const selector = componentContract.selectors[test.target as keyof Selector];
@@ -71,8 +72,9 @@ export async function runContractTests(componentName: string, component: HTMLEle
     }  
     
     // Report static test summary
-    const staticPassed = componentContract.static[0].assertions.length;
-    const staticFailed = 0;
+    const staticTotal = componentContract.static[0].assertions.length;
+    const staticFailed = failures.length - failuresBeforeStatic;
+    const staticPassed = Math.max(0, staticTotal - staticFailed);
     reporter.reportStatic(staticPassed, staticFailed);
     
     // Final summary

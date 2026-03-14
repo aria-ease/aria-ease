@@ -11,7 +11,7 @@ class ComboboxComponentStrategy implements ComponentStrategy {
     ) {}
 
     async resetState(page: Page): Promise<void> {
-        // Close popup if open (combobox has a listbox popup)
+        // Close popup if open (combobox has a popup)
         if (!this.selectors.popup) return;
         
         const popupSelector = this.selectors.popup;

@@ -24,19 +24,19 @@ class ComponentDetector {
         
         const selectors = componentContract.selectors;
         
-        if (componentName === 'combobox') {
+        if (componentName.includes("combobox")) {
             const mainSelector = selectors.input || selectors.container as string;
             return new ComboboxComponentStrategy(mainSelector, selectors, actionTimeoutMs, assertionTimeoutMs);
         }
-        if (componentName === 'accordion') {
+        if (componentName === "accordion") {
             const mainSelector = selectors.trigger || selectors.container as string;
             return new AccordionComponentStrategy(mainSelector, selectors, actionTimeoutMs, assertionTimeoutMs);
         }
-        if (componentName === 'menu') {
+        if (componentName === "menu") {
             const mainSelector = selectors.trigger || selectors.container as string;
             return new MenuComponentStrategy(mainSelector, selectors, actionTimeoutMs, assertionTimeoutMs);
         }
-        if (componentName === 'tabs') {
+        if (componentName === "tabs") {
             const mainSelector = selectors.tablist || selectors.tab as string;
             return new TabsComponentStrategy(mainSelector, selectors);
         }

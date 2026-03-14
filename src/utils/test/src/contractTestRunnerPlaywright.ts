@@ -6,13 +6,13 @@
 
 import { Page } from "playwright";
 import { readFileSync } from "fs";
-import contract from "./contract.json";
+import contract from "../contract/contract.json";
 import type { ComponentContract, Contract, ContractTestResult } from "Types";
 import { createTestPage } from "./playwrightTestHarness";
-import { ComponentDetector } from "../src/ComponentDetector";
+import { ComponentDetector } from "./ComponentDetector";
 import { ContractReporter } from "./ContractReporter";
-import { ActionExecutor } from "../src/ActionExecutor";
-import { AssertionRunner } from "../src/AssertionRunner";
+import { ActionExecutor } from "./ActionExecutor";
+import { AssertionRunner } from "./AssertionRunner";
 
 export async function runContractTestsPlaywright( componentName: string,  url?: string ): Promise<ContractTestResult> {
   const reporter = new ContractReporter(true);
@@ -62,7 +62,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
     }
     
     try {
-      await page.locator(mainSelector as string).first().waitFor({ state: 'attached', timeout: 28000 });
+      await page.locator(mainSelector as string).first().waitFor({ state: 'attached', timeout: 30000 });
     } catch (error) {
       throw new Error(
         "\n❌ CRITICAL: Component not found on page!\n" +
@@ -80,29 +80,36 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
     // Menu-specific: Wait for trigger to be visible
     if (componentName === 'menu' && componentContract.selectors.trigger) {
       await page.locator(componentContract.selectors.trigger).first().waitFor({ 
-        state: 'visible',
+        state: 'attached',
         timeout: 5000 
       }).catch(() => {
-        console.warn('Menu trigger not visible, continuing with tests...');
+        // Best-effort readiness check; action/assertion phases provide authoritative failures.
       });
     }
 
     // Run static tests using AssertionRunner
+    const failuresBeforeStatic = failures.length;
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
     
     for (const test of componentContract.static[0]?.assertions || []) {
       if (test.target === "relative") continue;
 
+      const staticDescription = `${test.target}${test.attribute ? ` (${test.attribute})` : ""}`;
+
       const targetSelector = componentContract.selectors[test.target as keyof typeof componentContract.selectors];
       if (!targetSelector) {
-        failures.push(`Selector for target ${test.target} not found.`);
+        const failure = `Selector for target ${test.target} not found.`;
+        failures.push(failure);
+        reporter.reportStaticTest(staticDescription, false, failure);
         continue;
       }
       const target = page.locator(targetSelector).first();
 
       const exists = await target.count() > 0;
       if (!exists) {
-        failures.push(`Target ${test.target} not found.`);
+        const failure = `Target ${test.target} not found.`;
+        failures.push(failure);
+        reporter.reportStaticTest(staticDescription, false, failure);
         continue;
       }
 
@@ -147,14 +154,21 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
         }
         
         if (!hasAny && !allRedundant) {
-          failures.push(test.failureMessage + ` None of the attributes "${test.attribute}" are present.`);
+          const failure = test.failureMessage + ` None of the attributes "${test.attribute}" are present.`;
+          failures.push(failure);
+          reporter.reportStaticTest(staticDescription, false, failure);
         } else if (!allRedundant && hasAny) {
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
+          reporter.reportStaticTest(staticDescription, true);
+        } else {
+          // All checks were redundant (already guaranteed by selector)
+          reporter.reportStaticTest(staticDescription, true);
         }
       } else {
         // Handle attribute value check using AssertionRunner
         if (isRedundantCheck(targetSelector, test.attribute, test.expectedValue)) {
           passes.push(`${test.attribute}="${test.expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
+          reporter.reportStaticTest(staticDescription, true);
         } else {
           const result = await staticAssertionRunner.validateAttribute(
             target, 
@@ -167,8 +181,10 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
           
           if (result.success && result.passMessage) {
             passes.push(result.passMessage);
+            reporter.reportStaticTest(staticDescription, true);
           } else if (!result.success && result.failMessage) {
             failures.push(result.failMessage);
+            reporter.reportStaticTest(staticDescription, false, result.failMessage);
           }
         }
       }
@@ -269,8 +285,9 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
     }
     
     // Report static test summary
-    const staticPassed = componentContract.static[0].assertions.length;
-    const staticFailed = 0;
+    const staticTotal = componentContract.static[0].assertions.length;
+    const staticFailed = failures.length - failuresBeforeStatic;
+    const staticPassed = Math.max(0, staticTotal - staticFailed);
     reporter.reportStatic(staticPassed, staticFailed);
     
     // Final summary
