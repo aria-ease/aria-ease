@@ -26,6 +26,26 @@
         "relative": "first | last | next | previous"
     }, 
 
+    "relationships": [
+        {
+            "type": "aria-reference",
+            "from": "tab",
+            "attribute": "aria-controls",
+            "to": "panel"
+        },
+        {
+            "type": "aria-reference",
+            "from": "panel",
+            "attribute": "aria-labelledby",
+            "to": "tab"
+        },
+        {
+            "type": "contains",
+            "parent": "tablist",
+            "child": "tab"
+        }
+    ],
+
     "static": [
         {
             "assertions": [
@@ -47,13 +67,6 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-controls",
                     "failureMessage": "Tab element doesn't conform to the ARIA Tab pattern as specified in APG 1.2. Tab element should have 'aria-controls' attribute that points to the id of the tab panel it controls. This helps assistive technology to associate the tab with its corresponding tab panel."
-                },
-                {
-                    "target": "panel",
-                    "assertion": "toHaveAttribute",
-                    "attribute": "role",
-                    "expectedValue": "tabpanel",
-                    "failureMessage": "Tab panel doesn't conform to the ARIA Tab pattern as specified in APG 1.2. Each tab panel should have 'role=tabpanel' attribute. This helps assistive technology identify the panel as a significant region of the page."
                 },
                 {
                     "target": "panel",

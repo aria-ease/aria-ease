@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.5.0](https://github.com/aria-ease/aria-ease/compare/v6.4.10...v6.5.0) (2026-03-14)
+
+
+### Features
+
+* changed contracts name to *.contract.json format ([e1884db](https://github.com/aria-ease/aria-ease/commit/e1884db008882e663daf8f2d9fa048e0caff3e82))
+
 ### [6.4.10](https://github.com/aria-ease/aria-ease/compare/v6.4.9...v6.4.10) (2026-03-12)
 
 

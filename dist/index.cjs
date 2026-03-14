@@ -37,29 +37,29 @@ var init_contract = __esm({
   "src/utils/test/contract/contract.json"() {
     contract_default = {
       menu: {
-        path: "./contracts/MenuContract.json",
+        path: "./aria-contracts/menu/menu.contract.json",
         component: "menu"
       },
-      combobox: {
-        path: "./contracts/ComboboxContract.json",
-        component: "combobox"
+      "combobox.listbox": {
+        path: "./aria-contracts/combobox/combobox.listbox.contract.json",
+        component: "combobox.listbox"
       },
       accordion: {
-        path: "./contracts/AccordionContract.json",
+        path: "./aria-contracts/accordion/accordion.contract.json",
         component: "accordion"
       },
       tabs: {
-        path: "./contracts/TabsContract.json",
+        path: "./aria-contracts/tabs/tabs.contract.json",
         component: "tabs"
       }
     };
   }
 });
 
-// src/utils/test/contract/ContractReporter.ts
+// src/utils/test/src/ContractReporter.ts
 var ContractReporter;
 var init_ContractReporter = __esm({
-  "src/utils/test/contract/ContractReporter.ts"() {
+  "src/utils/test/src/ContractReporter.ts"() {
     "use strict";
     ContractReporter = class {
       startTime = 0;
@@ -72,6 +72,8 @@ var init_ContractReporter = __esm({
       optionalSuggestions = 0;
       isPlaywright = false;
       apgUrl = "https://www.w3.org/WAI/ARIA/apg/";
+      hasPrintedStaticSection = false;
+      hasPrintedDynamicSection = false;
       constructor(isPlaywright = false) {
         this.isPlaywright = isPlaywright;
       }
@@ -82,30 +84,32 @@ var init_ContractReporter = __esm({
         this.startTime = Date.now();
         this.componentName = componentName;
         this.totalTests = totalTests;
+        this.hasPrintedStaticSection = false;
+        this.hasPrintedDynamicSection = false;
         if (apgUrl) {
           this.apgUrl = apgUrl;
         }
         const mode = this.isPlaywright ? "Playwright (Real Browser)" : "jsdom (Fast)";
         this.log(`
 ${"\u2550".repeat(60)}`);
-        this.log(`\u{1F50D} Testing ${componentName} Component - ${mode}`);
+        this.log(`\u{1F50D} Testing ${componentName.charAt(0).toUpperCase() + componentName.slice(1)} Component - ${mode}`);
         this.log(`${"\u2550".repeat(60)}
 `);
       }
       reportStatic(passes, failures) {
         this.staticPasses = passes;
         this.staticFailures = failures;
-        const icon = failures === 0 ? "\u2705" : "\u274C";
-        const status = failures === 0 ? "PASS" : "FAIL";
-        this.log("");
-        this.log(`${icon} Static ARIA Tests: ${status}`);
-        this.log(`   ${passes}/${passes + failures} required attributes present
-`);
       }
       /**
        * Report individual static test pass
        */
       reportStaticTest(description, passed, failureMessage) {
+        if (!this.hasPrintedStaticSection) {
+          this.log(`${"\u2500".repeat(60)}`);
+          this.log(`\u{1F9EA} Static Assertions`);
+          this.log(`${"\u2500".repeat(60)}`);
+          this.hasPrintedStaticSection = true;
+        }
         const icon = passed ? "\u2713" : "\u2717";
         this.log(`  ${icon} ${description}`);
         if (!passed && failureMessage) {
@@ -116,6 +120,13 @@ ${"\u2550".repeat(60)}`);
        * Report individual dynamic test result
        */
       reportTest(test, status, failureMessage) {
+        if (!this.hasPrintedDynamicSection) {
+          this.log("");
+          this.log(`${"\u2500".repeat(60)}`);
+          this.log(`\u2328\uFE0F Dynamic Interaction Tests`);
+          this.log(`${"\u2500".repeat(60)}`);
+          this.hasPrintedDynamicSection = true;
+        }
         const result = {
           description: test.description,
           status,
@@ -202,7 +213,7 @@ ${"\u2500".repeat(60)}`);
         });
         this.log(`
 \u{1F4A1} Run with Playwright for full validation:`);
-        this.log(`   testUiComponent('${this.componentName}', component, 'http://localhost:5173/')
+        this.log(`   testUiComponent('${this.componentName}', null, 'http://localhost:5173/test-harness?component=component_name')
 `);
       }
       /**
@@ -226,9 +237,14 @@ ${"\u2500".repeat(60)}`);
 ${"\u2550".repeat(60)}`);
         this.log(`\u{1F4CA} Summary
 `);
+        const staticIcon = this.staticFailures === 0 ? "\u2705" : "\u274C";
+        const staticStatus = this.staticFailures === 0 ? "PASS" : "FAIL";
+        this.log(`${staticIcon} Static ARIA Tests: ${staticStatus}`);
+        this.log(`   ${this.staticPasses}/${this.staticPasses + this.staticFailures} required attributes present`);
+        this.log("");
         if (totalFailures === 0 && this.skipped === 0 && this.optionalSuggestions === 0) {
           this.log(`\u2705 All ${totalRun} tests passed!`);
-          this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions \u2713`);
+          this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions \u2713`);
         } else if (totalFailures === 0) {
           this.log(`\u2705 ${totalPasses}/${totalRun} required tests passed`);
           if (this.skipped > 0) {
@@ -237,7 +253,7 @@ ${"\u2550".repeat(60)}`);
           if (this.optionalSuggestions > 0) {
             this.log(`\u{1F4A1} ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? "s" : ""} suggested`);
           }
-          this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions \u2713`);
+          this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions \u2713`);
         } else {
           this.log(`\u274C ${totalFailures} test${totalFailures > 1 ? "s" : ""} failed`);
           this.log(`\u2705 ${totalPasses} test${totalPasses > 1 ? "s" : ""} passed`);
@@ -283,7 +299,7 @@ ${"\u2550".repeat(60)}`);
   }
 });
 
-// src/utils/test/contract/playwrightTestHarness.ts
+// src/utils/test/src/playwrightTestHarness.ts
 async function getOrCreateBrowser() {
   if (!sharedBrowser) {
     sharedBrowser = await import_playwright.chromium.launch({
@@ -325,7 +341,7 @@ async function closeSharedBrowser() {
 }
 var import_playwright, sharedBrowser, sharedContext;
 var init_playwrightTestHarness = __esm({
-  "src/utils/test/contract/playwrightTestHarness.ts"() {
+  "src/utils/test/src/playwrightTestHarness.ts"() {
     "use strict";
     import_playwright = require("playwright");
     sharedBrowser = null;
@@ -597,7 +613,7 @@ var init_ComponentDetector = __esm({
         const contractData = (0, import_fs.readFileSync)(resolvedPath, "utf-8");
         const componentContract = JSON.parse(contractData);
         const selectors = componentContract.selectors;
-        if (componentName === "combobox") {
+        if (componentName.includes("combobox")) {
           const mainSelector = selectors.input || selectors.container;
           return new ComboboxComponentStrategy(mainSelector, selectors, actionTimeoutMs, assertionTimeoutMs);
         }
@@ -1119,7 +1135,7 @@ var init_AssertionRunner = __esm({
   }
 });
 
-// src/utils/test/contract/contractTestRunnerPlaywright.ts
+// src/utils/test/src/contractTestRunnerPlaywright.ts
 var contractTestRunnerPlaywright_exports = {};
 __export(contractTestRunnerPlaywright_exports, {
   runContractTestsPlaywright: () => runContractTestsPlaywright
@@ -1163,7 +1179,7 @@ async function runContractTestsPlaywright(componentName, url) {
       throw new Error(`CRITICAL: No selector found in contract for ${componentName}`);
     }
     try {
-      await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: 28e3 });
+      await page.locator(mainSelector).first().waitFor({ state: "attached", timeout: 3e4 });
     } catch (error) {
       throw new Error(
         `
@@ -1178,24 +1194,29 @@ This usually means:
     reporter.start(componentName, totalTests, apgUrl);
     if (componentName === "menu" && componentContract.selectors.trigger) {
       await page.locator(componentContract.selectors.trigger).first().waitFor({
-        state: "visible",
+        state: "attached",
         timeout: 5e3
       }).catch(() => {
-        console.warn("Menu trigger not visible, continuing with tests...");
       });
     }
+    const failuresBeforeStatic = failures.length;
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
     for (const test of componentContract.static[0]?.assertions || []) {
       if (test.target === "relative") continue;
+      const staticDescription = `${test.target}${test.attribute ? ` (${test.attribute})` : ""}`;
       const targetSelector = componentContract.selectors[test.target];
       if (!targetSelector) {
-        failures.push(`Selector for target ${test.target} not found.`);
+        const failure = `Selector for target ${test.target} not found.`;
+        failures.push(failure);
+        reporter.reportStaticTest(staticDescription, false, failure);
         continue;
       }
       const target = page.locator(targetSelector).first();
       const exists = await target.count() > 0;
       if (!exists) {
-        failures.push(`Target ${test.target} not found.`);
+        const failure = `Target ${test.target} not found.`;
+        failures.push(failure);
+        reporter.reportStaticTest(staticDescription, false, failure);
         continue;
       }
       const isRedundantCheck = (selector, attrName, expectedVal) => {
@@ -1229,13 +1250,19 @@ This usually means:
           }
         }
         if (!hasAny && !allRedundant) {
-          failures.push(test.failureMessage + ` None of the attributes "${test.attribute}" are present.`);
+          const failure = test.failureMessage + ` None of the attributes "${test.attribute}" are present.`;
+          failures.push(failure);
+          reporter.reportStaticTest(staticDescription, false, failure);
         } else if (!allRedundant && hasAny) {
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
+          reporter.reportStaticTest(staticDescription, true);
+        } else {
+          reporter.reportStaticTest(staticDescription, true);
         }
       } else {
         if (isRedundantCheck(targetSelector, test.attribute, test.expectedValue)) {
           passes.push(`${test.attribute}="${test.expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
+          reporter.reportStaticTest(staticDescription, true);
         } else {
           const result = await staticAssertionRunner.validateAttribute(
             target,
@@ -1247,8 +1274,10 @@ This usually means:
           );
           if (result.success && result.passMessage) {
             passes.push(result.passMessage);
+            reporter.reportStaticTest(staticDescription, true);
           } else if (!result.success && result.failMessage) {
             failures.push(result.failMessage);
+            reporter.reportStaticTest(staticDescription, false, result.failMessage);
           }
         }
       }
@@ -1327,8 +1356,9 @@ This usually means:
         reporter.reportTest(dynamicTest, testPassed ? "pass" : "fail", failureMessage);
       }
     }
-    const staticPassed = componentContract.static[0].assertions.length;
-    const staticFailed = 0;
+    const staticTotal = componentContract.static[0].assertions.length;
+    const staticFailed = failures.length - failuresBeforeStatic;
+    const staticPassed = Math.max(0, staticTotal - staticFailed);
     reporter.reportStatic(staticPassed, staticFailed);
     reporter.summary(failures);
   } catch (error) {
@@ -1358,7 +1388,7 @@ Make sure your dev server is running at ${url}`);
 }
 var import_fs2, import_meta3;
 var init_contractTestRunnerPlaywright = __esm({
-  "src/utils/test/contract/contractTestRunnerPlaywright.ts"() {
+  "src/utils/test/src/contractTestRunnerPlaywright.ts"() {
     "use strict";
     import_fs2 = require("fs");
     init_contract();
@@ -2035,6 +2065,18 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     };
     return nodeListLike;
   }
+  function intializeMenuItems() {
+    const items = getItems();
+    items.forEach((item) => {
+      item.setAttribute("role", "menuitem");
+      const submenuId = item.getAttribute("data-submenu-id");
+      if (submenuId) {
+        item.setAttribute("aria-controls", submenuId);
+        item.setAttribute("aria-haspopup", "menu");
+      }
+    });
+  }
+  intializeMenuItems();
   function isItemInNestedSubmenu(item) {
     let parent = item.parentElement;
     while (parent && parent !== menuDiv) {
@@ -2147,13 +2189,6 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
       }
     }
   }
-  function intializeMenuItems() {
-    const items = getItems();
-    items.forEach((item) => {
-      item.setAttribute("role", "menuitem");
-    });
-  }
-  intializeMenuItems();
   function handleTriggerClick() {
     const isOpen = triggerButton.getAttribute("aria-expanded") === "true";
     if (isOpen) {
@@ -2929,7 +2964,7 @@ function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation 
 // src/utils/test/src/test.ts
 var import_jest_axe = require("jest-axe");
 
-// src/utils/test/contract/contractTestRunner.ts
+// src/utils/test/src/contractTestRunner.ts
 init_contract();
 var import_promises = __toESM(require("fs/promises"), 1);
 init_ContractReporter();
@@ -2949,6 +2984,7 @@ async function runContractTests(componentName, component) {
   const failures = [];
   const passes = [];
   const skipped = [];
+  const failuresBeforeStatic = failures.length;
   for (const test of componentContract.static[0].assertions) {
     if (test.target !== "relative") {
       const selector = componentContract.selectors[test.target];
@@ -2987,8 +3023,9 @@ async function runContractTests(componentName, component) {
     skipped.push(dynamicTest.description);
     reporter.reportTest(dynamicTest, "skip");
   }
-  const staticPassed = componentContract.static[0].assertions.length;
-  const staticFailed = 0;
+  const staticTotal = componentContract.static[0].assertions.length;
+  const staticFailed = failures.length - failuresBeforeStatic;
+  const staticPassed = Math.max(0, staticTotal - staticFailed);
   reporter.reportStatic(staticPassed, staticFailed);
   reporter.summary(failures);
   return { passes, failures, skipped };

@@ -2,7 +2,7 @@ import {
   ContractReporter,
   closeSharedBrowser,
   contract_default
-} from "./chunk-GFKAJHCS.js";
+} from "./chunk-AUJAN4RK.js";
 import "./chunk-I2KLQ2HA.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
@@ -539,6 +539,18 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     };
     return nodeListLike;
   }
+  function intializeMenuItems() {
+    const items = getItems();
+    items.forEach((item) => {
+      item.setAttribute("role", "menuitem");
+      const submenuId = item.getAttribute("data-submenu-id");
+      if (submenuId) {
+        item.setAttribute("aria-controls", submenuId);
+        item.setAttribute("aria-haspopup", "menu");
+      }
+    });
+  }
+  intializeMenuItems();
   function isItemInNestedSubmenu(item) {
     let parent = item.parentElement;
     while (parent && parent !== menuDiv) {
@@ -651,13 +663,6 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
       }
     }
   }
-  function intializeMenuItems() {
-    const items = getItems();
-    items.forEach((item) => {
-      item.setAttribute("role", "menuitem");
-    });
-  }
-  intializeMenuItems();
   function handleTriggerClick() {
     const isOpen = triggerButton.getAttribute("aria-expanded") === "true";
     if (isOpen) {
@@ -1433,7 +1438,7 @@ function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation 
 // src/utils/test/src/test.ts
 import { axe } from "jest-axe";
 
-// src/utils/test/contract/contractTestRunner.ts
+// src/utils/test/src/contractTestRunner.ts
 import fs from "fs/promises";
 async function runContractTests(componentName, component) {
   const reporter = new ContractReporter(false);
@@ -1450,6 +1455,7 @@ async function runContractTests(componentName, component) {
   const failures = [];
   const passes = [];
   const skipped = [];
+  const failuresBeforeStatic = failures.length;
   for (const test of componentContract.static[0].assertions) {
     if (test.target !== "relative") {
       const selector = componentContract.selectors[test.target];
@@ -1488,8 +1494,9 @@ async function runContractTests(componentName, component) {
     skipped.push(dynamicTest.description);
     reporter.reportTest(dynamicTest, "skip");
   }
-  const staticPassed = componentContract.static[0].assertions.length;
-  const staticFailed = 0;
+  const staticTotal = componentContract.static[0].assertions.length;
+  const staticFailed = failures.length - failuresBeforeStatic;
+  const staticPassed = Math.max(0, staticTotal - staticFailed);
   reporter.reportStatic(staticPassed, staticFailed);
   reporter.summary(failures);
   return { passes, failures, skipped };
@@ -1539,7 +1546,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-7BCEDPZF.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-7F756CFB.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl);
       } else {
         throw new Error(

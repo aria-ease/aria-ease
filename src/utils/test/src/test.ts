@@ -7,8 +7,8 @@
 
 import { axe } from "jest-axe";
 import type { JestAxeResult, ContractTestResult } from "Types";
-import { runContractTests } from "../contract/contractTestRunner";
-import { closeSharedBrowser } from "../contract/playwrightTestHarness";
+import { runContractTests } from "./contractTestRunner";
+import { closeSharedBrowser } from "./playwrightTestHarness";
 
 
 export async function testUiComponent(componentName: string, component: HTMLElement | null, url: string | null): Promise<JestAxeResult> {
@@ -69,7 +69,7 @@ export async function testUiComponent(componentName: string, component: HTMLElem
             if (devServerUrl) {
                 console.log(`🎭 Running Playwright tests on ${devServerUrl}`);
                 
-                const { runContractTestsPlaywright } = await import("../contract/contractTestRunnerPlaywright");
+                const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright");
                 contract = await runContractTestsPlaywright(componentName, devServerUrl);
             } else {
                 throw new Error(

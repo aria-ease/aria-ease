@@ -16,7 +16,7 @@
         "trigger": "[data-test-id=menu-trigger]",
         "container": "[role=menu]",
         "items": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
-        "submenuTrigger": "[role=menuitem][aria-haspopup=true], [role=menuitemradio][aria-haspopup=true], [role=menuitemcheckbox][aria-haspopup=true]",
+        "submenuTrigger": "[role=menu] [role=menuitem][aria-haspopup=true], [role=menu] [role=menuitemradio][aria-haspopup=true], [role=menu] [role=menuitemcheckbox][aria-haspopup=true], [role=menu] [role=menuitem][aria-haspopup=menu], [role=menu] [role=menuitemradio][aria-haspopup=menu], [role=menu] [role=menuitemcheckbox][aria-haspopup=menu]",
         "submenu": "[role=menu][aria-labelledby]",
         "focusable": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
         "relative": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
@@ -28,6 +28,26 @@
         "target": "trigger | relative | menu",
         "relative": "first | last | next | previous"
     },
+
+    "relationships": [
+        {
+            "type": "aria-reference",
+            "from": "trigger",
+            "attribute": "aria-controls",
+            "to": "container"
+        },
+        {
+            "type": "aria-reference",
+            "from": "container",
+            "attribute": "aria-labelledby",
+            "to": "trigger"
+        },
+        {
+            "type": "contains",
+            "parent": "container",
+            "child": "items"
+        }
+    ],
 
     "static": [
         {
@@ -57,6 +77,27 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-labelledby | aria-label",
                     "failureMessage": "Menu container doesn't conform to the ARIA Menu pattern as specified in APG 1.2. Menu container should have 'aria-labelledby' attribute that points to the id of the trigger button that controls it, or 'aria-label' that describes the purpose of the container."
+                },
+                {
+                    "target": "container",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "role",
+                    "expectedValue": "menu",
+                    "failureMessage": "Menu container doesn't conform to the ARIA Menu pattern as specified in APG 1.2. Menu container should have role of 'menu'"
+                }, 
+                {
+                    "target": "items",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "role",
+                    "expectedValue": "menuitem | menuitemcheckbox | menuitemradio",
+                    "failureMessage": "Menu items do not conform to the ARIA Menu pattern as specified in APG 1.2. Menu items should have role of 'menuitem', 'menuitemcheckbox', or 'menuitemradio'"
+                },
+                {
+                    "target": "items",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "tabindex",
+                    "expectedValue": "-1",
+                    "failureMessage": "Menu items do not conform to the ARIA Menu pattern as specified in APG 1.2. Menu items' tabindex should have value of '-1'. This ensures the menu items are excluded from the page's Tab sequence"
                 }
             ]
         }

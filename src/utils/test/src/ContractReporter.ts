@@ -22,6 +22,8 @@ export class ContractReporter {
   private optionalSuggestions: number = 0;
   private isPlaywright: boolean = false;
   private apgUrl: string = 'https://www.w3.org/WAI/ARIA/apg/';
+  private hasPrintedStaticSection: boolean = false;
+  private hasPrintedDynamicSection: boolean = false;
 
   constructor(isPlaywright: boolean = false) {
     this.isPlaywright = isPlaywright;
@@ -35,32 +37,34 @@ export class ContractReporter {
     this.startTime = Date.now();
     this.componentName = componentName;
     this.totalTests = totalTests;
+    this.hasPrintedStaticSection = false;
+    this.hasPrintedDynamicSection = false;
     if (apgUrl) {
       this.apgUrl = apgUrl;
     }
     
     const mode = this.isPlaywright ? 'Playwright (Real Browser)' : 'jsdom (Fast)';
     this.log(`\n${'═'.repeat(60)}`);
-    this.log(`🔍 Testing ${componentName} Component - ${mode}`);
+    this.log(`🔍 Testing ${componentName.charAt(0).toUpperCase() + componentName.slice(1)} Component - ${mode}`);
     this.log(`${'═'.repeat(60)}\n`);
   }
 
   reportStatic(passes: number, failures: number) {
     this.staticPasses = passes;
     this.staticFailures = failures;
-    
-    const icon = failures === 0 ? '✅' : '❌';
-    const status = failures === 0 ? 'PASS' : 'FAIL';
-    
-    this.log(''); // Add blank line before summary
-    this.log(`${icon} Static ARIA Tests: ${status}`);
-    this.log(`   ${passes}/${passes + failures} required attributes present\n`);
   }
 
   /**
    * Report individual static test pass
    */
   reportStaticTest(description: string, passed: boolean, failureMessage?: string) {
+    if (!this.hasPrintedStaticSection) {
+      this.log(`${'─'.repeat(60)}`);
+      this.log(`🧪 Static Assertions`);
+      this.log(`${'─'.repeat(60)}`);
+      this.hasPrintedStaticSection = true;
+    }
+
     const icon = passed ? '✓' : '✗';
     this.log(`  ${icon} ${description}`);
     if (!passed && failureMessage) {
@@ -72,6 +76,14 @@ export class ContractReporter {
    * Report individual dynamic test result
    */
   reportTest(test: { description: string; isOptional?: boolean }, status: 'pass' | 'fail' | 'skip' | 'optional-fail', failureMessage?: string) {
+    if (!this.hasPrintedDynamicSection) {
+      this.log('');
+      this.log(`${'─'.repeat(60)}`);
+      this.log(`⌨️ Dynamic Interaction Tests`);
+      this.log(`${'─'.repeat(60)}`);
+      this.hasPrintedDynamicSection = true;
+    }
+
     const result: TestResult = {
       description: test.description,
       status,
@@ -168,7 +180,7 @@ export class ContractReporter {
     });
     
     this.log(`\n💡 Run with Playwright for full validation:`);
-    this.log(`   testUiComponent('${this.componentName}', component, 'http://localhost:5173/')\n`);
+    this.log(`   testUiComponent('${this.componentName}', null, 'http://localhost:5173/test-harness?component=component_name')\n`);
   }
 
   /**
@@ -200,10 +212,16 @@ export class ContractReporter {
     // Summary section
     this.log(`\n${'═'.repeat(60)}`);
     this.log(`📊 Summary\n`);
+
+    const staticIcon = this.staticFailures === 0 ? '✅' : '❌';
+    const staticStatus = this.staticFailures === 0 ? 'PASS' : 'FAIL';
+    this.log(`${staticIcon} Static ARIA Tests: ${staticStatus}`);
+    this.log(`   ${this.staticPasses}/${this.staticPasses + this.staticFailures} required attributes present`);
+    this.log('');
     
     if (totalFailures === 0 && this.skipped === 0 && this.optionalSuggestions === 0) {
       this.log(`✅ All ${totalRun} tests passed!`);
-      this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions ✓`);
+      this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions ✓`);
     } else if (totalFailures === 0) {
       this.log(`✅ ${totalPasses}/${totalRun} required tests passed`);
       if (this.skipped > 0) {
@@ -212,7 +230,7 @@ export class ContractReporter {
       if (this.optionalSuggestions > 0) {
         this.log(`💡 ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? 's' : ''} suggested`);
       }
-      this.log(`   ${this.componentName} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions ✓`);
+      this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions ✓`);
     } else {
       this.log(`❌ ${totalFailures} test${totalFailures > 1 ? 's' : ''} failed`);
       this.log(`✅ ${totalPasses} test${totalPasses > 1 ? 's' : ''} passed`);
