@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.5.1](https://github.com/aria-ease/aria-ease/compare/v6.5.0...v6.5.1) (2026-03-15)
+
+
+### Bug Fixes
+
+* fixed Left Arrow key getting stuck before menuitem that controls a SubMenu ([2f496c3](https://github.com/aria-ease/aria-ease/commit/2f496c39237b7b52288dbdd2370384eb3f954c66))
+
 ## [6.5.0](https://github.com/aria-ease/aria-ease/compare/v6.4.10...v6.5.0) (2026-03-14)
 
 
