@@ -50,11 +50,13 @@ interface Selector {
     trigger?: string;
     menu?: string;
     items?: string;
+    leafItem?: string;
     relative?: string;
     container?: string;
     focusable?: string;
     submenuTrigger?: string;
     submenu?: string;
+    submenuItems?: string;
     input?: string;
     listbox?: string;
     button?: string;
@@ -91,6 +93,7 @@ interface ComponentContract {
             attribute: string;
             expectedValue: string;
             failureMessage: string;
+            isOptional?: boolean;
         }>;
     }>;
     dynamic: Array<{

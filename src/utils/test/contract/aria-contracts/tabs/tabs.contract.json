@@ -105,7 +105,7 @@
             ]
         },
         {
-            "description": "Right Arrow moves focus to next tab and activates it (automatic activation).",
+            "description": "Right Arrow moves focus to next tab and activates it (automatic activation) in horizontally oriented tabs.",
             "isVertical": false,
             "action": [
                 { "type": "focus", "target": "focusable" },
@@ -145,7 +145,7 @@
             ]
         },
         {
-            "description": "Left Arrow moves focus to previous tab and activates it (wraps to last).",
+            "description": "Left Arrow moves focus to previous tab and activates it (wraps to last) in horizontally oriented tabs.",
             "isVertical": false,
             "action": [
                 { "type": "focus", "target": "focusable" },
@@ -156,7 +156,7 @@
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "last",
-                    "failureMessage": "Focus should wrap to last tab after pressing Left Arrow on first tab."
+                    "failureMessage": "Focus should wrap to last tab after pressing Left Arrow on first tab in horizontally oriented tabs."
                 },
                 {
                     "target": "relative",
@@ -177,7 +177,7 @@
             ]
         },
         {
-            "description": "Down Arrow moves focus to next tab and activates it (vertical tabs).",
+            "description": "Down Arrow moves focus to next tab and activates it in vertically oriented tabs.",
             "isVertical": true,
             "action": [
                 { "type": "focus", "target": "focusable" },
@@ -188,7 +188,7 @@
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "second",
-                    "failureMessage": "Focus should move to second tab after pressing Down Arrow (vertical orientation)."
+                    "failureMessage": "Focus should move to second tab after pressing Down Arrow in vertically oriented tabs."
                 },
                 {
                     "target": "relative",
@@ -201,7 +201,7 @@
             ]
         },
         {
-            "description": "Up Arrow moves focus to previous tab and activates it (wraps to last, vertical tabs).",
+            "description": "Up Arrow moves focus to previous tab and activates it (wraps to last) in vertically oriented tabs.",
             "isVertical": true,
             "action": [
                 { "type": "focus", "target": "focusable" },
@@ -212,7 +212,7 @@
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "last",
-                    "failureMessage": "Focus should wrap to last tab after pressing Up Arrow on first tab (vertical orientation)."
+                    "failureMessage": "Focus should wrap to last tab after pressing Up Arrow on first tab in vertically oriented tabs."
                 },
                 {
                     "target": "relative",

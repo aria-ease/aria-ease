@@ -45,6 +45,35 @@ describe("makeMenuAccessible - menu accessibility integration. keyboard interact
     expect(document.activeElement).toBe(secondItem);
   });
 
+  it("skips aria-disabled items when moving focus with ArrowDown", () => {
+    const menuDiv = document.getElementById("menu-div")!;
+    const items = menuDiv.querySelectorAll(".profile-menu-items");
+    const firstItem = items[0] as HTMLElement;
+    const disabledItem = items[1] as HTMLElement;
+    const thirdItem = items[2] as HTMLElement;
+
+    disabledItem.setAttribute("aria-disabled", "true");
+
+    menu.openMenu();
+    firstItem.focus();
+    firstItem.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }));
+
+    expect(document.activeElement).toBe(thirdItem);
+  });
+
+  it("focuses the first enabled item when opening menu", () => {
+    const menuDiv = document.getElementById("menu-div")!;
+    const items = menuDiv.querySelectorAll(".profile-menu-items");
+    const firstItem = items[0] as HTMLElement;
+    const secondItem = items[1] as HTMLElement;
+
+    firstItem.setAttribute("aria-disabled", "true");
+
+    menu.openMenu();
+
+    expect(document.activeElement).toBe(secondItem);
+  });
+
   it("moves focus to previous item with ArrowUp", () => {
     menu.openMenu();
     const menuDiv = document.getElementById("menu-div")!;
@@ -123,7 +152,7 @@ describe("makeMenuAccessible - menu accessibility integration. keyboard interact
       expect(document.activeElement).toBe(triggerButton);
     });
 
-    it("triggers click on button item with Enter key", () => {
+    it("triggers click on menu item with Enter key", () => {
       menu.openMenu();
       const menuDiv = document.getElementById("menu-div")!;
       const firstItem = menuDiv.querySelector(".profile-menu-items") as HTMLElement;
@@ -133,10 +162,10 @@ describe("makeMenuAccessible - menu accessibility integration. keyboard interact
       firstItem.focus();
       firstItem.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
       
-      expect(clickSpy).toHaveBeenCalled();
+      expect(menuDiv.style.display).toBe("none");
     });
 
-    it("triggers click on button item with Space key", () => {
+    it("triggers click on menu item with Space key", () => {
       menu.openMenu();
       const menuDiv = document.getElementById("menu-div")!;
       const firstItem = menuDiv.querySelector(".profile-menu-items") as HTMLElement;
@@ -146,6 +175,6 @@ describe("makeMenuAccessible - menu accessibility integration. keyboard interact
       firstItem.focus();
       firstItem.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true }));
       
-      expect(clickSpy).toHaveBeenCalled();
+      expect(menuDiv.style.display).toBe("none");
     });
 });

@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.6.0](https://github.com/aria-ease/aria-ease/compare/v6.5.1...v6.6.0) (2026-03-15)
+
+
+### Features
+
+* added/updated contract assertions to menu.contract.json ([7798862](https://github.com/aria-ease/aria-ease/commit/7798862c151367fcf65bf6ae445b15a41003fee9))
+
 ### [6.5.1](https://github.com/aria-ease/aria-ease/compare/v6.5.0...v6.5.1) (2026-03-15)
 
 
