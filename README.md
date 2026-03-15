@@ -134,7 +134,7 @@ pnpm add aria-ease
 
 ### Automated Accessibility Audits (CLI)
 
-Run automated accessibility audits on your website with one command:
+Run axe-core powered automated accessibility audits on your website with one command:
 
 ```bash
 npx aria-ease audit --url https://yoursite.com
