@@ -754,7 +754,7 @@ For older browser support, use a polyfill service or transpile with appropriate 
 
 ---
 
-## � CI/CD Integration: Accessibility as a Deployment Gatekeeper
+## 🚀 CI/CD Integration: Accessibility as a Deployment Gatekeeper
 
 **The game-changer:** Turn accessibility into a deployment invariant. Code that fails accessibility checks cannot reach production.
 
@@ -876,10 +876,14 @@ Create `ariaease.config.js` in your project root:
 ```javascript
 export default {
   audit: {
-    urls: ["http://localhost:5173/", "http://localhost:5173/changelog"],
+    urls: [
+      "http://localhost:5173", // Homepage
+      "http://localhost:5173/docs", // Docs
+      "http://localhost:5173/examples", // Examples
+    ],
     output: {
-      format: "html",
-      out: "./accessibility-reports/audit",
+      format: "all", // Generate JSON, CSV, and HTML reports
+      out: "./accessibility-reports",
     },
   },
 };
@@ -997,7 +1001,7 @@ You've shifted accessibility left (into development), automated the verification
 
 ---
 
-## �📖 More Resources
+## 📖 More Resources
 
 - [Full Documentation](https://ariaease.site/docs)
 - [GitHub Repository](https://github.com/aria-ease/aria-ease)

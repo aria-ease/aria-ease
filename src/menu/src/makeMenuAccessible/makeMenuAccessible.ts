@@ -320,8 +320,6 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
   triggerButton.addEventListener("click", handleTriggerClick);
   document.addEventListener("click", handleClickOutside);
 
-  triggerButton.setAttribute('data-menu-initialized', 'true');
-
   function cleanup() {
     removeListeners();
     triggerButton.removeEventListener("click", handleTriggerClick);
