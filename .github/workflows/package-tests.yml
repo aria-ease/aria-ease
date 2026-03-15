@@ -19,12 +19,10 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
-          cache-dependency-path: package/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install dependencies
         run: npm install
-        working-directory: package
 
       - name: Run unit and integration tests
         run: npm test
-        working-directory: package
