@@ -82,33 +82,26 @@ class MenuComponentStrategy implements ComponentStrategy {
     }
 
     async shouldSkipTest(test: DynamicTest, page: Page): Promise<boolean> {
-        // Check if test requires submenu elements that don't exist
-        for (const act of test.action) {
-            if (act.type === 'keypress' && (act.target === 'submenuTrigger' || act.target === 'submenu')) {
-                const submenuSelector = this.selectors[act.target as keyof typeof this.selectors];
-                if (submenuSelector) {
-                    const submenuCount = await page.locator(submenuSelector).count();
-                    if (submenuCount === 0) {
-                        return true; // Skip test - submenu element not found
-                    }
-                }
-            }
+        const requiresSubmenu =
+            test.action.some((act) =>
+                act.target === 'submenu' || act.target === 'submenuTrigger' || act.target === 'submenuItems'
+            ) ||
+            test.assertions.some((assertion) =>
+                assertion.target === 'submenu' || assertion.target === 'submenuTrigger' || assertion.target === 'submenuItems'
+            );
+
+        if (!requiresSubmenu) {
+            return false;
         }
-        
-        // Also check assertions for submenu requirements
-        for (const assertion of test.assertions) {
-            if (assertion.target === 'submenu' || assertion.target === 'submenuTrigger') {
-                const submenuSelector = this.selectors[assertion.target as keyof typeof this.selectors];
-                if (submenuSelector) {
-                    const submenuCount = await page.locator(submenuSelector).count();
-                    if (submenuCount === 0) {
-                        return true; // Skip test - submenu element not found
-                    }
-                }
-            }
+
+        const submenuTriggerSelector = this.selectors.submenuTrigger;
+        if (!submenuTriggerSelector) {
+            return true;
         }
-        
-        return false;
+
+        // Capability check: submenu support exists if at least one submenu trigger is present.
+        const submenuTriggerCount = await page.locator(submenuTriggerSelector).count();
+        return submenuTriggerCount === 0;
     }
 
     getMainSelector(): string {

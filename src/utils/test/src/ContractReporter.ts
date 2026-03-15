@@ -212,12 +212,6 @@ export class ContractReporter {
     // Summary section
     this.log(`\n${'═'.repeat(60)}`);
     this.log(`📊 Summary\n`);
-
-    const staticIcon = this.staticFailures === 0 ? '✅' : '❌';
-    const staticStatus = this.staticFailures === 0 ? 'PASS' : 'FAIL';
-    this.log(`${staticIcon} Static ARIA Tests: ${staticStatus}`);
-    this.log(`   ${this.staticPasses}/${this.staticPasses + this.staticFailures} required attributes present`);
-    this.log('');
     
     if (totalFailures === 0 && this.skipped === 0 && this.optionalSuggestions === 0) {
       this.log(`✅ All ${totalRun} tests passed!`);

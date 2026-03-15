@@ -20,6 +20,10 @@ export class ActionExecutor {
     private timeoutMs: number = 400
   ) {}
 
+  private isOptionalMenuTarget(target: string): boolean {
+    return ["submenu", "submenuTrigger", "submenuItems"].includes(target);
+  }
+
   /**
    * Check if error is due to browser/page being closed
    */
@@ -157,8 +161,8 @@ export class ActionExecutor {
         keyValue = keyValue.replace(/ /g, "");
       }
 
-      // Special case: global keyboard events (arrows, escape)
-      if (target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
+      // Use the currently focused element for menu-style keyboard interactions.
+      if (target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape", "Home", "End", "Tab", "Shift+Tab"].includes(keyValue)) {
         await this.page.keyboard.press(keyValue);
         return { success: true };
       }
@@ -172,11 +176,14 @@ export class ActionExecutor {
       const locator = this.page.locator(selector).first();
       const elementCount = await locator.count();
       
-      // Element not found - could be optional (submenu)
+      // Element not found - submenu targets may be optional depending on the contract.
       if (elementCount === 0) {
+        const optionalMenuTarget = this.isOptionalMenuTarget(target);
         return {
           success: false,
-          error: `${target} element not found (optional submenu test)`,
+          error: optionalMenuTarget
+            ? `${target} element not found (optional submenu test)`
+            : `${target} element not found.`,
           shouldBreak: true // Signal to skip this test
         };
       }

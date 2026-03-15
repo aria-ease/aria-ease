@@ -237,11 +237,6 @@ ${"\u2500".repeat(60)}`);
 ${"\u2550".repeat(60)}`);
         this.log(`\u{1F4CA} Summary
 `);
-        const staticIcon = this.staticFailures === 0 ? "\u2705" : "\u274C";
-        const staticStatus = this.staticFailures === 0 ? "PASS" : "FAIL";
-        this.log(`${staticIcon} Static ARIA Tests: ${staticStatus}`);
-        this.log(`   ${this.staticPasses}/${this.staticPasses + this.staticFailures} required attributes present`);
-        this.log("");
         if (totalFailures === 0 && this.skipped === 0 && this.optionalSuggestions === 0) {
           this.log(`\u2705 All ${totalRun} tests passed!`);
           this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions \u2713`);
@@ -528,29 +523,20 @@ This indicates a problem with the menu component's close functionality.`
         }
       }
       async shouldSkipTest(test, page) {
-        for (const act of test.action) {
-          if (act.type === "keypress" && (act.target === "submenuTrigger" || act.target === "submenu")) {
-            const submenuSelector = this.selectors[act.target];
-            if (submenuSelector) {
-              const submenuCount = await page.locator(submenuSelector).count();
-              if (submenuCount === 0) {
-                return true;
-              }
-            }
-          }
+        const requiresSubmenu = test.action.some(
+          (act) => act.target === "submenu" || act.target === "submenuTrigger" || act.target === "submenuItems"
+        ) || test.assertions.some(
+          (assertion) => assertion.target === "submenu" || assertion.target === "submenuTrigger" || assertion.target === "submenuItems"
+        );
+        if (!requiresSubmenu) {
+          return false;
         }
-        for (const assertion of test.assertions) {
-          if (assertion.target === "submenu" || assertion.target === "submenuTrigger") {
-            const submenuSelector = this.selectors[assertion.target];
-            if (submenuSelector) {
-              const submenuCount = await page.locator(submenuSelector).count();
-              if (submenuCount === 0) {
-                return true;
-              }
-            }
-          }
+        const submenuTriggerSelector = this.selectors.submenuTrigger;
+        if (!submenuTriggerSelector) {
+          return true;
         }
-        return false;
+        const submenuTriggerCount = await page.locator(submenuTriggerSelector).count();
+        return submenuTriggerCount === 0;
       }
       getMainSelector() {
         return this.mainSelector;
@@ -693,6 +679,9 @@ var init_ActionExecutor = __esm({
         this.selectors = selectors;
         this.timeoutMs = timeoutMs;
       }
+      isOptionalMenuTarget(target) {
+        return ["submenu", "submenuTrigger", "submenuItems"].includes(target);
+      }
       /**
        * Check if error is due to browser/page being closed
        */
@@ -813,7 +802,7 @@ var init_ActionExecutor = __esm({
           } else if (keyValue.includes(" ")) {
             keyValue = keyValue.replace(/ /g, "");
           }
-          if (target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(keyValue)) {
+          if (target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape", "Home", "End", "Tab", "Shift+Tab"].includes(keyValue)) {
             await this.page.keyboard.press(keyValue);
             return { success: true };
           }
@@ -824,9 +813,10 @@ var init_ActionExecutor = __esm({
           const locator = this.page.locator(selector).first();
           const elementCount = await locator.count();
           if (elementCount === 0) {
+            const optionalMenuTarget = this.isOptionalMenuTarget(target);
             return {
               success: false,
-              error: `${target} element not found (optional submenu test)`,
+              error: optionalMenuTarget ? `${target} element not found (optional submenu test)` : `${target} element not found.`,
               shouldBreak: true
               // Signal to skip this test
             };
@@ -1199,23 +1189,35 @@ This usually means:
       }).catch(() => {
       });
     }
-    const failuresBeforeStatic = failures.length;
+    const hasSubmenuCapability = componentName === "menu" && !!componentContract.selectors.submenuTrigger ? await page.locator(componentContract.selectors.submenuTrigger).count() > 0 : false;
+    let staticFailed = 0;
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
     for (const test of componentContract.static[0]?.assertions || []) {
       if (test.target === "relative") continue;
       const staticDescription = `${test.target}${test.attribute ? ` (${test.attribute})` : ""}`;
+      if (componentName === "menu" && test.target === "submenuTrigger" && !hasSubmenuCapability) {
+        passes.push(`Skipping submenu static assertion for ${test.target}: no submenu capability detected in rendered component.`);
+        reporter.reportStaticTest(staticDescription, true);
+        continue;
+      }
       const targetSelector = componentContract.selectors[test.target];
       if (!targetSelector) {
         const failure = `Selector for target ${test.target} not found.`;
         failures.push(failure);
+        staticFailed += 1;
         reporter.reportStaticTest(staticDescription, false, failure);
         continue;
       }
       const target = page.locator(targetSelector).first();
       const exists = await target.count() > 0;
       if (!exists) {
+        if (test.isOptional === true) {
+          reporter.reportStaticTest(staticDescription, true);
+          continue;
+        }
         const failure = `Target ${test.target} not found.`;
         failures.push(failure);
+        staticFailed += 1;
         reporter.reportStaticTest(staticDescription, false, failure);
         continue;
       }
@@ -1252,6 +1254,7 @@ This usually means:
         if (!hasAny && !allRedundant) {
           const failure = test.failureMessage + ` None of the attributes "${test.attribute}" are present.`;
           failures.push(failure);
+          staticFailed += 1;
           reporter.reportStaticTest(staticDescription, false, failure);
         } else if (!allRedundant && hasAny) {
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
@@ -1277,6 +1280,7 @@ This usually means:
             reporter.reportStaticTest(staticDescription, true);
           } else if (!result.success && result.failMessage) {
             failures.push(result.failMessage);
+            staticFailed += 1;
             reporter.reportStaticTest(staticDescription, false, result.failMessage);
           }
         }
@@ -1306,9 +1310,12 @@ This usually means:
       }
       const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
       const assertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
+      let shouldSkipCurrentTest = false;
+      let shouldAbortCurrentTest = false;
       for (const act of action) {
         if (!page || page.isClosed()) {
           failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+          shouldAbortCurrentTest = true;
           break;
         }
         let result;
@@ -1326,17 +1333,28 @@ This usually means:
           continue;
         }
         if (!result.success) {
-          if (result.error) {
-            failures.push(result.error);
-          }
           if (result.shouldBreak) {
             if (result.error?.includes("optional submenu test")) {
               reporter.reportTest(dynamicTest, "skip", result.error);
+              shouldSkipCurrentTest = true;
+            } else if (result.error) {
+              failures.push(result.error);
+              shouldAbortCurrentTest = true;
             }
             break;
           }
+          if (result.error) {
+            failures.push(result.error);
+          }
           continue;
         }
+      }
+      if (shouldSkipCurrentTest) {
+        continue;
+      }
+      if (shouldAbortCurrentTest) {
+        reporter.reportTest(dynamicTest, "fail", failures[failures.length - 1]);
+        continue;
       }
       for (const assertion of assertions) {
         const result = await assertionRunner.validate(assertion, dynamicTest.description);
@@ -1357,7 +1375,6 @@ This usually means:
       }
     }
     const staticTotal = componentContract.static[0].assertions.length;
-    const staticFailed = failures.length - failuresBeforeStatic;
     const staticPassed = Math.max(0, staticTotal - staticFailed);
     reporter.reportStatic(staticPassed, staticFailed);
     reporter.summary(failures);
@@ -1990,11 +2007,14 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
       for (let i = 0; i < allItems.length; i++) {
         const item = allItems.item(i);
         const isNested = isItemInNestedSubmenu(item);
+        const isDisabled = item.getAttribute("aria-disabled") === "true";
         if (!isNested) {
           if (!item.hasAttribute("tabindex")) {
             item.setAttribute("tabindex", "-1");
           }
-          filteredItems.push(item);
+          if (!isDisabled) {
+            filteredItems.push(item);
+          }
         }
       }
     }
@@ -2019,9 +2039,14 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     const items = getItems();
     items.forEach((item) => {
       item.setAttribute("role", "menuitem");
-      if (item.hasAttribute("data-submenu-id")) {
+      const submenuId = item.getAttribute("data-submenu-id") ?? item.getAttribute("aria-controls");
+      const hasSubmenuTriggerAttributes = item.hasAttribute("aria-haspopup") && submenuId;
+      if (submenuId && (item.hasAttribute("data-submenu-id") || hasSubmenuTriggerAttributes)) {
         item.setAttribute("aria-haspopup", "menu");
-        item.setAttribute("aria-controls", item.getAttribute("data-submenu-id"));
+        item.setAttribute("aria-controls", submenuId);
+        if (!item.hasAttribute("aria-expanded")) {
+          item.setAttribute("aria-expanded", "false");
+        }
       }
     });
   }
@@ -2030,24 +2055,29 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     const nextIndex = (currentIndex + direction + len) % len;
     elementItems.item(nextIndex).focus();
   }
+  function focusItemAtIndex(items, index) {
+    if (items.length === 0) return;
+    items[index]?.focus();
+  }
   function hasSubmenu(menuItem) {
     return menuItem.hasAttribute("aria-controls") && menuItem.hasAttribute("aria-haspopup") && menuItem.getAttribute("role") === "menuitem";
   }
   intializeMenuItems();
   function handleItemsKeydown(event, menuItem, menuItemIndex) {
     switch (event.key) {
-      case "ArrowUp":
       case "ArrowLeft": {
         if (event.key === "ArrowLeft" && triggerButton.getAttribute("role") === "menuitem") {
           event.preventDefault();
           closeMenu();
           return;
         }
+        break;
+      }
+      case "ArrowUp": {
         event.preventDefault();
         moveFocus2(toNodeListLike(getFilteredItems()), menuItemIndex, -1);
         break;
       }
-      case "ArrowDown":
       case "ArrowRight": {
         if (event.key === "ArrowRight" && hasSubmenu(menuItem)) {
           event.preventDefault();
@@ -2057,8 +2087,22 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
             return;
           }
         }
+        break;
+      }
+      case "ArrowDown": {
         event.preventDefault();
         moveFocus2(toNodeListLike(getFilteredItems()), menuItemIndex, 1);
+        break;
+      }
+      case "Home": {
+        event.preventDefault();
+        focusItemAtIndex(getFilteredItems(), 0);
+        break;
+      }
+      case "End": {
+        event.preventDefault();
+        const items = getFilteredItems();
+        focusItemAtIndex(items, items.length - 1);
         break;
       }
       case "Escape": {
@@ -2073,7 +2117,18 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
       case "Enter":
       case " ": {
         event.preventDefault();
+        if (hasSubmenu(menuItem)) {
+          const submenuId = menuItem.getAttribute("aria-controls");
+          if (submenuId) {
+            openSubmenu(submenuId);
+            return;
+          }
+        }
         menuItem.click();
+        closeMenu();
+        if (onOpenChange) {
+          onOpenChange(false);
+        }
         break;
       }
       case "Tab": {
@@ -2182,6 +2237,7 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     }
   }
   function closeMenu() {
+    submenuInstances.forEach((instance) => instance.closeMenu());
     setAria(false);
     menuDiv.style.display = "none";
     removeListeners();

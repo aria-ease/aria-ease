@@ -2,7 +2,7 @@ import {
   ContractReporter,
   closeSharedBrowser,
   contract_default
-} from "./chunk-AUJAN4RK.js";
+} from "./chunk-LKN5PRYD.js";
 import "./chunk-I2KLQ2HA.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
@@ -464,11 +464,14 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
       for (let i = 0; i < allItems.length; i++) {
         const item = allItems.item(i);
         const isNested = isItemInNestedSubmenu(item);
+        const isDisabled = item.getAttribute("aria-disabled") === "true";
         if (!isNested) {
           if (!item.hasAttribute("tabindex")) {
             item.setAttribute("tabindex", "-1");
           }
-          filteredItems.push(item);
+          if (!isDisabled) {
+            filteredItems.push(item);
+          }
         }
       }
     }
@@ -493,9 +496,14 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     const items = getItems();
     items.forEach((item) => {
       item.setAttribute("role", "menuitem");
-      if (item.hasAttribute("data-submenu-id")) {
+      const submenuId = item.getAttribute("data-submenu-id") ?? item.getAttribute("aria-controls");
+      const hasSubmenuTriggerAttributes = item.hasAttribute("aria-haspopup") && submenuId;
+      if (submenuId && (item.hasAttribute("data-submenu-id") || hasSubmenuTriggerAttributes)) {
         item.setAttribute("aria-haspopup", "menu");
-        item.setAttribute("aria-controls", item.getAttribute("data-submenu-id"));
+        item.setAttribute("aria-controls", submenuId);
+        if (!item.hasAttribute("aria-expanded")) {
+          item.setAttribute("aria-expanded", "false");
+        }
       }
     });
   }
@@ -504,24 +512,29 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     const nextIndex = (currentIndex + direction + len) % len;
     elementItems.item(nextIndex).focus();
   }
+  function focusItemAtIndex(items, index) {
+    if (items.length === 0) return;
+    items[index]?.focus();
+  }
   function hasSubmenu(menuItem) {
     return menuItem.hasAttribute("aria-controls") && menuItem.hasAttribute("aria-haspopup") && menuItem.getAttribute("role") === "menuitem";
   }
   intializeMenuItems();
   function handleItemsKeydown(event, menuItem, menuItemIndex) {
     switch (event.key) {
-      case "ArrowUp":
       case "ArrowLeft": {
         if (event.key === "ArrowLeft" && triggerButton.getAttribute("role") === "menuitem") {
           event.preventDefault();
           closeMenu();
           return;
         }
+        break;
+      }
+      case "ArrowUp": {
         event.preventDefault();
         moveFocus2(toNodeListLike(getFilteredItems()), menuItemIndex, -1);
         break;
       }
-      case "ArrowDown":
       case "ArrowRight": {
         if (event.key === "ArrowRight" && hasSubmenu(menuItem)) {
           event.preventDefault();
@@ -531,8 +544,22 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
             return;
           }
         }
+        break;
+      }
+      case "ArrowDown": {
         event.preventDefault();
         moveFocus2(toNodeListLike(getFilteredItems()), menuItemIndex, 1);
+        break;
+      }
+      case "Home": {
+        event.preventDefault();
+        focusItemAtIndex(getFilteredItems(), 0);
+        break;
+      }
+      case "End": {
+        event.preventDefault();
+        const items = getFilteredItems();
+        focusItemAtIndex(items, items.length - 1);
         break;
       }
       case "Escape": {
@@ -547,7 +574,18 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
       case "Enter":
       case " ": {
         event.preventDefault();
+        if (hasSubmenu(menuItem)) {
+          const submenuId = menuItem.getAttribute("aria-controls");
+          if (submenuId) {
+            openSubmenu(submenuId);
+            return;
+          }
+        }
         menuItem.click();
+        closeMenu();
+        if (onOpenChange) {
+          onOpenChange(false);
+        }
         break;
       }
       case "Tab": {
@@ -656,6 +694,7 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     }
   }
   function closeMenu() {
+    submenuInstances.forEach((instance) => instance.closeMenu());
     setAria(false);
     menuDiv.style.display = "none";
     removeListeners();
@@ -1550,7 +1589,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-7F756CFB.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-PC6JOYYV.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl);
       } else {
         throw new Error(

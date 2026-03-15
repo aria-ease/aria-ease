@@ -53,7 +53,9 @@
                     "attribute": { "type": "string" },
                     "to": { "type": "string" },
                     "parent": { "type": "string" },
-                    "child": { "type": "string" }
+                    "child": { "type": "string" },
+                    "failureMessage": { "type": "string" },
+                    "isOptional": { "type": "boolean" }
                 },
                 "allOf": [
                     {

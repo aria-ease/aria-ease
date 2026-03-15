@@ -4,7 +4,7 @@
         "version": "1.0.0",
         "created": "11-02-2026",
         "lastUpdated": "15-03-2026",
-        "description": "ARIA Menu interaction contract. Validates the ARIA and interaction contract for a custom menu component following the ARIA Authoring Practices Guide menu with popup pattern.",
+        "description": "ARIA Menu interaction contract. Validates the ARIA and interaction contract for a custom menu component following the ARIA Authoring Practices Guide menu with popup pattern",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/menubar/",
             "wcag": ["2.2 AA"]
@@ -16,8 +16,10 @@
         "trigger": "[data-test-id=menu-trigger]",
         "container": "[role=menu]",
         "items": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
-        "submenuTrigger": "[role=menu] [role=menuitem][aria-haspopup=menu][aria-controls], [role=menu] [role=menuitemradio][aria-haspopup=menu][aria-controls], [role=menu] [role=menuitemcheckbox][aria-haspopup=menu][aria-controls], [data-submenu-id]",
-        "submenu": "[role=menu][aria-labelledby]",
+        "submenuTrigger": "[role=menu] [role=menuitem][aria-haspopup=true], [role=menu] [role=menuitemradio][aria-haspopup=true], [role=menu] [role=menuitemcheckbox][aria-haspopup=true], [role=menu] [role=menuitem][aria-haspopup=menu], [role=menu] [role=menuitemradio][aria-haspopup=menu], [role=menu] [role=menuitemcheckbox][aria-haspopup=menu]",
+        "submenu": "[role=menu] [role=menu]",
+        "submenuItems": "[role=menu] [role=menu] > [role=menuitem], [role=menu] [role=menu] > [role=menuitemradio], [role=menu] [role=menu] > [role=menuitemcheckbox]",
+        "leafItem": "[role=menu] [role=menuitem]:not([aria-haspopup]), [role=menu] [role=menuitemradio]:not([aria-haspopup]), [role=menu] [role=menuitemcheckbox]:not([aria-haspopup])",
         "focusable": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
         "relative": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
         "popup": "[role=menu]"
@@ -34,18 +36,33 @@
             "type": "aria-reference",
             "from": "trigger",
             "attribute": "aria-controls",
-            "to": "container"
+            "to": "container",
+            "failureMessage": "Menu trigger does not conform to the ARIA Menu pattern as specified in APG 1.2. Menu trigger should have aria-controls attribute that points to the menu it controls."
         },
         {
             "type": "aria-reference",
             "from": "container",
             "attribute": "aria-labelledby",
-            "to": "trigger"
+            "to": "trigger",
+            "isOptional": true,
+            "failureMessage": "The APG 1.2 recommends a menu container to have aria-labelledby attribute that references the trigger that controls the menu."
         },
         {
             "type": "contains",
             "parent": "container",
             "child": "items"
+        },
+        {
+            "type": "contains",
+            "parent": "submenu",
+            "child": "submenuItems"
+        },
+        {
+            "type": "aria-reference",
+            "from": "submenuTrigger",
+            "attribute": "aria-controls",
+            "to": "submenu",
+            "failureMessage": "Submenu trigger does not conform to the ARIA Menu pattern as specified in APG 1.2. Submenu trigger should have aria-controls attribute that references the submenu it controls."
         }
     ],
 
@@ -83,21 +100,28 @@
                     "assertion": "toHaveAttribute",
                     "attribute": "role",
                     "expectedValue": "menu",
-                    "failureMessage": "Menu container doesn't conform to the ARIA Menu pattern as specified in APG 1.2. Menu container should have role of 'menu'"
+                    "failureMessage": "Menu container doesn't conform to the ARIA Menu pattern as specified in APG 1.2. Menu container should have role of 'menu'."
                 }, 
                 {
                     "target": "items",
                     "assertion": "toHaveAttribute",
                     "attribute": "role",
                     "expectedValue": "menuitem | menuitemcheckbox | menuitemradio",
-                    "failureMessage": "Menu items do not conform to the ARIA Menu pattern as specified in APG 1.2. Menu items should have role of 'menuitem', 'menuitemcheckbox', or 'menuitemradio'"
+                    "failureMessage": "Menu items do not conform to the ARIA Menu pattern as specified in APG 1.2. Menu items should have role of 'menuitem', 'menuitemcheckbox', or 'menuitemradio'."
                 },
                 {
                     "target": "items",
                     "assertion": "toHaveAttribute",
                     "attribute": "tabindex",
                     "expectedValue": "-1",
-                    "failureMessage": "Menu items do not conform to the ARIA Menu pattern as specified in APG 1.2. Menu items' tabindex should have value of '-1'. This ensures the menu items are excluded from the page's Tab sequence"
+                    "failureMessage": "Menu items do not conform to the ARIA Menu pattern as specified in APG 1.2. Menu items' tabindex should have value of '-1'. This ensures the menu items are excluded from the page's Tab sequence."
+                },
+                {
+                    "target": "submenuTrigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-haspopup",
+                    "expectedValue":"true | menu",
+                    "failureMessage": "Submenu trigger does not conform to the ARIA Menu pattern as specified in APG 1.2. Submenu trigger should have aria-haspop set to 'true' or 'menu'."
                 }
             ]
         }
@@ -105,7 +129,7 @@
 
     "dynamic": [
         {
-            "description": "Clicking the trigger opens the menu, updates ARIA state, and focuses the first interactive item in the menu.",
+            "description": "Clicking the trigger opens the menu, updates ARIA expanded, and focuses the first interactive item in the menu.",
             "action": [
                 { "type": "click", "target": "trigger" }
             ],
@@ -131,7 +155,7 @@
             ]
         },
         {
-            "description": "Clicking the trigger again closes the menu and returns focus to trigger.",
+            "description": "Clicking the trigger again closes the menu, updates ARIA expanded, and returns focus to trigger.",
             "action": [
                 { "type": "click", "target": "trigger" },
                 { "type": "click", "target": "trigger" }
@@ -157,7 +181,7 @@
             ]
         },
         {
-            "description": "Pressing Enter on trigger opens the menu and focuses first item.",
+            "description": "Pressing Enter on trigger opens the menu, updates ARIA expanded, and focuses first item.",
             "action": [
                 { "type": "keypress", "target": "trigger", "key": "Enter" }
             ],
@@ -183,7 +207,7 @@
             ]
         },
         {
-            "description": "Pressing Space on trigger opens the menu and focuses first item.",
+            "description": "Pressing Space on trigger opens the menu, updates ARIA expanded, and focuses first item.",
             "action": [
                 { "type": "keypress", "target": "trigger", "key": "Space" }
             ],
@@ -219,7 +243,7 @@
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "second",
-                    "failureMessage": "Second menu item should have focus after pressing Down Arrow."
+                    "failureMessage": "Down Arrow should move focus to next menu item."
                 }
             ]
         },
@@ -235,43 +259,44 @@
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "first",
-                    "failureMessage": "First menu item should have focus after Down Arrow then Up Arrow."
+                    "failureMessage": "Up Arrow should move focus to previous menu item."
                 }
             ]
         },
         {
-            "description": "Right Arrow moves focus to next menu item.",
+            "description": "Up Arrow from first item wraps to last.",
             "action": [
                 { "type": "click", "target": "trigger" },
-                { "type": "keypress", "target": "focusable", "key": "ArrowRight" }
+                { "type": "keypress", "target": "focusable", "key": "ArrowUp" }
+                
             ],
             "assertions": [
                 {
                     "target": "relative",
                     "assertion": "toHaveFocus",
-                    "expectedValue": "second",
-                    "failureMessage": "Second menu item should have focus after pressing Right Arrow."
+                    "expectedValue": "last",
+                    "failureMessage": "Up Arrow should wrap focus from first item wraps to last."
                 }
             ]
         },
         {
-            "description": "Left Arrow moves focus to previous menu item.",
+            "description": "Down Arrow from last item wraps to first item.",
             "action": [
                 { "type": "click", "target": "trigger" },
-                { "type": "keypress", "target": "focusable", "key": "ArrowRight" },
-                { "type": "keypress", "target": "focusable", "key": "ArrowLeft" }
+                { "type": "keypress", "target": "focusable", "key": "ArrowUp" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowDown" }
             ],
             "assertions": [
                 {
                     "target": "relative",
                     "assertion": "toHaveFocus",
                     "expectedValue": "first",
-                    "failureMessage": "First menu item should have focus after Right Arrow then Left Arrow."
+                    "failureMessage": "Down Arrow should wrap focus from last item wraps to first item."
                 }
             ]
         },
         {
-            "description": "Escape closes the menu and returns focus to trigger.",
+            "description": "Escape closes the menu, updates ARIA expanded, and returns focus to trigger.",
             "action": [
                 { "type": "click", "target": "trigger" },
                 { "type": "keypress", "target": "focusable", "key": "Escape" }
@@ -297,7 +322,7 @@
             ]
         },
         {
-            "description": "Pressing Enter on trigger when menu is open closes the menu.",
+            "description": "Pressing Enter on trigger when menu is open closes the menu and updates ARIA expanded.",
             "action": [
                 { "type": "click", "target": "trigger" },
                 { "type": "keypress", "target": "trigger", "key": "Enter" }
@@ -318,7 +343,7 @@
             ]
         },
         {
-            "description": "Pressing Space on trigger when menu is open closes the menu.",
+            "description": "Pressing Space on trigger when menu is open closes the menu and updates ARIA expanded.",
             "action": [
                 { "type": "click", "target": "trigger" },
                 { "type": "keypress", "target": "trigger", "key": "Space" }
@@ -339,7 +364,7 @@
             ]
         },
         {
-            "description": "Clicking outside the menu closes it and returns focus to trigger.",
+            "description": "Clicking outside the menu closes it, updates ARIA expanded, and returns focus to trigger.",
             "action": [
                 { "type": "click", "target": "trigger" },
                 { "type": "click", "target": "document" }
@@ -365,7 +390,7 @@
             ]
         },
         {
-            "description": "Right Arrow on menuitem with submenu opens the submenu",
+            "description": "Right Arrow on menuitem with submenu opens the submenu, updates ARIA expanded, and focuses the first interactive element of the menu.",
             "action": [
                 { "type": "click", "target": "trigger" },
                 { "type": "keypress", "target": "submenuTrigger", "key": "ArrowRight" }
@@ -374,12 +399,24 @@
                 {
                     "target": "submenu",
                     "assertion": "toBeVisible",
-                    "failureMessage": "Submenu should open when Right Arrow pressed on item with submenu"
+                    "failureMessage": "Submenu should open when Right Arrow pressed on item with submenu."
+                },
+                {
+                    "target": "submenuTrigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "true",
+                    "failureMessage": "Submenu trigger's aria-expanded should be true after Right Arrow open the submenu."
+                },
+                {
+                    "target": "submenuItems",
+                    "assertion": "toHaveFocus",
+                    "failureMessage": "First interactive item in the submenu should have focus after Right Arrow open the submenu."
                 }
             ]
         },
         {
-            "description": "Tab on a menuitem closes the menu and update aria-expanded",
+            "description": "Tab on a menuitem closes the menu and update aria-expanded.",
             "action": [
                 { "type": "click", "target": "trigger" },
                 { "type": "keypress", "target": "focusable", "key": "Tab" }
@@ -396,11 +433,23 @@
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
                     "failureMessage": "Trigger's aria-expanded should be false after Tab closes the menu."
+                },
+                {
+                    "target": "submenu",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Shift+Tab should close all submenus, not just top-level menu."
+                },
+                {
+                    "target": "submenuTrigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Submenu trigger's aria-expanded should be false after Shift+Tab closes the submenu."
                 }
             ]
         },
         {
-            "description": "Shift+Tab on a menuitem closes the menu and update aria-expanded",
+            "description": "Shift+Tab on a menuitem closes the menu and update aria-expanded.",
             "action": [
                 { "type": "click", "target": "trigger" },
                 { "type": "keypress", "target": "focusable", "key": "Shift+Tab" }
@@ -417,6 +466,70 @@
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
                     "failureMessage": "Trigger's aria-expanded should be false after Shift+Tab closes the menu."
+                },
+                {
+                    "target": "submenu",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Shift+Tab should close all submenus, not just top-level menu."
+                },
+                {
+                    "target": "submenuTrigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Submenu trigger's aria-expanded should be false after Shift+Tab closes the submenu."
+                }
+            ]
+        },
+        {
+            "description": "Enter on a menuitem without submenu activates the item and closes the menu.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "leafItem", "key": "Enter" }
+            ],
+            "assertions": [
+                {
+                    "target": "container",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Menu should close after Enter on a menuitem without submenu."
+                },
+                {
+                    "target": "trigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Trigger's aria-expanded should be false after Enter on a menuitem without submenu."
+                }
+            ]
+        },
+        {
+            "description": "Home moves focus to first item.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "focusable", "key": "ArrowDown" },
+                { "type": "keypress", "target": "focusable", "key": "Home" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "first",
+                    "failureMessage": "First interactive item in the menu should have focus after pressing Home."
+                }
+            ]
+        },
+        {
+            "description": "End moves focus to last item.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "focusable", "key": "End" }
+            ],
+            "assertions": [
+                {
+                    "target": "relative",
+                    "assertion": "toHaveFocus",
+                    "expectedValue": "last",
+                    "failureMessage": "Last interactive item in the menu should have focus after pressing End."
                 }
             ]
         }

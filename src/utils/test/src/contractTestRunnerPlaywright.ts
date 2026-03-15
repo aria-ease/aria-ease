@@ -87,8 +87,13 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       });
     }
 
+    const hasSubmenuCapability =
+      componentName === 'menu' && !!componentContract.selectors.submenuTrigger
+        ? (await page.locator(componentContract.selectors.submenuTrigger).count()) > 0
+        : false;
+
     // Run static tests using AssertionRunner
-    const failuresBeforeStatic = failures.length;
+    let staticFailed = 0;
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
     
     for (const test of componentContract.static[0]?.assertions || []) {
@@ -96,10 +101,17 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
 
       const staticDescription = `${test.target}${test.attribute ? ` (${test.attribute})` : ""}`;
 
+      if (componentName === 'menu' && test.target === 'submenuTrigger' && !hasSubmenuCapability) {
+        passes.push(`Skipping submenu static assertion for ${test.target}: no submenu capability detected in rendered component.`);
+        reporter.reportStaticTest(staticDescription, true);
+        continue;
+      }
+
       const targetSelector = componentContract.selectors[test.target as keyof typeof componentContract.selectors];
       if (!targetSelector) {
         const failure = `Selector for target ${test.target} not found.`;
         failures.push(failure);
+        staticFailed += 1;
         reporter.reportStaticTest(staticDescription, false, failure);
         continue;
       }
@@ -107,8 +119,13 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
 
       const exists = await target.count() > 0;
       if (!exists) {
+        if (test.isOptional === true) {
+          reporter.reportStaticTest(staticDescription, true);
+          continue;
+        }
         const failure = `Target ${test.target} not found.`;
         failures.push(failure);
+        staticFailed += 1;
         reporter.reportStaticTest(staticDescription, false, failure);
         continue;
       }
@@ -156,6 +173,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
         if (!hasAny && !allRedundant) {
           const failure = test.failureMessage + ` None of the attributes "${test.attribute}" are present.`;
           failures.push(failure);
+          staticFailed += 1;
           reporter.reportStaticTest(staticDescription, false, failure);
         } else if (!allRedundant && hasAny) {
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
@@ -184,6 +202,7 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
             reporter.reportStaticTest(staticDescription, true);
           } else if (!result.success && result.failMessage) {
             failures.push(result.failMessage);
+            staticFailed += 1;
             reporter.reportStaticTest(staticDescription, false, result.failMessage);
           }
         }
@@ -222,9 +241,13 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
       const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
       const assertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
 
+      let shouldSkipCurrentTest = false;
+      let shouldAbortCurrentTest = false;
+
       for (const act of action) {
         if (!page || page.isClosed()) {
           failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
+          shouldAbortCurrentTest = true;
           break;
         }
 
@@ -245,17 +268,31 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
         }
 
         if (!result.success) {
-          if (result.error) {
-            failures.push(result.error);
-          }
           if (result.shouldBreak) {
             if (result.error?.includes('optional submenu test')) {
               reporter.reportTest(dynamicTest, 'skip', result.error);
+              shouldSkipCurrentTest = true;
+            } else if (result.error) {
+              failures.push(result.error);
+              shouldAbortCurrentTest = true;
             }
             break;
           }
+
+          if (result.error) {
+            failures.push(result.error);
+          }
           continue;
         }
+      }
+
+      if (shouldSkipCurrentTest) {
+        continue;
+      }
+
+      if (shouldAbortCurrentTest) {
+        reporter.reportTest(dynamicTest, 'fail', failures[failures.length - 1]);
+        continue;
       }
 
       // Run assertions for this test
@@ -286,7 +323,6 @@ export async function runContractTestsPlaywright( componentName: string,  url?: 
     
     // Report static test summary
     const staticTotal = componentContract.static[0].assertions.length;
-    const staticFailed = failures.length - failuresBeforeStatic;
     const staticPassed = Math.max(0, staticTotal - staticFailed);
     reporter.reportStatic(staticPassed, staticFailed);
     
