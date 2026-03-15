@@ -18,7 +18,7 @@ Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that
 | **🔧 Development** | Component utilities for accessible patterns   | ✅ Available | Build it right from the start           |
 | **⚡ Linting**     | ESLint rules to enforce accessible coding     | 🚧 Roadmap   | Catch mistakes as you type              |
 | **🔍 Pre-Deploy**  | Axe-core powered static accessibility audit   | ✅ Available | Verify before it ships                  |
-| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | ✅ Available | 26 combobox assertions in ~4 seconds    |
+| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | ✅ Available | 26 combobox assertions in ~2 seconds    |
 | **🚀 CI/CD**       | Accessibility as deployment gatekeeper        | ✅ Available | Block inaccessible code from production |
 | **📊 Production**  | Real user signal monitoring and replay        | 🚧 Roadmap   | Understand how users actually interact  |
 | **📈 Insights**    | Dashboard for reporting and analytics         | 🚧 Roadmap   | Visualize accessibility health          |
@@ -70,11 +70,11 @@ This is the game-changer. We encoded the WAI-ARIA APG into deterministic JSON "c
 
 ```bash
 npx aria-ease test
-# ✓ 26 assertions in ~4 seconds
+# ✓ 26 assertions in ~2 seconds
 # ✓ 26 assertions in ~1 second in CI
 ```
 
-**Why this matters:** Before, verifying a combobox meant manual keyboard testing across browsers. Now, it's automated, fast, and repeatable. You can boast about executing 26 combobox interaction assertions in ~4 seconds.
+**Why this matters:** Before, verifying a combobox meant manual keyboard testing across browsers. Now, it's automated, fast, and repeatable. You can boast about executing 26 combobox interaction assertions in ~2 seconds.
 
 #### 4. **CI/CD Integration** (Available Now)
 
