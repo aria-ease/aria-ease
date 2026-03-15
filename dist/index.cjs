@@ -1734,38 +1734,11 @@ function moveFocus(elementItems, currentIndex, direction) {
 function isClickableButNotSemantic(el) {
   return el.getAttribute("data-custom-click") !== null && el.getAttribute("data-custom-click") !== void 0;
 }
-function handleMenuClose(menuElement, menuTriggerButton) {
-  menuElement.style.display = "none";
-  const menuTriggerButtonId = menuTriggerButton.getAttribute("id");
-  if (!menuTriggerButtonId) {
-    console.error("[aria-ease] Menu trigger button must have an id attribute to properly set aria attributes.");
-    return;
-  }
-  menuTriggerButton.setAttribute("aria-expanded", "false");
-}
-function hasSubmenu(menuItem) {
-  return menuItem.getAttribute("aria-haspopup") === "true" || menuItem.getAttribute("aria-haspopup") === "menu";
-}
-function getSubmenuId(menuItem) {
-  return menuItem.getAttribute("aria-controls");
-}
-function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, openSubmenu, closeSubmenu, onOpenChange) {
+function handleKeyPress(event, elementItems, elementItemIndex) {
   const currentEl = elementItems.item(elementItemIndex);
   switch (event.key) {
     case "ArrowUp":
     case "ArrowLeft": {
-      if (event.key === "ArrowLeft" && menuElementDiv && closeSubmenu) {
-        const labelledBy = menuElementDiv.getAttribute("aria-labelledby");
-        if (labelledBy) {
-          const parentTrigger = document.getElementById(labelledBy);
-          if (parentTrigger && parentTrigger.getAttribute("role") === "menuitem") {
-            event.preventDefault();
-            closeSubmenu();
-            parentTrigger.focus();
-            return;
-          }
-        }
-      }
       if (!isTextInput(currentEl) && !isTextArea(currentEl)) {
         event.preventDefault();
         moveFocus(elementItems, elementItemIndex, -1);
@@ -1780,14 +1753,6 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
     }
     case "ArrowDown":
     case "ArrowRight": {
-      if (event.key === "ArrowRight" && hasSubmenu(currentEl) && openSubmenu) {
-        event.preventDefault();
-        const submenuId = getSubmenuId(currentEl);
-        if (submenuId) {
-          openSubmenu(submenuId);
-          return;
-        }
-      }
       if (!isTextInput(currentEl) && !isTextArea(currentEl)) {
         event.preventDefault();
         moveFocus(elementItems, elementItemIndex, 1);
@@ -1803,15 +1768,6 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
     }
     case "Escape": {
       event.preventDefault();
-      if (menuElementDiv && triggerButton) {
-        if (getComputedStyle(menuElementDiv).display === "block") {
-          handleMenuClose(menuElementDiv, triggerButton);
-          if (onOpenChange) {
-            onOpenChange(false);
-          }
-        }
-        triggerButton.focus();
-      }
       break;
     }
     case "Enter":
@@ -1826,12 +1782,6 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
       break;
     }
     case "Tab": {
-      if (menuElementDiv && triggerButton && (!event.shiftKey || event.shiftKey)) {
-        handleMenuClose(menuElementDiv, triggerButton);
-        if (onOpenChange) {
-          onOpenChange(false);
-        }
-      }
       break;
     }
     default:
@@ -2069,19 +2019,87 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     const items = getItems();
     items.forEach((item) => {
       item.setAttribute("role", "menuitem");
-      const submenuId = item.getAttribute("data-submenu-id");
-      if (submenuId) {
-        item.setAttribute("aria-controls", submenuId);
+      if (item.hasAttribute("data-submenu-id")) {
         item.setAttribute("aria-haspopup", "menu");
+        item.setAttribute("aria-controls", item.getAttribute("data-submenu-id"));
       }
     });
   }
+  function moveFocus2(elementItems, currentIndex, direction) {
+    const len = elementItems.length;
+    const nextIndex = (currentIndex + direction + len) % len;
+    elementItems.item(nextIndex).focus();
+  }
+  function hasSubmenu(menuItem) {
+    return menuItem.hasAttribute("aria-controls") && menuItem.hasAttribute("aria-haspopup") && menuItem.getAttribute("role") === "menuitem";
+  }
   intializeMenuItems();
+  function handleItemsKeydown(event, menuItem, menuItemIndex) {
+    switch (event.key) {
+      case "ArrowUp":
+      case "ArrowLeft": {
+        if (event.key === "ArrowLeft" && triggerButton.getAttribute("role") === "menuitem") {
+          event.preventDefault();
+          closeMenu();
+          return;
+        }
+        event.preventDefault();
+        moveFocus2(toNodeListLike(getFilteredItems()), menuItemIndex, -1);
+        break;
+      }
+      case "ArrowDown":
+      case "ArrowRight": {
+        if (event.key === "ArrowRight" && hasSubmenu(menuItem)) {
+          event.preventDefault();
+          const submenuId = menuItem.getAttribute("aria-controls");
+          if (submenuId) {
+            openSubmenu(submenuId);
+            return;
+          }
+        }
+        event.preventDefault();
+        moveFocus2(toNodeListLike(getFilteredItems()), menuItemIndex, 1);
+        break;
+      }
+      case "Escape": {
+        event.preventDefault();
+        closeMenu();
+        triggerButton.focus();
+        if (onOpenChange) {
+          onOpenChange(false);
+        }
+        break;
+      }
+      case "Enter":
+      case " ": {
+        event.preventDefault();
+        menuItem.click();
+        break;
+      }
+      case "Tab": {
+        if (!event.shiftKey || event.shiftKey) {
+          closeMenu();
+          if (onOpenChange) {
+            onOpenChange(false);
+          }
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
   function isItemInNestedSubmenu(item) {
     let parent = item.parentElement;
     while (parent && parent !== menuDiv) {
       if (parent.getAttribute("role") === "menu") {
         return true;
+      }
+      if (parent.id) {
+        const parentMenuTrigger = menuDiv.querySelector(`[aria-controls="${parent.id}"]`);
+        if (parentMenuTrigger) {
+          return true;
+        }
       }
       parent = parent.parentElement;
     }
@@ -2118,9 +2136,6 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
     }
     submenuInstance.openMenu();
   }
-  function closeSubmenu() {
-    closeMenu();
-  }
   function onOpenChange(isOpen) {
     if (callback?.onOpenChange) {
       try {
@@ -2132,19 +2147,9 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
   }
   function addListeners() {
     const items = getFilteredItems();
-    const nodeListLike = toNodeListLike(items);
     items.forEach((menuItem, index) => {
       if (!handlerMap.has(menuItem)) {
-        const handler = (event) => handleKeyPress(
-          event,
-          nodeListLike,
-          index,
-          menuDiv,
-          triggerButton,
-          openSubmenu,
-          closeSubmenu,
-          onOpenChange
-        );
+        const handler = (event) => handleItemsKeydown(event, menuItem, index);
         menuItem.addEventListener("keydown", handler);
         handlerMap.set(menuItem, handler);
       }

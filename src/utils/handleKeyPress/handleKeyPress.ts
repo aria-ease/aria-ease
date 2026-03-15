@@ -59,38 +59,6 @@ function isClickableButNotSemantic(el: HTMLElement): boolean {
     return el.getAttribute("data-custom-click") !== null && el.getAttribute("data-custom-click") !== undefined;
 }
 
-/**
- * Closes a menu and updates ARIA attributes.
- * @param {HTMLElement} menuElement The menu element to close.
- * @param {HTMLElement} menuTriggerButton The button that triggers the menu.
- */
-function handleMenuClose(menuElement: HTMLElement, menuTriggerButton: HTMLElement) {
-    menuElement.style.display = "none";
-    const menuTriggerButtonId = menuTriggerButton.getAttribute("id");
-    if (!menuTriggerButtonId) {
-        console.error("[aria-ease] Menu trigger button must have an id attribute to properly set aria attributes.");
-        return;
-    }
-    menuTriggerButton.setAttribute("aria-expanded", "false");
-}
-
-/**
- * Checks if a menu item has a submenu.
- * @param {HTMLElement} menuItem The menu item to check.
- * @returns {boolean} True if the item has aria-haspopup attribute set.
- */
-function hasSubmenu(menuItem: HTMLElement): boolean {
-    return menuItem.getAttribute("aria-haspopup") === "true" || menuItem.getAttribute("aria-haspopup") === "menu";
-}
-
-/**
- * Gets the submenu ID from a menu item's aria-controls attribute.
- * @param {HTMLElement} menuItem The menu item to get submenu ID from.
- * @returns {string | null} The submenu ID or null if not found.
- */
-function getSubmenuId(menuItem: HTMLElement): string | null {
-    return menuItem.getAttribute("aria-controls");
-}
 
 /**
  * Handles keyboard press events for accessible navigation within interactive elements.
@@ -103,33 +71,11 @@ function getSubmenuId(menuItem: HTMLElement): string | null {
  * @param {Function} [openSubmenu] Optional callback to open a submenu.
  * @param {Function} [closeSubmenu] Optional callback to close a submenu.
  */
-export function handleKeyPress(
-    event: KeyboardEvent,
-    elementItems: NodeListOfHTMLElement,
-    elementItemIndex: number,
-    menuElementDiv?: HTMLElement,
-    triggerButton?: HTMLElement,
-    openSubmenu?: (submenuId: string) => void,
-    closeSubmenu?: () => void,
-    onOpenChange?: (isOpen: boolean) => void
-): void {
+export function handleKeyPress( event: KeyboardEvent, elementItems: NodeListOfHTMLElement, elementItemIndex: number ): void {
     const currentEl = elementItems.item(elementItemIndex);
     switch (event.key) {
         case "ArrowUp":
         case "ArrowLeft": {
-            if(event.key === "ArrowLeft" && menuElementDiv && closeSubmenu) {
-                const labelledBy = menuElementDiv.getAttribute("aria-labelledby");
-                if (labelledBy) {
-                    const parentTrigger = document.getElementById(labelledBy);
-                    if (parentTrigger && parentTrigger.getAttribute("role") === "menuitem") {
-                        event.preventDefault();
-                        closeSubmenu();
-                        parentTrigger.focus();
-                        return;
-                    }
-                }
-            }
-
             if (!isTextInput(currentEl) && !isTextArea(currentEl)) {
                 event.preventDefault();
                 moveFocus(elementItems, elementItemIndex, -1);
@@ -144,15 +90,6 @@ export function handleKeyPress(
         }
         case "ArrowDown":
         case "ArrowRight": {
-            if(event.key === "ArrowRight" && hasSubmenu(currentEl) && openSubmenu) {
-                event.preventDefault();
-                const submenuId = getSubmenuId(currentEl);
-                if (submenuId) {
-                    openSubmenu(submenuId);
-                    return;
-                }
-            }
-            
             if (!isTextInput(currentEl) && !isTextArea(currentEl)) {
                 event.preventDefault();
                 moveFocus(elementItems, elementItemIndex, 1);
@@ -167,16 +104,7 @@ export function handleKeyPress(
             break;
         }
         case "Escape": {
-            event.preventDefault();
-            if (menuElementDiv && triggerButton) {
-                if (getComputedStyle(menuElementDiv).display === "block") {
-                    handleMenuClose(menuElementDiv, triggerButton);
-                    if (onOpenChange) {
-                        onOpenChange(false);
-                    }
-                }
-                triggerButton.focus();
-            }
+            event.preventDefault()
             break;
         }
         case "Enter":
@@ -191,12 +119,6 @@ export function handleKeyPress(
             break;
         }
         case "Tab": {
-            if (menuElementDiv && triggerButton && (!event.shiftKey || event.shiftKey)) {
-                handleMenuClose(menuElementDiv, triggerButton);
-                if (onOpenChange) {
-                    onOpenChange(false);
-                }
-            } 
             break;
         }
         default:
