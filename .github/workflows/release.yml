@@ -1,0 +1,31 @@
+name: Release and Update Docs
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone docs repo
+        run: git clone https://github.com/aria-ease/aria-ease-website.git
+
+      - name: Copy changelog
+        run: cp CHANGELOG.md aria-ease-website/public/CHANGELOG.md
+
+      - name: Create Pull Request for changelog update
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.DOCS_REPO_TOKEN }}
+          path: aria-ease-website
+          branch: update-changelog-${{ github.sha }}
+          title: "Update CHANGELOG from library repo"
+          body: "Automated changelog update from library repo."
+          base: main
+          commit-message: "docs: update changelog from library repo"

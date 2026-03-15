@@ -1,0 +1,53 @@
+name: W3C ARIA Pattern Watcher
+
+on:
+  schedule:
+    # Runs every day at midnight (UTC) to check for updates
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+    # Allows you to trigger the check manually for testing
+
+jobs:
+  check-w3c-updates:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Merged Pattern PRs from W3C
+        id: fetch_prs
+        run: |
+          # We use the GitHub API to find PRs in w3c/aria-practices 
+          # that are merged, have the 'pattern' label, and were updated recently.
+          
+          QUERY_DATE=$(date -d "24 hours ago" --iso-8601=seconds)
+          
+          RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/search/issues?q=repo:w3c/aria-practices+is:pr+is:merged+label:pattern+merged:>$QUERY_DATE")
+          
+          COUNT=$(echo $RESPONSE | jq '.total_count')
+          echo "found_count=$COUNT" >> $GITHUB_OUTPUT
+          
+          if [ "$COUNT" -gt 0 ]; then
+            PR_URLS=$(echo $RESPONSE | jq -r '.items[].html_url' | tr '\n' ' ')
+            echo "pr_urls=$PR_URLS" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Ping Isaac
+        if: steps.fetch_prs.outputs.found_count > 0
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const prUrls = "${{ steps.fetch_prs.outputs.pr_urls }}";
+            const issueTitle = "🚨 W3C ARIA Pattern Update Detected";
+            const issueBody = `Hello Isaac! The W3C has merged new pattern updates that might affect **aria-ease**. \n\nCheck them out here: \n${prUrls.split(' ').join('\n')}`;
+            
+            // This creates an issue in your repo and tags you
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: issueTitle,
+              body: issueBody,
+              assignees: [context.repo.owner] // Assuming you are the owner
+            });
+
+      - name: Log Results
+        run: |
+          echo "Finished checking W3C. PRs found: ${{ steps.fetch_prs.outputs.found_count }}"
