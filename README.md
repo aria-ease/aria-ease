@@ -997,7 +997,7 @@ The first time you see that green check mark in your CI/CD pipeline—knowing th
 
 **No one has any excuse to ship inaccessible code anymore.**
 
-You've shifted accessibility left (into development), automated the verification, and made it a deployment gatekeeper. By the time code reaches manual testing, there should only be minute, non-automatable aspects left to verify.
+You've shifted accessibility left (into development), automated the verification, and made it a deployment gatekeeper.
 
 ---
 
