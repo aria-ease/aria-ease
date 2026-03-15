@@ -3,7 +3,7 @@
         "id": "aria-ease.accordion",
         "version": "1.0.0",
         "created": "09-02-2026",
-        "lastUpdated": "28-02-2026",
+        "lastUpdated": "15-03-2026",
         "description": "ARIA Accordion interaction contract. Validates the ARIA and interaction contract for a custom accordion component following the ARIA Authoring Practices Guide accordion with show/hide pattern.",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/accordion/",

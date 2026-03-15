@@ -3,7 +3,7 @@
         "id": "aria-ease.tabs",
         "version": "1.0.0",
         "created": "28-02-2026",
-        "lastUpdated": "28-02-2026",
+        "lastUpdated": "15-03-2026",
         "description": "ARIA tabs interaction contract. Validates the ARIA and interaction contract for a custom tabs component following the ARIA Authoring Practices Guide pattern.",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/tabs/",

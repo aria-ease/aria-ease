@@ -18,7 +18,7 @@ Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that
 | **🔧 Development** | Component utilities for accessible patterns   | ✅ Available | Build it right from the start           |
 | **⚡ Linting**     | ESLint rules to enforce accessible coding     | 🚧 Roadmap   | Catch mistakes as you type              |
 | **🔍 Pre-Deploy**  | Axe-core powered static accessibility audit   | ✅ Available | Verify before it ships                  |
-| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | ✅ Available | 26 combobox assertions in ~4 seconds    |
+| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | ✅ Available | 26 combobox assertions in ~2 seconds    |
 | **🚀 CI/CD**       | Accessibility as deployment gatekeeper        | ✅ Available | Block inaccessible code from production |
 | **📊 Production**  | Real user signal monitoring and replay        | 🚧 Roadmap   | Understand how users actually interact  |
 | **📈 Insights**    | Dashboard for reporting and analytics         | 🚧 Roadmap   | Visualize accessibility health          |
@@ -70,11 +70,11 @@ This is the game-changer. We encoded the WAI-ARIA APG into deterministic JSON "c
 
 ```bash
 npx aria-ease test
-# ✓ 26 assertions in ~4 seconds
+# ✓ 26 assertions in ~2 seconds
 # ✓ 26 assertions in ~1 second in CI
 ```
 
-**Why this matters:** Before, verifying a combobox meant manual keyboard testing across browsers. Now, it's automated, fast, and repeatable. You can boast about executing 26 combobox interaction assertions in ~4 seconds.
+**Why this matters:** Before, verifying a combobox meant manual keyboard testing across browsers. Now, it's automated, fast, and repeatable. You can boast about executing 26 combobox interaction assertions in ~2 seconds.
 
 #### 4. **CI/CD Integration** (Available Now)
 
@@ -134,7 +134,7 @@ pnpm add aria-ease
 
 ### Automated Accessibility Audits (CLI)
 
-Run automated accessibility audits on your website with one command:
+Run axe-core powered automated accessibility audits on your website with one command:
 
 ```bash
 npx aria-ease audit --url https://yoursite.com
@@ -754,7 +754,7 @@ For older browser support, use a polyfill service or transpile with appropriate 
 
 ---
 
-## � CI/CD Integration: Accessibility as a Deployment Gatekeeper
+## 🚀 CI/CD Integration: Accessibility as a Deployment Gatekeeper
 
 **The game-changer:** Turn accessibility into a deployment invariant. Code that fails accessibility checks cannot reach production.
 
@@ -876,10 +876,14 @@ Create `ariaease.config.js` in your project root:
 ```javascript
 export default {
   audit: {
-    urls: ["http://localhost:5173/", "http://localhost:5173/changelog"],
+    urls: [
+      "http://localhost:5173", // Homepage
+      "http://localhost:5173/docs", // Docs
+      "http://localhost:5173/examples", // Examples
+    ],
     output: {
-      format: "html",
-      out: "./accessibility-reports/audit",
+      format: "all", // Generate JSON, CSV, and HTML reports
+      out: "./accessibility-reports",
     },
   },
 };
@@ -993,11 +997,11 @@ The first time you see that green check mark in your CI/CD pipeline—knowing th
 
 **No one has any excuse to ship inaccessible code anymore.**
 
-You've shifted accessibility left (into development), automated the verification, and made it a deployment gatekeeper. By the time code reaches manual testing, there should only be minute, non-automatable aspects left to verify.
+You've shifted accessibility left (into development), automated the verification, and made it a deployment gatekeeper.
 
 ---
 
-## �📖 More Resources
+## 📖 More Resources
 
 - [Full Documentation](https://ariaease.site/docs)
 - [GitHub Repository](https://github.com/aria-ease/aria-ease)

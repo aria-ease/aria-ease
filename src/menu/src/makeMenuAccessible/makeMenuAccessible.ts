@@ -5,7 +5,6 @@
   * @param {string} triggerId - The id of the button that triggers the menu.
 */
 
-import { handleKeyPress } from "../../../utils/handleKeyPress/handleKeyPress";
 import { NodeListOfHTMLElement, AccessibilityInstance, MenuConfig } from "Types";
 
 
@@ -90,10 +89,88 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
     const items = getItems();
     items.forEach((item: HTMLElement) => {
       item.setAttribute("role", "menuitem");
+
+      if(item.hasAttribute('data-submenu-id')) {
+        item.setAttribute("aria-haspopup", "menu");
+        item.setAttribute("aria-controls", item.getAttribute('data-submenu-id')!);
+      }
     });
   }
 
+  function moveFocus(elementItems: NodeListOfHTMLElement, currentIndex: number, direction: -1 | 1) {
+    const len = elementItems.length;
+    const nextIndex = (currentIndex + direction + len) % len;
+    elementItems.item(nextIndex).focus();
+  }
+
+  function hasSubmenu(menuItem: HTMLElement) {
+    return menuItem.hasAttribute("aria-controls") && menuItem.hasAttribute("aria-haspopup") && menuItem.getAttribute("role") === "menuitem";
+  }
+
   intializeMenuItems();
+
+  function handleItemsKeydown(event: KeyboardEvent, menuItem: HTMLElement, menuItemIndex: number) {
+    switch (event.key) {
+      case "ArrowUp":
+      case "ArrowLeft": {
+        if (event.key === "ArrowLeft" && triggerButton.getAttribute("role") === "menuitem") {
+          event.preventDefault();
+          closeMenu();
+          return;
+        }
+
+        event.preventDefault();
+        moveFocus(toNodeListLike(getFilteredItems()), menuItemIndex, -1);
+        break;
+      }
+
+      case "ArrowDown":
+      case "ArrowRight": {
+        if(event.key === "ArrowRight" && hasSubmenu(menuItem)) {
+          event.preventDefault();
+          const submenuId = menuItem.getAttribute("aria-controls");
+          if (submenuId) {
+            openSubmenu(submenuId);
+            return;
+          }
+        }
+                
+        event.preventDefault();
+        moveFocus(toNodeListLike(getFilteredItems()), menuItemIndex, 1);
+        break;
+      }
+            
+      case "Escape": {
+        event.preventDefault();
+        closeMenu();
+        triggerButton.focus();
+        if (onOpenChange) {
+          onOpenChange(false);
+        }
+          
+        break;
+      }
+            
+      case "Enter":
+      case " ": {    
+        event.preventDefault();
+        menuItem.click();
+        break;
+      }
+      
+      case "Tab": {
+        if (!event.shiftKey || event.shiftKey) {
+          closeMenu();
+          if (onOpenChange) {
+            onOpenChange(false);
+          }
+        } 
+        break;
+      }
+      default:
+        break;
+    }
+  }
 
   function isItemInNestedSubmenu(item: HTMLElement): boolean {
     let parent = item.parentElement;
@@ -101,6 +178,14 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
       if (parent.getAttribute('role') === 'menu') {
         return true;
       }
+
+      if (parent.id) {
+        const parentMenuTrigger = menuDiv.querySelector(`[aria-controls="${parent.id}"]`);
+        if (parentMenuTrigger) {
+          return true;
+        }
+      }
+
       parent = parent.parentElement;
     }
     return false;
@@ -139,12 +224,7 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
       });
       submenuInstances.set(submenuId, submenuInstance);
     }
-    
     submenuInstance.openMenu();
-  }
-
-  function closeSubmenu() {
-    closeMenu();
   }
 
   function onOpenChange(isOpen: boolean) {
@@ -159,20 +239,10 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
 
   function addListeners() {
     const items = getFilteredItems();
-    const nodeListLike = toNodeListLike(items);
     
     items.forEach((menuItem: HTMLElement, index: number) => {
       if (!handlerMap.has(menuItem)) {
-        const handler = (event: KeyboardEvent) => handleKeyPress(
-          event, 
-          nodeListLike, 
-          index, 
-          menuDiv, 
-          triggerButton,
-          openSubmenu,
-          closeSubmenu,
-          onOpenChange
-        );
+        const handler = (event: KeyboardEvent) => handleItemsKeydown(event, menuItem, index);
         menuItem.addEventListener("keydown", handler);
         handlerMap.set(menuItem, handler);
       } 
@@ -216,7 +286,7 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
     
     removeListeners();
     triggerButton.focus();
-
+    
     if (callback?.onOpenChange) {
       try {
         callback.onOpenChange(false);
@@ -249,8 +319,6 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
 
   triggerButton.addEventListener("click", handleTriggerClick);
   document.addEventListener("click", handleClickOutside);
-
-  triggerButton.setAttribute('data-menu-initialized', 'true');
 
   function cleanup() {
     removeListeners();

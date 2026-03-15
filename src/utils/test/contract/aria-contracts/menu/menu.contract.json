@@ -3,7 +3,7 @@
         "id": "aria-ease.menu",
         "version": "1.0.0",
         "created": "11-02-2026",
-        "lastUpdated": "28-02-2026",
+        "lastUpdated": "15-03-2026",
         "description": "ARIA Menu interaction contract. Validates the ARIA and interaction contract for a custom menu component following the ARIA Authoring Practices Guide menu with popup pattern.",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/menubar/",
@@ -16,7 +16,7 @@
         "trigger": "[data-test-id=menu-trigger]",
         "container": "[role=menu]",
         "items": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
-        "submenuTrigger": "[role=menu] [role=menuitem][aria-haspopup=true], [role=menu] [role=menuitemradio][aria-haspopup=true], [role=menu] [role=menuitemcheckbox][aria-haspopup=true], [role=menu] [role=menuitem][aria-haspopup=menu], [role=menu] [role=menuitemradio][aria-haspopup=menu], [role=menu] [role=menuitemcheckbox][aria-haspopup=menu]",
+        "submenuTrigger": "[role=menu] [role=menuitem][aria-haspopup=menu][aria-controls], [role=menu] [role=menuitemradio][aria-haspopup=menu][aria-controls], [role=menu] [role=menuitemcheckbox][aria-haspopup=menu][aria-controls], [data-submenu-id]",
         "submenu": "[role=menu][aria-labelledby]",
         "focusable": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
         "relative": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",

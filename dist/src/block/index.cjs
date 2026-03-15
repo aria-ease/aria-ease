@@ -23,15 +23,11 @@ function moveFocus(elementItems, currentIndex, direction) {
 function isClickableButNotSemantic(el) {
   return el.getAttribute("data-custom-click") !== null && el.getAttribute("data-custom-click") !== void 0;
 }
-function hasSubmenu(menuItem) {
-  return menuItem.getAttribute("aria-haspopup") === "true" || menuItem.getAttribute("aria-haspopup") === "menu";
-}
-function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, triggerButton, openSubmenu, closeSubmenu, onOpenChange) {
+function handleKeyPress(event, elementItems, elementItemIndex) {
   const currentEl = elementItems.item(elementItemIndex);
   switch (event.key) {
     case "ArrowUp":
     case "ArrowLeft": {
-      if (event.key === "ArrowLeft" && menuElementDiv) ;
       if (!isTextInput(currentEl) && !isTextArea(currentEl)) {
         event.preventDefault();
         moveFocus(elementItems, elementItemIndex, -1);
@@ -46,7 +42,6 @@ function handleKeyPress(event, elementItems, elementItemIndex, menuElementDiv, t
     }
     case "ArrowDown":
     case "ArrowRight": {
-      if (event.key === "ArrowRight" && hasSubmenu(currentEl) && openSubmenu) ;
       if (!isTextInput(currentEl) && !isTextArea(currentEl)) {
         event.preventDefault();
         moveFocus(elementItems, elementItemIndex, 1);
