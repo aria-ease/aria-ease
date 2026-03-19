@@ -66,11 +66,20 @@ function validateConfig(config: unknown): { valid: boolean; errors: string[] } {
               if (typeof comp.name !== 'string') {
                 errors.push(`test.components[${idx}].name must be a string`);
               }
-              if (typeof comp.path !== 'string') {
-                errors.push(`test.components[${idx}].path must be a string`);
+              if (comp.path !== undefined && typeof comp.path !== 'string') {
+                errors.push(`test.components[${idx}].path must be a string when provided`);
+              }
+              if (comp.strictness !== undefined && !['minimal', 'balanced', 'strict', 'paranoid'].includes(comp.strictness)) {
+                errors.push(`test.components[${idx}].strictness must be one of: minimal, balanced, strict, paranoid`);
               }
             }
           });
+        }
+      }
+
+      if (cfg.test.strictness !== undefined) {
+        if (!['minimal', 'balanced', 'strict', 'paranoid'].includes(cfg.test.strictness)) {
+          errors.push('test.strictness must be one of: minimal, balanced, strict, paranoid');
         }
       }
     }

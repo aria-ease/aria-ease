@@ -122,6 +122,26 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
     return menuItem.hasAttribute("aria-controls") && menuItem.hasAttribute("aria-haspopup") && menuItem.getAttribute("role") === "menuitem";
   }
 
+  function closeAncestorMenusFromTrigger(triggerEl: HTMLElement) {
+    let currentTrigger: HTMLElement | null = triggerEl;
+
+    while (currentTrigger && currentTrigger.getAttribute("role") === "menuitem") {
+      const parentMenu = currentTrigger.closest('[role="menu"]') as HTMLElement | null;
+      if (!parentMenu) break;
+
+      parentMenu.style.display = "none";
+      currentTrigger.setAttribute("aria-expanded", "false");
+
+      const parentTriggerId = parentMenu.getAttribute("aria-labelledby");
+      if (!parentTriggerId) break;
+
+      const nextTrigger = document.getElementById(parentTriggerId) as HTMLElement | null;
+      if (!nextTrigger) break;
+
+      currentTrigger = nextTrigger;
+    }
+  }
+
   intializeMenuItems();
 
   function handleItemsKeydown(event: KeyboardEvent, menuItem: HTMLElement, menuItemIndex: number) {
@@ -203,12 +223,11 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
       }
       
       case "Tab": {
-        if (!event.shiftKey || event.shiftKey) {
-          closeMenu();
-          if (onOpenChange) {
-            onOpenChange(false);
-          }
-        } 
+        closeMenu();
+        closeAncestorMenusFromTrigger(triggerButton);
+        if (onOpenChange) {
+          onOpenChange(false);
+        }
         break;
       }
       default:

@@ -2,7 +2,7 @@
  * Declares the module 'aria-ease' and includes type information and JSDoc comments.
  */
 
-import { AccordionStates, CheckboxStates, RadioStates, ToggleStates, JestAxeResult } from "./Types";
+import { AccordionStates, CheckboxStates, RadioStates, ToggleStates, JestAxeResult, StrictnessMode } from "./Types";
 
 declare module 'aria-ease' {
   /**
@@ -59,8 +59,16 @@ declare module 'aria-ease' {
  function makeToggleAccessible(toggleId: string, togglesClass: string, toggleStates: ToggleStates[], currentPressedToggleIndex: number): void
 
   /**
-   * Runs static and interactions accessibility test on UI components. 
-   * @param {HTMLElement} component The UI component to be tested
+   * Runs static and interaction accessibility tests on UI components.
+   * @param {string} componentName The component contract name.
+   * @param {HTMLElement | null} component The rendered component root for jsdom mode.
+   * @param {string | null} url URL for Playwright mode.
+   * @param {{ strictness?: StrictnessMode }} options Strictness mode for contract enforcement.
   */
-  function testUiComponent(component: HTMLElement): Promise<JestAxeResult>
+  function testUiComponent(
+    componentName: string,
+    component: HTMLElement | null,
+    url: string | null,
+    options?: { strictness?: StrictnessMode }
+  ): Promise<JestAxeResult>
 }

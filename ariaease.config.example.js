@@ -14,5 +14,23 @@ export default {
       format: 'html',
       out: './accessibility-reports/audit'
     }
+  },
+
+  // Contract test configuration
+  test: {
+    // Global fallback strictness: minimal | balanced | strict | paranoid
+    strictness: 'balanced',
+
+    // Optional per-component overrides
+    components: [
+      {
+        name: 'menu',
+        strictness: 'strict'
+      },
+      {
+        name: 'accordion',
+        strictness: 'minimal'
+      }
+    ]
   }
 };
