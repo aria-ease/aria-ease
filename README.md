@@ -70,7 +70,7 @@ npx aria-ease test
 # ✓ 26 assertions in ~1 second in CI
 ```
 
-**Why this matters:** Before, verifying a combobox meant manual keyboard testing across browsers. Now, it's automated, fast, and repeatable. You can boast about executing 26 combobox interaction assertions in ~2 seconds.
+**Why this matters:** Before, verifying a combobox meant testing every interaction manually. Now, Aria-Ease automates the deterministic aspects of testing a combobox; keyboard interaction, ARIA states update, visibility, semantic roles.
 
 #### 4. **CI/CD Integration** (Available Now)
 
@@ -663,7 +663,7 @@ describe("Shopify User Menu Accessibility Test", () => {
 
 ### Strictness Modes
 
-Aria-Ease supports strictness policies to define how contract levels are enforced.
+Aria-Ease supports strictness policies to define how APG specs are enforced.
 
 - `minimal`
   - `required` -> error
@@ -717,9 +717,14 @@ export default {
 Or override per test call:
 
 ```javascript
-await testUiComponent("menu", null, "http://localhost:5173/test-harness?component=menu", {
-  strictness: "strict",
-});
+await testUiComponent(
+  "menu",
+  null,
+  "http://localhost:5173/test-harness?component=menu",
+  {
+    strictness: "strict",
+  },
+);
 ```
 
 ---

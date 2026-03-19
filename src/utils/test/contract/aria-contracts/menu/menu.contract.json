@@ -13,7 +13,7 @@
     },
 
     "selectors": {
-        "trigger": "[data-test-id=menu-trigger]",
+        "trigger": "[aria-controls][aria-haspopup][aria-expanded]:not([role='menuitem']):not([role='menuitemcheckbox']):not([role='menuitemradio'])",
         "container": "[role=menu]",
         "items": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
         "submenuTrigger": "[role=menu] [role=menuitem][aria-haspopup=true], [role=menu] [role=menuitemradio][aria-haspopup=true], [role=menu] [role=menuitemcheckbox][aria-haspopup=true], [role=menu] [role=menuitem][aria-haspopup=menu], [role=menu] [role=menuitemradio][aria-haspopup=menu], [role=menu] [role=menuitemcheckbox][aria-haspopup=menu]",

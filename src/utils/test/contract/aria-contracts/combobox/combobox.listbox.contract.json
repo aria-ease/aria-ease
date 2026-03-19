@@ -14,7 +14,7 @@
 
     "selectors": {
         "input": "[role=combobox]",
-        "button": "[data-test-id=combobox-button]",
+        "button": "button[tabindex='-1'], [role=button][tabindex='-1']",
         "listbox": "[role=listbox]",
         "options": "[role=option]",
         "focusable": "[role=combobox]",
