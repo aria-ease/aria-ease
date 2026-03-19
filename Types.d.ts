@@ -26,13 +26,20 @@ interface AriaEaseConfigAudit {
     waitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
 }
 
+type ContractLevel = 'required' | 'recommended' | 'optional';
+type InterpretationMode = 'strict' | 'relaxed' | '';
+type ContractConfidence = 'low' | 'medium' | 'high';
+type StrictnessMode = 'minimal' | 'balanced' | 'strict' | 'paranoid';
+
 interface AriaEaseConfigTest {
-    components: AriaEaseConfigTestComponent[];
+    components?: AriaEaseConfigTestComponent[];
+    strictness?: StrictnessMode;
 }
 
 interface AriaEaseConfigTestComponent {
     name: string;
-    path: string;
+    path?: string;
+    strictness?: StrictnessMode;
 }
 
 interface AriaEaseConfig {
@@ -93,12 +100,20 @@ interface ComponentContract {
             attribute: string;
             expectedValue: string;
             failureMessage: string;
-            isOptional?: boolean;
+            level?: ContractLevel;
+            interpretation?: InterpretationMode;
+            confidence?: ContractConfidence;
+            rationale?: string;
+            note?: string;
         }>;
     }>;
     dynamic: Array<{
         description: string;
-        isOptional?: boolean;
+        level?: ContractLevel;
+        interpretation?: InterpretationMode;
+        confidence?: ContractConfidence;
+        rationale?: string;
+        note?: string;
         isMultiple?: boolean;
         isVertical?: boolean;
         prerequisite: Array<Prerequisite>;
@@ -116,6 +131,11 @@ interface ComponentContract {
             expectedValue?: string;
             failureMessage?: string;
             relativeTarget?: string;
+            level?: ContractLevel;
+            interpretation?: InterpretationMode;
+            confidence?: ContractConfidence;
+            rationale?: string;
+            note?: string;
         }>;
     }>;
 }
@@ -229,6 +249,7 @@ interface ContractTestResult {
   passes: string[];
   failures: string[];
   skipped: string[];
+    warnings?: string[];
 }
 
 type DynamicTest = ComponentContract['dynamic'][number];
@@ -260,7 +281,11 @@ export {
     TabsConfig,
     TabsCallback,
     ComponentStrategy,
-    DynamicTest
+    DynamicTest,
+    StrictnessMode,
+    ContractLevel,
+    InterpretationMode,
+    ContractConfidence
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;

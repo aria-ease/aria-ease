@@ -66,10 +66,11 @@ var init_ContractReporter = __esm({
       componentName = "";
       staticPasses = 0;
       staticFailures = 0;
+      staticWarnings = 0;
       dynamicResults = [];
       totalTests = 0;
       skipped = 0;
-      optionalSuggestions = 0;
+      warnings = 0;
       isPlaywright = false;
       apgUrl = "https://www.w3.org/WAI/ARIA/apg/";
       hasPrintedStaticSection = false;
@@ -96,23 +97,27 @@ ${"\u2550".repeat(60)}`);
         this.log(`${"\u2550".repeat(60)}
 `);
       }
-      reportStatic(passes, failures) {
+      reportStatic(passes, failures, warnings = 0) {
         this.staticPasses = passes;
         this.staticFailures = failures;
+        this.staticWarnings = warnings;
       }
       /**
        * Report individual static test pass
        */
-      reportStaticTest(description, passed, failureMessage) {
+      reportStaticTest(description, status, failureMessage, level) {
         if (!this.hasPrintedStaticSection) {
           this.log(`${"\u2500".repeat(60)}`);
           this.log(`\u{1F9EA} Static Assertions`);
           this.log(`${"\u2500".repeat(60)}`);
           this.hasPrintedStaticSection = true;
         }
-        const icon = passed ? "\u2713" : "\u2717";
+        const icon = status === "pass" ? "\u2713" : status === "warn" ? "\u26A0" : status === "skip" ? "\u25CB" : "\u2717";
         this.log(`  ${icon} ${description}`);
-        if (!passed && failureMessage) {
+        if (level) {
+          this.log(`     \u21B3 level=${level}`);
+        }
+        if ((status === "fail" || status === "warn" || status === "skip") && failureMessage) {
           this.log(`     \u21B3 ${failureMessage}`);
         }
       }
@@ -131,23 +136,26 @@ ${"\u2550".repeat(60)}`);
           description: test.description,
           status,
           failureMessage,
-          isOptional: test.isOptional
+          level: test.level
         };
         if (status === "skip") {
           result.skipReason = "Requires real browser (addEventListener events)";
         }
         this.dynamicResults.push(result);
-        const icons = { pass: "\u2713", fail: "\u2717", skip: "\u25CB", "optional-fail": "\u25CB" };
-        const prefix = test.isOptional ? "[OPTIONAL] " : "";
-        this.log(`  ${icons[status]} ${prefix}${test.description}`);
+        const icons = { pass: "\u2713", fail: "\u2717", warn: "\u26A0", skip: "\u25CB" };
+        const levelPrefix = test.level ? `[${test.level.toUpperCase()}] ` : "";
+        this.log(`  ${icons[status]} ${levelPrefix}${test.description}`);
         if (status === "skip" && !this.isPlaywright) {
           this.log(`     \u21B3 Skipped in jsdom (runs in Playwright)`);
         }
-        if (status === "fail" && failureMessage && !test.isOptional) {
+        if (status === "fail" && failureMessage) {
           this.log(`     \u21B3 ${failureMessage}`);
         }
-        if (status === "optional-fail") {
-          this.log(`     \u21B3 Not implemented (recommended for enhanced UX)`);
+        if (status === "warn" && failureMessage) {
+          this.log(`     \u21B3 ${failureMessage}`);
+        }
+        if (status === "skip" && failureMessage) {
+          this.log(`     \u21B3 ${failureMessage}`);
         }
       }
       /**
@@ -171,29 +179,29 @@ ${"\u2500".repeat(60)}`);
           this.log("");
         });
       }
-      /**
-       * Report optional features that aren't implemented
-       */
-      reportOptionalSuggestions() {
-        const suggestions = this.dynamicResults.filter((r) => r.status === "optional-fail");
-        if (suggestions.length === 0) return;
+      reportWarnings() {
+        const warnings = this.dynamicResults.filter((r) => r.status === "warn");
+        if (warnings.length === 0 && this.staticWarnings === 0) return;
         this.log(`
 ${"\u2500".repeat(60)}`);
-        this.log(`\u{1F4A1} Optional Enhancements (${suggestions.length}):
+        this.log(`\u26A0\uFE0F Warnings (${this.staticWarnings + warnings.length}):
 `);
-        this.log(`These features are optional per APG guidelines but recommended`);
-        this.log(`for improved user experience and keyboard interaction:
+        this.log(`These checks are failing but treated as warnings under the active strictness mode.
 `);
-        suggestions.forEach((test, index) => {
+        warnings.forEach((test, index) => {
           this.log(`${index + 1}. ${test.description}`);
           if (test.failureMessage) {
             this.log(`   \u21B3 ${test.failureMessage}`);
           }
+          if (test.level) {
+            this.log(`   \u21B3 level=${test.level}`);
+          }
         });
-        this.log(`
-\u2728 Consider implementing these for better accessibility`);
-        this.log(`   Reference: ${this.apgUrl}
+        if (this.apgUrl) {
+          this.log(`
+Reference: ${this.apgUrl}
 `);
+        }
       }
       /**
        * Report skipped tests with helpful context
@@ -223,40 +231,41 @@ ${"\u2500".repeat(60)}`);
         const duration = Date.now() - this.startTime;
         const dynamicPasses = this.dynamicResults.filter((r) => r.status === "pass").length;
         const dynamicFailures = this.dynamicResults.filter((r) => r.status === "fail").length;
+        const dynamicWarnings = this.dynamicResults.filter((r) => r.status === "warn").length;
         this.skipped = this.dynamicResults.filter((r) => r.status === "skip").length;
-        this.optionalSuggestions = this.dynamicResults.filter((r) => r.status === "optional-fail").length;
+        this.warnings = this.staticWarnings + dynamicWarnings;
         const totalPasses = this.staticPasses + dynamicPasses;
         const totalFailures = this.staticFailures + dynamicFailures;
-        const totalRun = totalPasses + totalFailures;
+        const totalRun = totalPasses + totalFailures + this.warnings;
         if (failures.length > 0) {
           this.reportFailures(failures);
         }
-        this.reportOptionalSuggestions();
+        this.reportWarnings();
         this.reportSkipped();
         this.log(`
 ${"\u2550".repeat(60)}`);
         this.log(`\u{1F4CA} Summary
 `);
-        if (totalFailures === 0 && this.skipped === 0 && this.optionalSuggestions === 0) {
+        if (totalFailures === 0 && this.skipped === 0 && this.warnings === 0) {
           this.log(`\u2705 All ${totalRun} tests passed!`);
           this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions \u2713`);
         } else if (totalFailures === 0) {
-          this.log(`\u2705 ${totalPasses}/${totalRun} required tests passed`);
+          this.log(`\u2705 ${totalPasses}/${totalRun} tests passed`);
           if (this.skipped > 0) {
             this.log(`\u25CB  ${this.skipped} tests skipped`);
           }
-          if (this.optionalSuggestions > 0) {
-            this.log(`\u{1F4A1} ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? "s" : ""} suggested`);
+          if (this.warnings > 0) {
+            this.log(`\u26A0\uFE0F ${this.warnings} warning${this.warnings > 1 ? "s" : ""}`);
           }
           this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions \u2713`);
         } else {
           this.log(`\u274C ${totalFailures} test${totalFailures > 1 ? "s" : ""} failed`);
           this.log(`\u2705 ${totalPasses} test${totalPasses > 1 ? "s" : ""} passed`);
+          if (this.warnings > 0) {
+            this.log(`\u26A0\uFE0F ${this.warnings} warning${this.warnings > 1 ? "s" : ""}`);
+          }
           if (this.skipped > 0) {
             this.log(`\u25CB  ${this.skipped} test${this.skipped > 1 ? "s" : ""} skipped`);
-          }
-          if (this.optionalSuggestions > 0) {
-            this.log(`\u{1F4A1} ${this.optionalSuggestions} optional enhancement${this.optionalSuggestions > 1 ? "s" : ""} suggested`);
           }
         }
         this.log(`\u23F1\uFE0F  Duration: ${duration}ms`);
@@ -291,6 +300,52 @@ ${"\u2550".repeat(60)}`);
         this.log("");
       }
     };
+  }
+});
+
+// src/utils/test/src/strictness.ts
+function normalizeLevel(level) {
+  if (level === "required" || level === "recommended" || level === "optional") {
+    return level;
+  }
+  return FALLBACK_LEVEL;
+}
+function normalizeStrictness(strictness) {
+  if (strictness === "minimal" || strictness === "balanced" || strictness === "strict" || strictness === "paranoid") {
+    return strictness;
+  }
+  return "balanced";
+}
+function resolveEnforcement(level, strictness) {
+  const matrix = {
+    minimal: {
+      required: "error",
+      recommended: "ignore",
+      optional: "ignore"
+    },
+    balanced: {
+      required: "error",
+      recommended: "warning",
+      optional: "ignore"
+    },
+    strict: {
+      required: "error",
+      recommended: "error",
+      optional: "warning"
+    },
+    paranoid: {
+      required: "error",
+      recommended: "error",
+      optional: "error"
+    }
+  };
+  return matrix[strictness][level];
+}
+var FALLBACK_LEVEL;
+var init_strictness = __esm({
+  "src/utils/test/src/strictness.ts"() {
+    "use strict";
+    FALLBACK_LEVEL = "required";
   }
 });
 
@@ -341,6 +396,140 @@ var init_playwrightTestHarness = __esm({
     import_playwright = require("playwright");
     sharedBrowser = null;
     sharedContext = null;
+  }
+});
+
+// src/utils/cli/configLoader.ts
+var configLoader_exports = {};
+__export(configLoader_exports, {
+  loadConfig: () => loadConfig
+});
+function validateConfig(config) {
+  const errors = [];
+  if (!config || typeof config !== "object") {
+    errors.push("Config must be an object");
+    return { valid: false, errors };
+  }
+  const cfg = config;
+  if (cfg.audit !== void 0) {
+    if (typeof cfg.audit !== "object" || cfg.audit === null) {
+      errors.push("audit must be an object");
+    } else {
+      if (cfg.audit.urls !== void 0) {
+        if (!Array.isArray(cfg.audit.urls)) {
+          errors.push("audit.urls must be an array");
+        } else if (cfg.audit.urls.some((url) => typeof url !== "string")) {
+          errors.push("audit.urls must contain only strings");
+        }
+      }
+      if (cfg.audit.output !== void 0) {
+        if (typeof cfg.audit.output !== "object") {
+          errors.push("audit.output must be an object");
+        } else {
+          const output = cfg.audit.output;
+          if (output.format !== void 0) {
+            if (!["json", "csv", "html", "all"].includes(output.format)) {
+              errors.push("audit.output.format must be one of: json, csv, html, all");
+            }
+          }
+          if (output.out !== void 0 && typeof output.out !== "string") {
+            errors.push("audit.output.out must be a string");
+          }
+        }
+      }
+    }
+  }
+  if (cfg.test !== void 0) {
+    if (typeof cfg.test !== "object" || cfg.test === null) {
+      errors.push("test must be an object");
+    } else {
+      if (cfg.test.components !== void 0) {
+        if (!Array.isArray(cfg.test.components)) {
+          errors.push("test.components must be an array");
+        } else {
+          cfg.test.components.forEach((comp, idx) => {
+            if (typeof comp !== "object" || comp === null) {
+              errors.push(`test.components[${idx}] must be an object`);
+            } else {
+              if (typeof comp.name !== "string") {
+                errors.push(`test.components[${idx}].name must be a string`);
+              }
+              if (comp.path !== void 0 && typeof comp.path !== "string") {
+                errors.push(`test.components[${idx}].path must be a string when provided`);
+              }
+              if (comp.strictness !== void 0 && !["minimal", "balanced", "strict", "paranoid"].includes(comp.strictness)) {
+                errors.push(`test.components[${idx}].strictness must be one of: minimal, balanced, strict, paranoid`);
+              }
+            }
+          });
+        }
+      }
+      if (cfg.test.strictness !== void 0) {
+        if (!["minimal", "balanced", "strict", "paranoid"].includes(cfg.test.strictness)) {
+          errors.push("test.strictness must be one of: minimal, balanced, strict, paranoid");
+        }
+      }
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+async function loadConfigFile(filePath) {
+  try {
+    const ext = import_path.default.extname(filePath);
+    if (ext === ".json") {
+      const content = await import_fs_extra.default.readFile(filePath, "utf-8");
+      return JSON.parse(content);
+    } else if ([".js", ".mjs", ".cjs", ".ts"].includes(ext)) {
+      const imported = await import(filePath);
+      return imported.default || imported;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+async function loadConfig(cwd = process.cwd()) {
+  const configNames = [
+    "ariaease.config.js",
+    "ariaease.config.mjs",
+    "ariaease.config.cjs",
+    "ariaease.config.json",
+    "ariaease.config.ts"
+  ];
+  let loadedConfig = null;
+  let foundPath = null;
+  const errors = [];
+  for (const name of configNames) {
+    const configPath = import_path.default.resolve(cwd, name);
+    if (await import_fs_extra.default.pathExists(configPath)) {
+      foundPath = configPath;
+      loadedConfig = await loadConfigFile(configPath);
+      if (loadedConfig === null) {
+        errors.push(`Found config at ${name} but failed to load it. Check for syntax errors.`);
+        continue;
+      }
+      const validation = validateConfig(loadedConfig);
+      if (!validation.valid) {
+        errors.push(`Config validation failed in ${name}:`);
+        errors.push(...validation.errors.map((err) => `  - ${err}`));
+        loadedConfig = null;
+        continue;
+      }
+      break;
+    }
+  }
+  return {
+    config: loadedConfig || {},
+    configPath: loadedConfig ? foundPath : null,
+    errors
+  };
+}
+var import_path, import_fs_extra;
+var init_configLoader = __esm({
+  "src/utils/cli/configLoader.ts"() {
+    "use strict";
+    import_path = __toESM(require("path"), 1);
+    import_fs_extra = __toESM(require("fs-extra"), 1);
   }
 });
 
@@ -679,9 +868,6 @@ var init_ActionExecutor = __esm({
         this.selectors = selectors;
         this.timeoutMs = timeoutMs;
       }
-      isOptionalMenuTarget(target) {
-        return ["submenu", "submenuTrigger", "submenuItems"].includes(target);
-      }
       /**
        * Check if error is due to browser/page being closed
        */
@@ -813,10 +999,9 @@ var init_ActionExecutor = __esm({
           const locator = this.page.locator(selector).first();
           const elementCount = await locator.count();
           if (elementCount === 0) {
-            const optionalMenuTarget = this.isOptionalMenuTarget(target);
             return {
               success: false,
-              error: optionalMenuTarget ? `${target} element not found (optional submenu test)` : `${target} element not found.`,
+              error: `${target} element not found.`,
               shouldBreak: true
               // Signal to skip this test
             };
@@ -1130,10 +1315,11 @@ var contractTestRunnerPlaywright_exports = {};
 __export(contractTestRunnerPlaywright_exports, {
   runContractTestsPlaywright: () => runContractTestsPlaywright
 });
-async function runContractTestsPlaywright(componentName, url) {
+async function runContractTestsPlaywright(componentName, url, strictness) {
   const reporter = new ContractReporter(true);
   const actionTimeoutMs = 400;
   const assertionTimeoutMs = 400;
+  const strictnessMode = normalizeStrictness(strictness);
   const contractTyped = contract_default;
   const contractPath = contractTyped[componentName]?.path;
   const resolvedPath = new URL(contractPath, import_meta3.url).pathname;
@@ -1142,9 +1328,25 @@ async function runContractTestsPlaywright(componentName, url) {
   const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
   const apgUrl = componentContract.meta?.source?.apg;
   const failures = [];
+  const warnings = [];
   const passes = [];
   const skipped = [];
   let page = null;
+  const classifyFailure = (message, levelRaw) => {
+    const level = normalizeLevel(levelRaw);
+    const enforcement = resolveEnforcement(level, strictnessMode);
+    if (enforcement === "error") {
+      failures.push(message);
+      return { status: "fail", level, detail: message };
+    }
+    if (enforcement === "warning") {
+      warnings.push(message);
+      return { status: "warn", level, detail: message };
+    }
+    const ignoredMessage = `${message} (ignored by strictness=${strictnessMode}, level=${level})`;
+    skipped.push(ignoredMessage);
+    return { status: "skip", level, detail: ignoredMessage };
+  };
   try {
     page = await createTestPage();
     if (url) {
@@ -1190,35 +1392,37 @@ This usually means:
       });
     }
     const hasSubmenuCapability = componentName === "menu" && !!componentContract.selectors.submenuTrigger ? await page.locator(componentContract.selectors.submenuTrigger).count() > 0 : false;
+    let staticPassed = 0;
     let staticFailed = 0;
+    let staticWarnings = 0;
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
     for (const test of componentContract.static[0]?.assertions || []) {
       if (test.target === "relative") continue;
       const staticDescription = `${test.target}${test.attribute ? ` (${test.attribute})` : ""}`;
+      const staticLevel = normalizeLevel(test.level);
       if (componentName === "menu" && test.target === "submenuTrigger" && !hasSubmenuCapability) {
-        passes.push(`Skipping submenu static assertion for ${test.target}: no submenu capability detected in rendered component.`);
-        reporter.reportStaticTest(staticDescription, true);
+        const skipMessage = `Skipping submenu static assertion for ${test.target}: no submenu capability detected in rendered component.`;
+        skipped.push(skipMessage);
+        reporter.reportStaticTest(staticDescription, "skip", skipMessage, staticLevel);
         continue;
       }
       const targetSelector = componentContract.selectors[test.target];
       if (!targetSelector) {
         const failure = `Selector for target ${test.target} not found.`;
-        failures.push(failure);
-        staticFailed += 1;
-        reporter.reportStaticTest(staticDescription, false, failure);
+        const outcome = classifyFailure(failure, test.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(staticDescription, outcome.status, outcome.detail, outcome.level);
         continue;
       }
       const target = page.locator(targetSelector).first();
       const exists = await target.count() > 0;
       if (!exists) {
-        if (test.isOptional === true) {
-          reporter.reportStaticTest(staticDescription, true);
-          continue;
-        }
         const failure = `Target ${test.target} not found.`;
-        failures.push(failure);
-        staticFailed += 1;
-        reporter.reportStaticTest(staticDescription, false, failure);
+        const outcome = classifyFailure(failure, test.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(staticDescription, outcome.status, outcome.detail, outcome.level);
         continue;
       }
       const isRedundantCheck = (selector, attrName, expectedVal) => {
@@ -1253,19 +1457,23 @@ This usually means:
         }
         if (!hasAny && !allRedundant) {
           const failure = test.failureMessage + ` None of the attributes "${test.attribute}" are present.`;
-          failures.push(failure);
-          staticFailed += 1;
-          reporter.reportStaticTest(staticDescription, false, failure);
+          const outcome = classifyFailure(failure, test.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(staticDescription, outcome.status, outcome.detail, outcome.level);
         } else if (!allRedundant && hasAny) {
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
-          reporter.reportStaticTest(staticDescription, true);
+          staticPassed += 1;
+          reporter.reportStaticTest(staticDescription, "pass", void 0, staticLevel);
         } else {
-          reporter.reportStaticTest(staticDescription, true);
+          staticPassed += 1;
+          reporter.reportStaticTest(staticDescription, "pass", void 0, staticLevel);
         }
       } else {
         if (isRedundantCheck(targetSelector, test.attribute, test.expectedValue)) {
           passes.push(`${test.attribute}="${test.expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
-          reporter.reportStaticTest(staticDescription, true);
+          staticPassed += 1;
+          reporter.reportStaticTest(staticDescription, "pass", void 0, staticLevel);
         } else {
           const result = await staticAssertionRunner.validateAttribute(
             target,
@@ -1277,11 +1485,13 @@ This usually means:
           );
           if (result.success && result.passMessage) {
             passes.push(result.passMessage);
-            reporter.reportStaticTest(staticDescription, true);
+            staticPassed += 1;
+            reporter.reportStaticTest(staticDescription, "pass", void 0, staticLevel);
           } else if (!result.success && result.failMessage) {
-            failures.push(result.failMessage);
-            staticFailed += 1;
-            reporter.reportStaticTest(staticDescription, false, result.failMessage);
+            const outcome = classifyFailure(result.failMessage, test.level);
+            if (outcome.status === "fail") staticFailed += 1;
+            if (outcome.status === "warn") staticWarnings += 1;
+            reporter.reportStaticTest(staticDescription, outcome.status, outcome.detail, outcome.level);
           }
         }
       }
@@ -1296,6 +1506,9 @@ This usually means:
       }
       const { action, assertions } = dynamicTest;
       const failuresBeforeTest = failures.length;
+      const warningsBeforeTest = warnings.length;
+      const skippedBeforeTest = skipped.length;
+      const dynamicLevel = normalizeLevel(dynamicTest.level);
       try {
         await strategy.resetState(page);
       } catch (error) {
@@ -1305,13 +1518,15 @@ This usually means:
       }
       const shouldSkipTest = await strategy.shouldSkipTest(dynamicTest, page);
       if (shouldSkipTest) {
-        reporter.reportTest(dynamicTest, "skip", `Skipping test - component-specific conditions not met`);
+        const skipMessage = `Skipping test - component-specific conditions not met`;
+        skipped.push(skipMessage);
+        reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, "skip", skipMessage);
         continue;
       }
       const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
       const assertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
-      let shouldSkipCurrentTest = false;
       let shouldAbortCurrentTest = false;
+      let actionOutcome = null;
       for (const act of action) {
         if (!page || page.isClosed()) {
           failures.push(`CRITICAL: Browser/page closed during test execution. Remaining actions skipped.`);
@@ -1333,27 +1548,20 @@ This usually means:
           continue;
         }
         if (!result.success) {
-          if (result.shouldBreak) {
-            if (result.error?.includes("optional submenu test")) {
-              reporter.reportTest(dynamicTest, "skip", result.error);
-              shouldSkipCurrentTest = true;
-            } else if (result.error) {
-              failures.push(result.error);
-              shouldAbortCurrentTest = true;
-            }
-            break;
-          }
           if (result.error) {
-            failures.push(result.error);
+            const outcome = classifyFailure(result.error, dynamicTest.level);
+            actionOutcome = { status: outcome.status, detail: outcome.detail };
           }
-          continue;
+          shouldAbortCurrentTest = true;
+          break;
         }
       }
-      if (shouldSkipCurrentTest) {
-        continue;
-      }
       if (shouldAbortCurrentTest) {
-        reporter.reportTest(dynamicTest, "fail", failures[failures.length - 1]);
+        reporter.reportTest(
+          { description: dynamicTest.description, level: dynamicLevel },
+          actionOutcome?.status || "fail",
+          actionOutcome?.detail || failures[failures.length - 1]
+        );
         continue;
       }
       for (const assertion of assertions) {
@@ -1361,22 +1569,39 @@ This usually means:
         if (result.success && result.passMessage) {
           passes.push(result.passMessage);
         } else if (!result.success && result.failMessage) {
-          failures.push(result.failMessage);
+          const assertionLevel = normalizeLevel(assertion.level || dynamicTest.level);
+          const outcome = classifyFailure(result.failMessage, assertionLevel);
+          if (outcome.status === "skip") {
+            continue;
+          }
         }
       }
       const failuresAfterTest = failures.length;
-      const testPassed = failuresAfterTest === failuresBeforeTest;
-      const failureMessage = testPassed ? void 0 : failures[failures.length - 1];
-      if (dynamicTest.isOptional === true && !testPassed) {
-        failures.pop();
-        reporter.reportTest(dynamicTest, "optional-fail", failureMessage);
+      const warningsAfterTest = warnings.length;
+      const skippedAfterTest = skipped.length;
+      if (failuresAfterTest > failuresBeforeTest) {
+        reporter.reportTest(
+          { description: dynamicTest.description, level: dynamicLevel },
+          "fail",
+          failures[failures.length - 1]
+        );
+      } else if (warningsAfterTest > warningsBeforeTest) {
+        reporter.reportTest(
+          { description: dynamicTest.description, level: dynamicLevel },
+          "warn",
+          warnings[warnings.length - 1]
+        );
+      } else if (skippedAfterTest > skippedBeforeTest) {
+        reporter.reportTest(
+          { description: dynamicTest.description, level: dynamicLevel },
+          "skip",
+          skipped[skipped.length - 1]
+        );
       } else {
-        reporter.reportTest(dynamicTest, testPassed ? "pass" : "fail", failureMessage);
+        reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, "pass");
       }
     }
-    const staticTotal = componentContract.static[0].assertions.length;
-    const staticPassed = Math.max(0, staticTotal - staticFailed);
-    reporter.reportStatic(staticPassed, staticFailed);
+    reporter.reportStatic(staticPassed, staticFailed, staticWarnings);
     reporter.summary(failures);
   } catch (error) {
     if (error instanceof Error) {
@@ -1401,7 +1626,7 @@ Make sure your dev server is running at ${url}`);
   } finally {
     if (page) await page.close();
   }
-  return { passes, failures, skipped };
+  return { passes, failures, skipped, warnings };
 }
 var import_fs2, import_meta3;
 var init_contractTestRunnerPlaywright = __esm({
@@ -1414,6 +1639,7 @@ var init_contractTestRunnerPlaywright = __esm({
     init_ContractReporter();
     init_ActionExecutor();
     init_AssertionRunner();
+    init_strictness();
     import_meta3 = {};
   }
 });
@@ -1439,13 +1665,13 @@ function displayBadgeInfo(badgeType) {
   console.log(import_chalk.default.dim("\n   This helps others discover accessibility tools and shows you care!\n"));
 }
 async function promptAddBadge(badgeType, cwd = process.cwd()) {
-  const readmePath = import_path.default.join(cwd, "README.md");
-  const readmeExists = await import_fs_extra.default.pathExists(readmePath);
+  const readmePath = import_path2.default.join(cwd, "README.md");
+  const readmeExists = await import_fs_extra2.default.pathExists(readmePath);
   if (!readmeExists) {
     console.log(import_chalk.default.yellow("   \u2139\uFE0F  No README.md found in current directory"));
     return;
   }
-  const readmeContent = await import_fs_extra.default.readFile(readmePath, "utf-8");
+  const readmeContent = await import_fs_extra2.default.readFile(readmePath, "utf-8");
   const markdown = getBadgeMarkdown(badgeType);
   if (readmeContent.includes(markdown) || readmeContent.includes(BADGE_CONFIGS[badgeType].fileName)) {
     console.log(import_chalk.default.gray("   \u2713 Badge already in README.md"));
@@ -1489,7 +1715,7 @@ async function addBadgeToReadme(readmePath, content, badge) {
     insertIndex = 1;
   }
   lines.splice(insertIndex, 0, badge);
-  await import_fs_extra.default.writeFile(readmePath, lines.join("\n"), "utf-8");
+  await import_fs_extra2.default.writeFile(readmePath, lines.join("\n"), "utf-8");
 }
 function displayAllBadges() {
   console.log(import_chalk.default.cyan("\n\u{1F4CD} Available badges:"));
@@ -1501,12 +1727,12 @@ function displayAllBadges() {
   console.log(import_chalk.default.green("   " + getBadgeMarkdown("verified")));
   console.log("");
 }
-var import_fs_extra, import_path, import_chalk, import_readline, BADGE_CONFIGS;
+var import_fs_extra2, import_path2, import_chalk, import_readline, BADGE_CONFIGS;
 var init_badgeHelper = __esm({
   "src/utils/cli/badgeHelper.ts"() {
     "use strict";
-    import_fs_extra = __toESM(require("fs-extra"), 1);
-    import_path = __toESM(require("path"), 1);
+    import_fs_extra2 = __toESM(require("fs-extra"), 1);
+    import_path2 = __toESM(require("path"), 1);
     import_chalk = __toESM(require("chalk"), 1);
     import_readline = __toESM(require("readline"), 1);
     BADGE_CONFIGS = {
@@ -2062,6 +2288,20 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
   function hasSubmenu(menuItem) {
     return menuItem.hasAttribute("aria-controls") && menuItem.hasAttribute("aria-haspopup") && menuItem.getAttribute("role") === "menuitem";
   }
+  function closeAncestorMenusFromTrigger(triggerEl) {
+    let currentTrigger = triggerEl;
+    while (currentTrigger && currentTrigger.getAttribute("role") === "menuitem") {
+      const parentMenu = currentTrigger.closest('[role="menu"]');
+      if (!parentMenu) break;
+      parentMenu.style.display = "none";
+      currentTrigger.setAttribute("aria-expanded", "false");
+      const parentTriggerId = parentMenu.getAttribute("aria-labelledby");
+      if (!parentTriggerId) break;
+      const nextTrigger = document.getElementById(parentTriggerId);
+      if (!nextTrigger) break;
+      currentTrigger = nextTrigger;
+    }
+  }
   intializeMenuItems();
   function handleItemsKeydown(event, menuItem, menuItemIndex) {
     switch (event.key) {
@@ -2132,11 +2372,10 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
         break;
       }
       case "Tab": {
-        if (!event.shiftKey || event.shiftKey) {
-          closeMenu();
-          if (onOpenChange) {
-            onOpenChange(false);
-          }
+        closeMenu();
+        closeAncestorMenusFromTrigger(triggerButton);
+        if (onOpenChange) {
+          onOpenChange(false);
         }
         break;
       }
@@ -3028,9 +3267,11 @@ var import_jest_axe = require("jest-axe");
 init_contract();
 var import_promises = __toESM(require("fs/promises"), 1);
 init_ContractReporter();
+init_strictness();
 var import_meta = {};
-async function runContractTests(componentName, component) {
+async function runContractTests(componentName, component, strictness) {
   const reporter = new ContractReporter(false);
+  const strictnessMode = normalizeStrictness(strictness);
   const contractTyped = contract_default;
   const contractPath = contractTyped[componentName]?.path;
   if (!contractPath) {
@@ -3044,19 +3285,42 @@ async function runContractTests(componentName, component) {
   const failures = [];
   const passes = [];
   const skipped = [];
-  const failuresBeforeStatic = failures.length;
+  const warnings = [];
+  const classifyFailure = (message, levelRaw) => {
+    const level = normalizeLevel(levelRaw);
+    const enforcement = resolveEnforcement(level, strictnessMode);
+    if (enforcement === "error") {
+      failures.push(message);
+      return { status: "fail", level, detail: message };
+    }
+    if (enforcement === "warning") {
+      warnings.push(message);
+      return { status: "warn", level, detail: message };
+    }
+    const ignoredMessage = `${message} (ignored by strictness=${strictnessMode}, level=${level})`;
+    skipped.push(ignoredMessage);
+    return { status: "skip", level, detail: ignoredMessage };
+  };
+  let staticPassed = 0;
+  let staticFailed = 0;
+  let staticWarnings = 0;
   for (const test of componentContract.static[0].assertions) {
     if (test.target !== "relative") {
+      const staticLevel = normalizeLevel(test.level);
       const selector = componentContract.selectors[test.target];
       if (!selector) {
-        failures.push(`Selector for target ${test.target} not found.`);
-        reporter.reportStaticTest(`${test.target} has required ARIA attributes`, false, `Selector for target ${test.target} not found.`);
+        const outcome = classifyFailure(`Selector for target ${test.target} not found.`, test.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(`${test.target} has required ARIA attributes`, outcome.status, outcome.detail, outcome.level);
         continue;
       }
       const target = component.querySelector(selector);
       if (!target) {
-        failures.push(`Target ${test.target} not found.`);
-        reporter.reportStaticTest(`${test.target} has required ARIA attributes`, false, `Target ${test.target} not found.`);
+        const outcome = classifyFailure(`Target ${test.target} not found.`, test.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(`${test.target} has required ARIA attributes`, outcome.status, outcome.detail, outcome.level);
         continue;
       }
       const attributeValue = target.getAttribute(test.attribute);
@@ -3064,36 +3328,40 @@ async function runContractTests(componentName, component) {
         const attributes = test.attribute.split(" | ");
         const hasAnyAttribute = attributes.some((attr) => target.hasAttribute(attr));
         if (!hasAnyAttribute) {
-          failures.push(test.failureMessage + ` None of the attributes "${test.attribute}" are present.`);
-          reporter.reportStaticTest(`${test.target} has ${test.attribute}`, false, test.failureMessage);
+          const outcome = classifyFailure(test.failureMessage + ` None of the attributes "${test.attribute}" are present.`, test.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(`${test.target} has ${test.attribute}`, outcome.status, outcome.detail, outcome.level);
         } else {
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
-          reporter.reportStaticTest(`${test.target} has ${test.attribute}`, true);
+          staticPassed += 1;
+          reporter.reportStaticTest(`${test.target} has ${test.attribute}`, "pass", void 0, staticLevel);
         }
       } else if (!attributeValue || !test.expectedValue.split(" | ").includes(attributeValue)) {
-        failures.push(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
-        reporter.reportStaticTest(`${test.target} has ${test.attribute}="${test.expectedValue}"`, false, test.failureMessage);
+        const outcome = classifyFailure(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`, test.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(`${test.target} has ${test.attribute}="${test.expectedValue}"`, outcome.status, outcome.detail, outcome.level);
       } else {
         passes.push(`Attribute value matches expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
-        reporter.reportStaticTest(`${test.target} has ${test.attribute}="${attributeValue}"`, true);
+        staticPassed += 1;
+        reporter.reportStaticTest(`${test.target} has ${test.attribute}="${attributeValue}"`, "pass", void 0, staticLevel);
       }
     }
   }
   for (const dynamicTest of componentContract.dynamic) {
     skipped.push(dynamicTest.description);
-    reporter.reportTest(dynamicTest, "skip");
+    reporter.reportTest({ description: dynamicTest.description, level: dynamicTest.level }, "skip");
   }
-  const staticTotal = componentContract.static[0].assertions.length;
-  const staticFailed = failures.length - failuresBeforeStatic;
-  const staticPassed = Math.max(0, staticTotal - staticFailed);
-  reporter.reportStatic(staticPassed, staticFailed);
+  reporter.reportStatic(staticPassed, staticFailed, staticWarnings);
   reporter.summary(failures);
-  return { passes, failures, skipped };
+  return { passes, failures, skipped, warnings };
 }
 
 // src/utils/test/src/test.ts
 init_playwrightTestHarness();
-async function testUiComponent(componentName, component, url) {
+init_strictness();
+async function testUiComponent(componentName, component, url, options = {}) {
   if (!componentName || typeof componentName !== "string") {
     throw new Error("\u274C testUiComponent requires a valid componentName (string)");
   }
@@ -3130,6 +3398,17 @@ Error: ${error instanceof Error ? error.message : String(error)}`
     }
     return null;
   }
+  let strictness = normalizeStrictness(options.strictness);
+  if (options.strictness === void 0 && typeof window === "undefined") {
+    try {
+      const { loadConfig: loadConfig2 } = await Promise.resolve().then(() => (init_configLoader(), configLoader_exports));
+      const { config } = await loadConfig2(process.cwd());
+      const componentStrictness = config.test?.components?.find((comp) => comp?.name === componentName)?.strictness;
+      strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+    } catch {
+      strictness = "balanced";
+    }
+  }
   let contract;
   try {
     if (url) {
@@ -3137,7 +3416,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
         const { runContractTestsPlaywright: runContractTestsPlaywright2 } = await Promise.resolve().then(() => (init_contractTestRunnerPlaywright(), contractTestRunnerPlaywright_exports));
-        contract = await runContractTestsPlaywright2(componentName, devServerUrl);
+        contract = await runContractTestsPlaywright2(componentName, devServerUrl, strictness);
       } else {
         throw new Error(
           `\u274C Dev server not running at ${url}
@@ -3146,7 +3425,7 @@ Please start your dev server and try again.`
       }
     } else if (component) {
       console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
-      contract = await runContractTests(componentName, component);
+      contract = await runContractTests(componentName, component, strictness);
     } else {
       throw new Error("\u274C Either component or URL must be provided");
     }

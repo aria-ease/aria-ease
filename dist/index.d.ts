@@ -194,6 +194,8 @@ declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, lis
 
 declare function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation, activateOnFocus, callback }: TabsConfig): AccessibilityInstance;
 
+type StrictnessMode = 'minimal' | 'balanced' | 'strict' | 'paranoid';
+
 /**
  * Runs static and interactions accessibility test on UI components.
  * @param {string} componentName The name of the component contract to test against
@@ -201,7 +203,10 @@ declare function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orie
  * @param {string} url Optional URL to run full Playwright E2E tests. If omitted, uses isolated component testing with page.setContent()
  */
 
-declare function testUiComponent(componentName: string, component: HTMLElement | null, url: string | null): Promise<JestAxeResult>;
+type TestAuditOptions = {
+    strictness?: StrictnessMode;
+};
+declare function testUiComponent(componentName: string, component: HTMLElement | null, url: string | null, options?: TestAuditOptions): Promise<JestAxeResult>;
 /**
  * Cleanup function to close the shared Playwright browser
  * Call this in afterAll() or after all tests complete

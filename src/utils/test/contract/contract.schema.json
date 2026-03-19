@@ -55,7 +55,11 @@
                     "parent": { "type": "string" },
                     "child": { "type": "string" },
                     "failureMessage": { "type": "string" },
-                    "isOptional": { "type": "boolean" }
+                    "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
+                    "interpretation": { "type": "string", "enum": ["strict", "relaxed", ""] },
+                    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+                    "rationale": { "type": "string" },
+                    "note": { "type": "string" }
                 },
                 "allOf": [
                     {
@@ -95,7 +99,12 @@
                                 "assertion": { "type": "string" },
                                 "attribute": { "type": "string" },
                                 "expectedValue": { "type": "string" },
-                                "failureMessage": { "type": "string" }
+                                "failureMessage": { "type": "string" },
+                                "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
+                                "interpretation": { "type": "string", "enum": ["strict", "relaxed", ""] },
+                                "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+                                "rationale": { "type": "string" },
+                                "note": { "type": "string" }
                             }
                         }
                     }
@@ -111,7 +120,11 @@
                 "required": ["description", "action", "assertions"],
                 "properties": {
                     "description": { "type": "string" },
-                    "isOptional": { "type": "boolean" },
+                    "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
+                    "interpretation": { "type": "string", "enum": ["strict", "relaxed", ""] },
+                    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+                    "rationale": { "type": "string" },
+                    "note": { "type": "string" },
                     "isVertical": { "type": "boolean" },
                     "isMultiple": { "type": "boolean" },
                     "action": {
@@ -139,7 +152,12 @@
                                 "attribute": { "type": "string" },
                                 "expectedValue": { "type": "string" },
                                 "relativeTarget": { "type": "string" },
-                                "failureMessage": { "type": "string" }
+                                "failureMessage": { "type": "string" },
+                                "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
+                                "interpretation": { "type": "string", "enum": ["strict", "relaxed", ""] },
+                                "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+                                "rationale": { "type": "string" },
+                                "note": { "type": "string" }
                             }
                         }
                     }

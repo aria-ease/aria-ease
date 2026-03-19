@@ -1,9 +1,9 @@
 {
     "meta": {
-        "id": "aria-ease.accordion",
+        "id": "aria-ease.contract.accordion",
         "version": "1.0.0",
         "created": "09-02-2026",
-        "lastUpdated": "15-03-2026",
+        "lastUpdated": "19-03-2026",
         "description": "ARIA Accordion interaction contract. Validates the ARIA and interaction contract for a custom accordion component following the ARIA Authoring Practices Guide accordion with show/hide pattern.",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/accordion/",
@@ -13,16 +13,15 @@
     },
 
     "selectors": {
-        "container": "[data-test-id=accordion-group]",
-        "trigger": "[data-test-id=accordion-trigger]",
-        "focusable": "[data-test-id=accordion-trigger]",
-        "relative": "[data-test-id=accordion-trigger]",
-        "panel": "[role=region]"
+        "trigger": "[data-accordion] [aria-controls][aria-expanded], [aria-controls][aria-expanded]",
+        "focusable": "[data-accordion] [aria-controls][aria-expanded], [aria-controls][aria-expanded]",
+        "relative": "[data-accordion] [aria-controls][aria-expanded], [aria-controls][aria-expanded]",
+        "panel": "[role='region'][aria-labelledby], [role='region'][aria-labelledby]"
     },
 
     "observables": {
         "observable": "focus | visible | attribute | role",
-        "target": "trigger | relative | panel | container",
+        "target": "trigger | relative | panel | focusable",
         "relative": "first | last | next | previous"
     },
 
@@ -38,11 +37,6 @@
             "from": "panel",
             "attribute": "aria-labelledby",
             "to": "trigger"
-        },
-        {
-            "type": "contains",
-            "parent": "container",
-            "child": "trigger"
         }
     ],
 
@@ -199,7 +193,7 @@
         {
             "description": "Down Arrow moves focus to next accordion trigger.",
             "isMultiple": true,
-            "isOptional": true,
+            "level": "optional",
             "action": [
                 { "type": "keypress", "target": "focusable", "key": "ArrowDown" }
             ],
@@ -215,7 +209,7 @@
         {
             "description": "Up Arrow moves focus to previous accordion trigger.",
             "isMultiple": true,
-            "isOptional": true,
+            "level": "optional",
             "action": [
                 { "type": "keypress", "target": "focusable", "key": "ArrowUp" }
             ],
@@ -231,7 +225,7 @@
         {
             "description": "Home moves focus to first accordion trigger.",
             "isMultiple": true,
-            "isOptional": true,
+            "level": "optional",
             "action": [
                 { "type": "keypress", "target": "focusable", "key": "Home" }
             ],
@@ -247,7 +241,7 @@
         {
             "description": "End moves focus to last accordion trigger.",
             "isMultiple": true,
-            "isOptional": true,
+            "level": "optional",
             "action": [
                 { "type": "keypress", "target": "focusable", "key": "End" }
             ],
@@ -263,7 +257,7 @@
         {
             "description": "Down Arrow wraps focus from last trigger to first trigger.",
             "isMultiple": true,
-            "isOptional": true,
+            "level": "optional",
             "action": [
                 { "type": "keypress", "target": "focusable", "key": "ArrowDown" }
             ],
@@ -279,7 +273,7 @@
         {
             "description": "Up Arrow wraps focus from first trigger to last trigger.",
             "isMultiple": true,
-            "isOptional": true,
+            "level": "optional",
             "action": [
                 { "type": "keypress", "target": "focusable", "key": "ArrowUp" }
             ],

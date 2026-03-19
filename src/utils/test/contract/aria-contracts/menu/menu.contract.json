@@ -1,9 +1,9 @@
 {
     "meta": {
-        "id": "aria-ease.menu",
+        "id": "aria-ease.contract.menu",
         "version": "1.0.0",
         "created": "11-02-2026",
-        "lastUpdated": "15-03-2026",
+        "lastUpdated": "19-03-2026",
         "description": "ARIA Menu interaction contract. Validates the ARIA and interaction contract for a custom menu component following the ARIA Authoring Practices Guide menu with popup pattern",
         "source": {
             "apg": "https://www.w3.org/WAI/ARIA/apg/patterns/menubar/",
@@ -13,7 +13,7 @@
     },
 
     "selectors": {
-        "trigger": "[data-test-id=menu-trigger]",
+        "trigger": "[aria-controls][aria-haspopup][aria-expanded]:not([role='menuitem']):not([role='menuitemcheckbox']):not([role='menuitemradio'])",
         "container": "[role=menu]",
         "items": "[role=menuitem], [role=menuitemradio], [role=menuitemcheckbox]",
         "submenuTrigger": "[role=menu] [role=menuitem][aria-haspopup=true], [role=menu] [role=menuitemradio][aria-haspopup=true], [role=menu] [role=menuitemcheckbox][aria-haspopup=true], [role=menu] [role=menuitem][aria-haspopup=menu], [role=menu] [role=menuitemradio][aria-haspopup=menu], [role=menu] [role=menuitemcheckbox][aria-haspopup=menu]",
@@ -44,7 +44,7 @@
             "from": "container",
             "attribute": "aria-labelledby",
             "to": "trigger",
-            "isOptional": true,
+            "level": "optional",
             "failureMessage": "The APG 1.2 recommends a menu container to have aria-labelledby attribute that references the trigger that controls the menu."
         },
         {
@@ -390,7 +390,7 @@
             ]
         },
         {
-            "description": "Right Arrow on menuitem with submenu opens the submenu, updates ARIA expanded, and focuses the first interactive element of the menu.",
+            "description": "Right Arrow from a submenu item opens the submenu, updates ARIA expanded, and focuses first item.",
             "action": [
                 { "type": "click", "target": "trigger" },
                 { "type": "keypress", "target": "submenuTrigger", "key": "ArrowRight" }
@@ -425,7 +425,7 @@
                 {
                     "target": "container",
                     "assertion": "notToBeVisible",
-                    "failureMessage": "Menu should close after clicking outside."
+                    "failureMessage": "Menu should close after pressing Tab from a menuitem."
                 },
                 {
                     "target": "trigger",
@@ -433,18 +433,6 @@
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
                     "failureMessage": "Trigger's aria-expanded should be false after Tab closes the menu."
-                },
-                {
-                    "target": "submenu",
-                    "assertion": "notToBeVisible",
-                    "failureMessage": "Shift+Tab should close all submenus, not just top-level menu."
-                },
-                {
-                    "target": "submenuTrigger",
-                    "assertion": "toHaveAttribute",
-                    "attribute": "aria-expanded",
-                    "expectedValue": "false",
-                    "failureMessage": "Submenu trigger's aria-expanded should be false after Shift+Tab closes the submenu."
                 }
             ]
         },
@@ -458,7 +446,7 @@
                 {
                     "target": "container",
                     "assertion": "notToBeVisible",
-                    "failureMessage": "Menu should close after clicking outside."
+                    "failureMessage": "Menu should close after pressing Shift+Tab from a menuitem."
                 },
                 {
                     "target": "trigger",
@@ -466,18 +454,55 @@
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
                     "failureMessage": "Trigger's aria-expanded should be false after Shift+Tab closes the menu."
-                },
+                }
+            ]
+        },
+        {
+            "description": "Tab from a submenu item closes submenu and updates submenu trigger expanded state.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "submenuTrigger", "key": "ArrowRight" },
+                { "type": "keypress", "target": "submenuItems", "key": "Tab" }
+            ],
+            "assertions": [
                 {
                     "target": "submenu",
                     "assertion": "notToBeVisible",
-                    "failureMessage": "Shift+Tab should close all submenus, not just top-level menu."
+                    "failureMessage": "Tab should close submenu when focus leaves submenu items."
                 },
                 {
                     "target": "submenuTrigger",
                     "assertion": "toHaveAttribute",
                     "attribute": "aria-expanded",
                     "expectedValue": "false",
-                    "failureMessage": "Submenu trigger's aria-expanded should be false after Shift+Tab closes the submenu."
+                    "failureMessage": "Submenu trigger's aria-expanded should be false after Tab closes submenu."
+                }
+            ]
+        },
+        {
+            "description": "Shift+Tab from a submenu item closes submenu and updates submenu trigger expanded state.",
+            "action": [
+                { "type": "click", "target": "trigger" },
+                { "type": "keypress", "target": "submenuTrigger", "key": "ArrowRight" },
+                { "type": "keypress", "target": "submenuItems", "key": "Shift+Tab" }
+            ],
+            "assertions": [
+                {
+                    "target": "submenu",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Shift+Tab should close submenu when focus leaves submenu items."
+                },
+                {
+                    "target": "submenuTrigger",
+                    "assertion": "toHaveAttribute",
+                    "attribute": "aria-expanded",
+                    "expectedValue": "false",
+                    "failureMessage": "Submenu trigger's aria-expanded should be false after Shift+Tab closes submenu."
+                },
+                {
+                    "target": "container",
+                    "assertion": "notToBeVisible",
+                    "failureMessage": "Shift+Tab should also close top-level menu after submenu closes."
                 }
             ]
         },
