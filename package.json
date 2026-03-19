@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "6.7.0",
+  "version": "6.8.0",
   "description": "Accessibility infrastructure for the entire frontend engineering lifecycle. Build accessible patterns, run automated audits, verify component interactions, and gate deployments — all in one system.",
   "main": "dist/index.cjs",
   "type": "module",

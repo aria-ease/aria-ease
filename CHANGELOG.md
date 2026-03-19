@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.8.0](https://github.com/aria-ease/aria-ease/compare/v6.6.0...v6.8.0) (2026-03-19)
+
+
+### Features
+
+* added accessibility semantic selectors in contracts to discover elements automatically ([2990f3c](https://github.com/aria-ease/aria-ease/commit/2990f3cf8dc6d6b72323ce29689c4c8ff500e839))
+* added rule classification and strictness profile to contract testing ([2887623](https://github.com/aria-ease/aria-ease/commit/28876235a00bdf007b14ef9f4ee91766c88857b5))
+
 ## [6.7.0](https://github.com/aria-ease/aria-ease/compare/v6.6.0...v6.7.0) (2026-03-19)
 
 
