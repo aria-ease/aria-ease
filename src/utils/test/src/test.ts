@@ -9,9 +9,13 @@ import { axe } from "jest-axe";
 import type { JestAxeResult, ContractTestResult } from "Types";
 import { runContractTests } from "./contractTestRunner";
 import { closeSharedBrowser } from "./playwrightTestHarness";
+import { normalizeStrictness, type StrictnessMode } from "./strictness";
 
+type TestAuditOptions = {
+    strictness?: StrictnessMode;
+};
 
-export async function testUiComponent(componentName: string, component: HTMLElement | null, url: string | null): Promise<JestAxeResult> {
+export async function testUiComponent(componentName: string, component: HTMLElement | null, url: string | null, options: TestAuditOptions = {}): Promise<JestAxeResult> {
     // Validate inputs
     if (!componentName || typeof componentName !== 'string') {
         throw new Error('❌ testUiComponent requires a valid componentName (string)');
@@ -58,6 +62,27 @@ export async function testUiComponent(componentName: string, component: HTMLElem
         return null;
     }
     
+    // Resolve strictness with precedence:
+    // 1) Explicit test call options
+    // 2) Matching component entry in ariaease.config.*
+    // 3) Global test.strictness in ariaease.config.*
+    // 4) balanced default
+    let strictness: StrictnessMode = normalizeStrictness(options.strictness);
+    if (options.strictness === undefined && typeof window === "undefined") {
+        try {
+            const { loadConfig } = await import("../../cli/configLoader.js");
+            const { config } = await loadConfig(process.cwd());
+
+            const componentStrictness = config.test?.components
+                ?.find((comp) => comp?.name === componentName)
+                ?.strictness;
+
+            strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+        } catch {
+            strictness = "balanced";
+        }
+    }
+
     // Run contract tests
     let contract;
     
@@ -70,7 +95,7 @@ export async function testUiComponent(componentName: string, component: HTMLElem
                 console.log(`🎭 Running Playwright tests on ${devServerUrl}`);
                 
                 const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright");
-                contract = await runContractTestsPlaywright(componentName, devServerUrl);
+                contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness);
             } else {
                 throw new Error(
                     `❌ Dev server not running at ${url}\n` +
@@ -81,7 +106,7 @@ export async function testUiComponent(componentName: string, component: HTMLElem
             // No URL provided - use isolated testing with page.setContent 
             console.log(`🎭 Running component contract tests in JSDOM mode`);
             
-            contract = await runContractTests(componentName, component as HTMLElement);
+            contract = await runContractTests(componentName, component as HTMLElement, strictness);
         } else {
             throw new Error('❌ Either component or URL must be provided');
         }

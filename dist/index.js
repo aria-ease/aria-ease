@@ -1,8 +1,11 @@
 import {
   ContractReporter,
   closeSharedBrowser,
-  contract_default
-} from "./chunk-LKN5PRYD.js";
+  contract_default,
+  normalizeLevel,
+  normalizeStrictness,
+  resolveEnforcement
+} from "./chunk-2TOYEY5L.js";
 import "./chunk-I2KLQ2HA.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
@@ -519,6 +522,20 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
   function hasSubmenu(menuItem) {
     return menuItem.hasAttribute("aria-controls") && menuItem.hasAttribute("aria-haspopup") && menuItem.getAttribute("role") === "menuitem";
   }
+  function closeAncestorMenusFromTrigger(triggerEl) {
+    let currentTrigger = triggerEl;
+    while (currentTrigger && currentTrigger.getAttribute("role") === "menuitem") {
+      const parentMenu = currentTrigger.closest('[role="menu"]');
+      if (!parentMenu) break;
+      parentMenu.style.display = "none";
+      currentTrigger.setAttribute("aria-expanded", "false");
+      const parentTriggerId = parentMenu.getAttribute("aria-labelledby");
+      if (!parentTriggerId) break;
+      const nextTrigger = document.getElementById(parentTriggerId);
+      if (!nextTrigger) break;
+      currentTrigger = nextTrigger;
+    }
+  }
   intializeMenuItems();
   function handleItemsKeydown(event, menuItem, menuItemIndex) {
     switch (event.key) {
@@ -589,11 +606,10 @@ function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }) {
         break;
       }
       case "Tab": {
-        if (!event.shiftKey || event.shiftKey) {
-          closeMenu();
-          if (onOpenChange) {
-            onOpenChange(false);
-          }
+        closeMenu();
+        closeAncestorMenusFromTrigger(triggerButton);
+        if (onOpenChange) {
+          onOpenChange(false);
         }
         break;
       }
@@ -1483,8 +1499,9 @@ import { axe } from "jest-axe";
 
 // src/utils/test/src/contractTestRunner.ts
 import fs from "fs/promises";
-async function runContractTests(componentName, component) {
+async function runContractTests(componentName, component, strictness) {
   const reporter = new ContractReporter(false);
+  const strictnessMode = normalizeStrictness(strictness);
   const contractTyped = contract_default;
   const contractPath = contractTyped[componentName]?.path;
   if (!contractPath) {
@@ -1498,19 +1515,42 @@ async function runContractTests(componentName, component) {
   const failures = [];
   const passes = [];
   const skipped = [];
-  const failuresBeforeStatic = failures.length;
+  const warnings = [];
+  const classifyFailure = (message, levelRaw) => {
+    const level = normalizeLevel(levelRaw);
+    const enforcement = resolveEnforcement(level, strictnessMode);
+    if (enforcement === "error") {
+      failures.push(message);
+      return { status: "fail", level, detail: message };
+    }
+    if (enforcement === "warning") {
+      warnings.push(message);
+      return { status: "warn", level, detail: message };
+    }
+    const ignoredMessage = `${message} (ignored by strictness=${strictnessMode}, level=${level})`;
+    skipped.push(ignoredMessage);
+    return { status: "skip", level, detail: ignoredMessage };
+  };
+  let staticPassed = 0;
+  let staticFailed = 0;
+  let staticWarnings = 0;
   for (const test of componentContract.static[0].assertions) {
     if (test.target !== "relative") {
+      const staticLevel = normalizeLevel(test.level);
       const selector = componentContract.selectors[test.target];
       if (!selector) {
-        failures.push(`Selector for target ${test.target} not found.`);
-        reporter.reportStaticTest(`${test.target} has required ARIA attributes`, false, `Selector for target ${test.target} not found.`);
+        const outcome = classifyFailure(`Selector for target ${test.target} not found.`, test.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(`${test.target} has required ARIA attributes`, outcome.status, outcome.detail, outcome.level);
         continue;
       }
       const target = component.querySelector(selector);
       if (!target) {
-        failures.push(`Target ${test.target} not found.`);
-        reporter.reportStaticTest(`${test.target} has required ARIA attributes`, false, `Target ${test.target} not found.`);
+        const outcome = classifyFailure(`Target ${test.target} not found.`, test.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(`${test.target} has required ARIA attributes`, outcome.status, outcome.detail, outcome.level);
         continue;
       }
       const attributeValue = target.getAttribute(test.attribute);
@@ -1518,35 +1558,38 @@ async function runContractTests(componentName, component) {
         const attributes = test.attribute.split(" | ");
         const hasAnyAttribute = attributes.some((attr) => target.hasAttribute(attr));
         if (!hasAnyAttribute) {
-          failures.push(test.failureMessage + ` None of the attributes "${test.attribute}" are present.`);
-          reporter.reportStaticTest(`${test.target} has ${test.attribute}`, false, test.failureMessage);
+          const outcome = classifyFailure(test.failureMessage + ` None of the attributes "${test.attribute}" are present.`, test.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(`${test.target} has ${test.attribute}`, outcome.status, outcome.detail, outcome.level);
         } else {
           passes.push(`At least one of the attributes "${test.attribute}" exists on the element.`);
-          reporter.reportStaticTest(`${test.target} has ${test.attribute}`, true);
+          staticPassed += 1;
+          reporter.reportStaticTest(`${test.target} has ${test.attribute}`, "pass", void 0, staticLevel);
         }
       } else if (!attributeValue || !test.expectedValue.split(" | ").includes(attributeValue)) {
-        failures.push(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
-        reporter.reportStaticTest(`${test.target} has ${test.attribute}="${test.expectedValue}"`, false, test.failureMessage);
+        const outcome = classifyFailure(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`, test.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(`${test.target} has ${test.attribute}="${test.expectedValue}"`, outcome.status, outcome.detail, outcome.level);
       } else {
         passes.push(`Attribute value matches expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`);
-        reporter.reportStaticTest(`${test.target} has ${test.attribute}="${attributeValue}"`, true);
+        staticPassed += 1;
+        reporter.reportStaticTest(`${test.target} has ${test.attribute}="${attributeValue}"`, "pass", void 0, staticLevel);
       }
     }
   }
   for (const dynamicTest of componentContract.dynamic) {
     skipped.push(dynamicTest.description);
-    reporter.reportTest(dynamicTest, "skip");
+    reporter.reportTest({ description: dynamicTest.description, level: dynamicTest.level }, "skip");
   }
-  const staticTotal = componentContract.static[0].assertions.length;
-  const staticFailed = failures.length - failuresBeforeStatic;
-  const staticPassed = Math.max(0, staticTotal - staticFailed);
-  reporter.reportStatic(staticPassed, staticFailed);
+  reporter.reportStatic(staticPassed, staticFailed, staticWarnings);
   reporter.summary(failures);
-  return { passes, failures, skipped };
+  return { passes, failures, skipped, warnings };
 }
 
 // src/utils/test/src/test.ts
-async function testUiComponent(componentName, component, url) {
+async function testUiComponent(componentName, component, url, options = {}) {
   if (!componentName || typeof componentName !== "string") {
     throw new Error("\u274C testUiComponent requires a valid componentName (string)");
   }
@@ -1583,14 +1626,25 @@ Error: ${error instanceof Error ? error.message : String(error)}`
     }
     return null;
   }
+  let strictness = normalizeStrictness(options.strictness);
+  if (options.strictness === void 0 && typeof window === "undefined") {
+    try {
+      const { loadConfig } = await import("./configLoader-IT4PWCJB.js");
+      const { config } = await loadConfig(process.cwd());
+      const componentStrictness = config.test?.components?.find((comp) => comp?.name === componentName)?.strictness;
+      strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+    } catch {
+      strictness = "balanced";
+    }
+  }
   let contract;
   try {
     if (url) {
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-PC6JOYYV.js");
-        contract = await runContractTestsPlaywright(componentName, devServerUrl);
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-UAOFNS7Z.js");
+        contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness);
       } else {
         throw new Error(
           `\u274C Dev server not running at ${url}
@@ -1599,7 +1653,7 @@ Please start your dev server and try again.`
       }
     } else if (component) {
       console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
-      contract = await runContractTests(componentName, component);
+      contract = await runContractTests(componentName, component, strictness);
     } else {
       throw new Error("\u274C Either component or URL must be provided");
     }

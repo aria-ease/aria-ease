@@ -13,19 +13,15 @@ Stop treating accessibility as an afterthought. Aria-Ease engineers accessibilit
 
 Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that integrates into every phase of your frontend engineering lifecycle:
 
-| Phase              | Feature                                       | Status       | Impact                                  |
-| ------------------ | --------------------------------------------- | ------------ | --------------------------------------- |
-| **🔧 Development** | Component utilities for accessible patterns   | ✅ Available | Build it right from the start           |
-| **⚡ Linting**     | ESLint rules to enforce accessible coding     | 🚧 Roadmap   | Catch mistakes as you type              |
-| **🔍 Pre-Deploy**  | Axe-core powered static accessibility audit   | ✅ Available | Verify before it ships                  |
-| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | ✅ Available | 26 combobox assertions in ~2 seconds    |
-| **🚀 CI/CD**       | Accessibility as deployment gatekeeper        | ✅ Available | Block inaccessible code from production |
-| **📊 Production**  | Real user signal monitoring and replay        | 🚧 Roadmap   | Understand how users actually interact  |
-| **📈 Insights**    | Dashboard for reporting and analytics         | 🚧 Roadmap   | Visualize accessibility health          |
-
-**The philosophy:** By the time your app reaches manual testing, there should only be minute, non-automatable aspects left to verify.
-
-**The reality:** Code that fails accessibility checks cannot reach production. Period.
+| Phase              | Feature                                       | Status       | Impact                                        |
+| ------------------ | --------------------------------------------- | ------------ | --------------------------------------------- |
+| **🔧 Development** | Component utilities for accessible patterns   | ✅ Available | Build it right from the start                 |
+| **⚡ Linting**     | ESLint rules to enforce accessible coding     | 🚧 Roadmap   | Catch mistakes as you type                    |
+| **🔍 Pre-Deploy**  | Axe-core powered static accessibility audit   | ✅ Available | Verify before it ships                        |
+| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | ✅ Available | Fast, determinic component accessibility test |
+| **🚀 CI/CD**       | Accessibility as deployment gatekeeper        | ✅ Available | Block inaccessible code from production       |
+| **📊 Production**  | Real user signal monitoring and replay        | 🚧 Roadmap   | Understand how users actually interact        |
+| **📈 Insights**    | Dashboard for reporting and analytics         | 🚧 Roadmap   | Visualize accessibility health                |
 
 ---
 
@@ -35,7 +31,7 @@ Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that
 
 **Traditional approach:** Build features → Manual testing → Find accessibility issues → Fix them → Manual testing again → Ship (maybe)
 
-**Aria-Ease approach:** Build with accessible utilities → Automated audits catch issues → Contract tests verify behavior → CI/CD gates deployment → Ship with confidence
+**Aria-Ease approach:** Build with accessible utilities → Automated audits catch issues → Contract tests verify deterministic component behaviors → CI/CD gates deployment → Ship with confidence
 
 ### What Makes This Different?
 
@@ -157,6 +153,9 @@ export default {
       format: "html", // 'json' | 'csv' | 'html' | 'all'
       out: "./accessibility-reports",
     },
+  },
+  test: {
+    strictness: "balanced", // 'minimal' | 'balanced' | 'strict' | 'paranoid'
   },
 };
 ```
@@ -662,6 +661,67 @@ describe("Shopify User Menu Accessibility Test", () => {
 });
 ```
 
+### Strictness Modes
+
+Aria-Ease supports strictness policies to define how contract levels are enforced.
+
+- `minimal`
+  - `required` -> error
+  - `recommended` -> ignore
+  - `optional` -> ignore
+- `balanced` (default)
+  - `required` -> error
+  - `recommended` -> warning
+  - `optional` -> ignore
+- `strict`
+  - `required` -> error
+  - `recommended` -> error
+  - `optional` -> warning
+- `paranoid`
+  - `required` -> error
+  - `recommended` -> error
+  - `optional` -> error
+
+Configure strictness globally in `ariaease.config.*`:
+
+```javascript
+export default {
+  test: {
+    strictness: "balanced",
+  },
+};
+```
+
+Or define strictness per component (recommended when components have different maturity levels):
+
+```javascript
+export default {
+  test: {
+    strictness: "balanced", // fallback
+    components: [
+      {
+        name: "menu",
+        strictness: "strict",
+      },
+      {
+        name: "accordion",
+        strictness: "minimal",
+      },
+    ],
+  },
+};
+```
+
+`path` is optional and not required for strictness resolution.
+
+Or override per test call:
+
+```javascript
+await testUiComponent("menu", null, "http://localhost:5173/test-harness?component=menu", {
+  strictness: "strict",
+});
+```
+
 ---
 
 ## 📦 Bundle Size
@@ -989,7 +1049,7 @@ npx aria-ease test
 - Deterministic JSON contracts (no flaky selectors)
 - Runs headless in CI
 
-**Compare to manual testing:** Manually verifying keyboard interactions for a combobox (arrow keys, typing, Enter, Escape, Home/End, etc.) across browsers, verifying WAI-ARIA roles, states and properties = 20-30 minutes. Aria-Ease = 4 seconds.
+**Compare to manual testing:** Manually verifying keyboard interactions for a combobox listbox (arrow keys, typing, Enter, Escape, Home/End, etc.) across browsers, verifying WAI-ARIA roles, states and properties = 20-30 minutes. Aria-Ease = ~2 seconds.
 
 ### The Moment of Truth
 

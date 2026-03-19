@@ -212,31 +212,6 @@ test("my component test", async () => {
 });
 ```
 
-### Test Harness vs Full App
-
-**Test Harness (Recommended):**
-
-```jsx
-// ✅ Fast, isolated, deterministic
-await testUiComponent(
-  "menu",
-  null,
-  "http://localhost:5173/test-harness?component=menu",
-);
-```
-
-**Full App (For Integration Tests):**
-
-```jsx
-// Use when you need to test component within full app context
-// (with routing, layouts, app state, etc.)
-await testUiComponent(
-  "menu",
-  null,
-  "http://localhost:5173/examples/menu", // Full app page
-);
-```
-
 ## Performance Comparison
 
 | Metric              | Old Architecture | New Architecture | Improvement     |

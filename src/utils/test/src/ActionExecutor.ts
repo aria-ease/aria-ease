@@ -20,10 +20,6 @@ export class ActionExecutor {
     private timeoutMs: number = 400
   ) {}
 
-  private isOptionalMenuTarget(target: string): boolean {
-    return ["submenu", "submenuTrigger", "submenuItems"].includes(target);
-  }
-
   /**
    * Check if error is due to browser/page being closed
    */
@@ -176,14 +172,11 @@ export class ActionExecutor {
       const locator = this.page.locator(selector).first();
       const elementCount = await locator.count();
       
-      // Element not found - submenu targets may be optional depending on the contract.
+      // Element not found for keypress target.
       if (elementCount === 0) {
-        const optionalMenuTarget = this.isOptionalMenuTarget(target);
         return {
           success: false,
-          error: optionalMenuTarget
-            ? `${target} element not found (optional submenu test)`
-            : `${target} element not found.`,
+          error: `${target} element not found.`,
           shouldBreak: true // Signal to skip this test
         };
       }
