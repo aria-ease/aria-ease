@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.7.0](https://github.com/aria-ease/aria-ease/compare/v6.6.0...v6.7.0) (2026-03-19)
+
+
+### Features
+
+* added rule classification and strictness profile to contract testing ([8ab96e7](https://github.com/aria-ease/aria-ease/commit/8ab96e781b1a2b64f67df79f890126d0b4da1a79))
+
 ## [6.6.0](https://github.com/aria-ease/aria-ease/compare/v6.5.1...v6.6.0) (2026-03-15)
 
 
