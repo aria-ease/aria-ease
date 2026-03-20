@@ -50,7 +50,7 @@ Utilities   ESLint    Axe-core  Contract  Gate    Monitor   Dashboard
 
 **Aria-Ease Approach:**
 
-- Build with accessible utilities → Automated audit → Automated testing → CI/CD gates deploy → Ship with confidence
+- Build with accessible baseline utilities → Automated audit → Automated testing → CI/CD gates deploy → Ship with confidence
 - Fast, deterministic, scales effortlessly
 - **26 combobox assertions in ~4 seconds** vs 20+ minutes of manual testing
 
@@ -69,11 +69,11 @@ Utilities   ESLint    Axe-core  Contract  Gate    Monitor   Dashboard
 **Component Utilities**
 
 - Tree-shakable, framework-agnostic utilities
-- Implements WAI-ARIA APG patterns
+- Implements Aria-Ease's baseline interpretation of WAI-ARIA APG patterns
 - Handles keyboard interaction, focus management, ARIA attributes
 - 7 core components: Menu, Accordion, Checkbox, Radio, Toggle, Combobox, Block
 
-**Value:** Build it right from the start. No retrofitting needed.
+**Value:** Start from a proven, consistent baseline and build confidently. No retrofitting needed.
 
 ### Phase 2: Linting (Roadmap 🚧)
 
@@ -101,18 +101,19 @@ npx aria-ease audit --url https://yoursite.com
 
 ### Phase 4: Component Testing (Available ✅)
 
-**WAI-ARIA APG Contract Testing**
+**Baseline APG Contract Testing**
 
 - Custom Playwright runner
 - Isolated test-harness architecture
-- Deterministic JSON contracts encoding WAI-ARIA APG
+- Deterministic JSON contracts encoding Aria-Ease's baseline interpretation of WAI-ARIA APG guidance
+- Extensibility path: contracts are designed to be extendable and overridable over time
 - **Fast:** 26 combobox assertions in ~4 seconds
 
 ```bash
 npx aria-ease test --component combobox
 ```
 
-**Value:** Verify interaction behavior automatically. No more manual keyboard testing.
+**Value:** Verify baseline interaction behavior automatically, then evolve toward team-specific standards.
 
 **Innovation:** The custom Playwright contract runner and isolated test-harness system makes interaction testing feel closer to unit testing than manual QA. This is a major technical achievement.
 
@@ -189,7 +190,7 @@ Think of it like:
 
 The custom Playwright contract runner is a differentiator:
 
-- Encoding WAI-ARIA APG into deterministic JSON contracts
+- Encoding a proven APG baseline into deterministic JSON contracts
 - Isolated test-harness architecture
 - Speed that makes CI/CD practical
 - **26 combobox assertions in ~4 seconds** (quote this specific stat—it's impressive)

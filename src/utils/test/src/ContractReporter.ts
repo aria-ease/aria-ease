@@ -22,14 +22,15 @@ export class ContractReporter {
   private skipped: number = 0;
   private warnings: number = 0;
   private isPlaywright: boolean = false;
+  private isCustomContract: boolean = false;
   private apgUrl: string = 'https://www.w3.org/WAI/ARIA/apg/';
   private hasPrintedStaticSection: boolean = false;
   private hasPrintedDynamicSection: boolean = false;
 
-  constructor(isPlaywright: boolean = false) {
+  constructor(isPlaywright: boolean = false, isCustomContract: boolean = false) {
     this.isPlaywright = isPlaywright;
+    this.isCustomContract = isCustomContract;
   }
-
   private log(message: string) {
     process.stderr.write(message + '\n');
   }
@@ -211,6 +212,14 @@ export class ContractReporter {
     const totalFailures = this.staticFailures + dynamicFailures;
     const totalRun = totalPasses + totalFailures + this.warnings;
 
+    // Dynamic message based on contract type
+    const getComponentMessage = () => {
+      const componentDisplayName = `${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)}`;
+      if (this.isCustomContract) {
+        return `${componentDisplayName} component validates against your custom accessibility policy ✓`;
+      }
+      return `${componentDisplayName} component meets Aria-Ease baseline WAI-ARIA expectations ✓`;
+    };
     // Report failures first
     if (failures.length > 0) {
       this.reportFailures(failures);
@@ -228,7 +237,7 @@ export class ContractReporter {
     
     if (totalFailures === 0 && this.skipped === 0 && this.warnings === 0) {
       this.log(`✅ All ${totalRun} tests passed!`);
-      this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions ✓`);
+      this.log(`   ${getComponentMessage()}`);
     } else if (totalFailures === 0) {
       this.log(`✅ ${totalPasses}/${totalRun} tests passed`);
       if (this.skipped > 0) {
@@ -237,7 +246,7 @@ export class ContractReporter {
       if (this.warnings > 0) {
         this.log(`⚠️ ${this.warnings} warning${this.warnings > 1 ? 's' : ''}`);
       }
-      this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions ✓`);
+      this.log(`   ${getComponentMessage()}`);
     } else {
       this.log(`❌ ${totalFailures} test${totalFailures > 1 ? 's' : ''} failed`);
       this.log(`✅ ${totalPasses} test${totalPasses > 1 ? 's' : ''} passed`);

@@ -18,7 +18,7 @@
     "release:major": "standard-version --release-as major",
     "clean": "rm -rf dist bin",
     "build:core": "tsup ./index.ts --format esm,cjs --dts --outDir dist --external jest-axe --external @testing-library/react --external @axe-core/playwright --external playwright",
-    "build:modules": "tsup ./src/combobox/index.ts ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/tabs/index.ts ./src/radio/index.ts ./src/toggle/index.ts --format esm,cjs --dts --treeshake --outDir dist/src",
+    "build:modules": "tsup ./src/combobox/index.ts ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/tabs/index.ts ./src/radio/index.ts ./src/toggle/index.ts ./src/contracts/index.ts --format esm,cjs --dts --treeshake --outDir dist/src",
     "build:test": "tsup ./src/utils/test/index.ts --format esm,cjs --dts --treeshake --external jest-axe --external @testing-library/react --external playwright --external @playwright/test --outDir dist/src/utils/test",
     "build:cli": "tsup ./src/utils/cli/cli.ts --format esm,cjs --dts --outDir bin --external commander --external chalk --external jest-axe --external @testing-library/react --external @axe-core/playwright --external playwright",
     "build:contracts": "mkdir -p ./dist/src/utils/test && cp -r ./src/utils/test/contract/aria-contracts ./dist/src/utils/test/",
@@ -117,6 +117,11 @@
       "types": "./dist/src/tabs/index.d.ts",
       "import": "./dist/src/tabs/index.js",
       "require": "./dist/src/tabs/index.cjs"
+    },
+    "./contracts": {
+      "types": "./dist/src/contracts/index.d.ts",
+      "import": "./dist/src/contracts/index.js",
+      "require": "./dist/src/contracts/index.cjs"
     }
   },
   "files": [

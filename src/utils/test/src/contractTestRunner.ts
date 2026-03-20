@@ -24,7 +24,10 @@ export async function runContractTests(
     const resolvedPath = new URL(contractPath, import.meta.url).pathname;
     const contractData = await fs.readFile(resolvedPath, "utf-8");
     const componentContract: ComponentContract = JSON.parse(contractData);
-    const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
+    const totalTests =
+        (componentContract.relationships?.length || 0) +
+        (componentContract.static[0]?.assertions.length || 0) +
+        componentContract.dynamic.length;
 
     reporter.start(componentName, totalTests);
 
@@ -55,6 +58,94 @@ export async function runContractTests(
     let staticPassed = 0;
     let staticFailed = 0;
     let staticWarnings = 0;
+
+    for (const rel of componentContract.relationships || []) {
+        const relationshipLevel = normalizeLevel(rel.level);
+        if (rel.type === "aria-reference") {
+            const fromSelector = componentContract.selectors[rel.from as keyof Selector];
+            const toSelector = componentContract.selectors[rel.to as keyof Selector];
+            const relDescription = `${rel.from}.${rel.attribute} references ${rel.to}`;
+
+            if (!fromSelector || !toSelector) {
+                const outcome = classifyFailure(`Relationship selector missing: from="${rel.from}" or to="${rel.to}" not found in selectors.`, rel.level);
+                if (outcome.status === 'fail') staticFailed += 1;
+                if (outcome.status === 'warn') staticWarnings += 1;
+                reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+                continue;
+            }
+
+            const fromTarget = component.querySelector(fromSelector) as HTMLElement | null;
+            const toTarget = component.querySelector(toSelector) as HTMLElement | null;
+
+            if (!fromTarget || !toTarget) {
+                const outcome = classifyFailure(`Relationship target not found: ${!fromTarget ? rel.from : rel.to}.`, rel.level);
+                if (outcome.status === 'fail') staticFailed += 1;
+                if (outcome.status === 'warn') staticWarnings += 1;
+                reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+                continue;
+            }
+
+            const toId = toTarget.getAttribute("id");
+            const attrValue = fromTarget.getAttribute(rel.attribute) || "";
+            if (!toId) {
+                const outcome = classifyFailure(`Relationship target "${rel.to}" must have an id for ${rel.attribute} validation.`, rel.level);
+                if (outcome.status === 'fail') staticFailed += 1;
+                if (outcome.status === 'warn') staticWarnings += 1;
+                reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+                continue;
+            }
+
+            const references = attrValue.split(/\s+/).filter(Boolean);
+            if (!references.includes(toId)) {
+                const outcome = classifyFailure(`Expected ${rel.from} ${rel.attribute} to reference id "${toId}", found "${attrValue}".`, rel.level);
+                if (outcome.status === 'fail') staticFailed += 1;
+                if (outcome.status === 'warn') staticWarnings += 1;
+                reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+                continue;
+            }
+
+            passes.push(`Relationship valid: ${rel.from}.${rel.attribute} -> ${rel.to} (id=${toId}).`);
+            staticPassed += 1;
+            reporter.reportStaticTest(relDescription, 'pass', undefined, relationshipLevel);
+            continue;
+        }
+
+        if (rel.type === "contains") {
+            const parentSelector = componentContract.selectors[rel.parent as keyof Selector];
+            const childSelector = componentContract.selectors[rel.child as keyof Selector];
+            const relDescription = `${rel.parent} contains ${rel.child}`;
+
+            if (!parentSelector || !childSelector) {
+                const outcome = classifyFailure(`Relationship selector missing: parent="${rel.parent}" or child="${rel.child}" not found in selectors.`, rel.level);
+                if (outcome.status === 'fail') staticFailed += 1;
+                if (outcome.status === 'warn') staticWarnings += 1;
+                reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+                continue;
+            }
+
+            const parentTarget = component.querySelector(parentSelector) as HTMLElement | null;
+            if (!parentTarget) {
+                const outcome = classifyFailure(`Relationship parent target not found: ${rel.parent}.`, rel.level);
+                if (outcome.status === 'fail') staticFailed += 1;
+                if (outcome.status === 'warn') staticWarnings += 1;
+                reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+                continue;
+            }
+
+            const nestedChild = parentTarget.querySelector(childSelector);
+            if (!nestedChild) {
+                const outcome = classifyFailure(`Expected ${rel.parent} to contain descendant matching selector for ${rel.child}.`, rel.level);
+                if (outcome.status === 'fail') staticFailed += 1;
+                if (outcome.status === 'warn') staticWarnings += 1;
+                reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+                continue;
+            }
+
+            passes.push(`Relationship valid: ${rel.parent} contains ${rel.child}.`);
+            staticPassed += 1;
+            reporter.reportStaticTest(relDescription, 'pass', undefined, relationshipLevel);
+        }
+    }
 
     for (const test of componentContract.static[0].assertions) {
         if(test.target !== "relative") {

@@ -69,6 +69,9 @@ function validateConfig(config: unknown): { valid: boolean; errors: string[] } {
               if (comp.path !== undefined && typeof comp.path !== 'string') {
                 errors.push(`test.components[${idx}].path must be a string when provided`);
               }
+              if (comp.strategyPath !== undefined && typeof comp.strategyPath !== 'string') {
+                errors.push(`test.components[${idx}].strategyPath must be a string when provided`);
+              }
               if (comp.strictness !== undefined && !['minimal', 'balanced', 'strict', 'paranoid'].includes(comp.strictness)) {
                 errors.push(`test.components[${idx}].strictness must be one of: minimal, balanced, strict, paranoid`);
               }
@@ -82,6 +85,26 @@ function validateConfig(config: unknown): { valid: boolean; errors: string[] } {
           errors.push('test.strictness must be one of: minimal, balanced, strict, paranoid');
         }
       }
+    }
+  }
+
+  // Validate contracts config if present
+  if (cfg.contracts !== undefined) {
+    if (!Array.isArray(cfg.contracts)) {
+      errors.push('contracts must be an array');
+    } else {
+      cfg.contracts.forEach((contract, idx) => {
+        if (typeof contract !== 'object' || contract === null) {
+          errors.push(`contracts[${idx}] must be an object`);
+        } else {
+          if (typeof (contract as { src?: string }).src !== 'string') {
+            errors.push(`contracts[${idx}].src is required and must be a string`);
+          }
+          if ((contract as { out?: string }).out !== undefined && typeof (contract as { out?: string }).out !== 'string') {
+            errors.push(`contracts[${idx}].out must be a string`);
+          }
+        }
+      });
     }
   }
 

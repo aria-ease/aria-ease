@@ -194,6 +194,141 @@ declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, lis
 
 declare function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation, activateOnFocus, callback }: TabsConfig): AccessibilityInstance;
 
+type Level = "required" | "recommended" | "optional";
+type ContractMeta = {
+    id?: string;
+    version?: string;
+    description?: string;
+    source?: {
+        apg?: string;
+        wcag?: string[];
+    };
+    W3CName?: string;
+};
+type SelectorsMap = Record<string, string>;
+type RelationshipInvariant = {
+    type: "aria-reference";
+    from: string;
+    attribute: string;
+    to: string;
+    level?: Level;
+} | {
+    type: "contains";
+    parent: string;
+    child: string;
+    level?: Level;
+};
+type StaticAssertion = {
+    target: string;
+    attribute: string;
+    expectedValue?: string;
+    failureMessage: string;
+    level: Level;
+};
+type DynamicAction = {
+    type: "focus" | "type" | "click" | "keypress" | "hover";
+    target: string;
+    key?: string;
+    value?: string;
+    relativeTarget?: string;
+};
+type DynamicAssertion = {
+    target: string;
+    assertion: "toBeVisible" | "notToBeVisible" | "toHaveAttribute" | "toHaveValue" | "toHaveFocus" | "toHaveRole";
+    attribute?: string;
+    expectedValue?: string;
+    failureMessage?: string;
+    relativeTarget?: string;
+    level?: Level;
+};
+type DynamicTest = {
+    description: string;
+    level?: Level;
+    action: DynamicAction[];
+    assertions: DynamicAssertion[];
+};
+type JsonContract = {
+    meta?: ContractMeta;
+    selectors: SelectorsMap;
+    relationships?: RelationshipInvariant[];
+    static: Array<{
+        assertions: StaticAssertion[];
+    }>;
+    dynamic: DynamicTest[];
+};
+declare class FluentContract {
+    private readonly jsonContract;
+    constructor(jsonContract: JsonContract);
+    toJSON(): JsonContract;
+}
+declare class StaticTargetBuilder {
+    private readonly targetName;
+    private readonly sink;
+    constructor(targetName: string, sink: StaticAssertion[]);
+    has(attribute: string, expectedValue?: string): {
+        required: () => void;
+        recommended: () => void;
+        optional: () => void;
+    };
+}
+declare class StaticBuilder {
+    private readonly sink;
+    constructor(sink: StaticAssertion[]);
+    target(targetName: string): StaticTargetBuilder;
+}
+declare class DynamicChain {
+    private readonly key;
+    private readonly testsSink;
+    private readonly selectors;
+    private selectorTarget;
+    private readonly actions;
+    private readonly assertions;
+    private explicitDescription;
+    constructor(key: string, testsSink: DynamicTest[], selectors: SelectorsMap);
+    on(target: string): this;
+    describe(description: string): this;
+    focus(targetExpression: string): this;
+    visible(target: string): this;
+    hidden(target: string): this;
+    has(target: string, attribute: string, expectedValue?: string): this;
+    required(): void;
+    recommended(): void;
+    optional(): void;
+    private finalize;
+    private parseRelativeExpression;
+}
+declare class ContractBuilder {
+    private readonly componentName;
+    private metaValue;
+    private selectorsValue;
+    private readonly relationshipInvariants;
+    private readonly staticAssertions;
+    private readonly dynamicTests;
+    constructor(componentName: string);
+    meta(meta: ContractMeta): this;
+    selectors(selectors: SelectorsMap): this;
+    relationship(invariant: RelationshipInvariant): this;
+    relationships(builderFn: (r: {
+        ariaReference: (from: string, attribute: string, to: string) => {
+            required: () => void;
+            recommended: () => void;
+            optional: () => void;
+        };
+        contains: (parent: string, child: string) => {
+            required: () => void;
+            recommended: () => void;
+            optional: () => void;
+        };
+    }) => void): this;
+    static(builderFn: (s: StaticBuilder) => void): this;
+    when(key: string): DynamicChain;
+    private validateRelationshipInvariants;
+    private validateStaticTargets;
+    private validateDynamicTargets;
+    build(): JsonContract;
+}
+declare function contract(componentName: string, define: (c: ContractBuilder) => void): FluentContract;
+
 type StrictnessMode = 'minimal' | 'balanced' | 'strict' | 'paranoid';
 
 /**
@@ -213,4 +348,4 @@ declare function testUiComponent(componentName: string, component: HTMLElement |
  */
 declare function cleanupTests(): Promise<void>;
 
-export { cleanupTests, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };
+export { ContractBuilder, type JsonContract, type RelationshipInvariant, cleanupTests, contract, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };

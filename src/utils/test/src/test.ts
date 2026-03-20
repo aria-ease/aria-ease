@@ -6,10 +6,11 @@
  */
 
 import { axe } from "jest-axe";
-import type { JestAxeResult, ContractTestResult } from "Types";
+import type { JestAxeResult, ContractTestResult, AriaEaseConfig } from "Types";
 import { runContractTests } from "./contractTestRunner";
 import { closeSharedBrowser } from "./playwrightTestHarness";
 import { normalizeStrictness, type StrictnessMode } from "./strictness";
+import path from "path";
 
 type TestAuditOptions = {
     strictness?: StrictnessMode;
@@ -68,18 +69,30 @@ export async function testUiComponent(componentName: string, component: HTMLElem
     // 3) Global test.strictness in ariaease.config.*
     // 4) balanced default
     let strictness: StrictnessMode = normalizeStrictness(options.strictness);
-    if (options.strictness === undefined && typeof window === "undefined") {
+    let config: AriaEaseConfig = {};
+    let configBaseDir = typeof process !== "undefined" ? process.cwd() : "";
+
+    // Load config in Node environments (including Vitest jsdom where window exists).
+    if (typeof process !== "undefined" && typeof process.cwd === "function") {
         try {
             const { loadConfig } = await import("../../cli/configLoader.js");
-            const { config } = await loadConfig(process.cwd());
+            const result = await loadConfig(process.cwd());
+            config = result.config;
+            if (result.configPath) {
+                configBaseDir = path.dirname(result.configPath);
+            }
 
-            const componentStrictness = config.test?.components
-                ?.find((comp) => comp?.name === componentName)
-                ?.strictness;
+            if (options.strictness === undefined) {
+                const componentStrictness = config.test?.components
+                    ?.find((comp) => comp?.name === componentName)
+                    ?.strictness;
 
-            strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+                strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+            }
         } catch {
-            strictness = "balanced";
+            if (options.strictness === undefined) {
+                strictness = "balanced";
+            }
         }
     }
 
@@ -95,7 +108,7 @@ export async function testUiComponent(componentName: string, component: HTMLElem
                 console.log(`🎭 Running Playwright tests on ${devServerUrl}`);
                 
                 const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright");
-                contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness);
+                contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness, config, configBaseDir);
             } else {
                 throw new Error(
                     `❌ Dev server not running at ${url}\n` +
