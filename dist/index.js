@@ -1805,7 +1805,7 @@ var ContractBuilder = class {
     };
   }
 };
-function contract(componentName, define) {
+function createContract(componentName, define) {
   const builder = new ContractBuilder(componentName);
   define(builder);
   return new FluentContract(builder.build());
@@ -2041,14 +2041,14 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       }
     }
   }
-  let contract2;
+  let contract;
   try {
     if (url) {
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
         const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-XBWJZMR3.js");
-        contract2 = await runContractTestsPlaywright(componentName, devServerUrl, strictness, config, configBaseDir);
+        contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness, config, configBaseDir);
       } else {
         throw new Error(
           `\u274C Dev server not running at ${url}
@@ -2057,7 +2057,7 @@ Please start your dev server and try again.`
       }
     } else if (component) {
       console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
-      contract2 = await runContractTests(componentName, component, strictness);
+      contract = await runContractTests(componentName, component, strictness);
     } else {
       throw new Error("\u274C Either component or URL must be provided");
     }
@@ -2070,13 +2070,13 @@ Please start your dev server and try again.`
   const result = {
     violations: results.violations,
     raw: results,
-    contract: contract2
+    contract
   };
-  if (contract2.failures.length > 0 && url === "Playwright") {
+  if (contract.failures.length > 0 && url === "Playwright") {
     throw new Error(
       `
-\u274C ${contract2.failures.length} accessibility contract test${contract2.failures.length > 1 ? "s" : ""} failed (Playwright mode)
-\u2705 ${contract2.passes.length} test${contract2.passes.length > 1 ? "s" : ""} passed
+\u274C ${contract.failures.length} accessibility contract test${contract.failures.length > 1 ? "s" : ""} failed (Playwright mode)
+\u2705 ${contract.passes.length} test${contract.passes.length > 1 ? "s" : ""} passed
 
 \u{1F4CB} Review the detailed test report above for specific failures.
 \u{1F4A1} Contract tests validate ARIA attributes and keyboard interactions per W3C APG guidelines.`
@@ -2151,7 +2151,7 @@ async function cleanupTests() {
 }
 export {
   cleanupTests,
-  contract,
+  createContract,
   makeAccordionAccessible,
   makeBlockAccessible,
   makeCheckboxAccessible,

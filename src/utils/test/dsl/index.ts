@@ -443,7 +443,7 @@ class ContractBuilder {
   }
 }
 
-export function contract(componentName: string, define: (c: ContractBuilder) => void): FluentContract {
+export function createContract(componentName: string, define: (c: ContractBuilder) => void): FluentContract {
   const builder = new ContractBuilder(componentName);
   define(builder);
   return new FluentContract(builder.build());

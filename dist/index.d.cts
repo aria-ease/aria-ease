@@ -327,7 +327,7 @@ declare class ContractBuilder {
     private validateDynamicTargets;
     build(): JsonContract;
 }
-declare function contract(componentName: string, define: (c: ContractBuilder) => void): FluentContract;
+declare function createContract(componentName: string, define: (c: ContractBuilder) => void): FluentContract;
 
 type StrictnessMode = 'minimal' | 'balanced' | 'strict' | 'paranoid';
 
@@ -348,4 +348,4 @@ declare function testUiComponent(componentName: string, component: HTMLElement |
  */
 declare function cleanupTests(): Promise<void>;
 
-export { ContractBuilder, type JsonContract, type RelationshipInvariant, cleanupTests, contract, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };
+export { ContractBuilder, type JsonContract, type RelationshipInvariant, cleanupTests, createContract, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };

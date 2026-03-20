@@ -487,14 +487,14 @@ function validateConfig(config) {
     if (!Array.isArray(cfg.contracts)) {
       errors.push("contracts must be an array");
     } else {
-      cfg.contracts.forEach((contract2, idx) => {
-        if (typeof contract2 !== "object" || contract2 === null) {
+      cfg.contracts.forEach((contract, idx) => {
+        if (typeof contract !== "object" || contract === null) {
           errors.push(`contracts[${idx}] must be an object`);
         } else {
-          if (typeof contract2.src !== "string") {
+          if (typeof contract.src !== "string") {
             errors.push(`contracts[${idx}].src is required and must be a string`);
           }
-          if (contract2.out !== void 0 && typeof contract2.out !== "string") {
+          if (contract.out !== void 0 && typeof contract.out !== "string") {
             errors.push(`contracts[${idx}].out must be a string`);
           }
         }
@@ -2060,7 +2060,7 @@ var init_badgeHelper = __esm({
 var index_exports = {};
 __export(index_exports, {
   cleanupTests: () => cleanupTests,
-  contract: () => contract,
+  createContract: () => createContract,
   makeAccordionAccessible: () => makeAccordionAccessible,
   makeBlockAccessible: () => makeBlockAccessible,
   makeCheckboxAccessible: () => makeCheckboxAccessible,
@@ -3870,7 +3870,7 @@ var ContractBuilder = class {
     };
   }
 };
-function contract(componentName, define) {
+function createContract(componentName, define) {
   const builder = new ContractBuilder(componentName);
   define(builder);
   return new FluentContract(builder.build());
@@ -4112,14 +4112,14 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       }
     }
   }
-  let contract2;
+  let contract;
   try {
     if (url) {
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
         const { runContractTestsPlaywright: runContractTestsPlaywright2 } = await Promise.resolve().then(() => (init_contractTestRunnerPlaywright(), contractTestRunnerPlaywright_exports));
-        contract2 = await runContractTestsPlaywright2(componentName, devServerUrl, strictness, config, configBaseDir);
+        contract = await runContractTestsPlaywright2(componentName, devServerUrl, strictness, config, configBaseDir);
       } else {
         throw new Error(
           `\u274C Dev server not running at ${url}
@@ -4128,7 +4128,7 @@ Please start your dev server and try again.`
       }
     } else if (component) {
       console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
-      contract2 = await runContractTests(componentName, component, strictness);
+      contract = await runContractTests(componentName, component, strictness);
     } else {
       throw new Error("\u274C Either component or URL must be provided");
     }
@@ -4141,13 +4141,13 @@ Please start your dev server and try again.`
   const result = {
     violations: results.violations,
     raw: results,
-    contract: contract2
+    contract
   };
-  if (contract2.failures.length > 0 && url === "Playwright") {
+  if (contract.failures.length > 0 && url === "Playwright") {
     throw new Error(
       `
-\u274C ${contract2.failures.length} accessibility contract test${contract2.failures.length > 1 ? "s" : ""} failed (Playwright mode)
-\u2705 ${contract2.passes.length} test${contract2.passes.length > 1 ? "s" : ""} passed
+\u274C ${contract.failures.length} accessibility contract test${contract.failures.length > 1 ? "s" : ""} failed (Playwright mode)
+\u2705 ${contract.passes.length} test${contract.passes.length > 1 ? "s" : ""} passed
 
 \u{1F4CB} Review the detailed test report above for specific failures.
 \u{1F4A1} Contract tests validate ARIA attributes and keyboard interactions per W3C APG guidelines.`
@@ -4223,7 +4223,7 @@ async function cleanupTests() {
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   cleanupTests,
-  contract,
+  createContract,
   makeAccordionAccessible,
   makeBlockAccessible,
   makeCheckboxAccessible,
