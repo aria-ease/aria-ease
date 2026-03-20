@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.9.0](https://github.com/aria-ease/aria-ease/compare/v6.8.0...v6.9.0) (2026-03-20)
+
+
+### Features
+
+* added DSL API and JSON contract generator ([74bf30f](https://github.com/aria-ease/aria-ease/commit/74bf30fdecff06f87d19d844f1bce600e6fefe63))
+
 ## [6.8.0](https://github.com/aria-ease/aria-ease/compare/v6.6.0...v6.8.0) (2026-03-19)
 
 
