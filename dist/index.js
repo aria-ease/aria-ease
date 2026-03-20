@@ -5,7 +5,7 @@ import {
   normalizeLevel,
   normalizeStrictness,
   resolveEnforcement
-} from "./chunk-2TOYEY5L.js";
+} from "./chunk-XERMSYEH.js";
 import "./chunk-I2KLQ2HA.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
@@ -1494,6 +1494,323 @@ function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation 
   return { activateTab, cleanup, refresh };
 }
 
+// src/utils/test/dsl/index.ts
+var FluentContract = class {
+  constructor(jsonContract) {
+    this.jsonContract = jsonContract;
+  }
+  toJSON() {
+    return this.jsonContract;
+  }
+};
+var StaticTargetBuilder = class {
+  constructor(targetName, sink) {
+    this.targetName = targetName;
+    this.sink = sink;
+  }
+  has(attribute, expectedValue) {
+    const create = (level) => {
+      this.sink.push({
+        target: this.targetName,
+        attribute,
+        expectedValue,
+        failureMessage: `Expected ${this.targetName} to have ${attribute}${expectedValue !== void 0 ? `=${expectedValue}` : ""}.`,
+        level
+      });
+    };
+    return {
+      required: () => create("required"),
+      recommended: () => create("recommended"),
+      optional: () => create("optional")
+    };
+  }
+};
+var StaticBuilder = class {
+  constructor(sink) {
+    this.sink = sink;
+  }
+  target(targetName) {
+    return new StaticTargetBuilder(targetName, this.sink);
+  }
+};
+var DynamicChain = class {
+  constructor(key, testsSink, selectors) {
+    this.key = key;
+    this.testsSink = testsSink;
+    this.selectors = selectors;
+  }
+  selectorTarget = "";
+  actions = [];
+  assertions = [];
+  explicitDescription = "";
+  on(target) {
+    this.selectorTarget = target;
+    this.actions.push({ type: "keypress", target, key: this.key });
+    return this;
+  }
+  describe(description) {
+    this.explicitDescription = description;
+    return this;
+  }
+  focus(targetExpression) {
+    const parsed = this.parseRelativeExpression(targetExpression);
+    if (parsed) {
+      if (!this.selectors[parsed.selectorKey]) {
+        const availableSelectors = Object.keys(this.selectors).sort().join(", ") || "(none)";
+        throw new Error(
+          `Invalid focus target expression "${targetExpression}": selector "${parsed.selectorKey}" is not defined. Available selectors: ${availableSelectors}`
+        );
+      }
+      if (!this.selectors.relative && this.selectors[parsed.selectorKey]) {
+        this.selectors.relative = this.selectors[parsed.selectorKey];
+      }
+      this.assertions.push({
+        target: "relative",
+        assertion: "toHaveFocus",
+        relativeTarget: parsed.relativeTarget
+      });
+    } else {
+      this.assertions.push({
+        target: targetExpression,
+        assertion: "toHaveFocus"
+      });
+    }
+    return this;
+  }
+  visible(target) {
+    this.assertions.push({ target, assertion: "toBeVisible" });
+    return this;
+  }
+  hidden(target) {
+    this.assertions.push({ target, assertion: "notToBeVisible" });
+    return this;
+  }
+  has(target, attribute, expectedValue) {
+    this.assertions.push({
+      target,
+      assertion: "toHaveAttribute",
+      attribute,
+      expectedValue
+    });
+    return this;
+  }
+  required() {
+    this.finalize("required");
+  }
+  recommended() {
+    this.finalize("recommended");
+  }
+  optional() {
+    this.finalize("optional");
+  }
+  finalize(level) {
+    if (!this.selectorTarget) {
+      throw new Error("Dynamic contract chain requires .on(<selectorKey>) before level terminator.");
+    }
+    const description = this.explicitDescription || `Pressing ${this.key} on ${this.selectorTarget} satisfies expected behavior.`;
+    this.testsSink.push({
+      description,
+      level,
+      action: this.actions,
+      assertions: this.assertions.map((a) => ({ ...a, level }))
+    });
+  }
+  parseRelativeExpression(input) {
+    const match = input.match(/^(next|previous|first|last)\(([^)]+)\)$/);
+    if (!match) return null;
+    const relativeTarget = match[1];
+    const selectorKey = match[2].trim();
+    return { relativeTarget, selectorKey };
+  }
+};
+var ContractBuilder = class {
+  constructor(componentName) {
+    this.componentName = componentName;
+  }
+  metaValue = {};
+  selectorsValue = {};
+  relationshipInvariants = [];
+  staticAssertions = [];
+  dynamicTests = [];
+  meta(meta) {
+    this.metaValue = { ...this.metaValue, ...meta };
+    return this;
+  }
+  selectors(selectors) {
+    this.selectorsValue = { ...this.selectorsValue, ...selectors };
+    return this;
+  }
+  relationship(invariant) {
+    this.relationshipInvariants.push(invariant);
+    return this;
+  }
+  relationships(builderFn) {
+    builderFn({
+      ariaReference: (from, attribute, to) => {
+        const create = (level) => {
+          this.relationshipInvariants.push({
+            type: "aria-reference",
+            from,
+            attribute,
+            to,
+            level
+          });
+        };
+        return {
+          required: () => create("required"),
+          recommended: () => create("recommended"),
+          optional: () => create("optional")
+        };
+      },
+      contains: (parent, child) => {
+        const create = (level) => {
+          this.relationshipInvariants.push({
+            type: "contains",
+            parent,
+            child,
+            level
+          });
+        };
+        return {
+          required: () => create("required"),
+          recommended: () => create("recommended"),
+          optional: () => create("optional")
+        };
+      }
+    });
+    return this;
+  }
+  static(builderFn) {
+    builderFn(new StaticBuilder(this.staticAssertions));
+    return this;
+  }
+  when(key) {
+    return new DynamicChain(key, this.dynamicTests, this.selectorsValue);
+  }
+  validateRelationshipInvariants() {
+    if (this.relationshipInvariants.length === 0) {
+      return;
+    }
+    const selectorKeys = new Set(Object.keys(this.selectorsValue));
+    const available = Object.keys(this.selectorsValue).sort().join(", ");
+    const errors = [];
+    this.relationshipInvariants.forEach((invariant, index) => {
+      const prefix = `relationships[${index}] (${invariant.type})`;
+      if (invariant.type === "aria-reference") {
+        if (!selectorKeys.has(invariant.from)) {
+          errors.push(`${prefix}: "from" references unknown selector "${invariant.from}"`);
+        }
+        if (!selectorKeys.has(invariant.to)) {
+          errors.push(`${prefix}: "to" references unknown selector "${invariant.to}"`);
+        }
+      }
+      if (invariant.type === "contains") {
+        if (!selectorKeys.has(invariant.parent)) {
+          errors.push(`${prefix}: "parent" references unknown selector "${invariant.parent}"`);
+        }
+        if (!selectorKeys.has(invariant.child)) {
+          errors.push(`${prefix}: "child" references unknown selector "${invariant.child}"`);
+        }
+      }
+    });
+    if (errors.length > 0) {
+      const availableSelectorsMessage = available.length > 0 ? available : "(none)";
+      throw new Error(
+        [
+          `Contract invariant validation failed for component "${this.componentName}".`,
+          ...errors.map((error) => `- ${error}`),
+          `Available selectors: ${availableSelectorsMessage}`
+        ].join("\n")
+      );
+    }
+  }
+  validateStaticTargets() {
+    const selectorKeys = new Set(Object.keys(this.selectorsValue));
+    const available = Object.keys(this.selectorsValue).sort().join(", ") || "(none)";
+    const errors = [];
+    this.staticAssertions.forEach((assertion, index) => {
+      if (!selectorKeys.has(assertion.target)) {
+        errors.push(`static.assertions[${index}]: target "${assertion.target}" is not defined in selectors`);
+      }
+    });
+    if (errors.length > 0) {
+      throw new Error(
+        [
+          `Contract static target validation failed for component "${this.componentName}".`,
+          ...errors.map((error) => `- ${error}`),
+          `Available selectors: ${available}`
+        ].join("\n")
+      );
+    }
+  }
+  validateDynamicTargets() {
+    const selectorKeys = new Set(Object.keys(this.selectorsValue));
+    const available = Object.keys(this.selectorsValue).sort().join(", ") || "(none)";
+    const errors = [];
+    const isValidActionTarget = (target) => {
+      return selectorKeys.has(target) || target === "document" || target === "relative";
+    };
+    const isValidAssertionTarget = (target) => {
+      return selectorKeys.has(target) || target === "relative";
+    };
+    this.dynamicTests.forEach((test, testIndex) => {
+      test.action.forEach((action, actionIndex) => {
+        if (!isValidActionTarget(action.target)) {
+          errors.push(
+            `dynamic[${testIndex}].action[${actionIndex}]: target "${action.target}" is not defined in selectors`
+          );
+        }
+      });
+      test.assertions.forEach((assertion, assertionIndex) => {
+        if (!isValidAssertionTarget(assertion.target)) {
+          errors.push(
+            `dynamic[${testIndex}].assertions[${assertionIndex}]: target "${assertion.target}" is not defined in selectors`
+          );
+        }
+        if (assertion.target === "relative" && !this.selectorsValue.relative) {
+          errors.push(
+            `dynamic[${testIndex}].assertions[${assertionIndex}]: target "relative" requires selectors.relative to be defined`
+          );
+        }
+      });
+    });
+    if (errors.length > 0) {
+      throw new Error(
+        [
+          `Contract dynamic target validation failed for component "${this.componentName}".`,
+          ...errors.map((error) => `- ${error}`),
+          `Available selectors: ${available}`,
+          `Allowed special targets: document, relative`
+        ].join("\n")
+      );
+    }
+  }
+  build() {
+    this.validateRelationshipInvariants();
+    this.validateStaticTargets();
+    this.validateDynamicTargets();
+    const fallbackId = this.metaValue.id || `aria-ease.contract.${this.componentName}`;
+    return {
+      meta: {
+        id: fallbackId,
+        version: this.metaValue.version || "1.0.0",
+        description: this.metaValue.description || `Fluent contract for ${this.componentName}`,
+        source: this.metaValue.source,
+        W3CName: this.metaValue.W3CName
+      },
+      selectors: this.selectorsValue,
+      relationships: this.relationshipInvariants,
+      static: [{ assertions: this.staticAssertions }],
+      dynamic: this.dynamicTests
+    };
+  }
+};
+function contract(componentName, define) {
+  const builder = new ContractBuilder(componentName);
+  define(builder);
+  return new FluentContract(builder.build());
+}
+
 // src/utils/test/src/test.ts
 import { axe } from "jest-axe";
 
@@ -1510,7 +1827,7 @@ async function runContractTests(componentName, component, strictness) {
   const resolvedPath = new URL(contractPath, import.meta.url).pathname;
   const contractData = await fs.readFile(resolvedPath, "utf-8");
   const componentContract = JSON.parse(contractData);
-  const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
+  const totalTests = (componentContract.relationships?.length || 0) + (componentContract.static[0]?.assertions.length || 0) + componentContract.dynamic.length;
   reporter.start(componentName, totalTests);
   const failures = [];
   const passes = [];
@@ -1534,6 +1851,82 @@ async function runContractTests(componentName, component, strictness) {
   let staticPassed = 0;
   let staticFailed = 0;
   let staticWarnings = 0;
+  for (const rel of componentContract.relationships || []) {
+    const relationshipLevel = normalizeLevel(rel.level);
+    if (rel.type === "aria-reference") {
+      const fromSelector = componentContract.selectors[rel.from];
+      const toSelector = componentContract.selectors[rel.to];
+      const relDescription = `${rel.from}.${rel.attribute} references ${rel.to}`;
+      if (!fromSelector || !toSelector) {
+        const outcome = classifyFailure(`Relationship selector missing: from="${rel.from}" or to="${rel.to}" not found in selectors.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const fromTarget = component.querySelector(fromSelector);
+      const toTarget = component.querySelector(toSelector);
+      if (!fromTarget || !toTarget) {
+        const outcome = classifyFailure(`Relationship target not found: ${!fromTarget ? rel.from : rel.to}.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const toId = toTarget.getAttribute("id");
+      const attrValue = fromTarget.getAttribute(rel.attribute) || "";
+      if (!toId) {
+        const outcome = classifyFailure(`Relationship target "${rel.to}" must have an id for ${rel.attribute} validation.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const references = attrValue.split(/\s+/).filter(Boolean);
+      if (!references.includes(toId)) {
+        const outcome = classifyFailure(`Expected ${rel.from} ${rel.attribute} to reference id "${toId}", found "${attrValue}".`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      passes.push(`Relationship valid: ${rel.from}.${rel.attribute} -> ${rel.to} (id=${toId}).`);
+      staticPassed += 1;
+      reporter.reportStaticTest(relDescription, "pass", void 0, relationshipLevel);
+      continue;
+    }
+    if (rel.type === "contains") {
+      const parentSelector = componentContract.selectors[rel.parent];
+      const childSelector = componentContract.selectors[rel.child];
+      const relDescription = `${rel.parent} contains ${rel.child}`;
+      if (!parentSelector || !childSelector) {
+        const outcome = classifyFailure(`Relationship selector missing: parent="${rel.parent}" or child="${rel.child}" not found in selectors.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const parentTarget = component.querySelector(parentSelector);
+      if (!parentTarget) {
+        const outcome = classifyFailure(`Relationship parent target not found: ${rel.parent}.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const nestedChild = parentTarget.querySelector(childSelector);
+      if (!nestedChild) {
+        const outcome = classifyFailure(`Expected ${rel.parent} to contain descendant matching selector for ${rel.child}.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      passes.push(`Relationship valid: ${rel.parent} contains ${rel.child}.`);
+      staticPassed += 1;
+      reporter.reportStaticTest(relDescription, "pass", void 0, relationshipLevel);
+    }
+  }
   for (const test of componentContract.static[0].assertions) {
     if (test.target !== "relative") {
       const staticLevel = normalizeLevel(test.level);
@@ -1589,6 +1982,7 @@ async function runContractTests(componentName, component, strictness) {
 }
 
 // src/utils/test/src/test.ts
+import path from "path";
 async function testUiComponent(componentName, component, url, options = {}) {
   if (!componentName || typeof componentName !== "string") {
     throw new Error("\u274C testUiComponent requires a valid componentName (string)");
@@ -1627,24 +2021,34 @@ Error: ${error instanceof Error ? error.message : String(error)}`
     return null;
   }
   let strictness = normalizeStrictness(options.strictness);
-  if (options.strictness === void 0 && typeof window === "undefined") {
+  let config = {};
+  let configBaseDir = typeof process !== "undefined" ? process.cwd() : "";
+  if (typeof process !== "undefined" && typeof process.cwd === "function") {
     try {
-      const { loadConfig } = await import("./configLoader-IT4PWCJB.js");
-      const { config } = await loadConfig(process.cwd());
-      const componentStrictness = config.test?.components?.find((comp) => comp?.name === componentName)?.strictness;
-      strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+      const { loadConfig } = await import("./configLoader-WTGJAP4Z.js");
+      const result2 = await loadConfig(process.cwd());
+      config = result2.config;
+      if (result2.configPath) {
+        configBaseDir = path.dirname(result2.configPath);
+      }
+      if (options.strictness === void 0) {
+        const componentStrictness = config.test?.components?.find((comp) => comp?.name === componentName)?.strictness;
+        strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+      }
     } catch {
-      strictness = "balanced";
+      if (options.strictness === void 0) {
+        strictness = "balanced";
+      }
     }
   }
-  let contract;
+  let contract2;
   try {
     if (url) {
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-UAOFNS7Z.js");
-        contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness);
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-XBWJZMR3.js");
+        contract2 = await runContractTestsPlaywright(componentName, devServerUrl, strictness, config, configBaseDir);
       } else {
         throw new Error(
           `\u274C Dev server not running at ${url}
@@ -1653,7 +2057,7 @@ Please start your dev server and try again.`
       }
     } else if (component) {
       console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
-      contract = await runContractTests(componentName, component, strictness);
+      contract2 = await runContractTests(componentName, component, strictness);
     } else {
       throw new Error("\u274C Either component or URL must be provided");
     }
@@ -1666,13 +2070,13 @@ Please start your dev server and try again.`
   const result = {
     violations: results.violations,
     raw: results,
-    contract
+    contract: contract2
   };
-  if (contract.failures.length > 0 && url === "Playwright") {
+  if (contract2.failures.length > 0 && url === "Playwright") {
     throw new Error(
       `
-\u274C ${contract.failures.length} accessibility contract test${contract.failures.length > 1 ? "s" : ""} failed (Playwright mode)
-\u2705 ${contract.passes.length} test${contract.passes.length > 1 ? "s" : ""} passed
+\u274C ${contract2.failures.length} accessibility contract test${contract2.failures.length > 1 ? "s" : ""} failed (Playwright mode)
+\u2705 ${contract2.passes.length} test${contract2.passes.length > 1 ? "s" : ""} passed
 
 \u{1F4CB} Review the detailed test report above for specific failures.
 \u{1F4A1} Contract tests validate ARIA attributes and keyboard interactions per W3C APG guidelines.`
@@ -1747,6 +2151,7 @@ async function cleanupTests() {
 }
 export {
   cleanupTests,
+  contract,
   makeAccordionAccessible,
   makeBlockAccessible,
   makeCheckboxAccessible,

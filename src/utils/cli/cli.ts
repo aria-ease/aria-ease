@@ -161,6 +161,48 @@ program.command('test')
   runTest();
 })
 
+program.command('build')
+.description('Build accessibility artifacts')
+.addCommand(
+  new Command('contracts')
+    .description('Build DSL contracts to JSON')
+    .action(async () => {
+      const { buildContracts } = await import("./buildContracts.js");
+      const { loadConfig } = await import("./configLoader.js");
+
+      const cwd = process.cwd();
+      const { config, configPath, errors } = await loadConfig(cwd);
+
+      if (configPath) {
+        console.log(chalk.green(`✅ Loaded config from ${path.basename(configPath)}\n`));
+      } else if (errors.length > 0) {
+        console.log(chalk.red('❌ Config file has errors:\n'));
+        errors.forEach(err => console.log(chalk.red(`   ${err}`)));
+        console.log('');
+        process.exit(1);
+      }
+
+      const result = await buildContracts(cwd, config);
+
+      if (!result.success && result.errors.length > 0) {
+        console.log(chalk.red(`❌ ${result.errors.length} error${result.errors.length !== 1 ? 's' : ''} occurred during build\n`));
+        process.exit(1);
+      }
+
+      if (result.built.length === 0 && (!config.contracts || config.contracts.length === 0)) {
+        // This is not really an error, just informational
+        process.exit(0);
+      }
+
+      if (result.built.length === 0) {
+        console.log(chalk.yellow('⚠️  No contracts were built\n'));
+        process.exit(1);
+      }
+
+      process.exit(0);
+    })
+)
+
 program.command('help')
 .description('Display help information')
 .action(() => {

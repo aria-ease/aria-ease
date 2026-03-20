@@ -72,11 +72,13 @@ var init_ContractReporter = __esm({
       skipped = 0;
       warnings = 0;
       isPlaywright = false;
+      isCustomContract = false;
       apgUrl = "https://www.w3.org/WAI/ARIA/apg/";
       hasPrintedStaticSection = false;
       hasPrintedDynamicSection = false;
-      constructor(isPlaywright = false) {
+      constructor(isPlaywright = false, isCustomContract = false) {
         this.isPlaywright = isPlaywright;
+        this.isCustomContract = isCustomContract;
       }
       log(message) {
         process.stderr.write(message + "\n");
@@ -237,6 +239,13 @@ ${"\u2500".repeat(60)}`);
         const totalPasses = this.staticPasses + dynamicPasses;
         const totalFailures = this.staticFailures + dynamicFailures;
         const totalRun = totalPasses + totalFailures + this.warnings;
+        const getComponentMessage = () => {
+          const componentDisplayName = `${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)}`;
+          if (this.isCustomContract) {
+            return `${componentDisplayName} component validates against your custom accessibility policy \u2713`;
+          }
+          return `${componentDisplayName} component meets Aria-Ease baseline WAI-ARIA expectations \u2713`;
+        };
         if (failures.length > 0) {
           this.reportFailures(failures);
         }
@@ -248,7 +257,7 @@ ${"\u2550".repeat(60)}`);
 `);
         if (totalFailures === 0 && this.skipped === 0 && this.warnings === 0) {
           this.log(`\u2705 All ${totalRun} tests passed!`);
-          this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions \u2713`);
+          this.log(`   ${getComponentMessage()}`);
         } else if (totalFailures === 0) {
           this.log(`\u2705 ${totalPasses}/${totalRun} tests passed`);
           if (this.skipped > 0) {
@@ -257,7 +266,7 @@ ${"\u2550".repeat(60)}`);
           if (this.warnings > 0) {
             this.log(`\u26A0\uFE0F ${this.warnings} warning${this.warnings > 1 ? "s" : ""}`);
           }
-          this.log(`   ${this.componentName.charAt(0).toUpperCase()}${this.componentName.slice(1)} component meets WAI-ARIA expectations for Roles, States, Properties, and Keyboard Interactions \u2713`);
+          this.log(`   ${getComponentMessage()}`);
         } else {
           this.log(`\u274C ${totalFailures} test${totalFailures > 1 ? "s" : ""} failed`);
           this.log(`\u2705 ${totalPasses} test${totalPasses > 1 ? "s" : ""} passed`);
@@ -457,6 +466,9 @@ function validateConfig(config) {
               if (comp.path !== void 0 && typeof comp.path !== "string") {
                 errors.push(`test.components[${idx}].path must be a string when provided`);
               }
+              if (comp.strategyPath !== void 0 && typeof comp.strategyPath !== "string") {
+                errors.push(`test.components[${idx}].strategyPath must be a string when provided`);
+              }
               if (comp.strictness !== void 0 && !["minimal", "balanced", "strict", "paranoid"].includes(comp.strictness)) {
                 errors.push(`test.components[${idx}].strictness must be one of: minimal, balanced, strict, paranoid`);
               }
@@ -469,6 +481,24 @@ function validateConfig(config) {
           errors.push("test.strictness must be one of: minimal, balanced, strict, paranoid");
         }
       }
+    }
+  }
+  if (cfg.contracts !== void 0) {
+    if (!Array.isArray(cfg.contracts)) {
+      errors.push("contracts must be an array");
+    } else {
+      cfg.contracts.forEach((contract2, idx) => {
+        if (typeof contract2 !== "object" || contract2 === null) {
+          errors.push(`contracts[${idx}] must be an object`);
+        } else {
+          if (typeof contract2.src !== "string") {
+            errors.push(`contracts[${idx}].src is required and must be a string`);
+          }
+          if (contract2.out !== void 0 && typeof contract2.out !== "string") {
+            errors.push(`contracts[${idx}].out must be a string`);
+          }
+        }
+      });
     }
   }
   return { valid: errors.length === 0, errors };
@@ -547,113 +577,11 @@ var init_test = __esm({
   }
 });
 
-// src/utils/test/src/component-strategies/ComboboxComponentStrategy.ts
-var ComboboxComponentStrategy;
-var init_ComboboxComponentStrategy = __esm({
-  "src/utils/test/src/component-strategies/ComboboxComponentStrategy.ts"() {
-    "use strict";
-    init_test();
-    ComboboxComponentStrategy = class {
-      constructor(mainSelector, selectors, actionTimeoutMs = 400, assertionTimeoutMs = 400) {
-        this.mainSelector = mainSelector;
-        this.selectors = selectors;
-        this.actionTimeoutMs = actionTimeoutMs;
-        this.assertionTimeoutMs = assertionTimeoutMs;
-      }
-      async resetState(page) {
-        if (!this.selectors.popup) return;
-        const popupSelector = this.selectors.popup;
-        const popupElement = page.locator(popupSelector).first();
-        const isPopupVisible = await popupElement.isVisible().catch(() => false);
-        if (!isPopupVisible) return;
-        let menuClosed = false;
-        let closeSelector = this.selectors.input;
-        if (!closeSelector && this.selectors.focusable) {
-          closeSelector = this.selectors.focusable;
-        } else if (!closeSelector) {
-          closeSelector = this.selectors.trigger;
-        }
-        if (closeSelector) {
-          const closeElement = page.locator(closeSelector).first();
-          await closeElement.focus();
-          await page.keyboard.press("Escape");
-          menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
-        }
-        if (!menuClosed && this.selectors.trigger) {
-          const triggerElement = page.locator(this.selectors.trigger).first();
-          await triggerElement.click({ timeout: this.actionTimeoutMs });
-          menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
-        }
-        if (!menuClosed) {
-          await page.mouse.click(10, 10);
-          menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
-        }
-        if (!menuClosed) {
-          throw new Error(
-            `\u274C FATAL: Cannot close combobox popup between tests. Popup remains visible after trying:
-  1. Escape key
-  2. Clicking trigger
-  3. Clicking outside
-This indicates a problem with the combobox component's close functionality.`
-          );
-        }
-        if (this.selectors.input) {
-          await page.locator(this.selectors.input).first().clear();
-        }
-      }
-      async shouldSkipTest() {
-        return false;
-      }
-      getMainSelector() {
-        return this.mainSelector;
-      }
-    };
-  }
-});
-
-// src/utils/test/src/component-strategies/AccordionComponentStrategy.ts
-var AccordionComponentStrategy;
-var init_AccordionComponentStrategy = __esm({
-  "src/utils/test/src/component-strategies/AccordionComponentStrategy.ts"() {
-    "use strict";
-    init_test();
-    AccordionComponentStrategy = class {
-      constructor(mainSelector, selectors, actionTimeoutMs = 400, assertionTimeoutMs = 400) {
-        this.mainSelector = mainSelector;
-        this.selectors = selectors;
-        this.actionTimeoutMs = actionTimeoutMs;
-        this.assertionTimeoutMs = assertionTimeoutMs;
-      }
-      async resetState(page) {
-        if (!this.selectors.panel || !this.selectors.trigger || this.selectors.popup) {
-          return;
-        }
-        const triggerSelector = this.selectors.trigger;
-        const panelSelector = this.selectors.panel;
-        if (!triggerSelector || !panelSelector) return;
-        const allTriggers = await page.locator(triggerSelector).all();
-        for (const trigger of allTriggers) {
-          const isExpanded = await trigger.getAttribute("aria-expanded") === "true";
-          const triggerPanel = await trigger.getAttribute("aria-controls");
-          if (isExpanded && triggerPanel) {
-            await trigger.click({ timeout: this.actionTimeoutMs });
-            const panel = page.locator(`#${triggerPanel}`);
-            await (0, test_exports.expect)(panel).toBeHidden({ timeout: this.assertionTimeoutMs }).catch(() => {
-            });
-          }
-        }
-      }
-      async shouldSkipTest() {
-        return false;
-      }
-      getMainSelector() {
-        return this.mainSelector;
-      }
-    };
-  }
-});
-
 // src/utils/test/src/component-strategies/MenuComponentStrategy.ts
+var MenuComponentStrategy_exports = {};
+__export(MenuComponentStrategy_exports, {
+  MenuComponentStrategy: () => MenuComponentStrategy
+});
 var MenuComponentStrategy;
 var init_MenuComponentStrategy = __esm({
   "src/utils/test/src/component-strategies/MenuComponentStrategy.ts"() {
@@ -734,7 +662,125 @@ This indicates a problem with the menu component's close functionality.`
   }
 });
 
+// src/utils/test/src/component-strategies/AccordionComponentStrategy.ts
+var AccordionComponentStrategy_exports = {};
+__export(AccordionComponentStrategy_exports, {
+  AccordionComponentStrategy: () => AccordionComponentStrategy
+});
+var AccordionComponentStrategy;
+var init_AccordionComponentStrategy = __esm({
+  "src/utils/test/src/component-strategies/AccordionComponentStrategy.ts"() {
+    "use strict";
+    init_test();
+    AccordionComponentStrategy = class {
+      constructor(mainSelector, selectors, actionTimeoutMs = 400, assertionTimeoutMs = 400) {
+        this.mainSelector = mainSelector;
+        this.selectors = selectors;
+        this.actionTimeoutMs = actionTimeoutMs;
+        this.assertionTimeoutMs = assertionTimeoutMs;
+      }
+      async resetState(page) {
+        if (!this.selectors.panel || !this.selectors.trigger || this.selectors.popup) {
+          return;
+        }
+        const triggerSelector = this.selectors.trigger;
+        const panelSelector = this.selectors.panel;
+        if (!triggerSelector || !panelSelector) return;
+        const allTriggers = await page.locator(triggerSelector).all();
+        for (const trigger of allTriggers) {
+          const isExpanded = await trigger.getAttribute("aria-expanded") === "true";
+          const triggerPanel = await trigger.getAttribute("aria-controls");
+          if (isExpanded && triggerPanel) {
+            await trigger.click({ timeout: this.actionTimeoutMs });
+            const panel = page.locator(`#${triggerPanel}`);
+            await (0, test_exports.expect)(panel).toBeHidden({ timeout: this.assertionTimeoutMs }).catch(() => {
+            });
+          }
+        }
+      }
+      async shouldSkipTest() {
+        return false;
+      }
+      getMainSelector() {
+        return this.mainSelector;
+      }
+    };
+  }
+});
+
+// src/utils/test/src/component-strategies/ComboboxComponentStrategy.ts
+var ComboboxComponentStrategy_exports = {};
+__export(ComboboxComponentStrategy_exports, {
+  ComboboxComponentStrategy: () => ComboboxComponentStrategy
+});
+var ComboboxComponentStrategy;
+var init_ComboboxComponentStrategy = __esm({
+  "src/utils/test/src/component-strategies/ComboboxComponentStrategy.ts"() {
+    "use strict";
+    init_test();
+    ComboboxComponentStrategy = class {
+      constructor(mainSelector, selectors, actionTimeoutMs = 400, assertionTimeoutMs = 400) {
+        this.mainSelector = mainSelector;
+        this.selectors = selectors;
+        this.actionTimeoutMs = actionTimeoutMs;
+        this.assertionTimeoutMs = assertionTimeoutMs;
+      }
+      async resetState(page) {
+        if (!this.selectors.popup) return;
+        const popupSelector = this.selectors.popup;
+        const popupElement = page.locator(popupSelector).first();
+        const isPopupVisible = await popupElement.isVisible().catch(() => false);
+        if (!isPopupVisible) return;
+        let listBoxClosed = false;
+        let closeSelector = this.selectors.input;
+        if (!closeSelector && this.selectors.focusable) {
+          closeSelector = this.selectors.focusable;
+        } else if (!closeSelector) {
+          closeSelector = this.selectors.button;
+        }
+        if (closeSelector) {
+          const closeElement = page.locator(closeSelector).first();
+          await closeElement.focus();
+          await page.keyboard.press("Escape");
+          listBoxClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
+        }
+        if (!listBoxClosed && this.selectors.button) {
+          const buttonElement = page.locator(this.selectors.button).first();
+          await buttonElement.click({ timeout: this.actionTimeoutMs });
+          listBoxClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
+        }
+        if (!listBoxClosed) {
+          await page.mouse.click(10, 10);
+          listBoxClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
+        }
+        if (!listBoxClosed) {
+          throw new Error(
+            `\u274C FATAL: Cannot close combobox popup between tests. Popup remains visible after trying:
+  1. Escape key
+  2. Clicking button
+  3. Clicking outside
+This indicates a problem with the combobox component's close functionality.`
+          );
+        }
+        if (this.selectors.input) {
+          await page.locator(this.selectors.input).first().clear();
+        }
+      }
+      async shouldSkipTest() {
+        return false;
+      }
+      getMainSelector() {
+        return this.mainSelector;
+      }
+    };
+  }
+});
+
 // src/utils/test/src/component-strategies/TabsComponentStrategy.ts
+var TabsComponentStrategy_exports = {};
+__export(TabsComponentStrategy_exports, {
+  TabsComponentStrategy: () => TabsComponentStrategy
+});
 var TabsComponentStrategy;
 var init_TabsComponentStrategy = __esm({
   "src/utils/test/src/component-strategies/TabsComponentStrategy.ts"() {
@@ -765,46 +811,173 @@ var init_TabsComponentStrategy = __esm({
   }
 });
 
+// src/utils/test/src/StrategyRegistry.ts
+var import_path2, import_url, StrategyRegistry;
+var init_StrategyRegistry = __esm({
+  "src/utils/test/src/StrategyRegistry.ts"() {
+    "use strict";
+    import_path2 = __toESM(require("path"), 1);
+    import_url = require("url");
+    StrategyRegistry = class {
+      builtInStrategies = /* @__PURE__ */ new Map();
+      constructor() {
+        this.registerBuiltInStrategies();
+      }
+      /**
+       * Register built-in strategies
+       */
+      registerBuiltInStrategies() {
+        this.builtInStrategies.set(
+          "menu",
+          () => Promise.resolve().then(() => (init_MenuComponentStrategy(), MenuComponentStrategy_exports)).then(
+            (m) => m.MenuComponentStrategy
+          )
+        );
+        this.builtInStrategies.set(
+          "accordion",
+          () => Promise.resolve().then(() => (init_AccordionComponentStrategy(), AccordionComponentStrategy_exports)).then(
+            (m) => m.AccordionComponentStrategy
+          )
+        );
+        this.builtInStrategies.set(
+          "combobox",
+          () => Promise.resolve().then(() => (init_ComboboxComponentStrategy(), ComboboxComponentStrategy_exports)).then(
+            (m) => m.ComboboxComponentStrategy
+          )
+        );
+        this.builtInStrategies.set(
+          "tabs",
+          () => Promise.resolve().then(() => (init_TabsComponentStrategy(), TabsComponentStrategy_exports)).then(
+            (m) => m.TabsComponentStrategy
+          )
+        );
+        this.builtInStrategies.set(
+          "combobox.listbox",
+          () => Promise.resolve().then(() => (init_ComboboxComponentStrategy(), ComboboxComponentStrategy_exports)).then(
+            (m) => m.ComboboxComponentStrategy
+          )
+        );
+      }
+      /**
+       * Load a strategy - either from custom path or built-in registry
+       * @param componentName - Component name (e.g., "menu", "accordion")
+       * @param customStrategyPath - Optional custom strategy file path
+       * @returns Strategy constructor function or null if not found
+       */
+      async loadStrategy(componentName, customStrategyPath, configBaseDir) {
+        try {
+          if (customStrategyPath) {
+            try {
+              const resolvedCustomPath = import_path2.default.isAbsolute(customStrategyPath) ? customStrategyPath : import_path2.default.resolve(configBaseDir || process.cwd(), customStrategyPath);
+              const customModule = await import((0, import_url.pathToFileURL)(resolvedCustomPath).href);
+              const strategy = customModule.default || customModule;
+              if (!strategy) {
+                throw new Error(`No default export found in ${customStrategyPath}`);
+              }
+              return strategy;
+            } catch (error) {
+              throw new Error(
+                `Failed to load custom strategy from ${customStrategyPath}: ${error instanceof Error ? error.message : String(error)}`
+              );
+            }
+          }
+          const builtInLoader = this.builtInStrategies.get(componentName);
+          if (!builtInLoader) {
+            return null;
+          }
+          return builtInLoader();
+        } catch (error) {
+          throw new Error(
+            `Strategy loading failed for ${componentName}: ${error instanceof Error ? error.message : String(error)}`
+          );
+        }
+      }
+      /**
+       * Check if a strategy exists (either built-in or custom path provided)
+       */
+      has(componentName, customStrategyPath) {
+        return !!customStrategyPath || this.builtInStrategies.has(componentName);
+      }
+    };
+  }
+});
+
 // src/utils/test/src/ComponentDetector.ts
-var import_fs, import_meta2, ComponentDetector;
+var import_fs, import_path3, import_meta2, ComponentDetector;
 var init_ComponentDetector = __esm({
   "src/utils/test/src/ComponentDetector.ts"() {
     "use strict";
-    init_ComboboxComponentStrategy();
-    init_AccordionComponentStrategy();
-    init_MenuComponentStrategy();
-    init_TabsComponentStrategy();
     import_fs = require("fs");
+    import_path3 = __toESM(require("path"), 1);
     init_contract();
+    init_StrategyRegistry();
     import_meta2 = {};
     ComponentDetector = class {
-      static detect(componentName, actionTimeoutMs = 400, assertionTimeoutMs = 400) {
-        const contractTyped = contract_default;
-        const contractPath = contractTyped[componentName]?.path;
+      static strategyRegistry = new StrategyRegistry();
+      static isComponentConfig(value) {
+        return typeof value === "object" && value !== null;
+      }
+      /**
+       * Detect and instantiate a component strategy
+       * Supports:
+       * - Built-in strategies (menu, accordion, combobox, tabs)
+       * - Custom strategies via config (strategyPath)
+       * - Custom contract paths via config (path)
+       * @param componentName - Component name
+       * @param componentConfig - Component config from ariaease.config.js
+       * @param actionTimeoutMs - Action timeout in milliseconds
+       * @param assertionTimeoutMs - Assertion timeout in milliseconds
+       * @returns Instantiated ComponentStrategy or null
+       */
+      static async detect(componentName, componentConfig, actionTimeoutMs = 400, assertionTimeoutMs = 400, configBaseDir) {
+        const typedComponentConfig = this.isComponentConfig(componentConfig) ? componentConfig : void 0;
+        let contractPath = typedComponentConfig?.path;
+        if (!contractPath) {
+          const contractTyped = contract_default;
+          contractPath = contractTyped[componentName]?.path;
+        }
         if (!contractPath) {
           throw new Error(`Contract path not found for component: ${componentName}`);
         }
-        const resolvedPath = new URL(contractPath, import_meta2.url).pathname;
+        const resolvedPath = (() => {
+          if (import_path3.default.isAbsolute(contractPath)) return contractPath;
+          if (configBaseDir) {
+            const configResolved = import_path3.default.resolve(configBaseDir, contractPath);
+            try {
+              (0, import_fs.readFileSync)(configResolved, "utf-8");
+              return configResolved;
+            } catch {
+            }
+          }
+          const cwdResolved = import_path3.default.resolve(process.cwd(), contractPath);
+          try {
+            (0, import_fs.readFileSync)(cwdResolved, "utf-8");
+            return cwdResolved;
+          } catch {
+            return new URL(contractPath, import_meta2.url).pathname;
+          }
+        })();
         const contractData = (0, import_fs.readFileSync)(resolvedPath, "utf-8");
         const componentContract = JSON.parse(contractData);
         const selectors = componentContract.selectors;
-        if (componentName.includes("combobox")) {
-          const mainSelector = selectors.input || selectors.container;
-          return new ComboboxComponentStrategy(mainSelector, selectors, actionTimeoutMs, assertionTimeoutMs);
+        const strategyClass = await this.strategyRegistry.loadStrategy(
+          componentName,
+          typedComponentConfig?.strategyPath,
+          configBaseDir
+        );
+        if (!strategyClass) {
+          return null;
         }
-        if (componentName === "accordion") {
-          const mainSelector = selectors.trigger || selectors.container;
-          return new AccordionComponentStrategy(mainSelector, selectors, actionTimeoutMs, assertionTimeoutMs);
-        }
-        if (componentName === "menu") {
-          const mainSelector = selectors.trigger || selectors.container;
-          return new MenuComponentStrategy(mainSelector, selectors, actionTimeoutMs, assertionTimeoutMs);
-        }
+        const mainSelector = selectors.trigger || selectors.input || selectors.tablist || selectors.container;
         if (componentName === "tabs") {
-          const mainSelector = selectors.tablist || selectors.tab;
-          return new TabsComponentStrategy(mainSelector, selectors);
+          return new strategyClass(mainSelector, selectors);
         }
-        return null;
+        return new strategyClass(
+          mainSelector,
+          selectors,
+          actionTimeoutMs,
+          assertionTimeoutMs
+        );
       }
     };
   }
@@ -1315,17 +1488,42 @@ var contractTestRunnerPlaywright_exports = {};
 __export(contractTestRunnerPlaywright_exports, {
   runContractTestsPlaywright: () => runContractTestsPlaywright
 });
-async function runContractTestsPlaywright(componentName, url, strictness) {
-  const reporter = new ContractReporter(true);
+async function runContractTestsPlaywright(componentName, url, strictness, config, configBaseDir) {
+  const componentConfig = config?.test?.components?.find((c) => c.name === componentName);
+  const isCustomContract = !!componentConfig?.path;
+  const reporter = new ContractReporter(true, isCustomContract);
   const actionTimeoutMs = 400;
   const assertionTimeoutMs = 400;
   const strictnessMode = normalizeStrictness(strictness);
-  const contractTyped = contract_default;
-  const contractPath = contractTyped[componentName]?.path;
-  const resolvedPath = new URL(contractPath, import_meta3.url).pathname;
+  let contractPath = componentConfig?.path;
+  if (!contractPath) {
+    const contractTyped = contract_default;
+    contractPath = contractTyped[componentName]?.path;
+  }
+  if (!contractPath) {
+    throw new Error(`Contract path not found for component: ${componentName}`);
+  }
+  const resolvedPath = (() => {
+    if (import_path4.default.isAbsolute(contractPath)) return contractPath;
+    if (configBaseDir) {
+      const configResolved = import_path4.default.resolve(configBaseDir, contractPath);
+      try {
+        (0, import_fs2.readFileSync)(configResolved, "utf-8");
+        return configResolved;
+      } catch {
+      }
+    }
+    const cwdResolved = import_path4.default.resolve(process.cwd(), contractPath);
+    try {
+      (0, import_fs2.readFileSync)(cwdResolved, "utf-8");
+      return cwdResolved;
+    } catch {
+      return new URL(contractPath, import_meta3.url).pathname;
+    }
+  })();
   const contractData = (0, import_fs2.readFileSync)(resolvedPath, "utf-8");
   const componentContract = JSON.parse(contractData);
-  const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
+  const totalTests = (componentContract.relationships?.length || 0) + (componentContract.static[0]?.assertions.length || 0) + componentContract.dynamic.length;
   const apgUrl = componentContract.meta?.source?.apg;
   const failures = [];
   const warnings = [];
@@ -1362,7 +1560,7 @@ async function runContractTestsPlaywright(componentName, url, strictness) {
       }
       await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     }
-    const strategy = ComponentDetector.detect(componentName, actionTimeoutMs, assertionTimeoutMs);
+    const strategy = await ComponentDetector.detect(componentName, componentConfig, actionTimeoutMs, assertionTimeoutMs, configBaseDir);
     if (!strategy) {
       throw new Error(`Unsupported component: ${componentName}`);
     }
@@ -1395,6 +1593,105 @@ This usually means:
     let staticPassed = 0;
     let staticFailed = 0;
     let staticWarnings = 0;
+    for (const rel of componentContract.relationships || []) {
+      const relationshipLevel = normalizeLevel(rel.level);
+      if (rel.type === "aria-reference") {
+        const relDescription = `${rel.from}.${rel.attribute} references ${rel.to}`;
+        const fromSelector = componentContract.selectors[rel.from];
+        const toSelector = componentContract.selectors[rel.to];
+        if (!fromSelector || !toSelector) {
+          const outcome = classifyFailure(
+            `Relationship selector missing: from="${rel.from}" or to="${rel.to}" not found in selectors.`,
+            rel.level
+          );
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+        const fromTarget = page.locator(fromSelector).first();
+        const toTarget = page.locator(toSelector).first();
+        const fromExists = await fromTarget.count() > 0;
+        const toExists = await toTarget.count() > 0;
+        if (!fromExists || !toExists) {
+          const outcome = classifyFailure(
+            `Relationship target not found: ${!fromExists ? rel.from : rel.to}.`,
+            rel.level
+          );
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+        const attrValue = await fromTarget.getAttribute(rel.attribute);
+        const toId = await toTarget.getAttribute("id");
+        if (!toId) {
+          const outcome = classifyFailure(
+            `Relationship target "${rel.to}" must have an id for ${rel.attribute} validation.`,
+            rel.level
+          );
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+        const references = (attrValue || "").split(/\s+/).filter(Boolean);
+        const matches = references.includes(toId);
+        if (!matches) {
+          const outcome = classifyFailure(
+            `Expected ${rel.from} ${rel.attribute} to reference id "${toId}", found "${attrValue || ""}".`,
+            rel.level
+          );
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+        passes.push(`Relationship valid: ${rel.from}.${rel.attribute} -> ${rel.to} (id=${toId}).`);
+        staticPassed += 1;
+        reporter.reportStaticTest(relDescription, "pass", void 0, relationshipLevel);
+        continue;
+      }
+      if (rel.type === "contains") {
+        const relDescription = `${rel.parent} contains ${rel.child}`;
+        const parentSelector = componentContract.selectors[rel.parent];
+        const childSelector = componentContract.selectors[rel.child];
+        if (!parentSelector || !childSelector) {
+          const outcome = classifyFailure(
+            `Relationship selector missing: parent="${rel.parent}" or child="${rel.child}" not found in selectors.`,
+            rel.level
+          );
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+        const parent = page.locator(parentSelector).first();
+        const parentExists = await parent.count() > 0;
+        if (!parentExists) {
+          const outcome = classifyFailure(`Relationship parent target not found: ${rel.parent}.`, rel.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+        const descendants = parent.locator(childSelector);
+        const descendantCount = await descendants.count();
+        if (descendantCount < 1) {
+          const outcome = classifyFailure(
+            `Expected ${rel.parent} to contain descendant matching selector for ${rel.child}.`,
+            rel.level
+          );
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+        passes.push(`Relationship valid: ${rel.parent} contains ${rel.child}.`);
+        staticPassed += 1;
+        reporter.reportStaticTest(relDescription, "pass", void 0, relationshipLevel);
+      }
+    }
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
     for (const test of componentContract.static[0]?.assertions || []) {
       if (test.target === "relative") continue;
@@ -1628,11 +1925,12 @@ Make sure your dev server is running at ${url}`);
   }
   return { passes, failures, skipped, warnings };
 }
-var import_fs2, import_meta3;
+var import_fs2, import_path4, import_meta3;
 var init_contractTestRunnerPlaywright = __esm({
   "src/utils/test/src/contractTestRunnerPlaywright.ts"() {
     "use strict";
     import_fs2 = require("fs");
+    import_path4 = __toESM(require("path"), 1);
     init_contract();
     init_playwrightTestHarness();
     init_ComponentDetector();
@@ -1665,7 +1963,7 @@ function displayBadgeInfo(badgeType) {
   console.log(import_chalk.default.dim("\n   This helps others discover accessibility tools and shows you care!\n"));
 }
 async function promptAddBadge(badgeType, cwd = process.cwd()) {
-  const readmePath = import_path2.default.join(cwd, "README.md");
+  const readmePath = import_path5.default.join(cwd, "README.md");
   const readmeExists = await import_fs_extra2.default.pathExists(readmePath);
   if (!readmeExists) {
     console.log(import_chalk.default.yellow("   \u2139\uFE0F  No README.md found in current directory"));
@@ -1727,12 +2025,12 @@ function displayAllBadges() {
   console.log(import_chalk.default.green("   " + getBadgeMarkdown("verified")));
   console.log("");
 }
-var import_fs_extra2, import_path2, import_chalk, import_readline, BADGE_CONFIGS;
+var import_fs_extra2, import_path5, import_chalk, import_readline, BADGE_CONFIGS;
 var init_badgeHelper = __esm({
   "src/utils/cli/badgeHelper.ts"() {
     "use strict";
     import_fs_extra2 = __toESM(require("fs-extra"), 1);
-    import_path2 = __toESM(require("path"), 1);
+    import_path5 = __toESM(require("path"), 1);
     import_chalk = __toESM(require("chalk"), 1);
     import_readline = __toESM(require("readline"), 1);
     BADGE_CONFIGS = {
@@ -1762,6 +2060,7 @@ var init_badgeHelper = __esm({
 var index_exports = {};
 __export(index_exports, {
   cleanupTests: () => cleanupTests,
+  contract: () => contract,
   makeAccordionAccessible: () => makeAccordionAccessible,
   makeBlockAccessible: () => makeBlockAccessible,
   makeCheckboxAccessible: () => makeCheckboxAccessible,
@@ -3260,6 +3559,323 @@ function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation 
   return { activateTab, cleanup, refresh };
 }
 
+// src/utils/test/dsl/index.ts
+var FluentContract = class {
+  constructor(jsonContract) {
+    this.jsonContract = jsonContract;
+  }
+  toJSON() {
+    return this.jsonContract;
+  }
+};
+var StaticTargetBuilder = class {
+  constructor(targetName, sink) {
+    this.targetName = targetName;
+    this.sink = sink;
+  }
+  has(attribute, expectedValue) {
+    const create = (level) => {
+      this.sink.push({
+        target: this.targetName,
+        attribute,
+        expectedValue,
+        failureMessage: `Expected ${this.targetName} to have ${attribute}${expectedValue !== void 0 ? `=${expectedValue}` : ""}.`,
+        level
+      });
+    };
+    return {
+      required: () => create("required"),
+      recommended: () => create("recommended"),
+      optional: () => create("optional")
+    };
+  }
+};
+var StaticBuilder = class {
+  constructor(sink) {
+    this.sink = sink;
+  }
+  target(targetName) {
+    return new StaticTargetBuilder(targetName, this.sink);
+  }
+};
+var DynamicChain = class {
+  constructor(key, testsSink, selectors) {
+    this.key = key;
+    this.testsSink = testsSink;
+    this.selectors = selectors;
+  }
+  selectorTarget = "";
+  actions = [];
+  assertions = [];
+  explicitDescription = "";
+  on(target) {
+    this.selectorTarget = target;
+    this.actions.push({ type: "keypress", target, key: this.key });
+    return this;
+  }
+  describe(description) {
+    this.explicitDescription = description;
+    return this;
+  }
+  focus(targetExpression) {
+    const parsed = this.parseRelativeExpression(targetExpression);
+    if (parsed) {
+      if (!this.selectors[parsed.selectorKey]) {
+        const availableSelectors = Object.keys(this.selectors).sort().join(", ") || "(none)";
+        throw new Error(
+          `Invalid focus target expression "${targetExpression}": selector "${parsed.selectorKey}" is not defined. Available selectors: ${availableSelectors}`
+        );
+      }
+      if (!this.selectors.relative && this.selectors[parsed.selectorKey]) {
+        this.selectors.relative = this.selectors[parsed.selectorKey];
+      }
+      this.assertions.push({
+        target: "relative",
+        assertion: "toHaveFocus",
+        relativeTarget: parsed.relativeTarget
+      });
+    } else {
+      this.assertions.push({
+        target: targetExpression,
+        assertion: "toHaveFocus"
+      });
+    }
+    return this;
+  }
+  visible(target) {
+    this.assertions.push({ target, assertion: "toBeVisible" });
+    return this;
+  }
+  hidden(target) {
+    this.assertions.push({ target, assertion: "notToBeVisible" });
+    return this;
+  }
+  has(target, attribute, expectedValue) {
+    this.assertions.push({
+      target,
+      assertion: "toHaveAttribute",
+      attribute,
+      expectedValue
+    });
+    return this;
+  }
+  required() {
+    this.finalize("required");
+  }
+  recommended() {
+    this.finalize("recommended");
+  }
+  optional() {
+    this.finalize("optional");
+  }
+  finalize(level) {
+    if (!this.selectorTarget) {
+      throw new Error("Dynamic contract chain requires .on(<selectorKey>) before level terminator.");
+    }
+    const description = this.explicitDescription || `Pressing ${this.key} on ${this.selectorTarget} satisfies expected behavior.`;
+    this.testsSink.push({
+      description,
+      level,
+      action: this.actions,
+      assertions: this.assertions.map((a) => ({ ...a, level }))
+    });
+  }
+  parseRelativeExpression(input) {
+    const match = input.match(/^(next|previous|first|last)\(([^)]+)\)$/);
+    if (!match) return null;
+    const relativeTarget = match[1];
+    const selectorKey = match[2].trim();
+    return { relativeTarget, selectorKey };
+  }
+};
+var ContractBuilder = class {
+  constructor(componentName) {
+    this.componentName = componentName;
+  }
+  metaValue = {};
+  selectorsValue = {};
+  relationshipInvariants = [];
+  staticAssertions = [];
+  dynamicTests = [];
+  meta(meta) {
+    this.metaValue = { ...this.metaValue, ...meta };
+    return this;
+  }
+  selectors(selectors) {
+    this.selectorsValue = { ...this.selectorsValue, ...selectors };
+    return this;
+  }
+  relationship(invariant) {
+    this.relationshipInvariants.push(invariant);
+    return this;
+  }
+  relationships(builderFn) {
+    builderFn({
+      ariaReference: (from, attribute, to) => {
+        const create = (level) => {
+          this.relationshipInvariants.push({
+            type: "aria-reference",
+            from,
+            attribute,
+            to,
+            level
+          });
+        };
+        return {
+          required: () => create("required"),
+          recommended: () => create("recommended"),
+          optional: () => create("optional")
+        };
+      },
+      contains: (parent, child) => {
+        const create = (level) => {
+          this.relationshipInvariants.push({
+            type: "contains",
+            parent,
+            child,
+            level
+          });
+        };
+        return {
+          required: () => create("required"),
+          recommended: () => create("recommended"),
+          optional: () => create("optional")
+        };
+      }
+    });
+    return this;
+  }
+  static(builderFn) {
+    builderFn(new StaticBuilder(this.staticAssertions));
+    return this;
+  }
+  when(key) {
+    return new DynamicChain(key, this.dynamicTests, this.selectorsValue);
+  }
+  validateRelationshipInvariants() {
+    if (this.relationshipInvariants.length === 0) {
+      return;
+    }
+    const selectorKeys = new Set(Object.keys(this.selectorsValue));
+    const available = Object.keys(this.selectorsValue).sort().join(", ");
+    const errors = [];
+    this.relationshipInvariants.forEach((invariant, index) => {
+      const prefix = `relationships[${index}] (${invariant.type})`;
+      if (invariant.type === "aria-reference") {
+        if (!selectorKeys.has(invariant.from)) {
+          errors.push(`${prefix}: "from" references unknown selector "${invariant.from}"`);
+        }
+        if (!selectorKeys.has(invariant.to)) {
+          errors.push(`${prefix}: "to" references unknown selector "${invariant.to}"`);
+        }
+      }
+      if (invariant.type === "contains") {
+        if (!selectorKeys.has(invariant.parent)) {
+          errors.push(`${prefix}: "parent" references unknown selector "${invariant.parent}"`);
+        }
+        if (!selectorKeys.has(invariant.child)) {
+          errors.push(`${prefix}: "child" references unknown selector "${invariant.child}"`);
+        }
+      }
+    });
+    if (errors.length > 0) {
+      const availableSelectorsMessage = available.length > 0 ? available : "(none)";
+      throw new Error(
+        [
+          `Contract invariant validation failed for component "${this.componentName}".`,
+          ...errors.map((error) => `- ${error}`),
+          `Available selectors: ${availableSelectorsMessage}`
+        ].join("\n")
+      );
+    }
+  }
+  validateStaticTargets() {
+    const selectorKeys = new Set(Object.keys(this.selectorsValue));
+    const available = Object.keys(this.selectorsValue).sort().join(", ") || "(none)";
+    const errors = [];
+    this.staticAssertions.forEach((assertion, index) => {
+      if (!selectorKeys.has(assertion.target)) {
+        errors.push(`static.assertions[${index}]: target "${assertion.target}" is not defined in selectors`);
+      }
+    });
+    if (errors.length > 0) {
+      throw new Error(
+        [
+          `Contract static target validation failed for component "${this.componentName}".`,
+          ...errors.map((error) => `- ${error}`),
+          `Available selectors: ${available}`
+        ].join("\n")
+      );
+    }
+  }
+  validateDynamicTargets() {
+    const selectorKeys = new Set(Object.keys(this.selectorsValue));
+    const available = Object.keys(this.selectorsValue).sort().join(", ") || "(none)";
+    const errors = [];
+    const isValidActionTarget = (target) => {
+      return selectorKeys.has(target) || target === "document" || target === "relative";
+    };
+    const isValidAssertionTarget = (target) => {
+      return selectorKeys.has(target) || target === "relative";
+    };
+    this.dynamicTests.forEach((test, testIndex) => {
+      test.action.forEach((action, actionIndex) => {
+        if (!isValidActionTarget(action.target)) {
+          errors.push(
+            `dynamic[${testIndex}].action[${actionIndex}]: target "${action.target}" is not defined in selectors`
+          );
+        }
+      });
+      test.assertions.forEach((assertion, assertionIndex) => {
+        if (!isValidAssertionTarget(assertion.target)) {
+          errors.push(
+            `dynamic[${testIndex}].assertions[${assertionIndex}]: target "${assertion.target}" is not defined in selectors`
+          );
+        }
+        if (assertion.target === "relative" && !this.selectorsValue.relative) {
+          errors.push(
+            `dynamic[${testIndex}].assertions[${assertionIndex}]: target "relative" requires selectors.relative to be defined`
+          );
+        }
+      });
+    });
+    if (errors.length > 0) {
+      throw new Error(
+        [
+          `Contract dynamic target validation failed for component "${this.componentName}".`,
+          ...errors.map((error) => `- ${error}`),
+          `Available selectors: ${available}`,
+          `Allowed special targets: document, relative`
+        ].join("\n")
+      );
+    }
+  }
+  build() {
+    this.validateRelationshipInvariants();
+    this.validateStaticTargets();
+    this.validateDynamicTargets();
+    const fallbackId = this.metaValue.id || `aria-ease.contract.${this.componentName}`;
+    return {
+      meta: {
+        id: fallbackId,
+        version: this.metaValue.version || "1.0.0",
+        description: this.metaValue.description || `Fluent contract for ${this.componentName}`,
+        source: this.metaValue.source,
+        W3CName: this.metaValue.W3CName
+      },
+      selectors: this.selectorsValue,
+      relationships: this.relationshipInvariants,
+      static: [{ assertions: this.staticAssertions }],
+      dynamic: this.dynamicTests
+    };
+  }
+};
+function contract(componentName, define) {
+  const builder = new ContractBuilder(componentName);
+  define(builder);
+  return new FluentContract(builder.build());
+}
+
 // src/utils/test/src/test.ts
 var import_jest_axe = require("jest-axe");
 
@@ -3280,7 +3896,7 @@ async function runContractTests(componentName, component, strictness) {
   const resolvedPath = new URL(contractPath, import_meta.url).pathname;
   const contractData = await import_promises.default.readFile(resolvedPath, "utf-8");
   const componentContract = JSON.parse(contractData);
-  const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
+  const totalTests = (componentContract.relationships?.length || 0) + (componentContract.static[0]?.assertions.length || 0) + componentContract.dynamic.length;
   reporter.start(componentName, totalTests);
   const failures = [];
   const passes = [];
@@ -3304,6 +3920,82 @@ async function runContractTests(componentName, component, strictness) {
   let staticPassed = 0;
   let staticFailed = 0;
   let staticWarnings = 0;
+  for (const rel of componentContract.relationships || []) {
+    const relationshipLevel = normalizeLevel(rel.level);
+    if (rel.type === "aria-reference") {
+      const fromSelector = componentContract.selectors[rel.from];
+      const toSelector = componentContract.selectors[rel.to];
+      const relDescription = `${rel.from}.${rel.attribute} references ${rel.to}`;
+      if (!fromSelector || !toSelector) {
+        const outcome = classifyFailure(`Relationship selector missing: from="${rel.from}" or to="${rel.to}" not found in selectors.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const fromTarget = component.querySelector(fromSelector);
+      const toTarget = component.querySelector(toSelector);
+      if (!fromTarget || !toTarget) {
+        const outcome = classifyFailure(`Relationship target not found: ${!fromTarget ? rel.from : rel.to}.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const toId = toTarget.getAttribute("id");
+      const attrValue = fromTarget.getAttribute(rel.attribute) || "";
+      if (!toId) {
+        const outcome = classifyFailure(`Relationship target "${rel.to}" must have an id for ${rel.attribute} validation.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const references = attrValue.split(/\s+/).filter(Boolean);
+      if (!references.includes(toId)) {
+        const outcome = classifyFailure(`Expected ${rel.from} ${rel.attribute} to reference id "${toId}", found "${attrValue}".`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      passes.push(`Relationship valid: ${rel.from}.${rel.attribute} -> ${rel.to} (id=${toId}).`);
+      staticPassed += 1;
+      reporter.reportStaticTest(relDescription, "pass", void 0, relationshipLevel);
+      continue;
+    }
+    if (rel.type === "contains") {
+      const parentSelector = componentContract.selectors[rel.parent];
+      const childSelector = componentContract.selectors[rel.child];
+      const relDescription = `${rel.parent} contains ${rel.child}`;
+      if (!parentSelector || !childSelector) {
+        const outcome = classifyFailure(`Relationship selector missing: parent="${rel.parent}" or child="${rel.child}" not found in selectors.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const parentTarget = component.querySelector(parentSelector);
+      if (!parentTarget) {
+        const outcome = classifyFailure(`Relationship parent target not found: ${rel.parent}.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const nestedChild = parentTarget.querySelector(childSelector);
+      if (!nestedChild) {
+        const outcome = classifyFailure(`Expected ${rel.parent} to contain descendant matching selector for ${rel.child}.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      passes.push(`Relationship valid: ${rel.parent} contains ${rel.child}.`);
+      staticPassed += 1;
+      reporter.reportStaticTest(relDescription, "pass", void 0, relationshipLevel);
+    }
+  }
   for (const test of componentContract.static[0].assertions) {
     if (test.target !== "relative") {
       const staticLevel = normalizeLevel(test.level);
@@ -3361,6 +4053,7 @@ async function runContractTests(componentName, component, strictness) {
 // src/utils/test/src/test.ts
 init_playwrightTestHarness();
 init_strictness();
+var import_path6 = __toESM(require("path"), 1);
 async function testUiComponent(componentName, component, url, options = {}) {
   if (!componentName || typeof componentName !== "string") {
     throw new Error("\u274C testUiComponent requires a valid componentName (string)");
@@ -3399,24 +4092,34 @@ Error: ${error instanceof Error ? error.message : String(error)}`
     return null;
   }
   let strictness = normalizeStrictness(options.strictness);
-  if (options.strictness === void 0 && typeof window === "undefined") {
+  let config = {};
+  let configBaseDir = typeof process !== "undefined" ? process.cwd() : "";
+  if (typeof process !== "undefined" && typeof process.cwd === "function") {
     try {
       const { loadConfig: loadConfig2 } = await Promise.resolve().then(() => (init_configLoader(), configLoader_exports));
-      const { config } = await loadConfig2(process.cwd());
-      const componentStrictness = config.test?.components?.find((comp) => comp?.name === componentName)?.strictness;
-      strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+      const result2 = await loadConfig2(process.cwd());
+      config = result2.config;
+      if (result2.configPath) {
+        configBaseDir = import_path6.default.dirname(result2.configPath);
+      }
+      if (options.strictness === void 0) {
+        const componentStrictness = config.test?.components?.find((comp) => comp?.name === componentName)?.strictness;
+        strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+      }
     } catch {
-      strictness = "balanced";
+      if (options.strictness === void 0) {
+        strictness = "balanced";
+      }
     }
   }
-  let contract;
+  let contract2;
   try {
     if (url) {
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
         const { runContractTestsPlaywright: runContractTestsPlaywright2 } = await Promise.resolve().then(() => (init_contractTestRunnerPlaywright(), contractTestRunnerPlaywright_exports));
-        contract = await runContractTestsPlaywright2(componentName, devServerUrl, strictness);
+        contract2 = await runContractTestsPlaywright2(componentName, devServerUrl, strictness, config, configBaseDir);
       } else {
         throw new Error(
           `\u274C Dev server not running at ${url}
@@ -3425,7 +4128,7 @@ Please start your dev server and try again.`
       }
     } else if (component) {
       console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
-      contract = await runContractTests(componentName, component, strictness);
+      contract2 = await runContractTests(componentName, component, strictness);
     } else {
       throw new Error("\u274C Either component or URL must be provided");
     }
@@ -3438,13 +4141,13 @@ Please start your dev server and try again.`
   const result = {
     violations: results.violations,
     raw: results,
-    contract
+    contract: contract2
   };
-  if (contract.failures.length > 0 && url === "Playwright") {
+  if (contract2.failures.length > 0 && url === "Playwright") {
     throw new Error(
       `
-\u274C ${contract.failures.length} accessibility contract test${contract.failures.length > 1 ? "s" : ""} failed (Playwright mode)
-\u2705 ${contract.passes.length} test${contract.passes.length > 1 ? "s" : ""} passed
+\u274C ${contract2.failures.length} accessibility contract test${contract2.failures.length > 1 ? "s" : ""} failed (Playwright mode)
+\u2705 ${contract2.passes.length} test${contract2.passes.length > 1 ? "s" : ""} passed
 
 \u{1F4CB} Review the detailed test report above for specific failures.
 \u{1F4A1} Contract tests validate ARIA attributes and keyboard interactions per W3C APG guidelines.`
@@ -3520,6 +4223,7 @@ async function cleanupTests() {
 // Annotate the CommonJS export names for ESM import in node:
 0 && (module.exports = {
   cleanupTests,
+  contract,
   makeAccordionAccessible,
   makeBlockAccessible,
   makeCheckboxAccessible,

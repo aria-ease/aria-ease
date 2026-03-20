@@ -55,11 +55,7 @@
                     "parent": { "type": "string" },
                     "child": { "type": "string" },
                     "failureMessage": { "type": "string" },
-                    "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
-                    "interpretation": { "type": "string", "enum": ["strict", "relaxed", ""] },
-                    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
-                    "rationale": { "type": "string" },
-                    "note": { "type": "string" }
+                    "level": { "type": "string", "enum": ["optional", "recommended", "required"] }
                 },
                 "allOf": [
                     {
@@ -93,18 +89,14 @@
                         "type": "array",
                         "items": {
                             "type": "object",
-                            "required": ["target", "assertion", "failureMessage"],
+                            "required": ["target", "assertion", "failureMessage", "level"],
                             "properties": {
                                 "target": { "type": "string" },
                                 "assertion": { "type": "string" },
                                 "attribute": { "type": "string" },
                                 "expectedValue": { "type": "string" },
                                 "failureMessage": { "type": "string" },
-                                "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
-                                "interpretation": { "type": "string", "enum": ["strict", "relaxed", ""] },
-                                "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
-                                "rationale": { "type": "string" },
-                                "note": { "type": "string" }
+                                "level": { "type": "string", "enum": ["optional", "recommended", "required"] }
                             }
                         }
                     }
@@ -121,10 +113,6 @@
                 "properties": {
                     "description": { "type": "string" },
                     "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
-                    "interpretation": { "type": "string", "enum": ["strict", "relaxed", ""] },
-                    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
-                    "rationale": { "type": "string" },
-                    "note": { "type": "string" },
                     "isVertical": { "type": "boolean" },
                     "isMultiple": { "type": "boolean" },
                     "action": {
@@ -145,7 +133,7 @@
                         "type": "array",
                         "items": {
                             "type": "object",
-                            "required": ["target", "assertion", "failureMessage"],
+                            "required": ["target", "assertion", "failureMessage", "level"],
                             "properties": {
                                 "target": { "type": "string" },
                                 "assertion": { "type": "string" },
@@ -153,11 +141,7 @@
                                 "expectedValue": { "type": "string" },
                                 "relativeTarget": { "type": "string" },
                                 "failureMessage": { "type": "string" },
-                                "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
-                                "interpretation": { "type": "string", "enum": ["strict", "relaxed", ""] },
-                                "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
-                                "rationale": { "type": "string" },
-                                "note": { "type": "string" }
+                                "level": { "type": "string", "enum": ["optional", "recommended", "required"] }
                             }
                         }
                     }

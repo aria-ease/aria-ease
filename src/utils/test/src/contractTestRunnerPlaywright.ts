@@ -6,8 +6,9 @@
 
 import { Page } from "playwright";
 import { readFileSync } from "fs";
+import path from "path";
 import contract from "../contract/contract.json";
-import type { ComponentContract, Contract, ContractTestResult } from "Types";
+import type { ComponentContract, Contract, ContractTestResult, AriaEaseConfig } from "Types";
 import { createTestPage } from "./playwrightTestHarness";
 import { ComponentDetector } from "./ComponentDetector";
 import { ContractReporter } from "./ContractReporter";
@@ -18,18 +19,55 @@ import { normalizeLevel, normalizeStrictness, resolveEnforcement } from "./stric
 export async function runContractTestsPlaywright(
   componentName: string,
   url?: string,
-  strictness?: string
+  strictness?: string,
+  config?: AriaEaseConfig,
+  configBaseDir?: string
 ): Promise<ContractTestResult> {
-  const reporter = new ContractReporter(true);
+  // Determine if a custom contract is being used
+  const componentConfig = config?.test?.components?.find(c => c.name === componentName);
+  const isCustomContract = !!componentConfig?.path;
+  const reporter = new ContractReporter(true, isCustomContract);
   const actionTimeoutMs = 400;
   const assertionTimeoutMs = 400;
   const strictnessMode = normalizeStrictness(strictness);
-  const contractTyped: Contract = contract;
-  const contractPath = contractTyped[componentName]?.path;
-  const resolvedPath = new URL(contractPath, import.meta.url).pathname;
+  
+  // Resolve contract path - use config override or default
+  let contractPath = componentConfig?.path;
+  if (!contractPath) {
+    const contractTyped: Contract = contract;
+    contractPath = contractTyped[componentName]?.path;
+  }
+  
+  if (!contractPath) {
+    throw new Error(`Contract path not found for component: ${componentName}`);
+  }
+
+  const resolvedPath = (() => {
+    if (path.isAbsolute(contractPath)) return contractPath;
+    if (configBaseDir) {
+      const configResolved = path.resolve(configBaseDir, contractPath);
+      try {
+        readFileSync(configResolved, "utf-8");
+        return configResolved;
+      } catch {
+        // Fall through to other resolution strategies
+      }
+    }
+    const cwdResolved = path.resolve(process.cwd(), contractPath);
+    try {
+      readFileSync(cwdResolved, "utf-8");
+      return cwdResolved;
+    } catch {
+      return new URL(contractPath, import.meta.url).pathname;
+    }
+  })();
+
   const contractData = readFileSync(resolvedPath, "utf-8");
   const componentContract: ComponentContract = JSON.parse(contractData);
-  const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
+  const totalTests =
+    (componentContract.relationships?.length || 0) +
+    (componentContract.static[0]?.assertions.length || 0) +
+    componentContract.dynamic.length;
   const apgUrl = componentContract.meta?.source?.apg;
   const failures: string[] = [];
   const warnings: string[] = [];
@@ -76,7 +114,7 @@ export async function runContractTestsPlaywright(
       await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     }
 
-    const strategy = ComponentDetector.detect(componentName, actionTimeoutMs, assertionTimeoutMs);
+    const strategy = await ComponentDetector.detect(componentName, componentConfig, actionTimeoutMs, assertionTimeoutMs, configBaseDir);
     if (!strategy) {
       throw new Error(`Unsupported component: ${componentName}`);
     }
@@ -118,10 +156,119 @@ export async function runContractTestsPlaywright(
         ? (await page.locator(componentContract.selectors.submenuTrigger).count()) > 0
         : false;
 
-    // Run static tests using AssertionRunner
     let staticPassed = 0;
     let staticFailed = 0;
     let staticWarnings = 0;
+
+    // Run relationship invariants first
+    for (const rel of componentContract.relationships || []) {
+      const relationshipLevel = normalizeLevel(rel.level);
+      if (rel.type === "aria-reference") {
+        const relDescription = `${rel.from}.${rel.attribute} references ${rel.to}`;
+        const fromSelector = componentContract.selectors[rel.from as keyof typeof componentContract.selectors];
+        const toSelector = componentContract.selectors[rel.to as keyof typeof componentContract.selectors];
+
+        if (!fromSelector || !toSelector) {
+          const outcome = classifyFailure(
+            `Relationship selector missing: from="${rel.from}" or to="${rel.to}" not found in selectors.`
+          , rel.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+
+        const fromTarget = page.locator(fromSelector).first();
+        const toTarget = page.locator(toSelector).first();
+        const fromExists = (await fromTarget.count()) > 0;
+        const toExists = (await toTarget.count()) > 0;
+
+        if (!fromExists || !toExists) {
+          const outcome = classifyFailure(
+            `Relationship target not found: ${!fromExists ? rel.from : rel.to}.`
+          , rel.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+
+        const attrValue = await fromTarget.getAttribute(rel.attribute);
+        const toId = await toTarget.getAttribute("id");
+
+        if (!toId) {
+          const outcome = classifyFailure(
+            `Relationship target "${rel.to}" must have an id for ${rel.attribute} validation.`
+          , rel.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+
+        const references = (attrValue || "").split(/\s+/).filter(Boolean);
+        const matches = references.includes(toId);
+
+        if (!matches) {
+          const outcome = classifyFailure(
+            `Expected ${rel.from} ${rel.attribute} to reference id "${toId}", found "${attrValue || ""}".`
+          , rel.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+
+        passes.push(`Relationship valid: ${rel.from}.${rel.attribute} -> ${rel.to} (id=${toId}).`);
+        staticPassed += 1;
+        reporter.reportStaticTest(relDescription, "pass", undefined, relationshipLevel);
+        continue;
+      }
+
+      if (rel.type === "contains") {
+        const relDescription = `${rel.parent} contains ${rel.child}`;
+        const parentSelector = componentContract.selectors[rel.parent as keyof typeof componentContract.selectors];
+        const childSelector = componentContract.selectors[rel.child as keyof typeof componentContract.selectors];
+
+        if (!parentSelector || !childSelector) {
+          const outcome = classifyFailure(
+            `Relationship selector missing: parent="${rel.parent}" or child="${rel.child}" not found in selectors.`
+          , rel.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+
+        const parent = page.locator(parentSelector).first();
+        const parentExists = (await parent.count()) > 0;
+        if (!parentExists) {
+          const outcome = classifyFailure(`Relationship parent target not found: ${rel.parent}.`, rel.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+
+        const descendants = parent.locator(childSelector);
+        const descendantCount = await descendants.count();
+        if (descendantCount < 1) {
+          const outcome = classifyFailure(
+            `Expected ${rel.parent} to contain descendant matching selector for ${rel.child}.`
+          , rel.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+
+        passes.push(`Relationship valid: ${rel.parent} contains ${rel.child}.`);
+        staticPassed += 1;
+        reporter.reportStaticTest(relDescription, "pass", undefined, relationshipLevel);
+      }
+    }
+
+    // Run static tests using AssertionRunner
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
     
     for (const test of componentContract.static[0]?.assertions || []) {
