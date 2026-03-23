@@ -31,6 +31,11 @@ type ContractLevel = 'required' | 'recommended' | 'optional';
 interface AriaEaseConfigTest {
     components?: AriaEaseConfigTestComponent[];
     strictness?: StrictnessMode;
+    disableTimeouts?: boolean;
+    actionTimeoutMs?: number;
+    assertionTimeoutMs?: number;
+    navigationTimeoutMs?: number;
+    componentReadyTimeoutMs?: number;
 }
 
 interface AriaEaseConfigTestComponent {
@@ -38,6 +43,11 @@ interface AriaEaseConfigTestComponent {
     path?: string;
     strategyPath?: string;
     strictness?: StrictnessMode;
+    disableTimeouts?: boolean;
+    actionTimeoutMs?: number;
+    assertionTimeoutMs?: number;
+    navigationTimeoutMs?: number;
+    componentReadyTimeoutMs?: number;
 }
 
 interface AriaEaseConfigContractSource {
@@ -110,6 +120,10 @@ interface ComponentContract {
             level?: ContractLevel;
         }
     >;
+    states?: Array<{
+        name?: string;
+        requires?: string[];
+    }>;
     static: Array<{
         assertions: Array<{
             target: string;
@@ -126,12 +140,16 @@ interface ComponentContract {
     dynamic: Array<{
         description: string;
         level?: ContractLevel;
-        interpretation?: InterpretationMode;
-        confidence?: ContractConfidence;
-        rationale?: string;
-        note?: string;
         isMultiple?: boolean;
         isVertical?: boolean;
+        given?: string;
+        setup: Array<{
+            type: string;
+            target: string;
+            key?: string;
+            value?: string;
+            relativeTarget?: string;
+        }>;
         action: Array<{
             type: string;
             target: string;

@@ -60,9 +60,9 @@ npx aria-ease audit --url https://yoursite.com
 
 #### 3. **Contract Testing** (Available Now)
 
-This is the game-changer. We encoded a deterministic, testable baseline interpretation of WAI-ARIA APG guidance into JSON "contracts" and built a custom Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
+This is the game-changer. Encoded a deterministic, testable interpretation of WAI-ARIA APG guidance into JSON "contracts" using Aria-Ease DSL API, and validate your contract against your component using Aria-Ease's Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
 
-Today, Aria-Ease maintains this baseline contract set. Down the line, contracts are being designed to be extendable and overridable so teams and experts can enforce their own standards without losing consistency.
+Teams and experts can enforce their own standards and maintain reusability and consistency.
 
 **The result?** Component interaction testing that feels closer to unit testing than manual QA.
 
@@ -72,7 +72,7 @@ npx aria-ease test
 # ✓ 26 assertions in ~1 second in CI
 ```
 
-**Why this matters:** Before, verifying a combobox meant testing every interaction manually. Now, Aria-Ease automates the repeatable baseline aspects of testing a combobox: keyboard interaction, ARIA state updates, visibility, and semantic roles.
+**Why this matters:** Before, verifying a combobox meant testing every interaction manually. Now, Aria-Ease automates the repeatable, deterministic aspects of testing a combobox: keyboard interaction, ARIA state updates, visibility, and semantic roles.
 
 #### 4. **CI/CD Integration** (Available Now)
 

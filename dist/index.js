@@ -1022,16 +1022,12 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   }
   function setActiveDescendant(index) {
     const visibleItems = getVisibleItems();
-    visibleItems.forEach((item) => {
-      item.setAttribute("aria-selected", "false");
-    });
     if (index >= 0 && index < visibleItems.length) {
       const activeItem = visibleItems[index];
       const itemId = activeItem.id || `${listBoxId}-option-${index}`;
       if (!activeItem.id) {
         activeItem.id = itemId;
       }
-      activeItem.setAttribute("aria-selected", "true");
       comboboxInput.setAttribute("aria-activedescendant", itemId);
       if (typeof activeItem.scrollIntoView === "function") {
         activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -1064,8 +1060,6 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
     comboboxInput.setAttribute("aria-activedescendant", "");
     listBox.style.display = "none";
     activeIndex = -1;
-    const visibleItems = getVisibleItems();
-    visibleItems.forEach((item) => item.setAttribute("aria-selected", "false"));
     if (callback?.onOpenChange) {
       try {
         callback.onOpenChange(false);
@@ -1077,6 +1071,7 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   function selectOption(item) {
     const value = item.textContent?.trim() || "";
     comboboxInput.value = value;
+    item.setAttribute("aria-selected", "true");
     closeListbox();
     if (callback?.onSelect) {
       try {
@@ -1123,6 +1118,10 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
         } else if (comboboxInput.value) {
           event.preventDefault();
           comboboxInput.value = "";
+          const visibleItems2 = getVisibleItems();
+          visibleItems2.forEach((item) => {
+            if (item.getAttribute("aria-selected") === "true") item.setAttribute("aria-selected", "false");
+          });
           if (callback?.onClear) {
             try {
               callback.onClear();
@@ -1201,9 +1200,24 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   function initializeOptions() {
     const items = listBox.querySelectorAll(`.${listBoxItemsClass}`);
     if (items.length === 0) return;
+    let selectedValue = null;
+    for (const item of items) {
+      if (item.getAttribute("aria-selected") === "true") {
+        selectedValue = item.textContent?.trim() || null;
+        break;
+      }
+    }
+    if (!selectedValue && comboboxInput.value) {
+      selectedValue = comboboxInput.value.trim();
+    }
     items.forEach((item, index) => {
       item.setAttribute("role", "option");
-      item.setAttribute("aria-selected", "false");
+      const itemValue = item.textContent?.trim() || "";
+      if (selectedValue && itemValue === selectedValue) {
+        item.setAttribute("aria-selected", "true");
+      } else {
+        item.setAttribute("aria-selected", "false");
+      }
       const currentId = item.getAttribute("id");
       if (!currentId || currentId === "") {
         const itemId = `${listBoxId}-option-${index}`;
@@ -1494,7 +1508,151 @@ function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation 
   return { activateTab, cleanup, refresh };
 }
 
-// src/utils/test/dsl/index.ts
+// src/utils/test/dsl/src/state-packs/comboboxStatePack.ts
+var COMBOBOX_STATES = {
+  "listbox.open": {
+    setup: openCombobox(),
+    assertion: isComboboxOpen()
+  },
+  "listbox.closed": {
+    setup: closeCombobox(),
+    assertion: isComboboxClosed()
+  },
+  "input.focused": {
+    setup: focusInput(),
+    assertion: [
+      ...isInputFocused()
+    ]
+  },
+  "input.filled": {
+    setup: fillInput(),
+    assertion: [
+      ...isInputFilled()
+    ]
+  },
+  "activeOption.first": {
+    requires: ["listbox.open"],
+    setup: [
+      { type: "keypress", target: "input", key: "ArrowDown" }
+    ],
+    assertion: [
+      ...isActiveDescendantNotEmpty()
+    ]
+  },
+  "activeOption.last": {
+    requires: ["activeOption.first"],
+    setup: [
+      { type: "keypress", target: "input", key: "ArrowUp" }
+    ],
+    assertion: [
+      ...isActiveDescendantNotEmpty()
+    ]
+  },
+  "selectedOption.first": {
+    requires: ["listbox.open"],
+    setup: [
+      { type: "click", target: "relative", relativeTarget: "first" }
+    ],
+    assertion: [
+      ...isAriaSelected("first")
+    ]
+  },
+  "selectedOption.last": {
+    requires: ["listbox.open"],
+    setup: [
+      { type: "click", target: "relative", relativeTarget: "last" }
+    ],
+    assertion: [
+      ...isAriaSelected("first")
+    ]
+  }
+};
+function openCombobox() {
+  return [
+    { type: "keypress", target: "input", key: "ArrowDown" }
+  ];
+}
+function closeCombobox() {
+  return [
+    { type: "keypress", target: "input", key: "Escape" }
+  ];
+}
+function focusInput() {
+  return [
+    { type: "focus", target: "input" }
+  ];
+}
+function fillInput() {
+  return [
+    { type: "type", target: "input", value: "test" }
+  ];
+}
+function isComboboxOpen() {
+  return [
+    {
+      target: "listbox",
+      assertion: "toBeVisible",
+      failureMessage: "Expected listbox to be visible"
+    }
+  ];
+}
+function isComboboxClosed() {
+  return [
+    {
+      target: "listbox",
+      assertion: "notToBeVisible",
+      failureMessage: "Expected listbox to be closed"
+    }
+  ];
+}
+function isActiveDescendantNotEmpty() {
+  return [
+    {
+      target: "input",
+      assertion: "toHaveAttribute",
+      attribute: "aria-activedescendant",
+      expectedValue: "!empty",
+      failureMessage: "Expected aria-activedescendant to not be empty"
+    }
+  ];
+}
+function isAriaSelected(index) {
+  return [
+    {
+      target: "relative",
+      relativeTarget: index,
+      assertion: "toHaveAttribute",
+      attribute: "aria-selected",
+      expectedValue: "true",
+      failureMessage: `Expected aria-selected on ${index} option to be true`
+    }
+  ];
+}
+function isInputFocused() {
+  return [
+    {
+      target: "input",
+      assertion: "toHaveFocus",
+      failureMessage: "Expected input to be focused"
+    }
+  ];
+}
+function isInputFilled() {
+  return [
+    {
+      target: "input",
+      assertion: "toHaveValue",
+      expectedValue: "test",
+      failureMessage: "Expected input to have the value 'test'"
+    }
+  ];
+}
+
+// src/utils/test/dsl/src/contractBuilder.ts
+var STATE_PACKS = {
+  "combobox.listbox": COMBOBOX_STATES
+  // Add more mappings as needed
+};
 var FluentContract = class {
   constructor(jsonContract) {
     this.jsonContract = jsonContract;
@@ -1503,306 +1661,155 @@ var FluentContract = class {
     return this.jsonContract;
   }
 };
-var StaticTargetBuilder = class {
-  constructor(targetName, sink) {
-    this.targetName = targetName;
-    this.sink = sink;
-  }
-  has(attribute, expectedValue) {
-    const create = (level) => {
-      this.sink.push({
-        target: this.targetName,
-        attribute,
-        expectedValue,
-        failureMessage: `Expected ${this.targetName} to have ${attribute}${expectedValue !== void 0 ? `=${expectedValue}` : ""}.`,
-        level
-      });
-    };
-    return {
-      required: () => create("required"),
-      recommended: () => create("recommended"),
-      optional: () => create("optional")
-    };
-  }
-};
-var StaticBuilder = class {
-  constructor(sink) {
-    this.sink = sink;
-  }
-  target(targetName) {
-    return new StaticTargetBuilder(targetName, this.sink);
-  }
-};
-var DynamicChain = class {
-  constructor(key, testsSink, selectors) {
-    this.key = key;
-    this.testsSink = testsSink;
-    this.selectors = selectors;
-  }
-  selectorTarget = "";
-  actions = [];
-  assertions = [];
-  explicitDescription = "";
-  on(target) {
-    this.selectorTarget = target;
-    this.actions.push({ type: "keypress", target, key: this.key });
-    return this;
-  }
-  describe(description) {
-    this.explicitDescription = description;
-    return this;
-  }
-  focus(targetExpression) {
-    const parsed = this.parseRelativeExpression(targetExpression);
-    if (parsed) {
-      if (!this.selectors[parsed.selectorKey]) {
-        const availableSelectors = Object.keys(this.selectors).sort().join(", ") || "(none)";
-        throw new Error(
-          `Invalid focus target expression "${targetExpression}": selector "${parsed.selectorKey}" is not defined. Available selectors: ${availableSelectors}`
-        );
-      }
-      if (!this.selectors.relative && this.selectors[parsed.selectorKey]) {
-        this.selectors.relative = this.selectors[parsed.selectorKey];
-      }
-      this.assertions.push({
-        target: "relative",
-        assertion: "toHaveFocus",
-        relativeTarget: parsed.relativeTarget
-      });
-    } else {
-      this.assertions.push({
-        target: targetExpression,
-        assertion: "toHaveFocus"
-      });
-    }
-    return this;
-  }
-  visible(target) {
-    this.assertions.push({ target, assertion: "toBeVisible" });
-    return this;
-  }
-  hidden(target) {
-    this.assertions.push({ target, assertion: "notToBeVisible" });
-    return this;
-  }
-  has(target, attribute, expectedValue) {
-    this.assertions.push({
-      target,
-      assertion: "toHaveAttribute",
-      attribute,
-      expectedValue
-    });
-    return this;
-  }
-  required() {
-    this.finalize("required");
-  }
-  recommended() {
-    this.finalize("recommended");
-  }
-  optional() {
-    this.finalize("optional");
-  }
-  finalize(level) {
-    if (!this.selectorTarget) {
-      throw new Error("Dynamic contract chain requires .on(<selectorKey>) before level terminator.");
-    }
-    const description = this.explicitDescription || `Pressing ${this.key} on ${this.selectorTarget} satisfies expected behavior.`;
-    this.testsSink.push({
-      description,
-      level,
-      action: this.actions,
-      assertions: this.assertions.map((a) => ({ ...a, level }))
-    });
-  }
-  parseRelativeExpression(input) {
-    const match = input.match(/^(next|previous|first|last)\(([^)]+)\)$/);
-    if (!match) return null;
-    const relativeTarget = match[1];
-    const selectorKey = match[2].trim();
-    return { relativeTarget, selectorKey };
-  }
-};
 var ContractBuilder = class {
   constructor(componentName) {
     this.componentName = componentName;
+    this.statePack = STATE_PACKS[componentName] || {};
   }
   metaValue = {};
   selectorsValue = {};
   relationshipInvariants = [];
   staticAssertions = [];
   dynamicTests = [];
+  statePack;
   meta(meta) {
-    this.metaValue = { ...this.metaValue, ...meta };
+    this.metaValue = meta;
     return this;
   }
   selectors(selectors) {
-    this.selectorsValue = { ...this.selectorsValue, ...selectors };
+    this.selectorsValue = selectors;
     return this;
   }
-  relationship(invariant) {
-    this.relationshipInvariants.push(invariant);
-    return this;
-  }
-  relationships(builderFn) {
-    builderFn({
-      ariaReference: (from, attribute, to) => {
-        const create = (level) => {
-          this.relationshipInvariants.push({
-            type: "aria-reference",
-            from,
-            attribute,
-            to,
-            level
-          });
-        };
-        return {
-          required: () => create("required"),
-          recommended: () => create("recommended"),
-          optional: () => create("optional")
-        };
-      },
-      contains: (parent, child) => {
-        const create = (level) => {
-          this.relationshipInvariants.push({
-            type: "contains",
-            parent,
-            child,
-            level
-          });
-        };
-        return {
-          required: () => create("required"),
-          recommended: () => create("recommended"),
-          optional: () => create("optional")
-        };
-      }
-    });
-    return this;
-  }
-  static(builderFn) {
-    builderFn(new StaticBuilder(this.staticAssertions));
-    return this;
-  }
-  when(key) {
-    return new DynamicChain(key, this.dynamicTests, this.selectorsValue);
-  }
-  validateRelationshipInvariants() {
-    if (this.relationshipInvariants.length === 0) {
-      return;
-    }
-    const selectorKeys = new Set(Object.keys(this.selectorsValue));
-    const available = Object.keys(this.selectorsValue).sort().join(", ");
-    const errors = [];
-    this.relationshipInvariants.forEach((invariant, index) => {
-      const prefix = `relationships[${index}] (${invariant.type})`;
-      if (invariant.type === "aria-reference") {
-        if (!selectorKeys.has(invariant.from)) {
-          errors.push(`${prefix}: "from" references unknown selector "${invariant.from}"`);
-        }
-        if (!selectorKeys.has(invariant.to)) {
-          errors.push(`${prefix}: "to" references unknown selector "${invariant.to}"`);
-        }
-      }
-      if (invariant.type === "contains") {
-        if (!selectorKeys.has(invariant.parent)) {
-          errors.push(`${prefix}: "parent" references unknown selector "${invariant.parent}"`);
-        }
-        if (!selectorKeys.has(invariant.child)) {
-          errors.push(`${prefix}: "child" references unknown selector "${invariant.child}"`);
-        }
-      }
-    });
-    if (errors.length > 0) {
-      const availableSelectorsMessage = available.length > 0 ? available : "(none)";
-      throw new Error(
-        [
-          `Contract invariant validation failed for component "${this.componentName}".`,
-          ...errors.map((error) => `- ${error}`),
-          `Available selectors: ${availableSelectorsMessage}`
-        ].join("\n")
-      );
-    }
-  }
-  validateStaticTargets() {
-    const selectorKeys = new Set(Object.keys(this.selectorsValue));
-    const available = Object.keys(this.selectorsValue).sort().join(", ") || "(none)";
-    const errors = [];
-    this.staticAssertions.forEach((assertion, index) => {
-      if (!selectorKeys.has(assertion.target)) {
-        errors.push(`static.assertions[${index}]: target "${assertion.target}" is not defined in selectors`);
-      }
-    });
-    if (errors.length > 0) {
-      throw new Error(
-        [
-          `Contract static target validation failed for component "${this.componentName}".`,
-          ...errors.map((error) => `- ${error}`),
-          `Available selectors: ${available}`
-        ].join("\n")
-      );
-    }
-  }
-  validateDynamicTargets() {
-    const selectorKeys = new Set(Object.keys(this.selectorsValue));
-    const available = Object.keys(this.selectorsValue).sort().join(", ") || "(none)";
-    const errors = [];
-    const isValidActionTarget = (target) => {
-      return selectorKeys.has(target) || target === "document" || target === "relative";
+  relationships(fn) {
+    const api = {
+      ariaReference: (from, attribute, to) => ({
+        required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
+        optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" })
+      }),
+      contains: (parent, child) => ({
+        required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
+        optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" })
+      })
     };
-    const isValidAssertionTarget = (target) => {
-      return selectorKeys.has(target) || target === "relative";
+    fn(api);
+    return this;
+  }
+  static(fn) {
+    const api = {
+      target: (target) => ({
+        has: (attribute, expectedValue) => ({
+          required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required" }),
+          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" })
+        })
+      })
     };
-    this.dynamicTests.forEach((test, testIndex) => {
-      test.action.forEach((action, actionIndex) => {
-        if (!isValidActionTarget(action.target)) {
-          errors.push(
-            `dynamic[${testIndex}].action[${actionIndex}]: target "${action.target}" is not defined in selectors`
-          );
-        }
-      });
-      test.assertions.forEach((assertion, assertionIndex) => {
-        if (!isValidAssertionTarget(assertion.target)) {
-          errors.push(
-            `dynamic[${testIndex}].assertions[${assertionIndex}]: target "${assertion.target}" is not defined in selectors`
-          );
-        }
-        if (assertion.target === "relative" && !this.selectorsValue.relative) {
-          errors.push(
-            `dynamic[${testIndex}].assertions[${assertionIndex}]: target "relative" requires selectors.relative to be defined`
-          );
-        }
-      });
-    });
-    if (errors.length > 0) {
-      throw new Error(
-        [
-          `Contract dynamic target validation failed for component "${this.componentName}".`,
-          ...errors.map((error) => `- ${error}`),
-          `Available selectors: ${available}`,
-          `Allowed special targets: document, relative`
-        ].join("\n")
-      );
-    }
+    fn(api);
+    return this;
+  }
+  when(event) {
+    return new DynamicTestBuilder(this, this.statePack, event);
+  }
+  addDynamicTest(test) {
+    this.dynamicTests.push(test);
   }
   build() {
-    this.validateRelationshipInvariants();
-    this.validateStaticTargets();
-    this.validateDynamicTargets();
-    const fallbackId = this.metaValue.id || `aria-ease.contract.${this.componentName}`;
     return {
-      meta: {
-        id: fallbackId,
-        version: this.metaValue.version || "1.0.0",
-        description: this.metaValue.description || `Fluent contract for ${this.componentName}`,
-        source: this.metaValue.source,
-        W3CName: this.metaValue.W3CName
-      },
+      meta: this.metaValue,
       selectors: this.selectorsValue,
-      relationships: this.relationshipInvariants,
-      static: [{ assertions: this.staticAssertions }],
+      relationships: this.relationshipInvariants.length ? this.relationshipInvariants : void 0,
+      static: this.staticAssertions.length ? [{ assertions: this.staticAssertions }] : [],
       dynamic: this.dynamicTests
     };
+  }
+};
+var DynamicTestBuilder = class {
+  constructor(parent, statePack, event) {
+    this.parent = parent;
+    this.statePack = statePack;
+    this.event = event;
+  }
+  _as;
+  _on;
+  _given = [];
+  _then = [];
+  _desc = "";
+  _level = "required";
+  as(actionType) {
+    this._as = actionType;
+    return this;
+  }
+  on(target) {
+    this._on = target;
+    return this;
+  }
+  given(states) {
+    this._given = Array.isArray(states) ? states : [states];
+    return this;
+  }
+  then(states) {
+    this._then = Array.isArray(states) ? states : [states];
+    return this;
+  }
+  describe(desc) {
+    this._desc = desc;
+    return this;
+  }
+  required() {
+    this._level = "required";
+    this._finalize();
+    return this.parent;
+  }
+  optional() {
+    this._level = "optional";
+    this._finalize();
+    return this.parent;
+  }
+  recommended() {
+    this._level = "recommended";
+    this._finalize();
+    return this.parent;
+  }
+  _finalize() {
+    const resolveSetup = (stateName, visited = /* @__PURE__ */ new Set()) => {
+      if (visited.has(stateName)) return [];
+      visited.add(stateName);
+      const s = this.statePack[stateName];
+      if (!s) return [];
+      let actions = [];
+      if (Array.isArray(s.requires)) {
+        for (const req of s.requires) {
+          actions = actions.concat(resolveSetup(req, visited));
+        }
+      }
+      if (s.setup) actions = actions.concat(s.setup);
+      return actions;
+    };
+    const setup = [];
+    for (const state of this._given) {
+      setup.push(...resolveSetup(state));
+    }
+    const assertions = [];
+    for (const state of this._then) {
+      const s = this.statePack[state];
+      if (s && s.assertion) {
+        if (Array.isArray(s.assertion)) assertions.push(...s.assertion);
+        else assertions.push(s.assertion);
+      }
+    }
+    const action = [
+      {
+        type: this._as,
+        target: this._on,
+        key: this._as === "keypress" ? this.event : void 0
+      }
+    ];
+    this.parent.addDynamicTest({
+      description: this._desc || "",
+      level: this._level,
+      action,
+      assertions,
+      ...setup.length ? { setup } : {}
+    });
   }
 };
 function createContract(componentName, define) {
@@ -2025,7 +2032,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
   let configBaseDir = typeof process !== "undefined" ? process.cwd() : "";
   if (typeof process !== "undefined" && typeof process.cwd === "function") {
     try {
-      const { loadConfig } = await import("./configLoader-WTGJAP4Z.js");
+      const { loadConfig } = await import("./configLoader-DWHOHXHL.js");
       const result2 = await loadConfig(process.cwd());
       config = result2.config;
       if (result2.configPath) {
@@ -2047,7 +2054,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-XBWJZMR3.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-WNWQYSXZ.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness, config, configBaseDir);
       } else {
         throw new Error(

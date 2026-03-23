@@ -27,8 +27,49 @@ export async function runContractTestsPlaywright(
   const componentConfig = config?.test?.components?.find(c => c.name === componentName);
   const isCustomContract = !!componentConfig?.path;
   const reporter = new ContractReporter(true, isCustomContract);
-  const actionTimeoutMs = 400;
-  const assertionTimeoutMs = 400;
+  const defaultTimeouts = {
+    actionTimeoutMs: 400,
+    assertionTimeoutMs: 400,
+    navigationTimeoutMs: 30000,
+    componentReadyTimeoutMs: 5000,
+  };
+  const globalDisableTimeouts = config?.test?.disableTimeouts === true;
+  const componentDisableTimeouts = componentConfig?.disableTimeouts === true;
+  const disableTimeouts = componentDisableTimeouts || globalDisableTimeouts;
+
+  const resolveTimeout = (
+    componentValue: number | undefined,
+    globalValue: number | undefined,
+    fallback: number
+  ): number => {
+    if (disableTimeouts) return 0;
+    const value = componentValue ?? globalValue;
+    if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
+      return fallback;
+    }
+    return value;
+  };
+
+  const actionTimeoutMs = resolveTimeout(
+    componentConfig?.actionTimeoutMs,
+    config?.test?.actionTimeoutMs,
+    defaultTimeouts.actionTimeoutMs
+  );
+  const assertionTimeoutMs = resolveTimeout(
+    componentConfig?.assertionTimeoutMs,
+    config?.test?.assertionTimeoutMs,
+    defaultTimeouts.assertionTimeoutMs
+  );
+  const navigationTimeoutMs = resolveTimeout(
+    componentConfig?.navigationTimeoutMs,
+    config?.test?.navigationTimeoutMs,
+    defaultTimeouts.navigationTimeoutMs
+  );
+  const componentReadyTimeoutMs = resolveTimeout(
+    componentConfig?.componentReadyTimeoutMs,
+    config?.test?.componentReadyTimeoutMs,
+    defaultTimeouts.componentReadyTimeoutMs
+  );
   const strictnessMode = normalizeStrictness(strictness);
   
   // Resolve contract path - use config override or default
@@ -101,7 +142,7 @@ export async function runContractTestsPlaywright(
       try {
         await page.goto(url, { 
           waitUntil: "domcontentloaded",
-          timeout: 30000 
+          timeout: navigationTimeoutMs
         });
       } catch (error) {
         throw new Error(
@@ -126,7 +167,7 @@ export async function runContractTestsPlaywright(
     }
     
     try {
-      await page.locator(mainSelector as string).first().waitFor({ state: 'attached', timeout: 30000 });
+      await page.locator(mainSelector as string).first().waitFor({ state: 'attached', timeout: componentReadyTimeoutMs });
     } catch (error) {
       throw new Error(
         "\n❌ CRITICAL: Component not found on page!\n" +
@@ -143,10 +184,8 @@ export async function runContractTestsPlaywright(
 
     // Menu-specific: Wait for trigger to be visible
     if (componentName === 'menu' && componentContract.selectors.trigger) {
-      await page.locator(componentContract.selectors.trigger).first().waitFor({ 
-        state: 'attached',
-        timeout: 5000 
-      }).catch(() => {
+      await page.locator(componentContract.selectors.trigger).first().waitFor({ state: 'attached', timeout: componentReadyTimeoutMs })
+      .catch(() => {
         // Best-effort readiness check; action/assertion phases provide authoritative failures.
       });
     }
@@ -156,6 +195,13 @@ export async function runContractTestsPlaywright(
         ? (await page.locator(componentContract.selectors.submenuTrigger).count()) > 0
         : false;
 
+    const isSubmenuRelation = (rel: { type: string; from?: string; to?: string; parent?: string; child?: string }) =>
+      (rel.type === "aria-reference" &&
+        [rel.from, rel.to].some((name) => ["submenu", "submenuTrigger", "submenuItems"].includes(name || ""))) ||
+      (rel.type === "contains" &&
+        [rel.parent, rel.child].some((name) => ["submenu", "submenuTrigger", "submenuItems"].includes(name || "")));
+
+
     let staticPassed = 0;
     let staticFailed = 0;
     let staticWarnings = 0;
@@ -163,6 +209,21 @@ export async function runContractTestsPlaywright(
     // Run relationship invariants first
     for (const rel of componentContract.relationships || []) {
       const relationshipLevel = normalizeLevel(rel.level);
+      if (componentName === 'menu' && !hasSubmenuCapability) {
+        const involvesSubmenu = isSubmenuRelation(rel);
+
+        if (involvesSubmenu) {
+          const relDescription =
+            rel.type === "aria-reference"
+              ? `${rel.from}.${rel.attribute} references ${rel.to}`
+              : `${rel.parent} contains ${rel.child}`;
+          const skipMessage = `Skipping submenu relationship assertion: no submenu capability detected in rendered component.`;
+          skipped.push(skipMessage);
+          reporter.reportStaticTest(relDescription, 'skip', skipMessage, relationshipLevel);
+          continue;
+        }
+      }
+
       if (rel.type === "aria-reference") {
         const relDescription = `${rel.from}.${rel.attribute} references ${rel.to}`;
         const fromSelector = componentContract.selectors[rel.from as keyof typeof componentContract.selectors];
@@ -184,6 +245,14 @@ export async function runContractTestsPlaywright(
         const toExists = (await toTarget.count()) > 0;
 
         if (!fromExists || !toExists) {
+          if (componentName === 'menu' && isSubmenuRelation(rel)) {
+            const skipMessage =
+              "Skipping submenu relationship assertion in static phase: submenu elements are not present until submenu is opened.";
+            skipped.push(skipMessage);
+            reporter.reportStaticTest(relDescription, 'skip', skipMessage, relationshipLevel);
+            continue;
+          }
+
           const outcome = classifyFailure(
             `Relationship target not found: ${!fromExists ? rel.from : rel.to}.`
           , rel.level);
@@ -243,6 +312,14 @@ export async function runContractTestsPlaywright(
         const parent = page.locator(parentSelector).first();
         const parentExists = (await parent.count()) > 0;
         if (!parentExists) {
+          if (componentName === 'menu' && isSubmenuRelation(rel)) {
+            const skipMessage =
+              "Skipping submenu relationship assertion in static phase: submenu container is not present until submenu is opened.";
+            skipped.push(skipMessage);
+            reporter.reportStaticTest(relDescription, 'skip', skipMessage, relationshipLevel);
+            continue;
+          }
+
           const outcome = classifyFailure(`Relationship parent target not found: ${rel.parent}.`, rel.level);
           if (outcome.status === "fail") staticFailed += 1;
           if (outcome.status === "warn") staticWarnings += 1;
@@ -253,6 +330,14 @@ export async function runContractTestsPlaywright(
         const descendants = parent.locator(childSelector);
         const descendantCount = await descendants.count();
         if (descendantCount < 1) {
+          if (componentName === 'menu' && isSubmenuRelation(rel)) {
+            const skipMessage =
+              "Skipping submenu relationship assertion in static phase: submenu descendants are not present until submenu is opened.";
+            skipped.push(skipMessage);
+            reporter.reportStaticTest(relDescription, 'skip', skipMessage, relationshipLevel);
+            continue;
+          }
+
           const outcome = classifyFailure(
             `Expected ${rel.parent} to contain descendant matching selector for ${rel.child}.`
           , rel.level);
@@ -398,13 +483,6 @@ export async function runContractTestsPlaywright(
         break; // Exit dynamic test loop
       }
 
-      const { action, assertions } = dynamicTest;
-      
-      const failuresBeforeTest = failures.length;
-      const warningsBeforeTest = warnings.length;
-      const skippedBeforeTest = skipped.length;
-      const dynamicLevel = normalizeLevel(dynamicTest.level);
-
       // Reset component state before each test using strategy pattern
       try {
         await strategy.resetState(page);
@@ -413,6 +491,46 @@ export async function runContractTestsPlaywright(
         reporter.error(errorMessage);
         throw error;
       }
+
+      const { setup = [], action, assertions } = dynamicTest;
+      const dynamicLevel = normalizeLevel(dynamicTest.level);
+      // Create action executor for this test (before setup/actions)
+      const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+
+      // Run setup actions if present
+      if (Array.isArray(setup) && setup.length > 0) {
+        for (const setupAct of setup) {
+          let setupResult;
+          if (setupAct.type === "focus") {
+            if (setupAct.target === "relative" && setupAct.relativeTarget) {
+              setupResult = await actionExecutor.focus("relative", setupAct.relativeTarget);
+            } else {
+              setupResult = await actionExecutor.focus(setupAct.target);
+            }
+          } else if (setupAct.type === "type" && setupAct.value) {
+            setupResult = await actionExecutor.type(setupAct.target, setupAct.value);
+          } else if (setupAct.type === "click") {
+            setupResult = await actionExecutor.click(setupAct.target, setupAct.relativeTarget);
+          } else if (setupAct.type === "keypress" && setupAct.key) {
+            setupResult = await actionExecutor.keypress(setupAct.target, setupAct.key);
+          } else if (setupAct.type === "hover") {
+            setupResult = await actionExecutor.hover(setupAct.target, setupAct.relativeTarget);
+          } else {
+            continue; // Unknown setup action type
+          }
+          if (!setupResult.success) {
+            const setupMsg = setupResult.error || "Setup action failed";
+            const outcome = classifyFailure(`Setup failed: ${setupMsg}`, dynamicTest.level);
+            reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, outcome.status, outcome.detail);
+            // Abort this test if setup fails
+            continue;
+          }
+        }
+      }
+      
+      const failuresBeforeTest = failures.length;
+      const warningsBeforeTest = warnings.length;
+      const skippedBeforeTest = skipped.length;
 
       // Check if test should be skipped using strategy pattern
       const shouldSkipTest = await strategy.shouldSkipTest(dynamicTest, page);
@@ -423,10 +541,10 @@ export async function runContractTestsPlaywright(
         continue;
       }
 
-      // Create action executor for this test
-      const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+      // Create assertion runner for this test
       const assertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
 
+      
       let shouldAbortCurrentTest = false;
       let actionOutcome: { status: 'fail' | 'warn' | 'skip'; detail: string } | null = null;
 
@@ -440,7 +558,11 @@ export async function runContractTestsPlaywright(
         let result;
         
         if (act.type === "focus") {
-          result = await actionExecutor.focus(act.target);
+          if (act.target === "relative" && act.relativeTarget) {
+            result = await actionExecutor.focus("relative", act.relativeTarget);
+          } else {
+            result = await actionExecutor.focus(act.target);
+          }
         } else if (act.type === "type" && act.value) {
           result = await actionExecutor.type(act.target, act.value);
         } else if (act.type === "click") {
@@ -531,7 +653,7 @@ export async function runContractTestsPlaywright(
       } else if (error.message.includes("Timeout") && error.message.includes("waitFor")) {
         throw new Error(
           "\n❌ CRITICAL: Component not found on page!\n" +
-          "The component selector could not be found within 30 seconds.\n" +
+          `The component selector could not be found within ${componentReadyTimeoutMs}ms.\n` +
           "This usually means:\n" +
           "  - The component didn't render\n" +
           "  - The URL is incorrect\n" +

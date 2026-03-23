@@ -20,6 +20,7 @@ type ContractAssertion = {
   expectedValue?: string;
   failureMessage?: string;
   relativeTarget?: string;
+  selectorKey?: string;
 };
 
 export class AssertionRunner {
@@ -32,30 +33,33 @@ export class AssertionRunner {
   /**
    * Resolve the target element for an assertion
    */
-  private async resolveTarget( targetName: string, relativeTarget?: string ): Promise<{ target: Locator | null; error?: string }> {
+  private async resolveTarget(
+    targetName: string,
+    relativeTarget?: string,
+    selectorKey?: string
+  ): Promise<{ target: Locator | null; error?: string }> {
     try {
       if (targetName === "relative") {
-        const relativeSelector = this.selectors.relative;
+        // Use selectorKey if provided (for semantic expressions like first(options))
+        const relativeSelector = selectorKey
+          ? this.selectors[selectorKey as keyof typeof this.selectors]
+          : this.selectors.relative;
         if (!relativeSelector) {
           return { target: null, error: "Relative selector is not defined in the contract." };
         }
-        
         if (!relativeTarget) {
           return { target: null, error: "Relative target or expected value is not defined." };
         }
-        
         const target = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget);
         if (!target) {
           return { target: null, error: `Target ${targetName} not found.` };
         }
         return { target };
       }
-
       const selector = this.selectors[targetName as keyof typeof this.selectors];
       if (!selector) {
         return { target: null, error: `Selector for assertion target ${targetName} not found.` };
       }
-
       return { target: this.page.locator(selector).first() };
     } catch (error) {
       return {
@@ -251,21 +255,46 @@ export class AssertionRunner {
       };
     }
 
-    // Resolve target element
-    const { target, error } = await this.resolveTarget(assertion.target, assertion.relativeTarget || assertion.expectedValue);
-    
+    // Resolve target element (support selectorKey for semantic relative assertions)
+    const { target, error } = await this.resolveTarget(
+      assertion.target,
+      assertion.relativeTarget || assertion.expectedValue,
+      assertion.selectorKey
+    );
     if (error || !target) {
       return { success: false, failMessage: error || `Target ${assertion.target} not found.`, target: null };
+    }
+
+    // Special case: for input[aria-activedescendant] assertions, check that the attribute matches the id of the correct option
+    if (
+      assertion.target === "input" &&
+      assertion.attribute === "aria-activedescendant" &&
+      assertion.expectedValue === "!empty" &&
+      assertion.relativeTarget && assertion.selectorKey
+    ) {
+      // Find the expected option element
+      const optionLocator = await RelativeTargetResolver.resolve(this.page, this.selectors[assertion.selectorKey], assertion.relativeTarget);
+      const optionId = optionLocator ? await optionLocator.getAttribute("id") : null;
+      const inputId = await target.getAttribute("aria-activedescendant");
+      if (optionId && inputId === optionId) {
+        return {
+          success: true,
+          passMessage: `input[aria-activedescendant] matches id of ${assertion.relativeTarget}(${assertion.selectorKey}). Test: "${testDescription}".`
+        };
+      } else {
+        return {
+          success: false,
+          failMessage: `input[aria-activedescendant] should match id of ${assertion.relativeTarget}(${assertion.selectorKey}), found "${inputId}".`
+        };
+      }
     }
 
     // Route to appropriate validator
     switch (assertion.assertion) {
       case "toBeVisible":
         return this.validateVisibility(target, assertion.target, true, assertion.failureMessage || '', testDescription);
-        
       case "notToBeVisible":
         return this.validateVisibility(target, assertion.target, false, assertion.failureMessage || '', testDescription);
-        
       case "toHaveAttribute":
         if (assertion.attribute && assertion.expectedValue !== undefined) {
           return this.validateAttribute(
@@ -278,22 +307,18 @@ export class AssertionRunner {
           );
         }
         return { success: false, failMessage: "Missing attribute or expectedValue for toHaveAttribute assertion" };
-        
       case "toHaveValue":
         if (assertion.expectedValue !== undefined) {
           return this.validateValue(target, assertion.target, assertion.expectedValue, assertion.failureMessage || '', testDescription);
         }
         return { success: false, failMessage: "Missing expectedValue for toHaveValue assertion" };
-        
       case "toHaveFocus":
         return this.validateFocus(target, assertion.target, assertion.failureMessage || '', testDescription);
-        
       case "toHaveRole":
         if (assertion.expectedValue !== undefined) {
           return this.validateRole(target, assertion.target, assertion.expectedValue, assertion.failureMessage || '', testDescription);
         }
         return { success: false, failMessage: "Missing expectedValue for toHaveRole assertion" };
-        
       default:
         return { success: false, failMessage: `Unknown assertion type: ${assertion.assertion}` };
     }

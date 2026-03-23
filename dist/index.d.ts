@@ -194,6 +194,11 @@ declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, lis
 
 declare function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation, activateOnFocus, callback }: TabsConfig): AccessibilityInstance;
 
+type StatePack = Record<string, {
+    setup?: DynamicAction[];
+    assertion?: DynamicAssertion[] | DynamicAssertion;
+    requires?: string[];
+}>;
 type Level = "required" | "recommended" | "optional";
 type ContractMeta = {
     id?: string;
@@ -225,13 +230,6 @@ type StaticAssertion = {
     failureMessage: string;
     level: Level;
 };
-type DynamicAction = {
-    type: "focus" | "type" | "click" | "keypress" | "hover";
-    target: string;
-    key?: string;
-    value?: string;
-    relativeTarget?: string;
-};
 type DynamicAssertion = {
     target: string;
     assertion: "toBeVisible" | "notToBeVisible" | "toHaveAttribute" | "toHaveValue" | "toHaveFocus" | "toHaveRole";
@@ -239,7 +237,21 @@ type DynamicAssertion = {
     expectedValue?: string;
     failureMessage?: string;
     relativeTarget?: string;
+    virtualId?: string;
+    selectorKey?: string;
     level?: Level;
+};
+type DynamicAction = {
+    type: "focus";
+    target: string;
+    relativeTarget?: "first" | "last" | "next" | "previous";
+    virtualId?: string;
+} | {
+    type: "click" | "keypress" | "type" | "hover";
+    target: string;
+    key?: string;
+    value?: string;
+    relativeTarget?: string;
 };
 type DynamicTest = {
     description: string;
@@ -261,42 +273,6 @@ declare class FluentContract {
     constructor(jsonContract: JsonContract);
     toJSON(): JsonContract;
 }
-declare class StaticTargetBuilder {
-    private readonly targetName;
-    private readonly sink;
-    constructor(targetName: string, sink: StaticAssertion[]);
-    has(attribute: string, expectedValue?: string): {
-        required: () => void;
-        recommended: () => void;
-        optional: () => void;
-    };
-}
-declare class StaticBuilder {
-    private readonly sink;
-    constructor(sink: StaticAssertion[]);
-    target(targetName: string): StaticTargetBuilder;
-}
-declare class DynamicChain {
-    private readonly key;
-    private readonly testsSink;
-    private readonly selectors;
-    private selectorTarget;
-    private readonly actions;
-    private readonly assertions;
-    private explicitDescription;
-    constructor(key: string, testsSink: DynamicTest[], selectors: SelectorsMap);
-    on(target: string): this;
-    describe(description: string): this;
-    focus(targetExpression: string): this;
-    visible(target: string): this;
-    hidden(target: string): this;
-    has(target: string, attribute: string, expectedValue?: string): this;
-    required(): void;
-    recommended(): void;
-    optional(): void;
-    private finalize;
-    private parseRelativeExpression;
-}
 declare class ContractBuilder {
     private readonly componentName;
     private metaValue;
@@ -304,28 +280,52 @@ declare class ContractBuilder {
     private readonly relationshipInvariants;
     private readonly staticAssertions;
     private readonly dynamicTests;
+    private statePack;
     constructor(componentName: string);
     meta(meta: ContractMeta): this;
     selectors(selectors: SelectorsMap): this;
-    relationship(invariant: RelationshipInvariant): this;
-    relationships(builderFn: (r: {
+    relationships(fn: (r: {
         ariaReference: (from: string, attribute: string, to: string) => {
             required: () => void;
-            recommended: () => void;
             optional: () => void;
         };
         contains: (parent: string, child: string) => {
             required: () => void;
-            recommended: () => void;
             optional: () => void;
         };
     }) => void): this;
-    static(builderFn: (s: StaticBuilder) => void): this;
-    when(key: string): DynamicChain;
-    private validateRelationshipInvariants;
-    private validateStaticTargets;
-    private validateDynamicTargets;
+    static(fn: (s: {
+        target: (target: string) => {
+            has: (attribute: string, expectedValue: string) => {
+                required: () => void;
+                optional: () => void;
+            };
+        };
+    }) => void): this;
+    when(event: string): DynamicTestBuilder;
+    addDynamicTest(test: DynamicTest): void;
     build(): JsonContract;
+}
+declare class DynamicTestBuilder {
+    private parent;
+    private statePack;
+    private event;
+    private _as;
+    private _on;
+    private _given;
+    private _then;
+    private _desc;
+    private _level;
+    constructor(parent: ContractBuilder, statePack: StatePack, event: string);
+    as(actionType: string): this;
+    on(target: string): this;
+    given(states: string | string[]): this;
+    then(states: string | string[]): this;
+    describe(desc: string): this;
+    required(): ContractBuilder;
+    optional(): ContractBuilder;
+    recommended(): ContractBuilder;
+    private _finalize;
 }
 declare function createContract(componentName: string, define: (c: ContractBuilder) => void): FluentContract;
 
@@ -348,4 +348,4 @@ declare function testUiComponent(componentName: string, component: HTMLElement |
  */
 declare function cleanupTests(): Promise<void>;
 
-export { ContractBuilder, type JsonContract, type RelationshipInvariant, cleanupTests, createContract, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };
+export { cleanupTests, createContract, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };
