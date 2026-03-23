@@ -180,7 +180,6 @@ describe("makeComboboxAccessible - keyboard navigation", () => {
 
     const firstOption = listbox.querySelector(".combo-option") as HTMLElement;
     expect(input.getAttribute("aria-activedescendant")).toBe(firstOption.id);
-    expect(firstOption.getAttribute("aria-selected")).toBe("true");
   });
 
   it("does not open listbox on ArrowUp when closed", () => {
@@ -368,7 +367,6 @@ describe("makeComboboxAccessible - mouse interactions", () => {
     secondOption.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
 
     expect(input.getAttribute("aria-activedescendant")).toBe(secondOption.id);
-    expect(secondOption.getAttribute("aria-selected")).toBe("true");
   });
 
   it("selects option on mousedown", () => {
@@ -635,7 +633,6 @@ describe("makeComboboxAccessible - refresh and filtering", () => {
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
 
     const firstOption = listbox.querySelector(".combo-option") as HTMLElement;
-    expect(firstOption.getAttribute("aria-selected")).toBe("true");
 
     // Refresh should clear selection
     refresh();

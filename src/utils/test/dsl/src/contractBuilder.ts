@@ -1,6 +1,6 @@
 
 
-import { COMBOBOX_STATES } from "./state-packs/comboboxStatePack";
+import { COMBOBOX_STATES, resolveSetup, CapabilityContext } from "./state-packs/comboboxStatePack";
 
 type StatePack = Record<string, {
   setup?: DynamicAction[];
@@ -52,7 +52,7 @@ type StaticAssertion = {
 };
 
 type DynamicAssertion = {
-  target: string; // "input", "relative", "virtual", etc.
+  target: string;
   assertion: "toBeVisible" | "notToBeVisible" | "toHaveAttribute" | "toHaveValue" | "toHaveFocus" | "toHaveRole";
   attribute?: string;
   expectedValue?: string;
@@ -66,7 +66,7 @@ type DynamicAssertion = {
 type DynamicAction =
   | {
       type: "focus";
-      target: string; // "input", "relative", "virtual", etc.
+      target: string;
       relativeTarget?: "first" | "last" | "next" | "previous";
       virtualId?: string;
     }
@@ -101,7 +101,6 @@ class FluentContract {
     return this.jsonContract;
   }
 }
-
 
 class ContractBuilder {
   private metaValue: ContractMeta = {};
@@ -245,8 +244,18 @@ class DynamicTestBuilder {
   }
 
   private _finalize() {
-    // Recursively resolve setup actions for all required states
-    const resolveSetup = (stateName: string, visited = new Set<string>()): DynamicAction[] => {
+    // Map action types to capability names for robust capability-based setup resolution
+    const capabilityMap: Record<string, string> = {
+      keypress: "keyboard",
+      click: "pointer",
+      type: "textInput",
+      focus: "keyboard",
+      hover: "pointer",
+      // add more mappings as needed
+    };
+    const capability = capabilityMap[this._as || "keyboard"] || (this._as || "keyboard");
+    const ctx: CapabilityContext = { capabilities: [capability] };
+    const resolveAllSetups = (stateName: string, visited = new Set<string>()): DynamicAction[] => {
       if (visited.has(stateName)) return [];
       visited.add(stateName);
       const s = this.statePack[stateName];
@@ -254,26 +263,35 @@ class DynamicTestBuilder {
       let actions: DynamicAction[] = [];
       if (Array.isArray(s.requires)) {
         for (const req of s.requires) {
-          actions = actions.concat(resolveSetup(req, visited));
+          actions = actions.concat(resolveAllSetups(req, visited));
         }
       }
-      if (s.setup) actions = actions.concat(s.setup);
+      if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx) as DynamicAction[]);
       return actions;
     };
 
     // Build setup from .given (recursively)
     const setup: DynamicAction[] = [];
     for (const state of this._given) {
-      setup.push(...resolveSetup(state));
+      setup.push(...resolveAllSetups(state));
     }
 
     // Build assertions from .then
     const assertions: DynamicAssertion[] = [];
     for (const state of this._then) {
       const s = this.statePack[state];
-      if (s && s.assertion) {
-        if (Array.isArray(s.assertion)) assertions.push(...s.assertion);
-        else assertions.push(s.assertion);
+      if (s && s.assertion !== undefined) {
+        let value: unknown = s.assertion;
+        if (typeof value === "function") {
+          // Type guard: only call if function has zero arguments
+          try {
+            value = (value as (() => unknown))();
+          } catch (e) {
+            throw new Error(`Error calling assertion function for state '${state}': ${(e as Error).message}`);
+          }
+        }
+        if (Array.isArray(value)) assertions.push(...value);
+        else assertions.push(value as DynamicAssertion);
       }
     }
     // Action from .when/.as/.on

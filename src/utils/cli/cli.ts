@@ -167,7 +167,7 @@ program.command('build')
   new Command('contracts')
     .description('Build DSL contracts to JSON')
     .action(async () => {
-      const { buildContracts } = await import("./buildContracts.js");
+      const { buildContracts } = await import("../test/dsl/src/buildContracts.js");
       const { loadConfig } = await import("./configLoader.js");
 
       const cwd = process.cwd();

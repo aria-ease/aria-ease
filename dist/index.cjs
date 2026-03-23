@@ -3761,90 +3761,141 @@ function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation 
 }
 
 // src/utils/test/dsl/src/state-packs/comboboxStatePack.ts
+function hasCapabilities(ctx, requiredCaps) {
+  return requiredCaps.some((cap) => ctx.capabilities.includes(cap));
+}
+function resolveSetup(setup, ctx) {
+  if (Array.isArray(setup) && setup.length && !setup[0].when) {
+    setup = [{ when: ["keyboard"], steps: () => setup }];
+  }
+  for (const strat of setup) {
+    if (hasCapabilities(ctx, strat.when)) {
+      return strat.steps(ctx);
+    }
+  }
+  throw new Error(
+    `No setup strategy matches capabilities: ${ctx.capabilities.join(", ")}`
+  );
+}
 var COMBOBOX_STATES = {
   "listbox.open": {
-    setup: openCombobox(),
-    assertion: isComboboxOpen()
+    setup: [
+      {
+        when: ["keyboard", "textInput"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowDown" }
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "button" }
+        ]
+      }
+    ],
+    assertion: isComboboxOpen
   },
   "listbox.closed": {
-    setup: closeCombobox(),
-    assertion: isComboboxClosed()
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          /* { type: "keypress", target: "input", key: "Escape" } */
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          /* { type: "click", target: "button" } */
+        ]
+      }
+    ],
+    assertion: isComboboxClosed
   },
   "input.focused": {
-    setup: focusInput(),
-    assertion: [
-      ...isInputFocused()
-    ]
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "focus", target: "input" }
+        ]
+      }
+    ],
+    assertion: isInputFocused
   },
   "input.filled": {
-    setup: fillInput(),
-    assertion: [
-      ...isInputFilled()
-    ]
+    setup: [
+      {
+        when: ["keyboard", "textInput"],
+        steps: () => [
+          { type: "type", target: "input", value: "test" }
+        ]
+      }
+    ],
+    assertion: isInputFilled
   },
   "activeOption.first": {
     requires: ["listbox.open"],
     setup: [
-      { type: "keypress", target: "input", key: "ArrowDown" }
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowDown" }
+        ]
+      }
     ],
-    assertion: [
-      ...isActiveDescendantNotEmpty()
-    ]
+    assertion: isActiveDescendantNotEmpty
   },
   "activeOption.last": {
     requires: ["activeOption.first"],
     setup: [
-      { type: "keypress", target: "input", key: "ArrowUp" }
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowUp" }
+        ]
+      }
     ],
-    assertion: [
-      ...isActiveDescendantNotEmpty()
-    ]
+    assertion: isActiveDescendantNotEmpty
   },
   "selectedOption.first": {
     requires: ["listbox.open"],
     setup: [
-      { type: "click", target: "relative", relativeTarget: "first" }
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "relative", relativeTarget: "first" }
+        ]
+      }
     ],
-    assertion: [
-      ...isAriaSelected("first")
-    ]
+    assertion: () => isAriaSelected("first")
   },
   "selectedOption.last": {
     requires: ["listbox.open"],
     setup: [
-      { type: "click", target: "relative", relativeTarget: "last" }
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "relative", relativeTarget: "last" }
+        ]
+      }
     ],
-    assertion: [
-      ...isAriaSelected("first")
-    ]
+    assertion: () => isAriaSelected("last")
   }
 };
-function openCombobox() {
-  return [
-    { type: "keypress", target: "input", key: "ArrowDown" }
-  ];
-}
-function closeCombobox() {
-  return [
-    { type: "keypress", target: "input", key: "Escape" }
-  ];
-}
-function focusInput() {
-  return [
-    { type: "focus", target: "input" }
-  ];
-}
-function fillInput() {
-  return [
-    { type: "type", target: "input", value: "test" }
-  ];
-}
 function isComboboxOpen() {
   return [
     {
       target: "listbox",
       assertion: "toBeVisible",
       failureMessage: "Expected listbox to be visible"
+    },
+    {
+      target: "input",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "true",
+      failureMessage: "Expect combobox input to have aria-expanded='true'"
     }
   ];
 }
@@ -3854,6 +3905,13 @@ function isComboboxClosed() {
       target: "listbox",
       assertion: "notToBeVisible",
       failureMessage: "Expected listbox to be closed"
+    },
+    {
+      target: "input",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "false",
+      failureMessage: "Expect combobox input to have aria-expanded='false'"
     }
   ];
 }
@@ -3876,7 +3934,7 @@ function isAriaSelected(index) {
       assertion: "toHaveAttribute",
       attribute: "aria-selected",
       expectedValue: "true",
-      failureMessage: `Expected aria-selected on ${index} option to be true`
+      failureMessage: `Expected ${index} option to have aria-selected='true'`
     }
   ];
 }
@@ -4022,7 +4080,17 @@ var DynamicTestBuilder = class {
     return this.parent;
   }
   _finalize() {
-    const resolveSetup = (stateName, visited = /* @__PURE__ */ new Set()) => {
+    const capabilityMap = {
+      keypress: "keyboard",
+      click: "pointer",
+      type: "textInput",
+      focus: "keyboard",
+      hover: "pointer"
+      // add more mappings as needed
+    };
+    const capability = capabilityMap[this._as || "keyboard"] || (this._as || "keyboard");
+    const ctx = { capabilities: [capability] };
+    const resolveAllSetups = (stateName, visited = /* @__PURE__ */ new Set()) => {
       if (visited.has(stateName)) return [];
       visited.add(stateName);
       const s = this.statePack[stateName];
@@ -4030,22 +4098,30 @@ var DynamicTestBuilder = class {
       let actions = [];
       if (Array.isArray(s.requires)) {
         for (const req of s.requires) {
-          actions = actions.concat(resolveSetup(req, visited));
+          actions = actions.concat(resolveAllSetups(req, visited));
         }
       }
-      if (s.setup) actions = actions.concat(s.setup);
+      if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx));
       return actions;
     };
     const setup = [];
     for (const state of this._given) {
-      setup.push(...resolveSetup(state));
+      setup.push(...resolveAllSetups(state));
     }
     const assertions = [];
     for (const state of this._then) {
       const s = this.statePack[state];
-      if (s && s.assertion) {
-        if (Array.isArray(s.assertion)) assertions.push(...s.assertion);
-        else assertions.push(s.assertion);
+      if (s && s.assertion !== void 0) {
+        let value = s.assertion;
+        if (typeof value === "function") {
+          try {
+            value = value();
+          } catch (e) {
+            throw new Error(`Error calling assertion function for state '${state}': ${e.message}`);
+          }
+        }
+        if (Array.isArray(value)) assertions.push(...value);
+        else assertions.push(value);
       }
     }
     const action = [

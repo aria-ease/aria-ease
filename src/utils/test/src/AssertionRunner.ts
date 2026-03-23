@@ -273,7 +273,7 @@ export class AssertionRunner {
       assertion.relativeTarget && assertion.selectorKey
     ) {
       // Find the expected option element
-      const optionLocator = await RelativeTargetResolver.resolve(this.page, this.selectors[assertion.selectorKey], assertion.relativeTarget);
+      const optionLocator = await RelativeTargetResolver.resolve(this.page, this.selectors[assertion.selectorKey] as string, assertion.relativeTarget);
       const optionId = optionLocator ? await optionLocator.getAttribute("id") : null;
       const inputId = await target.getAttribute("aria-activedescendant");
       if (optionId && inputId === optionId) {

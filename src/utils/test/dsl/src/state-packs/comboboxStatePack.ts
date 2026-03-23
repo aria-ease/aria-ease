@@ -1,124 +1,136 @@
-//Users describe intent, library encodes mechanics
-/* User writes:
-.then("activeOption.last")
-Library knows:
-activeOption.last
-  requires → listbox.open
-  implies → aria-expanded=true
-  implies → correct aria-activedescendant
- */
+// --- Capability-based helpers ---
+export type CapabilityContext = { capabilities: string[] };
+export type SetupStrategy = { when: string[]; steps: (ctx?: CapabilityContext) => unknown[] };
 
-  /* So what should .given() / .then() support?
-Final answer:
-✅ YES — allow arrays
+export function hasCapabilities(ctx: CapabilityContext, requiredCaps: string[]): boolean {
+  return requiredCaps.some(cap => ctx.capabilities.includes(cap));
+}
 
-But only for composing independent states:
-
-.given(["input.focused", "listbox.open"])
-.then(["selectedOption.first", "listbox.closed"]) 
-
-
-Every state must be complete and self-contained
-
-The next evolution is:
-
-mark states as derived vs primitive
-auto-detect redundant states in arrays
-warn if user passes unnecessary combinations
-
-That’s how this becomes a real system, not just a DSL.
-*/
-
+export function resolveSetup(
+  setup: SetupStrategy[] | unknown[],
+  ctx: CapabilityContext
+): unknown[] {
+  // Backward compatibility: if setup is a plain array, treat as default strategy
+  if (Array.isArray(setup) && setup.length && !(setup[0] as SetupStrategy).when) {
+    setup = [{ when: ["keyboard"], steps: () => setup }];
+  }
+  for (const strat of setup as SetupStrategy[]) {
+    if (hasCapabilities(ctx, strat.when)) {
+      return strat.steps(ctx);
+    }
+  }
+  throw new Error(
+    `No setup strategy matches capabilities: ${ctx.capabilities.join(", ")}`
+  );
+}
 
 export const COMBOBOX_STATES = {
   "listbox.open": {
-    setup: openCombobox(),
-    assertion: isComboboxOpen(),
-  },
-
-  "listbox.closed": {
-    setup: closeCombobox(),
-    assertion: isComboboxClosed(),
-  },
-
-  "input.focused": {
-    setup: focusInput(),
-    assertion: [
-      ...isInputFocused()
-    ]
-  },
-
-  "input.filled": {
-    setup: fillInput(),
-    assertion: [
-      ...isInputFilled()
+    setup: [
+      {
+        when: ["keyboard", "textInput"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowDown" }
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "button" }
+        ]
+      }
     ],
+    assertion: isComboboxOpen
   },
-
+  "listbox.closed": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          /* { type: "keypress", target: "input", key: "Escape" } */
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          /* { type: "click", target: "button" } */
+        ]
+      }
+    ],
+    assertion: isComboboxClosed
+  },
+  "input.focused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "focus", target: "input" }
+        ]
+      }
+    ],
+    assertion: isInputFocused
+  },
+  "input.filled": {
+    setup: [
+      {
+        when: ["keyboard", "textInput"],
+        steps: () => [
+          { type: "type", target: "input", value: "test" }
+        ]
+      }
+    ],
+    assertion: isInputFilled
+  },
   "activeOption.first": {
     requires: ["listbox.open"],
     setup: [
-      { type: "keypress", target: "input", key: "ArrowDown" },
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowDown" }
+        ]
+      }
     ],
-    assertion: [
-      ...isActiveDescendantNotEmpty()
-    ],
+    assertion: isActiveDescendantNotEmpty
   },
-
   "activeOption.last": {
     requires: ["activeOption.first"],
     setup: [
-      { type: "keypress", target: "input", key: "ArrowUp" },
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowUp" }
+        ]
+      }
     ],
-    assertion: [
-      ...isActiveDescendantNotEmpty()
-    ],
+    assertion: isActiveDescendantNotEmpty
   },
-
   "selectedOption.first": {
     requires: ["listbox.open"],
     setup: [
-      { type: "click", target: "relative", relativeTarget: "first" },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "relative", relativeTarget: "first" }
+        ]
+      }
     ],
-    assertion: [
-      ...isAriaSelected("first")
-    ]
+    assertion: () => isAriaSelected("first")
   },
-
   "selectedOption.last": {
     requires: ["listbox.open"],
     setup: [
-      { type: "click", target: "relative", relativeTarget: "last" },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "relative", relativeTarget: "last" }
+        ]
+      }
     ],
-    assertion: [
-      ...isAriaSelected("first")
-    ]
+    assertion: () => isAriaSelected("last")
   },
 };
 
-function openCombobox() {
-  return [
-    { type: "keypress", target: "input", key: "ArrowDown" },
-  ];
-}
-
-function closeCombobox() {
-  return [
-    { type: "keypress", target: "input", key: "Escape" },
-  ];
-}
-
-function focusInput() {
-  return [
-    { type: "focus", target: "input" },
-  ];
-}
-
-function fillInput() {
-  return [
-    { type: "type", target: "input", value: "test" },
-  ];
-}
 
 function isComboboxOpen() {
   return [
@@ -127,6 +139,13 @@ function isComboboxOpen() {
       assertion: "toBeVisible",
       failureMessage: "Expected listbox to be visible",
     },
+    {
+    target: "input",
+    assertion: "toHaveAttribute",
+    attribute: "aria-expanded",
+    expectedValue: "true",
+    failureMessage: "Expect combobox input to have aria-expanded='true'"
+    }
   ];
 }
 
@@ -137,6 +156,13 @@ function isComboboxClosed() {
       assertion: "notToBeVisible",
       failureMessage: "Expected listbox to be closed",
     },
+    {
+    target: "input",
+    assertion: "toHaveAttribute",
+    attribute: "aria-expanded",
+    expectedValue: "false",
+    failureMessage: "Expect combobox input to have aria-expanded='false'"
+    }
   ];
 }
 
@@ -160,7 +186,7 @@ function isAriaSelected(index: "first" | "last") {
       assertion: "toHaveAttribute",
       attribute: "aria-selected",
       expectedValue: "true",
-      failureMessage: `Expected aria-selected on ${index} option to be true`,
+      failureMessage: `Expected ${index} option to have aria-selected='true'`,
     }
   ]
 }
