@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.10.0](https://github.com/aria-ease/aria-ease/compare/v6.9.1...v6.10.0) (2026-03-23)
+
+
+### Features
+
+* introduce state-driven DSL and executable interaction engine ([fa1f93d](https://github.com/aria-ease/aria-ease/commit/fa1f93d7565babf619abea7ec0608d00222a00e5))
+
 ### [6.9.1](https://github.com/aria-ease/aria-ease/compare/v6.8.0...v6.9.1) (2026-03-20)
 
 
