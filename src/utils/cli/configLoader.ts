@@ -55,6 +55,26 @@ function validateConfig(config: unknown): { valid: boolean; errors: string[] } {
     if (typeof cfg.test !== 'object' || cfg.test === null) {
       errors.push('test must be an object');
     } else {
+      if (cfg.test.disableTimeouts !== undefined && typeof cfg.test.disableTimeouts !== 'boolean') {
+        errors.push('test.disableTimeouts must be a boolean when provided');
+      }
+
+      const testTimeoutFields = [
+        'actionTimeoutMs',
+        'assertionTimeoutMs',
+        'navigationTimeoutMs',
+        'componentReadyTimeoutMs'
+      ] as const;
+
+      for (const field of testTimeoutFields) {
+        const value = cfg.test[field];
+        if (value !== undefined) {
+          if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+            errors.push(`test.${field} must be a non-negative number when provided`);
+          }
+        }
+      }
+
       if (cfg.test.components !== undefined) {
         if (!Array.isArray(cfg.test.components)) {
           errors.push('test.components must be an array');
@@ -69,8 +89,30 @@ function validateConfig(config: unknown): { valid: boolean; errors: string[] } {
               if (comp.path !== undefined && typeof comp.path !== 'string') {
                 errors.push(`test.components[${idx}].path must be a string when provided`);
               }
+              if (comp.strategyPath !== undefined && typeof comp.strategyPath !== 'string') {
+                errors.push(`test.components[${idx}].strategyPath must be a string when provided`);
+              }
               if (comp.strictness !== undefined && !['minimal', 'balanced', 'strict', 'paranoid'].includes(comp.strictness)) {
                 errors.push(`test.components[${idx}].strictness must be one of: minimal, balanced, strict, paranoid`);
+              }
+              if (comp.disableTimeouts !== undefined && typeof comp.disableTimeouts !== 'boolean') {
+                errors.push(`test.components[${idx}].disableTimeouts must be a boolean when provided`);
+              }
+
+              const componentTimeoutFields = [
+                'actionTimeoutMs',
+                'assertionTimeoutMs',
+                'navigationTimeoutMs',
+                'componentReadyTimeoutMs'
+              ] as const;
+
+              for (const field of componentTimeoutFields) {
+                const value = comp[field];
+                if (value !== undefined) {
+                  if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) {
+                    errors.push(`test.components[${idx}].${field} must be a non-negative number when provided`);
+                  }
+                }
               }
             }
           });
@@ -82,6 +124,26 @@ function validateConfig(config: unknown): { valid: boolean; errors: string[] } {
           errors.push('test.strictness must be one of: minimal, balanced, strict, paranoid');
         }
       }
+    }
+  }
+
+  // Validate contracts config if present
+  if (cfg.contracts !== undefined) {
+    if (!Array.isArray(cfg.contracts)) {
+      errors.push('contracts must be an array');
+    } else {
+      cfg.contracts.forEach((contract, idx) => {
+        if (typeof contract !== 'object' || contract === null) {
+          errors.push(`contracts[${idx}] must be an object`);
+        } else {
+          if (typeof (contract as { src?: string }).src !== 'string') {
+            errors.push(`contracts[${idx}].src is required and must be a string`);
+          }
+          if ((contract as { out?: string }).out !== undefined && typeof (contract as { out?: string }).out !== 'string') {
+            errors.push(`contracts[${idx}].out must be a string`);
+          }
+        }
+      });
     }
   }
 

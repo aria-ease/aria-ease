@@ -27,24 +27,38 @@ interface AriaEaseConfigAudit {
 }
 
 type ContractLevel = 'required' | 'recommended' | 'optional';
-type InterpretationMode = 'strict' | 'relaxed' | '';
-type ContractConfidence = 'low' | 'medium' | 'high';
-type StrictnessMode = 'minimal' | 'balanced' | 'strict' | 'paranoid';
 
 interface AriaEaseConfigTest {
     components?: AriaEaseConfigTestComponent[];
     strictness?: StrictnessMode;
+    disableTimeouts?: boolean;
+    actionTimeoutMs?: number;
+    assertionTimeoutMs?: number;
+    navigationTimeoutMs?: number;
+    componentReadyTimeoutMs?: number;
 }
 
 interface AriaEaseConfigTestComponent {
     name: string;
     path?: string;
+    strategyPath?: string;
     strictness?: StrictnessMode;
+    disableTimeouts?: boolean;
+    actionTimeoutMs?: number;
+    assertionTimeoutMs?: number;
+    navigationTimeoutMs?: number;
+    componentReadyTimeoutMs?: number;
+}
+
+interface AriaEaseConfigContractSource {
+    src: string;
+    out?: string;
 }
 
 interface AriaEaseConfig {
     audit?: AriaEaseConfigAudit;
-    test?: AriaEaseConfigTest
+    test?: AriaEaseConfigTest;
+    contracts?: AriaEaseConfigContractSource[];
 }
 
 interface JestAxeResult {
@@ -53,7 +67,12 @@ interface JestAxeResult {
     contract: unknown;
 }
 
-interface Selector {
+/**
+ * Selector interface with standard fields and extensibility for custom selectors.
+ * Teams can add custom selector fields beyond the standard baseline set.
+ */
+interface Selector extends Record<string, string | undefined> {
+    // Standard baseline selectors (all optional)
     trigger?: string;
     menu?: string;
     items?: string;
@@ -71,15 +90,7 @@ interface Selector {
     panel?: string;
     tablist?: string;
     tab?: string;
-}
-
-interface Prerequisite {
-    type: string;
-    target: string;
-    state?: string;
-    value?: string;
-    attribute?: string;
-    relative?: string;
+    // Teams can add custom selector fields as needed
 }
 
 interface ComponentContract {
@@ -94,6 +105,25 @@ interface ComponentContract {
         W3CName?: string;
     };
     selectors: Selector;
+    relationships?: Array<
+        | {
+            type: 'aria-reference';
+            from: string;
+            attribute: string;
+            to: string;
+            level?: ContractLevel;
+        }
+        | {
+            type: 'contains';
+            parent: string;
+            child: string;
+            level?: ContractLevel;
+        }
+    >;
+    states?: Array<{
+        name?: string;
+        requires?: string[];
+    }>;
     static: Array<{
         assertions: Array<{
             target: string;
@@ -110,13 +140,16 @@ interface ComponentContract {
     dynamic: Array<{
         description: string;
         level?: ContractLevel;
-        interpretation?: InterpretationMode;
-        confidence?: ContractConfidence;
-        rationale?: string;
-        note?: string;
         isMultiple?: boolean;
         isVertical?: boolean;
-        prerequisite: Array<Prerequisite>;
+        given?: string;
+        setup: Array<{
+            type: string;
+            target: string;
+            key?: string;
+            value?: string;
+            relativeTarget?: string;
+        }>;
         action: Array<{
             type: string;
             target: string;
@@ -271,7 +304,6 @@ export {
     Contract,
     ComponentContract,
     Selector,
-    Prerequisite,
     FailureReport,
     AccessibilityInstance,
     ComboboxConfig,

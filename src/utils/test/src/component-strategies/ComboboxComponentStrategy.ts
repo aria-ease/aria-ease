@@ -21,14 +21,14 @@ class ComboboxComponentStrategy implements ComponentStrategy {
         
         if (!isPopupVisible) return;
         
-        let menuClosed = false;
+        let listBoxClosed = false;
         
         // Strategy 1: Try Escape key (standard for combobox)
         let closeSelector = this.selectors.input; // For combobox
         if (!closeSelector && this.selectors.focusable) {
             closeSelector = this.selectors.focusable;
         } else if (!closeSelector) {
-            closeSelector = this.selectors.trigger;
+            closeSelector = this.selectors.button;
         }
         
         if (closeSelector) {
@@ -36,35 +36,35 @@ class ComboboxComponentStrategy implements ComponentStrategy {
             await closeElement.focus();
             await page.keyboard.press('Escape');
             
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
+            listBoxClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
                 .then(() => true)
                 .catch(() => false);
         }
         
-        // Strategy 2: Click trigger to toggle closed
-        if (!menuClosed && this.selectors.trigger) {
-            const triggerElement = page.locator(this.selectors.trigger).first();
-            await triggerElement.click({ timeout: this.actionTimeoutMs });
+        // Strategy 2: Click button to toggle closed
+        if (!listBoxClosed && this.selectors.button) {
+            const buttonElement = page.locator(this.selectors.button).first();
+            await buttonElement.click({ timeout: this.actionTimeoutMs });
             
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
+            listBoxClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
                 .then(() => true)
                 .catch(() => false);
         }
         
         // Strategy 3: Click outside
-        if (!menuClosed) {
+        if (!listBoxClosed) {
             await page.mouse.click(10, 10);
-            menuClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
+            listBoxClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
                 .then(() => true)
                 .catch(() => false);
         }
         
         // Fatal error if still open
-        if (!menuClosed) {
+        if (!listBoxClosed) {
             throw new Error(
                 `❌ FATAL: Cannot close combobox popup between tests. Popup remains visible after trying:\n` +
                 `  1. Escape key\n` +
-                `  2. Clicking trigger\n` +
+                `  2. Clicking button\n` +
                 `  3. Clicking outside\n` +
                 `This indicates a problem with the combobox component's close functionality.`
             );

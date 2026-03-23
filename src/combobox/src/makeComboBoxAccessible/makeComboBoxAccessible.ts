@@ -50,10 +50,6 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
     function setActiveDescendant(index: number) {
         const visibleItems = getVisibleItems();
         
-        visibleItems.forEach(item => {
-            item.setAttribute("aria-selected", "false");
-        });
-
         if (index >= 0 && index < visibleItems.length) {
             const activeItem = visibleItems[index];
             const itemId = activeItem.id || `${listBoxId}-option-${index}`;
@@ -62,7 +58,6 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 activeItem.id = itemId;
             }
             
-            activeItem.setAttribute("aria-selected", "true");
             comboboxInput.setAttribute("aria-activedescendant", itemId);
             
             // scrollIntoView may not be available in all environments (e.g., JSDOM)
@@ -103,9 +98,6 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         listBox.style.display = "none";
         activeIndex = -1;
         
-        const visibleItems = getVisibleItems();
-        visibleItems.forEach(item => item.setAttribute("aria-selected", "false"));
-        
         if (callback?.onOpenChange) {
             try {
                 callback.onOpenChange(false);
@@ -118,6 +110,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
     function selectOption(item: HTMLElement) {
         const value = item.textContent?.trim() || "";
         comboboxInput.value = value;
+        item.setAttribute("aria-selected", "true");
         closeListbox();
         
         if (callback?.onSelect) {
@@ -174,6 +167,10 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 } else if (comboboxInput.value) {
                     event.preventDefault();
                     comboboxInput.value = "";
+                    const visibleItems = getVisibleItems();
+                    visibleItems.forEach(item => {
+                        if(item.getAttribute("aria-selected") === "true") item.setAttribute("aria-selected", "false");
+                    });
                     if (callback?.onClear) {
                         try {
                             callback.onClear();
@@ -263,10 +260,30 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
     function initializeOptions() {
         const items = listBox.querySelectorAll(`.${listBoxItemsClass}`) as NodeListOf<HTMLElement>;
         if (items.length === 0) return;
-        
+
+        // Find the currently selected value (by aria-selected or input value)
+        let selectedValue = null;
+        // Prefer aria-selected if present
+        for (const item of items) {
+            if (item.getAttribute("aria-selected") === "true") {
+                selectedValue = item.textContent?.trim() || null;
+                break;
+            }
+        }
+        // Fallback: use input value if no aria-selected found
+        if (!selectedValue && comboboxInput.value) {
+            selectedValue = comboboxInput.value.trim();
+        }
+
         items.forEach((item, index) => {
             item.setAttribute("role", "option");
-            item.setAttribute("aria-selected", "false");
+            // Set aria-selected true if matches selectedValue, else false
+            const itemValue = item.textContent?.trim() || "";
+            if (selectedValue && itemValue === selectedValue) {
+                item.setAttribute("aria-selected", "true");
+            } else {
+                item.setAttribute("aria-selected", "false");
+            }
             const currentId = item.getAttribute("id");
             if (!currentId || currentId === "") {
                 const itemId = `${listBoxId}-option-${index}`;

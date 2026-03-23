@@ -21,11 +21,24 @@ export default {
     // Global fallback strictness: minimal | balanced | strict | paranoid
     strictness: 'balanced',
 
+    // Timeout controls for Playwright contract runner
+    // Set true to disable Playwright timeouts for actions/assertions/navigation/readiness
+    disableTimeouts: false,
+    // Or tune specific timeout buckets in milliseconds
+    // actionTimeoutMs: 1000,
+    // assertionTimeoutMs: 2000,
+    // navigationTimeoutMs: 30000,
+    // componentReadyTimeoutMs: 5000,
+
     // Optional per-component overrides
     components: [
       {
         name: 'menu',
-        strictness: 'strict'
+        strictness: 'strict',
+        // Menus/submenus are more timing-sensitive in slower environments.
+        actionTimeoutMs: 1200,
+        assertionTimeoutMs: 2500,
+        componentReadyTimeoutMs: 8000
       },
       {
         name: 'accordion',

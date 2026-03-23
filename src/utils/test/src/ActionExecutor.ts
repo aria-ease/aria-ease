@@ -30,13 +30,50 @@ export class ActionExecutor {
   /**
    * Execute focus action
    */
-  async focus(target: string): Promise<ActionResult> {
+  /**
+   * Execute focus action (supports absolute, relative, and virtual focus)
+   * @param target - selector key (e.g. "input", "button", "relative", or "virtual")
+   * @param relativeTarget - for relative focus (e.g. "first", "last")
+   * @param virtualId - for virtual focus (aria-activedescendant value)
+   */
+  async focus(target: string, relativeTarget?: string, virtualId?: string): Promise<ActionResult> {
     try {
+      // Virtual focus: set aria-activedescendant on input
+      if (target === "virtual" && virtualId) {
+        const inputSelector = this.selectors.input;
+        if (!inputSelector) {
+          return { success: false, error: `Input selector not defined for virtual focus.` };
+        }
+        const input = this.page.locator(inputSelector).first();
+        const exists = await input.count();
+        if (!exists) {
+          return { success: false, error: `Input element not found for virtual focus.` };
+        }
+        await input.evaluate((el, id) => {
+          el.setAttribute("aria-activedescendant", id);
+        }, virtualId);
+        return { success: true };
+      }
+
+      // Relative focus: focus a specific option (e.g. first/last)
+      if (target === "relative" && relativeTarget) {
+        const relativeSelector = this.selectors.relative;
+        if (!relativeSelector) {
+          return { success: false, error: `Relative selector not defined for focus action.` };
+        }
+        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget);
+        if (!element) {
+          return { success: false, error: `Could not resolve relative target ${relativeTarget} for focus.` };
+        }
+        await element.focus({ timeout: this.timeoutMs });
+        return { success: true };
+      }
+
+      // Standard focus (absolute selector)
       const selector = this.selectors[target as keyof typeof this.selectors];
       if (!selector) {
         return { success: false, error: `Selector for focus target ${target} not found.` };
       }
-      
       await this.page.locator(selector).first().focus({ timeout: this.timeoutMs });
       return { success: true };
     } catch (error) {

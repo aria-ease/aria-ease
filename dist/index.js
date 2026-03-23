@@ -5,7 +5,7 @@ import {
   normalizeLevel,
   normalizeStrictness,
   resolveEnforcement
-} from "./chunk-2TOYEY5L.js";
+} from "./chunk-XERMSYEH.js";
 import "./chunk-I2KLQ2HA.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
@@ -1022,16 +1022,12 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   }
   function setActiveDescendant(index) {
     const visibleItems = getVisibleItems();
-    visibleItems.forEach((item) => {
-      item.setAttribute("aria-selected", "false");
-    });
     if (index >= 0 && index < visibleItems.length) {
       const activeItem = visibleItems[index];
       const itemId = activeItem.id || `${listBoxId}-option-${index}`;
       if (!activeItem.id) {
         activeItem.id = itemId;
       }
-      activeItem.setAttribute("aria-selected", "true");
       comboboxInput.setAttribute("aria-activedescendant", itemId);
       if (typeof activeItem.scrollIntoView === "function") {
         activeItem.scrollIntoView({ block: "nearest", behavior: "smooth" });
@@ -1064,8 +1060,6 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
     comboboxInput.setAttribute("aria-activedescendant", "");
     listBox.style.display = "none";
     activeIndex = -1;
-    const visibleItems = getVisibleItems();
-    visibleItems.forEach((item) => item.setAttribute("aria-selected", "false"));
     if (callback?.onOpenChange) {
       try {
         callback.onOpenChange(false);
@@ -1077,6 +1071,7 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   function selectOption(item) {
     const value = item.textContent?.trim() || "";
     comboboxInput.value = value;
+    item.setAttribute("aria-selected", "true");
     closeListbox();
     if (callback?.onSelect) {
       try {
@@ -1123,6 +1118,10 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
         } else if (comboboxInput.value) {
           event.preventDefault();
           comboboxInput.value = "";
+          const visibleItems2 = getVisibleItems();
+          visibleItems2.forEach((item) => {
+            if (item.getAttribute("aria-selected") === "true") item.setAttribute("aria-selected", "false");
+          });
           if (callback?.onClear) {
             try {
               callback.onClear();
@@ -1201,9 +1200,24 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
   function initializeOptions() {
     const items = listBox.querySelectorAll(`.${listBoxItemsClass}`);
     if (items.length === 0) return;
+    let selectedValue = null;
+    for (const item of items) {
+      if (item.getAttribute("aria-selected") === "true") {
+        selectedValue = item.textContent?.trim() || null;
+        break;
+      }
+    }
+    if (!selectedValue && comboboxInput.value) {
+      selectedValue = comboboxInput.value.trim();
+    }
     items.forEach((item, index) => {
       item.setAttribute("role", "option");
-      item.setAttribute("aria-selected", "false");
+      const itemValue = item.textContent?.trim() || "";
+      if (selectedValue && itemValue === selectedValue) {
+        item.setAttribute("aria-selected", "true");
+      } else {
+        item.setAttribute("aria-selected", "false");
+      }
       const currentId = item.getAttribute("id");
       if (!currentId || currentId === "") {
         const itemId = `${listBoxId}-option-${index}`;
@@ -1494,6 +1508,392 @@ function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation 
   return { activateTab, cleanup, refresh };
 }
 
+// src/utils/test/dsl/src/state-packs/comboboxStatePack.ts
+function hasCapabilities(ctx, requiredCaps) {
+  return requiredCaps.some((cap) => ctx.capabilities.includes(cap));
+}
+function resolveSetup(setup, ctx) {
+  if (Array.isArray(setup) && setup.length && !setup[0].when) {
+    setup = [{ when: ["keyboard"], steps: () => setup }];
+  }
+  for (const strat of setup) {
+    if (hasCapabilities(ctx, strat.when)) {
+      return strat.steps(ctx);
+    }
+  }
+  throw new Error(
+    `No setup strategy matches capabilities: ${ctx.capabilities.join(", ")}`
+  );
+}
+var COMBOBOX_STATES = {
+  "listbox.open": {
+    setup: [
+      {
+        when: ["keyboard", "textInput"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowDown" }
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "button" }
+        ]
+      }
+    ],
+    assertion: isComboboxOpen
+  },
+  "listbox.closed": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          /* { type: "keypress", target: "input", key: "Escape" } */
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          /* { type: "click", target: "button" } */
+        ]
+      }
+    ],
+    assertion: isComboboxClosed
+  },
+  "input.focused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "focus", target: "input" }
+        ]
+      }
+    ],
+    assertion: isInputFocused
+  },
+  "input.filled": {
+    setup: [
+      {
+        when: ["keyboard", "textInput"],
+        steps: () => [
+          { type: "type", target: "input", value: "test" }
+        ]
+      }
+    ],
+    assertion: isInputFilled
+  },
+  "activeOption.first": {
+    requires: ["listbox.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowDown" }
+        ]
+      }
+    ],
+    assertion: isActiveDescendantNotEmpty
+  },
+  "activeOption.last": {
+    requires: ["activeOption.first"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowUp" }
+        ]
+      }
+    ],
+    assertion: isActiveDescendantNotEmpty
+  },
+  "selectedOption.first": {
+    requires: ["listbox.open"],
+    setup: [
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "relative", relativeTarget: "first" }
+        ]
+      }
+    ],
+    assertion: () => isAriaSelected("first")
+  },
+  "selectedOption.last": {
+    requires: ["listbox.open"],
+    setup: [
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "relative", relativeTarget: "last" }
+        ]
+      }
+    ],
+    assertion: () => isAriaSelected("last")
+  }
+};
+function isComboboxOpen() {
+  return [
+    {
+      target: "listbox",
+      assertion: "toBeVisible",
+      failureMessage: "Expected listbox to be visible"
+    },
+    {
+      target: "input",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "true",
+      failureMessage: "Expect combobox input to have aria-expanded='true'"
+    }
+  ];
+}
+function isComboboxClosed() {
+  return [
+    {
+      target: "listbox",
+      assertion: "notToBeVisible",
+      failureMessage: "Expected listbox to be closed"
+    },
+    {
+      target: "input",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "false",
+      failureMessage: "Expect combobox input to have aria-expanded='false'"
+    }
+  ];
+}
+function isActiveDescendantNotEmpty() {
+  return [
+    {
+      target: "input",
+      assertion: "toHaveAttribute",
+      attribute: "aria-activedescendant",
+      expectedValue: "!empty",
+      failureMessage: "Expected aria-activedescendant to not be empty"
+    }
+  ];
+}
+function isAriaSelected(index) {
+  return [
+    {
+      target: "relative",
+      relativeTarget: index,
+      assertion: "toHaveAttribute",
+      attribute: "aria-selected",
+      expectedValue: "true",
+      failureMessage: `Expected ${index} option to have aria-selected='true'`
+    }
+  ];
+}
+function isInputFocused() {
+  return [
+    {
+      target: "input",
+      assertion: "toHaveFocus",
+      failureMessage: "Expected input to be focused"
+    }
+  ];
+}
+function isInputFilled() {
+  return [
+    {
+      target: "input",
+      assertion: "toHaveValue",
+      expectedValue: "test",
+      failureMessage: "Expected input to have the value 'test'"
+    }
+  ];
+}
+
+// src/utils/test/dsl/src/contractBuilder.ts
+var STATE_PACKS = {
+  "combobox.listbox": COMBOBOX_STATES
+  // Add more mappings as needed
+};
+var FluentContract = class {
+  constructor(jsonContract) {
+    this.jsonContract = jsonContract;
+  }
+  toJSON() {
+    return this.jsonContract;
+  }
+};
+var ContractBuilder = class {
+  constructor(componentName) {
+    this.componentName = componentName;
+    this.statePack = STATE_PACKS[componentName] || {};
+  }
+  metaValue = {};
+  selectorsValue = {};
+  relationshipInvariants = [];
+  staticAssertions = [];
+  dynamicTests = [];
+  statePack;
+  meta(meta) {
+    this.metaValue = meta;
+    return this;
+  }
+  selectors(selectors) {
+    this.selectorsValue = selectors;
+    return this;
+  }
+  relationships(fn) {
+    const api = {
+      ariaReference: (from, attribute, to) => ({
+        required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
+        optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" })
+      }),
+      contains: (parent, child) => ({
+        required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
+        optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" })
+      })
+    };
+    fn(api);
+    return this;
+  }
+  static(fn) {
+    const api = {
+      target: (target) => ({
+        has: (attribute, expectedValue) => ({
+          required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required" }),
+          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" })
+        })
+      })
+    };
+    fn(api);
+    return this;
+  }
+  when(event) {
+    return new DynamicTestBuilder(this, this.statePack, event);
+  }
+  addDynamicTest(test) {
+    this.dynamicTests.push(test);
+  }
+  build() {
+    return {
+      meta: this.metaValue,
+      selectors: this.selectorsValue,
+      relationships: this.relationshipInvariants.length ? this.relationshipInvariants : void 0,
+      static: this.staticAssertions.length ? [{ assertions: this.staticAssertions }] : [],
+      dynamic: this.dynamicTests
+    };
+  }
+};
+var DynamicTestBuilder = class {
+  constructor(parent, statePack, event) {
+    this.parent = parent;
+    this.statePack = statePack;
+    this.event = event;
+  }
+  _as;
+  _on;
+  _given = [];
+  _then = [];
+  _desc = "";
+  _level = "required";
+  as(actionType) {
+    this._as = actionType;
+    return this;
+  }
+  on(target) {
+    this._on = target;
+    return this;
+  }
+  given(states) {
+    this._given = Array.isArray(states) ? states : [states];
+    return this;
+  }
+  then(states) {
+    this._then = Array.isArray(states) ? states : [states];
+    return this;
+  }
+  describe(desc) {
+    this._desc = desc;
+    return this;
+  }
+  required() {
+    this._level = "required";
+    this._finalize();
+    return this.parent;
+  }
+  optional() {
+    this._level = "optional";
+    this._finalize();
+    return this.parent;
+  }
+  recommended() {
+    this._level = "recommended";
+    this._finalize();
+    return this.parent;
+  }
+  _finalize() {
+    const capabilityMap = {
+      keypress: "keyboard",
+      click: "pointer",
+      type: "textInput",
+      focus: "keyboard",
+      hover: "pointer"
+      // add more mappings as needed
+    };
+    const capability = capabilityMap[this._as || "keyboard"] || (this._as || "keyboard");
+    const ctx = { capabilities: [capability] };
+    const resolveAllSetups = (stateName, visited = /* @__PURE__ */ new Set()) => {
+      if (visited.has(stateName)) return [];
+      visited.add(stateName);
+      const s = this.statePack[stateName];
+      if (!s) return [];
+      let actions = [];
+      if (Array.isArray(s.requires)) {
+        for (const req of s.requires) {
+          actions = actions.concat(resolveAllSetups(req, visited));
+        }
+      }
+      if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx));
+      return actions;
+    };
+    const setup = [];
+    for (const state of this._given) {
+      setup.push(...resolveAllSetups(state));
+    }
+    const assertions = [];
+    for (const state of this._then) {
+      const s = this.statePack[state];
+      if (s && s.assertion !== void 0) {
+        let value = s.assertion;
+        if (typeof value === "function") {
+          try {
+            value = value();
+          } catch (e) {
+            throw new Error(`Error calling assertion function for state '${state}': ${e.message}`);
+          }
+        }
+        if (Array.isArray(value)) assertions.push(...value);
+        else assertions.push(value);
+      }
+    }
+    const action = [
+      {
+        type: this._as,
+        target: this._on,
+        key: this._as === "keypress" ? this.event : void 0
+      }
+    ];
+    this.parent.addDynamicTest({
+      description: this._desc || "",
+      level: this._level,
+      action,
+      assertions,
+      ...setup.length ? { setup } : {}
+    });
+  }
+};
+function createContract(componentName, define) {
+  const builder = new ContractBuilder(componentName);
+  define(builder);
+  return new FluentContract(builder.build());
+}
+
 // src/utils/test/src/test.ts
 import { axe } from "jest-axe";
 
@@ -1510,7 +1910,7 @@ async function runContractTests(componentName, component, strictness) {
   const resolvedPath = new URL(contractPath, import.meta.url).pathname;
   const contractData = await fs.readFile(resolvedPath, "utf-8");
   const componentContract = JSON.parse(contractData);
-  const totalTests = componentContract.static[0].assertions.length + componentContract.dynamic.length;
+  const totalTests = (componentContract.relationships?.length || 0) + (componentContract.static[0]?.assertions.length || 0) + componentContract.dynamic.length;
   reporter.start(componentName, totalTests);
   const failures = [];
   const passes = [];
@@ -1534,6 +1934,82 @@ async function runContractTests(componentName, component, strictness) {
   let staticPassed = 0;
   let staticFailed = 0;
   let staticWarnings = 0;
+  for (const rel of componentContract.relationships || []) {
+    const relationshipLevel = normalizeLevel(rel.level);
+    if (rel.type === "aria-reference") {
+      const fromSelector = componentContract.selectors[rel.from];
+      const toSelector = componentContract.selectors[rel.to];
+      const relDescription = `${rel.from}.${rel.attribute} references ${rel.to}`;
+      if (!fromSelector || !toSelector) {
+        const outcome = classifyFailure(`Relationship selector missing: from="${rel.from}" or to="${rel.to}" not found in selectors.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const fromTarget = component.querySelector(fromSelector);
+      const toTarget = component.querySelector(toSelector);
+      if (!fromTarget || !toTarget) {
+        const outcome = classifyFailure(`Relationship target not found: ${!fromTarget ? rel.from : rel.to}.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const toId = toTarget.getAttribute("id");
+      const attrValue = fromTarget.getAttribute(rel.attribute) || "";
+      if (!toId) {
+        const outcome = classifyFailure(`Relationship target "${rel.to}" must have an id for ${rel.attribute} validation.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const references = attrValue.split(/\s+/).filter(Boolean);
+      if (!references.includes(toId)) {
+        const outcome = classifyFailure(`Expected ${rel.from} ${rel.attribute} to reference id "${toId}", found "${attrValue}".`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      passes.push(`Relationship valid: ${rel.from}.${rel.attribute} -> ${rel.to} (id=${toId}).`);
+      staticPassed += 1;
+      reporter.reportStaticTest(relDescription, "pass", void 0, relationshipLevel);
+      continue;
+    }
+    if (rel.type === "contains") {
+      const parentSelector = componentContract.selectors[rel.parent];
+      const childSelector = componentContract.selectors[rel.child];
+      const relDescription = `${rel.parent} contains ${rel.child}`;
+      if (!parentSelector || !childSelector) {
+        const outcome = classifyFailure(`Relationship selector missing: parent="${rel.parent}" or child="${rel.child}" not found in selectors.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const parentTarget = component.querySelector(parentSelector);
+      if (!parentTarget) {
+        const outcome = classifyFailure(`Relationship parent target not found: ${rel.parent}.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      const nestedChild = parentTarget.querySelector(childSelector);
+      if (!nestedChild) {
+        const outcome = classifyFailure(`Expected ${rel.parent} to contain descendant matching selector for ${rel.child}.`, rel.level);
+        if (outcome.status === "fail") staticFailed += 1;
+        if (outcome.status === "warn") staticWarnings += 1;
+        reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+        continue;
+      }
+      passes.push(`Relationship valid: ${rel.parent} contains ${rel.child}.`);
+      staticPassed += 1;
+      reporter.reportStaticTest(relDescription, "pass", void 0, relationshipLevel);
+    }
+  }
   for (const test of componentContract.static[0].assertions) {
     if (test.target !== "relative") {
       const staticLevel = normalizeLevel(test.level);
@@ -1589,6 +2065,7 @@ async function runContractTests(componentName, component, strictness) {
 }
 
 // src/utils/test/src/test.ts
+import path from "path";
 async function testUiComponent(componentName, component, url, options = {}) {
   if (!componentName || typeof componentName !== "string") {
     throw new Error("\u274C testUiComponent requires a valid componentName (string)");
@@ -1627,14 +2104,24 @@ Error: ${error instanceof Error ? error.message : String(error)}`
     return null;
   }
   let strictness = normalizeStrictness(options.strictness);
-  if (options.strictness === void 0 && typeof window === "undefined") {
+  let config = {};
+  let configBaseDir = typeof process !== "undefined" ? process.cwd() : "";
+  if (typeof process !== "undefined" && typeof process.cwd === "function") {
     try {
-      const { loadConfig } = await import("./configLoader-IT4PWCJB.js");
-      const { config } = await loadConfig(process.cwd());
-      const componentStrictness = config.test?.components?.find((comp) => comp?.name === componentName)?.strictness;
-      strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+      const { loadConfig } = await import("./configLoader-DWHOHXHL.js");
+      const result2 = await loadConfig(process.cwd());
+      config = result2.config;
+      if (result2.configPath) {
+        configBaseDir = path.dirname(result2.configPath);
+      }
+      if (options.strictness === void 0) {
+        const componentStrictness = config.test?.components?.find((comp) => comp?.name === componentName)?.strictness;
+        strictness = normalizeStrictness(componentStrictness ?? config.test?.strictness);
+      }
     } catch {
-      strictness = "balanced";
+      if (options.strictness === void 0) {
+        strictness = "balanced";
+      }
     }
   }
   let contract;
@@ -1643,8 +2130,8 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-UAOFNS7Z.js");
-        contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness);
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-WNWQYSXZ.js");
+        contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness, config, configBaseDir);
       } else {
         throw new Error(
           `\u274C Dev server not running at ${url}
@@ -1747,6 +2234,7 @@ async function cleanupTests() {
 }
 export {
   cleanupTests,
+  createContract,
   makeAccordionAccessible,
   makeBlockAccessible,
   makeCheckboxAccessible,

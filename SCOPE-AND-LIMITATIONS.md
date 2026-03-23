@@ -18,10 +18,10 @@ Aria-Ease is **accessibility infrastructure for the entire frontend engineering 
 
 | Phase | What We Provide | Status |
 |-------|----------------|--------|
-| **Development** | Component utilities implementing WAI-ARIA APG patterns | ✅ Available |
+| **Development** | Component utilities implementing a baseline APG interpretation | ✅ Available |
 | **Linting** | ESLint rules to enforce accessible coding patterns | 🚧 Roadmap |
 | **Pre-Deploy** | Axe-core powered static accessibility audit CLI | ✅ Available |
-| **Testing** | WAI-ARIA APG contract testing with Playwright | ✅ Available |
+| **Testing** | Baseline APG contract testing with Playwright | ✅ Available |
 | **CI/CD** | Accessibility as deployment gatekeeper | ✅ Available |
 | **Production** | Real user signal monitoring and interaction replay | 🚧 Roadmap |
 | **Insights** | Dashboard for reporting and analytics | 🚧 Roadmap |
@@ -34,11 +34,11 @@ Aria-Ease is **accessibility infrastructure for the entire frontend engineering 
 
 ## ✅ What Aria-Ease DOES Cover
 
-Aria-Ease provides **production-ready accessibility utilities** for common interactive patterns. We handle the complex, repetitive technical implementation so you don't have to.
+Aria-Ease provides **production-ready accessibility utilities** for common interactive patterns. These utilities encode Aria-Ease's baseline interpretation of accessible behavior: a consistent starting point you can trust and verify.
 
 ### Component Patterns (7 Core)
 
-We provide full WCAG-compliant implementations for:
+We provide baseline WCAG-aligned implementations for:
 
 - ✅ **Menu / Dropdowns** - Navigation menus, user profile dropdowns, context menus
 - ✅ **Accordion** - Expandable sections, FAQs, collapsible content
@@ -81,16 +81,27 @@ For each pattern, Aria-Ease automatically handles:
 ### Standards Compliance
 
 - ✅ Based on **WAI-ARIA Authoring Practices Guide (APG)**
+- ✅ Presented as **a baseline interpretation**, not the only valid implementation
 - ✅ **WCAG 2.1 Level AA** compliant for covered patterns
 - ✅ Follows **established interaction patterns** from W3C
 - ✅ **Keyboard-first** approach (not mouse-dependent)
 
 ### Testing Tools
 
-- ✅ **Contract Testing Framework** - Validate component behavior
+- ✅ **Contract Testing Framework** - Validate baseline component behavior consistently
 - ✅ **CLI Audit Tool** - Powered by axe-core for automated scanning
 - ✅ **Component-Specific Tests** - Pre-built test suites
 - ✅ **Playwright Integration** - Browser-based testing
+
+### Contract Customization & Extension
+
+- ✅ **Custom Contract Definitions** - Define your own accessibility policies per component by providing custom contract JSON files
+- ✅ **Contract Path Override** - Swap out baseline contracts for custom ones via `ariaease.config.js`
+- ✅ **Custom Component Strategies** - Provide custom reset logic and skip conditions for component-specific testing behavior
+- ✅ **Custom Selector Fields** - Extend contract selector definitions with custom fields beyond the baseline set
+- ✅ **Per-Component Configuration** - Override contracts and strategies on a per-component basis without rebuilding source code
+
+**Philosophy:** Baseline contracts provide a trustworthy starting point. As teams mature, they can extend or override contracts to reflect their specific accessibility strategy.
 
 ---
 

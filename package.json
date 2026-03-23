@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "6.8.0",
+  "version": "6.11.0",
   "description": "Accessibility infrastructure for the entire frontend engineering lifecycle. Build accessible patterns, run automated audits, verify component interactions, and gate deployments — all in one system.",
   "main": "dist/index.cjs",
   "type": "module",
@@ -16,13 +16,14 @@
     "release:patch": "standard-version --release-as patch",
     "release:minor": "standard-version --release-as minor",
     "release:major": "standard-version --release-as major",
-    "clean": "rm -rf dist bin",
+    "clean": "rm -rf dist",
     "build:core": "tsup ./index.ts --format esm,cjs --dts --outDir dist --external jest-axe --external @testing-library/react --external @axe-core/playwright --external playwright",
-    "build:modules": "tsup ./src/combobox/index.ts ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/tabs/index.ts ./src/radio/index.ts ./src/toggle/index.ts --format esm,cjs --dts --treeshake --outDir dist/src",
+    "build:modules": "tsup ./src/combobox/index.ts ./src/accordion/index.ts ./src/block/index.ts ./src/checkbox/index.ts ./src/menu/index.ts ./src/tabs/index.ts ./src/radio/index.ts ./src/toggle/index.ts ./src/contracts/index.ts --format esm,cjs --dts --treeshake --outDir dist/src",
     "build:test": "tsup ./src/utils/test/index.ts --format esm,cjs --dts --treeshake --external jest-axe --external @testing-library/react --external playwright --external @playwright/test --outDir dist/src/utils/test",
-    "build:cli": "tsup ./src/utils/cli/cli.ts --format esm,cjs --dts --outDir bin --external commander --external chalk --external jest-axe --external @testing-library/react --external @axe-core/playwright --external playwright",
+    "build:dsl": "tsup ./src/utils/test/dsl/index.ts --format esm,cjs --dts --treeshake --outDir dist/src/utils/test/dsl",
+    "build:cli": "tsup ./src/utils/cli/cli.ts --format esm,cjs --dts --outDir dist --external commander --external chalk --external jest-axe --external @testing-library/react --external @axe-core/playwright --external playwright",
     "build:contracts": "mkdir -p ./dist/src/utils/test && cp -r ./src/utils/test/contract/aria-contracts ./dist/src/utils/test/",
-    "build": "npm run clean && npm run build:core && npm run build:modules && npm run build:test && npm run build:cli && npm run build:contracts"
+    "build": "npm run clean && npm run build:core && npm run build:modules && npm run build:test && npm run build:dsl && npm run build:cli && npm run build:contracts"
   },
   "repository": {
     "type": "git",
@@ -117,11 +118,15 @@
       "types": "./dist/src/tabs/index.d.ts",
       "import": "./dist/src/tabs/index.js",
       "require": "./dist/src/tabs/index.cjs"
+    },
+    "./contract": {
+      "types": "./dist/src/utils/test/dsl/index.d.ts",
+      "import": "./dist/src/utils/test/dsl/index.js",
+      "require": "./dist/src/utils/test/dsl/index.cjs"
     }
   },
   "files": [
     "dist",
-    "bin",
     "README.md",
     "LICENSE"
   ],
@@ -146,6 +151,6 @@
     }
   },
   "bin": {
-    "aria-ease": "./bin/cli.js"
+    "aria-ease": "./dist/cli.js"
   }
 }

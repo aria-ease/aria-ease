@@ -62,14 +62,9 @@ function isClickableButNotSemantic(el: HTMLElement): boolean {
 
 /**
  * Handles keyboard press events for accessible navigation within interactive elements.
- * Supports arrow key navigation, Enter/Space activation, and menu-specific behaviors.
  * @param {KeyboardEvent} event The keyboard event.
  * @param {NodeListOfHTMLElement} elementItems List of interactive elements to navigate.
  * @param {number} elementItemIndex The index of the currently focused element.
- * @param {HTMLElement} [menuElementDiv] Optional menu container element.
- * @param {HTMLElement} [triggerButton] Optional menu trigger button.
- * @param {Function} [openSubmenu] Optional callback to open a submenu.
- * @param {Function} [closeSubmenu] Optional callback to close a submenu.
  */
 export function handleKeyPress( event: KeyboardEvent, elementItems: NodeListOfHTMLElement, elementItemIndex: number ): void {
     const currentEl = elementItems.item(elementItemIndex);

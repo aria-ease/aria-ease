@@ -194,6 +194,141 @@ declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, lis
 
 declare function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation, activateOnFocus, callback }: TabsConfig): AccessibilityInstance;
 
+type StatePack = Record<string, {
+    setup?: DynamicAction[];
+    assertion?: DynamicAssertion[] | DynamicAssertion;
+    requires?: string[];
+}>;
+type Level = "required" | "recommended" | "optional";
+type ContractMeta = {
+    id?: string;
+    version?: string;
+    description?: string;
+    source?: {
+        apg?: string;
+        wcag?: string[];
+    };
+    W3CName?: string;
+};
+type SelectorsMap = Record<string, string>;
+type RelationshipInvariant = {
+    type: "aria-reference";
+    from: string;
+    attribute: string;
+    to: string;
+    level?: Level;
+} | {
+    type: "contains";
+    parent: string;
+    child: string;
+    level?: Level;
+};
+type StaticAssertion = {
+    target: string;
+    attribute: string;
+    expectedValue?: string;
+    failureMessage: string;
+    level: Level;
+};
+type DynamicAssertion = {
+    target: string;
+    assertion: "toBeVisible" | "notToBeVisible" | "toHaveAttribute" | "toHaveValue" | "toHaveFocus" | "toHaveRole";
+    attribute?: string;
+    expectedValue?: string;
+    failureMessage?: string;
+    relativeTarget?: string;
+    virtualId?: string;
+    selectorKey?: string;
+    level?: Level;
+};
+type DynamicAction = {
+    type: "focus";
+    target: string;
+    relativeTarget?: "first" | "last" | "next" | "previous";
+    virtualId?: string;
+} | {
+    type: "click" | "keypress" | "type" | "hover";
+    target: string;
+    key?: string;
+    value?: string;
+    relativeTarget?: string;
+};
+type DynamicTest = {
+    description: string;
+    level?: Level;
+    action: DynamicAction[];
+    assertions: DynamicAssertion[];
+};
+type JsonContract = {
+    meta?: ContractMeta;
+    selectors: SelectorsMap;
+    relationships?: RelationshipInvariant[];
+    static: Array<{
+        assertions: StaticAssertion[];
+    }>;
+    dynamic: DynamicTest[];
+};
+declare class FluentContract {
+    private readonly jsonContract;
+    constructor(jsonContract: JsonContract);
+    toJSON(): JsonContract;
+}
+declare class ContractBuilder {
+    private readonly componentName;
+    private metaValue;
+    private selectorsValue;
+    private readonly relationshipInvariants;
+    private readonly staticAssertions;
+    private readonly dynamicTests;
+    private statePack;
+    constructor(componentName: string);
+    meta(meta: ContractMeta): this;
+    selectors(selectors: SelectorsMap): this;
+    relationships(fn: (r: {
+        ariaReference: (from: string, attribute: string, to: string) => {
+            required: () => void;
+            optional: () => void;
+        };
+        contains: (parent: string, child: string) => {
+            required: () => void;
+            optional: () => void;
+        };
+    }) => void): this;
+    static(fn: (s: {
+        target: (target: string) => {
+            has: (attribute: string, expectedValue: string) => {
+                required: () => void;
+                optional: () => void;
+            };
+        };
+    }) => void): this;
+    when(event: string): DynamicTestBuilder;
+    addDynamicTest(test: DynamicTest): void;
+    build(): JsonContract;
+}
+declare class DynamicTestBuilder {
+    private parent;
+    private statePack;
+    private event;
+    private _as;
+    private _on;
+    private _given;
+    private _then;
+    private _desc;
+    private _level;
+    constructor(parent: ContractBuilder, statePack: StatePack, event: string);
+    as(actionType: string): this;
+    on(target: string): this;
+    given(states: string | string[]): this;
+    then(states: string | string[]): this;
+    describe(desc: string): this;
+    required(): ContractBuilder;
+    optional(): ContractBuilder;
+    recommended(): ContractBuilder;
+    private _finalize;
+}
+declare function createContract(componentName: string, define: (c: ContractBuilder) => void): FluentContract;
+
 type StrictnessMode = 'minimal' | 'balanced' | 'strict' | 'paranoid';
 
 /**
@@ -213,4 +348,4 @@ declare function testUiComponent(componentName: string, component: HTMLElement |
  */
 declare function cleanupTests(): Promise<void>;
 
-export { cleanupTests, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };
+export { cleanupTests, createContract, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };

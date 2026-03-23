@@ -31,13 +31,13 @@ Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that
 
 **Traditional approach:** Build features → Manual testing → Find accessibility issues → Fix them → Manual testing again → Ship (maybe)
 
-**Aria-Ease approach:** Build with accessible utilities → Automated audits catch issues → Contract tests verify deterministic component behaviors → CI/CD gates deployment → Ship with confidence
+**Aria-Ease approach:** Build with accessible baseline utilities → Automated audits catch issues → Contract tests verify consistent baseline component behaviors → CI/CD gates deployment → Ship with confidence
 
 ### What Makes This Different?
 
 #### 1. **Component Utilities** (Available Now)
 
-Reusable accessible interaction patterns that implement WAI-ARIA APG specifications. Tree-shakable, framework-agnostic, production-ready.
+Reusable accessible interaction patterns based on Aria-Ease's baseline interpretation of WAI-ARIA APG guidance. Not the only valid implementation, but a proven, consistent place to start. Tree-shakable, framework-agnostic, production-ready.
 
 ```javascript
 // Instead of 50+ lines managing ARIA attributes and keyboard events...
@@ -60,7 +60,9 @@ npx aria-ease audit --url https://yoursite.com
 
 #### 3. **Contract Testing** (Available Now)
 
-This is the game-changer. We encoded the WAI-ARIA APG into deterministic JSON "contracts" and built a custom Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
+This is the game-changer. Encoded a deterministic, testable interpretation of WAI-ARIA APG guidance into JSON "contracts" using Aria-Ease DSL API, and validate your contract against your component using Aria-Ease's Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
+
+Teams and experts can enforce their own standards and maintain reusability and consistency.
 
 **The result?** Component interaction testing that feels closer to unit testing than manual QA.
 
@@ -70,7 +72,7 @@ npx aria-ease test
 # ✓ 26 assertions in ~1 second in CI
 ```
 
-**Why this matters:** Before, verifying a combobox meant testing every interaction manually. Now, Aria-Ease automates the deterministic aspects of testing a combobox; keyboard interaction, ARIA states update, visibility, semantic roles.
+**Why this matters:** Before, verifying a combobox meant testing every interaction manually. Now, Aria-Ease automates the repeatable, deterministic aspects of testing a combobox: keyboard interaction, ARIA state updates, visibility, and semantic roles.
 
 #### 4. **CI/CD Integration** (Available Now)
 
@@ -111,7 +113,7 @@ Visualize accessibility health across your entire application. Track progress, i
 - 🎯 **Tree-shakable** - Import only what you need (1.4KB - 3.7KB per component)
 - ♿ **WCAG Compliant** - Follows WAI-ARIA best practices
 - ⌨️ **Keyboard Interaction** - Full keyboard support out of the box
-- 🧪 **Contract Testing** - Built-in accessibility testing framework
+- 🧪 **Contract Testing** - Built-in baseline accessibility testing framework
 - 🎭 **Framework Agnostic** - Works with React, Vue, vanilla JS, etc.
 - 🔍 **CLI Audit Tool** - Automated accessibility testing for your sites
 - 📦 **TypeScript Support** - Full type definitions included
@@ -175,6 +177,61 @@ npx aria-ease audit
 - `ariaease.config.ts` (TypeScript - experimental)
 
 The CLI will automatically find and load your config file, with validation to catch errors early.
+
+### Contract DSL Build Workflow
+
+You can author custom component contracts as readable DSL files and compile them with a built-in CLI command.
+
+1. Create one or more `*.contract.mjs` files that export a contract built with `contract("component.name", ...)`.
+2. Configure contract sources in `ariaease.config.js`.
+3. Run `npx aria-ease build contracts`.
+4. Run `npx aria-ease test`.
+
+Example config with multiple contract sources:
+
+```javascript
+export default {
+  test: {
+    strictness: "balanced",
+    components: [
+      {
+        name: "combobox.listbox",
+        path: "./tests/external-contracts/combobox.listbox.contract.json",
+        strategyPath: "./tests/external-strategies/CustomComboboxStrategy.js",
+      },
+    ],
+  },
+  contracts: [
+    {
+      src: "./tests/external-contracts/**/*.contract.mjs",
+      // optional: out: "./tests/external-contracts/generated"
+    },
+    {
+      src: "./tests/client-a/**/*.contract.mjs",
+      out: "./tests/client-a/generated",
+    },
+  ],
+};
+```
+
+Example `package.json` scripts:
+
+```json
+{
+  "scripts": {
+    "build:contracts": "npx aria-ease build contracts",
+    "test:a11y": "npx aria-ease build contracts && npx aria-ease test"
+  }
+}
+```
+
+During build, Aria-Ease validates:
+
+- contract schema shape
+- selector references in static/dynamic targets
+- relationship references (`aria-reference`, `contains`)
+
+At runtime, relationship invariants are executed and reported alongside static assertions and dynamic tests.
 
 **Perfect for CI/CD pipelines** to catch accessibility issues before production!
 
@@ -951,6 +1008,11 @@ export default {
       out: "./accessibility-reports",
     },
   },
+  contracts: [
+    {
+      src: "./tests/external-contracts/**/*.contract.mjs",
+    },
+  ],
 };
 ```
 
@@ -960,7 +1022,7 @@ Add to `package.json`:
 {
   "scripts": {
     "audit": "npx aria-ease audit -f html",
-    "test:a11y": "npx aria-ease test",
+    "test:a11y": "npx aria-ease build contracts && npx aria-ease test",
     "ci": "npm run audit && npm run test:a11y"
   }
 }
