@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [6.12.0](https://github.com/aria-ease/aria-ease/compare/v6.11.0...v6.12.0) (2026-03-25)
+
+
+### Features
+
+* added 'recommended' flag for 'has attribute' builder ([f3ff0ea](https://github.com/aria-ease/aria-ease/commit/f3ff0eae0e48f1dfc15d524e9d464bd706d9a94f))
+
 ## [6.11.0](https://github.com/aria-ease/aria-ease/compare/v6.10.0...v6.11.0) (2026-03-23)
 
 
