@@ -3,9 +3,9 @@
         "path": "./aria-contracts/menu/menu.contract.json",
         "component": "menu"
     },
-    "combobox.listbox": {
+    "combobox": {
         "path": "./aria-contracts/combobox/combobox.listbox.contract.json",
-        "component": "combobox.listbox"
+        "component": "combobox"
     },
     "accordion": {
         "path": "./aria-contracts/accordion/accordion.contract.json",

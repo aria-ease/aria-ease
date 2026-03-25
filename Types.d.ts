@@ -40,7 +40,7 @@ interface AriaEaseConfigTest {
 
 interface AriaEaseConfigTestComponent {
     name: string;
-    path?: string;
+    contractPath?: string;
     strategyPath?: string;
     strictness?: StrictnessMode;
     disableTimeouts?: boolean;
@@ -73,6 +73,7 @@ interface JestAxeResult {
  */
 interface Selector extends Record<string, string | undefined> {
     // Standard baseline selectors (all optional)
+    main: string;
     trigger?: string;
     menu?: string;
     items?: string;

@@ -288,10 +288,12 @@ declare class ContractBuilder {
         ariaReference: (from: string, attribute: string, to: string) => {
             required: () => void;
             optional: () => void;
+            recommended: () => void;
         };
         contains: (parent: string, child: string) => {
             required: () => void;
             optional: () => void;
+            recommended: () => void;
         };
     }) => void): this;
     static(fn: (s: {
@@ -299,6 +301,7 @@ declare class ContractBuilder {
             has: (attribute: string, expectedValue: string) => {
                 required: () => void;
                 optional: () => void;
+                recommended: () => void;
             };
         };
     }) => void): this;

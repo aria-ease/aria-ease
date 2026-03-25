@@ -9,7 +9,7 @@ type StatePack = Record<string, {
 }>;
 
 const STATE_PACKS: Record<string, unknown> = {
-  "combobox.listbox": COMBOBOX_STATES,
+  "combobox": COMBOBOX_STATES,
   // Add more mappings as needed
 };
 
@@ -129,20 +129,24 @@ class ContractBuilder {
     ariaReference: (from: string, attribute: string, to: string) => {
       required: () => void;
       optional: () => void;
+      recommended: () => void;
     };
     contains: (parent: string, child: string) => {
       required: () => void;
       optional: () => void;
+      recommended: () => void;
     };
   }) => void) {
     const api = {
       ariaReference: (from: string, attribute: string, to: string) => ({
         required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
         optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" }),
+        recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended" })
       }),
       contains: (parent: string, child: string) => ({
         required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
         optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" }),
+        recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended" })
       })
     };
     fn(api);
@@ -154,6 +158,7 @@ class ContractBuilder {
       has: (attribute: string, expectedValue: string) => {
         required: () => void;
         optional: () => void;
+        recommended: () => void;
       };
     };
   }) => void) {
@@ -162,6 +167,7 @@ class ContractBuilder {
         has: (attribute: string, expectedValue: string) => ({
           required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "required" }),
           optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "optional" }),
+          recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "recommended" }),
         })
       })
     };

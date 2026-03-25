@@ -1,11 +1,10 @@
 import {
   ContractReporter,
   closeSharedBrowser,
-  contract_default,
   normalizeLevel,
   normalizeStrictness,
   resolveEnforcement
-} from "./chunk-XERMSYEH.js";
+} from "./chunk-FZ7GMIJB.js";
 import "./chunk-I2KLQ2HA.js";
 
 // src/accordion/src/makeAccordionAccessible/makeAccordionAccessible.ts
@@ -1708,7 +1707,7 @@ function isInputFilled() {
 
 // src/utils/test/dsl/src/contractBuilder.ts
 var STATE_PACKS = {
-  "combobox.listbox": COMBOBOX_STATES
+  "combobox": COMBOBOX_STATES
   // Add more mappings as needed
 };
 var FluentContract = class {
@@ -1742,11 +1741,13 @@ var ContractBuilder = class {
     const api = {
       ariaReference: (from, attribute, to) => ({
         required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" })
+        optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" }),
+        recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended" })
       }),
       contains: (parent, child) => ({
         required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" })
+        optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" }),
+        recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended" })
       })
     };
     fn(api);
@@ -1757,7 +1758,8 @@ var ContractBuilder = class {
       target: (target) => ({
         has: (attribute, expectedValue) => ({
           required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required" }),
-          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" })
+          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" }),
+          recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "recommended" })
         })
       })
     };
@@ -1899,16 +1901,13 @@ import { axe } from "jest-axe";
 
 // src/utils/test/src/contractTestRunner.ts
 import fs from "fs/promises";
-async function runContractTests(componentName, component, strictness) {
+async function runContractTests(contractPath, componentName, component, strictness) {
   const reporter = new ContractReporter(false);
   const strictnessMode = normalizeStrictness(strictness);
-  const contractTyped = contract_default;
-  const contractPath = contractTyped[componentName]?.path;
   if (!contractPath) {
-    throw new Error(`No contract found for component: ${componentName}`);
+    throw new Error(`No contract path provided for component: ${componentName}`);
   }
-  const resolvedPath = new URL(contractPath, import.meta.url).pathname;
-  const contractData = await fs.readFile(resolvedPath, "utf-8");
+  const contractData = await fs.readFile(contractPath, "utf-8");
   const componentContract = JSON.parse(contractData);
   const totalTests = (componentContract.relationships?.length || 0) + (componentContract.static[0]?.assertions.length || 0) + componentContract.dynamic.length;
   reporter.start(componentName, totalTests);
@@ -2108,7 +2107,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
   let configBaseDir = typeof process !== "undefined" ? process.cwd() : "";
   if (typeof process !== "undefined" && typeof process.cwd === "function") {
     try {
-      const { loadConfig } = await import("./configLoader-DWHOHXHL.js");
+      const { loadConfig } = await import("./configLoader-Q7N5XV4P.js");
       const result2 = await loadConfig(process.cwd());
       config = result2.config;
       if (result2.configPath) {
@@ -2130,7 +2129,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-WNWQYSXZ.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-DIXP5DQ3.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness, config, configBaseDir);
       } else {
         throw new Error(
@@ -2140,7 +2139,16 @@ Please start your dev server and try again.`
       }
     } else if (component) {
       console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
-      contract = await runContractTests(componentName, component, strictness);
+      const contractPath = config.test?.components?.find((comp) => comp?.name === componentName)?.contractPath;
+      if (!contractPath) {
+        throw new Error(`\u274C No contract path found for component: ${componentName}`);
+      }
+      contract = await runContractTests(
+        path.resolve(configBaseDir, contractPath),
+        componentName,
+        component,
+        strictness
+      );
     } else {
       throw new Error("\u274C Either component or URL must be provided");
     }

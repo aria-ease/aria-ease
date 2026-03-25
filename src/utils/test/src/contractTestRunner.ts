@@ -1,28 +1,32 @@
-import contract from "../contract/contract.json";
 //import contractSchema from "./contract.schema.json";
-import type { Contract, ComponentContract, Selector, ContractTestResult } from "Types";
+import type { ComponentContract, Selector, ContractTestResult } from "Types";
 import fs from "fs/promises";
 import { ContractReporter } from "./ContractReporter";
 import { normalizeLevel, normalizeStrictness, resolveEnforcement } from "./strictness";
 
 
+
+/**
+ * Run contract tests for a component using a user-provided contract path.
+ * @param contractPath - Absolute path to the contract JSON file
+ * @param componentName - Name of the component (for reporting)
+ * @param component - The DOM element to test
+ * @param strictness - Optional strictness mode
+ */
 export async function runContractTests(
+    contractPath: string,
     componentName: string,
     component: HTMLElement,
     strictness?: string
 ): Promise<ContractTestResult> {
     const reporter = new ContractReporter(false);
-        const strictnessMode = normalizeStrictness(strictness);
-
-    const contractTyped: Contract = contract;
-    const contractPath = contractTyped[componentName]?.path;
+    const strictnessMode = normalizeStrictness(strictness);
 
     if (!contractPath) {
-        throw new Error(`No contract found for component: ${componentName}`);
+        throw new Error(`No contract path provided for component: ${componentName}`);
     }
 
-    const resolvedPath = new URL(contractPath, import.meta.url).pathname;
-    const contractData = await fs.readFile(resolvedPath, "utf-8");
+    const contractData = await fs.readFile(contractPath, "utf-8");
     const componentContract: ComponentContract = JSON.parse(contractData);
     const totalTests =
         (componentContract.relationships?.length || 0) +

@@ -60,7 +60,7 @@ npx aria-ease audit --url https://yoursite.com
 
 #### 3. **Contract Testing** (Available Now)
 
-This is the game-changer. Encoded a deterministic, testable interpretation of WAI-ARIA APG guidance into JSON "contracts" using Aria-Ease DSL API, and validate your contract against your component using Aria-Ease's Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
+This is the game-changer. Encode a deterministic, testable interpretation of WAI-ARIA APG guidance into JSON "contracts" using Aria-Ease DSL API, and validate your contract against your component using Aria-Ease's Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
 
 Teams and experts can enforce their own standards and maintain reusability and consistency.
 
@@ -195,7 +195,7 @@ export default {
     strictness: "balanced",
     components: [
       {
-        name: "combobox.listbox",
+        name: "combobox",
         path: "./tests/external-contracts/combobox.listbox.contract.json",
         strategyPath: "./tests/external-strategies/CustomComboboxStrategy.js",
       },
