@@ -119,7 +119,20 @@ export async function testUiComponent(componentName: string, component: HTMLElem
             // No URL provided - use isolated testing with page.setContent 
             console.log(`🎭 Running component contract tests in JSDOM mode`);
             
-            contract = await runContractTests(componentName, component as HTMLElement, strictness);
+            // Find the contract path for this component from config
+            const contractPath = config.test?.components
+                ?.find((comp) => comp?.name === componentName)?.contractPath;
+
+            if (!contractPath) {
+                throw new Error(`❌ No contract path found for component: ${componentName}`);
+            }
+
+            contract = await runContractTests(
+                path.resolve(configBaseDir, contractPath),
+                componentName,
+                component as HTMLElement,
+                strictness
+            );
         } else {
             throw new Error('❌ Either component or URL must be provided');
         }

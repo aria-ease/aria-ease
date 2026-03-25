@@ -31,31 +31,6 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// src/utils/test/contract/contract.json
-var contract_default;
-var init_contract = __esm({
-  "src/utils/test/contract/contract.json"() {
-    contract_default = {
-      menu: {
-        path: "./aria-contracts/menu/menu.contract.json",
-        component: "menu"
-      },
-      "combobox.listbox": {
-        path: "./aria-contracts/combobox/combobox.listbox.contract.json",
-        component: "combobox.listbox"
-      },
-      accordion: {
-        path: "./aria-contracts/accordion/accordion.contract.json",
-        component: "accordion"
-      },
-      tabs: {
-        path: "./aria-contracts/tabs/tabs.contract.json",
-        component: "tabs"
-      }
-    };
-  }
-});
-
 // src/utils/test/src/ContractReporter.ts
 var ContractReporter;
 var init_ContractReporter = __esm({
@@ -480,8 +455,8 @@ function validateConfig(config) {
               if (typeof comp.name !== "string") {
                 errors.push(`test.components[${idx}].name must be a string`);
               }
-              if (comp.path !== void 0 && typeof comp.path !== "string") {
-                errors.push(`test.components[${idx}].path must be a string when provided`);
+              if (comp.contractPath !== void 0 && typeof comp.contractPath !== "string") {
+                errors.push(`test.components[${idx}].contractPath must be a string when provided`);
               }
               if (comp.strategyPath !== void 0 && typeof comp.strategyPath !== "string") {
                 errors.push(`test.components[${idx}].strategyPath must be a string when provided`);
@@ -885,12 +860,6 @@ var init_StrategyRegistry = __esm({
             (m) => m.TabsComponentStrategy
           )
         );
-        this.builtInStrategies.set(
-          "combobox.listbox",
-          () => Promise.resolve().then(() => (init_ComboboxComponentStrategy(), ComboboxComponentStrategy_exports)).then(
-            (m) => m.ComboboxComponentStrategy
-          )
-        );
       }
       /**
        * Load a strategy - either from custom path or built-in registry
@@ -937,15 +906,14 @@ var init_StrategyRegistry = __esm({
 });
 
 // src/utils/test/src/ComponentDetector.ts
-var import_fs, import_path3, import_meta2, ComponentDetector;
+var import_fs, import_path3, import_meta, ComponentDetector;
 var init_ComponentDetector = __esm({
   "src/utils/test/src/ComponentDetector.ts"() {
     "use strict";
     import_fs = require("fs");
     import_path3 = __toESM(require("path"), 1);
-    init_contract();
     init_StrategyRegistry();
-    import_meta2 = {};
+    import_meta = {};
     ComponentDetector = class {
       static strategyRegistry = new StrategyRegistry();
       static isComponentConfig(value) {
@@ -965,11 +933,7 @@ var init_ComponentDetector = __esm({
        */
       static async detect(componentName, componentConfig, actionTimeoutMs = 400, assertionTimeoutMs = 400, configBaseDir) {
         const typedComponentConfig = this.isComponentConfig(componentConfig) ? componentConfig : void 0;
-        let contractPath = typedComponentConfig?.path;
-        if (!contractPath) {
-          const contractTyped = contract_default;
-          contractPath = contractTyped[componentName]?.path;
-        }
+        const contractPath = typedComponentConfig?.contractPath;
         if (!contractPath) {
           throw new Error(`Contract path not found for component: ${componentName}`);
         }
@@ -988,7 +952,7 @@ var init_ComponentDetector = __esm({
             (0, import_fs.readFileSync)(cwdResolved, "utf-8");
             return cwdResolved;
           } catch {
-            return new URL(contractPath, import_meta2.url).pathname;
+            return new URL(contractPath, import_meta.url).pathname;
           }
         })();
         const contractData = (0, import_fs.readFileSync)(resolvedPath, "utf-8");
@@ -1002,7 +966,7 @@ var init_ComponentDetector = __esm({
         if (!strategyClass) {
           return null;
         }
-        const mainSelector = selectors.trigger || selectors.input || selectors.tablist || selectors.container;
+        const mainSelector = selectors.main;
         if (componentName === "tabs") {
           return new strategyClass(mainSelector, selectors);
         }
@@ -1577,7 +1541,7 @@ __export(contractTestRunnerPlaywright_exports, {
 });
 async function runContractTestsPlaywright(componentName, url, strictness, config, configBaseDir) {
   const componentConfig = config?.test?.components?.find((c) => c.name === componentName);
-  const isCustomContract = !!componentConfig?.path;
+  const isCustomContract = !!componentConfig?.contractPath;
   const reporter = new ContractReporter(true, isCustomContract);
   const defaultTimeouts = {
     actionTimeoutMs: 400,
@@ -1617,11 +1581,7 @@ async function runContractTestsPlaywright(componentName, url, strictness, config
     defaultTimeouts.componentReadyTimeoutMs
   );
   const strictnessMode = normalizeStrictness(strictness);
-  let contractPath = componentConfig?.path;
-  if (!contractPath) {
-    const contractTyped = contract_default;
-    contractPath = contractTyped[componentName]?.path;
-  }
+  const contractPath = componentConfig?.contractPath;
   if (!contractPath) {
     throw new Error(`Contract path not found for component: ${componentName}`);
   }
@@ -1640,7 +1600,7 @@ async function runContractTestsPlaywright(componentName, url, strictness, config
       (0, import_fs2.readFileSync)(cwdResolved, "utf-8");
       return cwdResolved;
     } catch {
-      return new URL(contractPath, import_meta3.url).pathname;
+      return new URL(contractPath, import_meta2.url).pathname;
     }
   })();
   const contractData = (0, import_fs2.readFileSync)(resolvedPath, "utf-8");
@@ -2112,20 +2072,19 @@ This usually means:
   }
   return { passes, failures, skipped, warnings };
 }
-var import_fs2, import_path4, import_meta3;
+var import_fs2, import_path4, import_meta2;
 var init_contractTestRunnerPlaywright = __esm({
   "src/utils/test/src/contractTestRunnerPlaywright.ts"() {
     "use strict";
     import_fs2 = require("fs");
     import_path4 = __toESM(require("path"), 1);
-    init_contract();
     init_playwrightTestHarness();
     init_ComponentDetector();
     init_ContractReporter();
     init_ActionExecutor();
     init_AssertionRunner();
     init_strictness();
-    import_meta3 = {};
+    import_meta2 = {};
   }
 });
 
@@ -3960,7 +3919,7 @@ function isInputFilled() {
 
 // src/utils/test/dsl/src/contractBuilder.ts
 var STATE_PACKS = {
-  "combobox.listbox": COMBOBOX_STATES
+  "combobox": COMBOBOX_STATES
   // Add more mappings as needed
 };
 var FluentContract = class {
@@ -3994,11 +3953,13 @@ var ContractBuilder = class {
     const api = {
       ariaReference: (from, attribute, to) => ({
         required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" })
+        optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" }),
+        recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended" })
       }),
       contains: (parent, child) => ({
         required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" })
+        optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" }),
+        recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended" })
       })
     };
     fn(api);
@@ -4009,7 +3970,8 @@ var ContractBuilder = class {
       target: (target) => ({
         has: (attribute, expectedValue) => ({
           required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required" }),
-          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" })
+          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" }),
+          recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "recommended" })
         })
       })
     };
@@ -4150,21 +4112,16 @@ function createContract(componentName, define) {
 var import_jest_axe = require("jest-axe");
 
 // src/utils/test/src/contractTestRunner.ts
-init_contract();
 var import_promises = __toESM(require("fs/promises"), 1);
 init_ContractReporter();
 init_strictness();
-var import_meta = {};
-async function runContractTests(componentName, component, strictness) {
+async function runContractTests(contractPath, componentName, component, strictness) {
   const reporter = new ContractReporter(false);
   const strictnessMode = normalizeStrictness(strictness);
-  const contractTyped = contract_default;
-  const contractPath = contractTyped[componentName]?.path;
   if (!contractPath) {
-    throw new Error(`No contract found for component: ${componentName}`);
+    throw new Error(`No contract path provided for component: ${componentName}`);
   }
-  const resolvedPath = new URL(contractPath, import_meta.url).pathname;
-  const contractData = await import_promises.default.readFile(resolvedPath, "utf-8");
+  const contractData = await import_promises.default.readFile(contractPath, "utf-8");
   const componentContract = JSON.parse(contractData);
   const totalTests = (componentContract.relationships?.length || 0) + (componentContract.static[0]?.assertions.length || 0) + componentContract.dynamic.length;
   reporter.start(componentName, totalTests);
@@ -4398,7 +4355,16 @@ Please start your dev server and try again.`
       }
     } else if (component) {
       console.log(`\u{1F3AD} Running component contract tests in JSDOM mode`);
-      contract = await runContractTests(componentName, component, strictness);
+      const contractPath = config.test?.components?.find((comp) => comp?.name === componentName)?.contractPath;
+      if (!contractPath) {
+        throw new Error(`\u274C No contract path found for component: ${componentName}`);
+      }
+      contract = await runContractTests(
+        import_path6.default.resolve(configBaseDir, contractPath),
+        componentName,
+        component,
+        strictness
+      );
     } else {
       throw new Error("\u274C Either component or URL must be provided");
     }

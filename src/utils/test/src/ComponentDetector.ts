@@ -1,14 +1,13 @@
-import { ComponentStrategy, ComponentContract, Contract } from "Types";
+import { ComponentStrategy, ComponentContract } from "Types";
 import { TabsComponentStrategy } from "./component-strategies/TabsComponentStrategy";
 import { readFileSync } from "fs";
 import path from "path";
-import contract from "../contract/contract.json";
 import { StrategyRegistry } from "./StrategyRegistry";
 
 class ComponentDetector {
     private static strategyRegistry = new StrategyRegistry();
 
-    private static isComponentConfig(value: unknown): value is { path?: string; strategyPath?: string } {
+    private static isComponentConfig(value: unknown): value is { contractPath?: string; strategyPath?: string } {
         return typeof value === "object" && value !== null;
     }
 
@@ -34,12 +33,8 @@ class ComponentDetector {
         const typedComponentConfig = this.isComponentConfig(componentConfig) ? componentConfig : undefined;
 
         // Resolve contract path - use config override or default
-        let contractPath = typedComponentConfig?.path;
-        if (!contractPath) {
-            const contractTyped: Contract = contract;
-            contractPath = contractTyped[componentName]?.path;
-        }
-
+        const contractPath = typedComponentConfig?.contractPath;
+        
         if (!contractPath) {
             throw new Error(`Contract path not found for component: ${componentName}`);
         }
@@ -80,11 +75,7 @@ class ComponentDetector {
         }
 
         // Calculate main selector - needed for all strategies
-        const mainSelector = 
-            selectors.trigger || 
-            selectors.input || 
-            selectors.tablist || 
-            selectors.container as string;
+        const mainSelector = selectors.main as string;
 
         // Instantiate the strategy class with appropriate constructor args
         // Different strategies have different constructor signatures

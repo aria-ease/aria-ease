@@ -27,6 +27,7 @@
 
         "selectors": { 
             "type": "object",
+            "required": ["main"],
             "description": "CSS selectors keyed by logical name. Keys vary per component.",
             "additionalProperties": { "type": "string" }
         },

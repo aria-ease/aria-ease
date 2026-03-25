@@ -7,8 +7,7 @@
 import { Page } from "playwright";
 import { readFileSync } from "fs";
 import path from "path";
-import contract from "../contract/contract.json";
-import type { ComponentContract, Contract, ContractTestResult, AriaEaseConfig } from "Types";
+import type { ComponentContract, ContractTestResult, AriaEaseConfig } from "Types";
 import { createTestPage } from "./playwrightTestHarness";
 import { ComponentDetector } from "./ComponentDetector";
 import { ContractReporter } from "./ContractReporter";
@@ -25,7 +24,7 @@ export async function runContractTestsPlaywright(
 ): Promise<ContractTestResult> {
   // Determine if a custom contract is being used
   const componentConfig = config?.test?.components?.find(c => c.name === componentName);
-  const isCustomContract = !!componentConfig?.path;
+  const isCustomContract = !!componentConfig?.contractPath;
   const reporter = new ContractReporter(true, isCustomContract);
   const defaultTimeouts = {
     actionTimeoutMs: 400,
@@ -73,12 +72,7 @@ export async function runContractTestsPlaywright(
   const strictnessMode = normalizeStrictness(strictness);
   
   // Resolve contract path - use config override or default
-  let contractPath = componentConfig?.path;
-  if (!contractPath) {
-    const contractTyped: Contract = contract;
-    contractPath = contractTyped[componentName]?.path;
-  }
-  
+  const contractPath = componentConfig?.contractPath;
   if (!contractPath) {
     throw new Error(`Contract path not found for component: ${componentName}`);
   }
