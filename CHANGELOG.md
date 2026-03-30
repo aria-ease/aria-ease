@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.12.1](https://github.com/aria-ease/aria-ease/compare/v6.11.0...v6.12.1) (2026-03-30)
+
+
+### Features
+
+* added 'recommended' flag for 'has attribute' builder ([b9e36e1](https://github.com/aria-ease/aria-ease/commit/b9e36e1e6711aeb7cc1caceee96c13b4e55bb68b))
+
+
+### Bug Fixes
+
+* fixed static audit throwing false negatives on lazy loaded page. added wait for 'main' selector ([a1273b2](https://github.com/aria-ease/aria-ease/commit/a1273b2aec868239f091bbeb60b7abfc3b5f893e))
+
 ## [6.12.0](https://github.com/aria-ease/aria-ease/compare/v6.11.0...v6.12.0) (2026-03-25)
 
 
