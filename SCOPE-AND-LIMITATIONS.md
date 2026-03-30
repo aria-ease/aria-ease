@@ -16,15 +16,15 @@ Aria-Ease is **accessibility infrastructure for the entire frontend engineering 
 
 ### The Complete Lifecycle Coverage
 
-| Phase | What We Provide | Status |
-|-------|----------------|--------|
+| Phase           | What We Provide                                                | Status       |
+| --------------- | -------------------------------------------------------------- | ------------ |
 | **Development** | Component utilities implementing a baseline APG interpretation | ✅ Available |
-| **Linting** | ESLint rules to enforce accessible coding patterns | 🚧 Roadmap |
-| **Pre-Deploy** | Axe-core powered static accessibility audit CLI | ✅ Available |
-| **Testing** | Baseline APG contract testing with Playwright | ✅ Available |
-| **CI/CD** | Accessibility as deployment gatekeeper | ✅ Available |
-| **Production** | Real user signal monitoring and interaction replay | 🚧 Roadmap |
-| **Insights** | Dashboard for reporting and analytics | 🚧 Roadmap |
+| **Linting**     | ESLint rules to enforce accessible coding patterns             | 🚧 Roadmap   |
+| **Pre-Deploy**  | Axe-core powered static accessibility audit CLI                | ✅ Available |
+| **Testing**     | Baseline APG contract testing with Playwright                  | ✅ Available |
+| **CI/CD**       | Accessibility as deployment gatekeeper                         | ✅ Available |
+| **Production**  | Real user signal monitoring and interaction replay             | 🚧 Roadmap   |
+| **Insights**    | Dashboard for reporting and analytics                          | 🚧 Roadmap   |
 
 **Philosophy:** By the time your app reaches manual testing, there should only be minute, non-automatable aspects left to verify.
 
@@ -326,6 +326,7 @@ We're expanding the infrastructure to cover even more of the lifecycle:
 **What:** ESLint rules that enforce accessible coding patterns as you type.
 
 **Impact:** Catch accessibility mistakes in development, before they compile. Enforce patterns like:
+
 - Requiring `alt` attributes on images
 - Warning about non-semantic HTML (`<div>` with `onClick` instead of `<button>`)
 - Flagging missing ARIA labels
@@ -338,6 +339,7 @@ We're expanding the infrastructure to cover even more of the lifecycle:
 **What:** Real user signal monitoring, interaction replay, and analytics.
 
 **Impact:** See how assistive technology users actually experience your app in production:
+
 - Track keyboard navigation patterns
 - Monitor screen reader usage
 - Replay user sessions to identify pain points
@@ -350,6 +352,7 @@ We're expanding the infrastructure to cover even more of the lifecycle:
 **What:** Centralized dashboard for accessibility health and reporting.
 
 **Impact:**
+
 - Visualize accessibility metrics across your entire application
 - Track progress over time (% of violations fixed)
 - Generate executive reports for stakeholders
@@ -557,7 +560,7 @@ You can see a list of services on the services page https://ariaease.site/servic
 For now:
 
 - Community support via GitHub Discussions
-- Documentation at https://ariaease.site/docs
+- Documentation at https://ariaease.site/getting-started
 - Open source, so you can read the code
 
 ---
@@ -575,7 +578,7 @@ We'd rather be honest about our scope and have you use us confidently as part of
 ## 📖 Additional Resources
 
 - **[README](README.md)** - Quick start and API reference
-- **[Documentation Site](https://ariaease.site/docs)** - Full documentation with examples
+- **[Documentation Site](https://ariaease.site/getting-started)** - Full documentation with examples
 - **[GitHub Repository](https://github.com/aria-ease/aria-ease)** - Source code, issues, discussions
 - **[NPM Package](https://www.npmjs.com/package/aria-ease)** - Installation and version history
 - **[WAI-ARIA APG](https://www.w3.org/WAI/ARIA/apg/)** - The standards we implement

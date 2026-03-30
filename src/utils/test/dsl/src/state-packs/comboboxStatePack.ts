@@ -25,7 +25,7 @@ export function resolveSetup(
 }
 
 export const COMBOBOX_STATES = {
-  "listbox.open": {
+  "popup.open": {
     setup: [
       {
         when: ["keyboard", "textInput"],
@@ -42,7 +42,7 @@ export const COMBOBOX_STATES = {
     ],
     assertion: isComboboxOpen
   },
-  "listbox.closed": {
+  "popup.closed": {
     setup: [
       {
         when: ["keyboard"],
@@ -57,18 +57,18 @@ export const COMBOBOX_STATES = {
         ]
       }
     ],
-    assertion: isComboboxClosed
+    assertion: [...isComboboxClosed(), ...isActiveDescendantEmpty()]
   },
-  "input.focused": {
+  "main.focused": {
     setup: [
       {
         when: ["keyboard"],
         steps: () => [
-          { type: "focus", target: "input" }
+          { type: "focus", target: "main" }
         ]
       }
     ],
-    assertion: isInputFocused
+    assertion: isMainFocused
   },
   "input.filled": {
     setup: [
@@ -81,8 +81,19 @@ export const COMBOBOX_STATES = {
     ],
     assertion: isInputFilled
   },
+  "input.notFilled": {
+    setup: [
+      {
+        when: ["keyboard", "textInput"],
+        steps: () => [
+          { type: "type", target: "input", value: "" }
+        ]
+      }
+    ],
+    assertion: isInputNotFilled
+  },
   "activeOption.first": {
-    requires: ["listbox.open"],
+    requires: ["popup.open"],
     setup: [
       {
         when: ["keyboard"],
@@ -91,7 +102,7 @@ export const COMBOBOX_STATES = {
         ]
       }
     ],
-    assertion: isActiveDescendantNotEmpty
+    assertion: isActiveDescendantFirst
   },
   "activeOption.last": {
     requires: ["activeOption.first"],
@@ -103,10 +114,34 @@ export const COMBOBOX_STATES = {
         ]
       }
     ],
+    assertion: isActiveDescendantLast
+  },
+  "activeDescendant.notEmpty": {
+    requires: [],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          
+        ]
+      }
+    ],
     assertion: isActiveDescendantNotEmpty
   },
+  "activeDescendant.Empty": {
+    requires: [],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          
+        ]
+      }
+    ],
+    assertion: isActiveDescendantEmpty
+  },
   "selectedOption.first": {
-    requires: ["listbox.open"],
+    requires: ["popup.open"],
     setup: [
       {
         when: ["pointer"],
@@ -118,7 +153,7 @@ export const COMBOBOX_STATES = {
     assertion: () => isAriaSelected("first")
   },
   "selectedOption.last": {
-    requires: ["listbox.open"],
+    requires: ["popup.open"],
     setup: [
       {
         when: ["pointer"],
@@ -135,16 +170,16 @@ export const COMBOBOX_STATES = {
 function isComboboxOpen() {
   return [
     {
-      target: "listbox",
+      target: "popup",
       assertion: "toBeVisible",
-      failureMessage: "Expected listbox to be visible",
+      failureMessage: "Expected popup to be visible",
     },
     {
-    target: "input",
+    target: "main",
     assertion: "toHaveAttribute",
     attribute: "aria-expanded",
     expectedValue: "true",
-    failureMessage: "Expect combobox input to have aria-expanded='true'"
+    failureMessage: "Expect combobox main to have aria-expanded='true'."
     }
   ];
 }
@@ -152,28 +187,64 @@ function isComboboxOpen() {
 function isComboboxClosed() {
   return [
     {
-      target: "listbox",
+      target: "popup",
       assertion: "notToBeVisible",
-      failureMessage: "Expected listbox to be closed",
+      failureMessage: "Expected popup to be closed",
     },
     {
-    target: "input",
+    target: "main",
     assertion: "toHaveAttribute",
     attribute: "aria-expanded",
     expectedValue: "false",
-    failureMessage: "Expect combobox input to have aria-expanded='false'"
+    failureMessage: "Expect combobox main to have aria-expanded='false'."
     }
   ];
+}
+
+function isActiveDescendantFirst() {
+  return [
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-activedescendant",
+      expectedValue: { ref: "relative", relativeTarget: "first", property: "id"},
+      failureMessage: "Expected aria-activedescendant on main to match the id of the first option."
+    }
+  ]
+}
+
+function isActiveDescendantLast() {
+  return [
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-activedescendant",
+      expectedValue: { ref: "relative", relativeTarget: "last", property: "id"}, 
+      failureMessage: "Expected aria-activedescendant on main to match the id of the last option."
+    }
+  ]
 }
 
 function isActiveDescendantNotEmpty() {
   return [
     {
-      target: "input",
+      target: "main",
       assertion: "toHaveAttribute",
       attribute: "aria-activedescendant",
       expectedValue: "!empty",
-      failureMessage: "Expected aria-activedescendant to not be empty"
+      failureMessage: "Expected aria-activedescendant on main to not be empty."
+    }
+  ]
+}
+
+function isActiveDescendantEmpty() {
+  return [
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-activedescendant",
+      expectedValue: "",
+      failureMessage: "Expected aria-activedescendant on main to be empty."
     }
   ]
 }
@@ -186,17 +257,17 @@ function isAriaSelected(index: "first" | "last") {
       assertion: "toHaveAttribute",
       attribute: "aria-selected",
       expectedValue: "true",
-      failureMessage: `Expected ${index} option to have aria-selected='true'`,
+      failureMessage: `Expected ${index} option to have aria-selected='true'.`,
     }
   ]
 }
 
-function isInputFocused() {
+function isMainFocused() {
   return [
     {
-      target: "input",
+      target: "main",
       assertion: "toHaveFocus",
-      failureMessage: "Expected input to be focused",
+      failureMessage: "Expected main to be focused.",
     }
   ]
 }
@@ -207,7 +278,18 @@ function isInputFilled() {
       target: "input",
       assertion: "toHaveValue",
       expectedValue: "test",
-      failureMessage: "Expected input to have the value 'test'",
+      failureMessage: "Expected input to have the value 'test'.",
+    }
+  ]
+}
+
+function isInputNotFilled() {
+  return [
+    {
+      target: "input",
+      assertion: "toHaveValue",
+      expectedValue: "",
+      failureMessage: "Expected input to have the value ''.",
     }
   ]
 }

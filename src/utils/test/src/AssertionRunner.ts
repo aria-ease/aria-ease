@@ -17,7 +17,7 @@ type ContractAssertion = {
   target: string;
   assertion: string;
   attribute?: string;
-  expectedValue?: string;
+  expectedValue?: string | { ref: string, attribute?: string, property: string  };
   failureMessage?: string;
   relativeTarget?: string;
   selectorKey?: string;
@@ -33,17 +33,11 @@ export class AssertionRunner {
   /**
    * Resolve the target element for an assertion
    */
-  private async resolveTarget(
-    targetName: string,
-    relativeTarget?: string,
-    selectorKey?: string
-  ): Promise<{ target: Locator | null; error?: string }> {
+  private async resolveTarget( targetName: string, relativeTarget?: string, selectorKey?: string ): Promise<{ target: Locator | null; error?: string }> {
     try {
       if (targetName === "relative") {
         // Use selectorKey if provided (for semantic expressions like first(options))
-        const relativeSelector = selectorKey
-          ? this.selectors[selectorKey as keyof typeof this.selectors]
-          : this.selectors.relative;
+        const relativeSelector = selectorKey ? this.selectors[selectorKey as keyof typeof this.selectors] : this.selectors.relative;
         if (!relativeSelector) {
           return { target: null, error: "Relative selector is not defined in the contract." };
         }
@@ -56,6 +50,7 @@ export class AssertionRunner {
         }
         return { target };
       }
+      
       const selector = this.selectors[targetName as keyof typeof this.selectors];
       if (!selector) {
         return { target: null, error: `Selector for assertion target ${targetName} not found.` };
@@ -113,7 +108,7 @@ export class AssertionRunner {
   /**
    * Validate attribute assertion
    */
-  async validateAttribute( target: Locator, targetName: string, attribute: string, expectedValue: string, failureMessage: string, testDescription: string ): Promise<AssertionResult> {
+  async validateAttribute( target: Locator, targetName: string, attribute: string, expectedValue: string | { ref: string, attribute?: string, property: string  }, failureMessage: string, testDescription: string ): Promise<AssertionResult> {
     // Handle special case: !empty means attribute should have any non-empty value
     if (expectedValue === "!empty") {
       const attributeValue = await target.getAttribute(attribute);
@@ -130,10 +125,17 @@ export class AssertionRunner {
       }
     }
 
+    // Type guard: expectedValue must be a string at this point
+    if (typeof expectedValue !== 'string') {
+      // Debug log for diagnosis
+      console.error('[AssertionRunner] expectedValue is not a string:', expectedValue);
+      throw new Error(`AssertionRunner: expectedValue for attribute assertion must be a string, but got: ${JSON.stringify(expectedValue)}`);
+    }
+
     // Handle multiple acceptable values separated by " | "
     const expectedValues = expectedValue.split(" | ").map(v => v.trim());
     const attributeValue = await target.getAttribute(attribute);
-    
+
     if (attributeValue !== null && expectedValues.includes(attributeValue)) {
       return {
         success: true,
@@ -258,7 +260,7 @@ export class AssertionRunner {
     // Resolve target element (support selectorKey for semantic relative assertions)
     const { target, error } = await this.resolveTarget(
       assertion.target,
-      assertion.relativeTarget || assertion.expectedValue,
+      assertion.relativeTarget as string || assertion.expectedValue as string,
       assertion.selectorKey
     );
     if (error || !target) {
@@ -309,14 +311,14 @@ export class AssertionRunner {
         return { success: false, failMessage: "Missing attribute or expectedValue for toHaveAttribute assertion" };
       case "toHaveValue":
         if (assertion.expectedValue !== undefined) {
-          return this.validateValue(target, assertion.target, assertion.expectedValue, assertion.failureMessage || '', testDescription);
+          return this.validateValue(target, assertion.target, assertion.expectedValue as string, assertion.failureMessage || '', testDescription);
         }
         return { success: false, failMessage: "Missing expectedValue for toHaveValue assertion" };
       case "toHaveFocus":
         return this.validateFocus(target, assertion.target, assertion.failureMessage || '', testDescription);
       case "toHaveRole":
         if (assertion.expectedValue !== undefined) {
-          return this.validateRole(target, assertion.target, assertion.expectedValue, assertion.failureMessage || '', testDescription);
+          return this.validateRole(target, assertion.target, assertion.expectedValue as string, assertion.failureMessage || '', testDescription);
         }
         return { success: false, failMessage: "Missing expectedValue for toHaveRole assertion" };
       default:

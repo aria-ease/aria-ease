@@ -129,7 +129,7 @@ interface ComponentContract {
         assertions: Array<{
             target: string;
             attribute: string;
-            expectedValue: string;
+            expectedValue: string | { ref: string, attribute?: string, property: string, relativeTarget?: string };
             failureMessage: string;
             level?: ContractLevel;
             interpretation?: InterpretationMode;
@@ -162,7 +162,7 @@ interface ComponentContract {
             target: string;
             assertion: string;
             attribute?: string;
-            expectedValue?: string;
+            expectedValue?: string | { ref: string, attribute?: string, property: string, relativeTarget?: string };
             failureMessage?: string;
             relativeTarget?: string;
             level?: ContractLevel;

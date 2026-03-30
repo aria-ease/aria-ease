@@ -187,7 +187,7 @@ export async function runContractTests(
                     staticPassed += 1;
                     reporter.reportStaticTest(`${test.target} has ${test.attribute}`, 'pass', undefined, staticLevel);
                 }
-            } else if (!attributeValue || !(test.expectedValue.split(" | ").includes(attributeValue))) {
+            } else if (!attributeValue || (typeof test.expectedValue === "string" && !(test.expectedValue.split(" | ").includes(attributeValue)))) {
                 const outcome = classifyFailure(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`, test.level);
                 if (outcome.status === 'fail') staticFailed += 1;
                 if (outcome.status === 'warn') staticWarnings += 1;

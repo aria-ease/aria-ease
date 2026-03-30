@@ -15,14 +15,7 @@ import { ActionExecutor } from "./ActionExecutor";
 import { AssertionRunner } from "./AssertionRunner";
 import { normalizeLevel, normalizeStrictness, resolveEnforcement } from "./strictness";
 
-export async function runContractTestsPlaywright(
-  componentName: string,
-  url?: string,
-  strictness?: string,
-  config?: AriaEaseConfig,
-  configBaseDir?: string
-): Promise<ContractTestResult> {
-  // Determine if a custom contract is being used
+export async function runContractTestsPlaywright( componentName: string, url?: string, strictness?: string, config?: AriaEaseConfig, configBaseDir?: string ): Promise<ContractTestResult> {
   const componentConfig = config?.test?.components?.find(c => c.name === componentName);
   const isCustomContract = !!componentConfig?.contractPath;
   const reporter = new ContractReporter(true, isCustomContract);
@@ -71,7 +64,6 @@ export async function runContractTestsPlaywright(
   );
   const strictnessMode = normalizeStrictness(strictness);
   
-  // Resolve contract path - use config override or default
   const contractPath = componentConfig?.contractPath;
   if (!contractPath) {
     throw new Error(`Contract path not found for component: ${componentName}`);
@@ -99,10 +91,7 @@ export async function runContractTestsPlaywright(
 
   const contractData = readFileSync(resolvedPath, "utf-8");
   const componentContract: ComponentContract = JSON.parse(contractData);
-  const totalTests =
-    (componentContract.relationships?.length || 0) +
-    (componentContract.static[0]?.assertions.length || 0) +
-    componentContract.dynamic.length;
+  const totalTests = (componentContract.relationships?.length || 0) + (componentContract.static[0]?.assertions.length || 0) + componentContract.dynamic.length;
   const apgUrl = componentContract.meta?.source?.apg;
   const failures: string[] = [];
   const warnings: string[] = [];
@@ -347,22 +336,83 @@ export async function runContractTestsPlaywright(
       }
     }
 
+    // --- Types for expectedValue reference and context ---
+    type ExpectedValueRef = {
+      ref: string;
+      property?: string;
+      attribute?: string;
+      relativeTarget?: string;
+    };
+    type SelectorMap = Record<string, string>;
+    type RelativeContext = { relativeBaseSelector?: string };
+
+    // --- Helper to resolve expectedValue reference objects ---
+    async function resolveExpectedValue(
+      expectedValue: string | ExpectedValueRef,
+      selectors: SelectorMap,
+      page: Page,
+      context: RelativeContext = {}
+    ): Promise<string | undefined> {
+      if (!expectedValue || typeof expectedValue !== 'object' || !('ref' in expectedValue)) return expectedValue as string;
+      let refSelector: string | undefined;
+      if (expectedValue.ref === 'relative') {
+        if (!expectedValue.relativeTarget || !context.relativeBaseSelector) return undefined;
+        const baseLocator = page.locator(context.relativeBaseSelector);
+        const count = await baseLocator.count();
+        let idx = 0;
+        if (expectedValue.relativeTarget === 'first') idx = 0;
+        else if (expectedValue.relativeTarget === 'second') idx = 1;
+        else if (expectedValue.relativeTarget === 'last') idx = count - 1;
+        else if (!isNaN(Number(expectedValue.relativeTarget))) idx = Number(expectedValue.relativeTarget);
+        else idx = 0;
+        if (idx < 0 || idx >= count) return undefined;
+        const relElem = baseLocator.nth(idx);
+        return await getPropertyFromLocator(relElem, expectedValue.property || expectedValue.attribute);
+      } else {
+        refSelector = selectors[expectedValue.ref];
+        if (!refSelector) throw new Error(`Selector for ref '${expectedValue.ref}' not found in contract selectors.`);
+        const refLocator = page.locator(refSelector).first();
+        return await getPropertyFromLocator(refLocator, expectedValue.property || expectedValue.attribute);
+      }
+    }
+
+    // --- Helper to extract property/attribute/textContent from a locator ---
+    async function getPropertyFromLocator(locator: import('playwright').Locator, property?: string): Promise<string | undefined> {
+      if (!locator) return undefined;
+      if (!property || property === 'id') {
+        return (await locator.getAttribute('id')) ?? undefined;
+      } else if (property === 'class') {
+        return (await locator.getAttribute('class')) ?? undefined;
+      } else if (property === 'textContent') {
+        return await locator.evaluate((el: Element) => el.textContent ?? undefined);
+      } else if (property.startsWith('aria-')) {
+        return (await locator.getAttribute(property)) ?? undefined;
+      } else if (property.endsWith('*')) {
+        const attrs = await locator.evaluate((el: Element) => {
+          const out: string[] = [];
+          for (const attr of Array.from(el.attributes)) {
+            if (attr.name.startsWith('aria-')) out.push(`${attr.name}=${attr.value}`);
+          }
+          return out.join(';');
+        });
+        return attrs;
+      } else {
+        return (await locator.getAttribute(property)) ?? undefined;
+      }
+    }
+
     // Run static tests using AssertionRunner
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
-    
     for (const test of componentContract.static[0]?.assertions || []) {
       if (test.target === "relative") continue;
-
       const staticDescription = `${test.target}${test.attribute ? ` (${test.attribute})` : ""}`;
       const staticLevel = normalizeLevel(test.level);
-
       if (componentName === 'menu' && test.target === 'submenuTrigger' && !hasSubmenuCapability) {
         const skipMessage = `Skipping submenu static assertion for ${test.target}: no submenu capability detected in rendered component.`;
         skipped.push(skipMessage);
         reporter.reportStaticTest(staticDescription, 'skip', skipMessage, staticLevel);
         continue;
       }
-
       const targetSelector = componentContract.selectors[test.target as keyof typeof componentContract.selectors];
       if (!targetSelector) {
         const failure = `Selector for target ${test.target} not found.`;
@@ -373,7 +423,6 @@ export async function runContractTestsPlaywright(
         continue;
       }
       const target = page.locator(targetSelector).first();
-
       const exists = await target.count() > 0;
       if (!exists) {
         const failure = `Target ${test.target} not found.`;
@@ -383,39 +432,47 @@ export async function runContractTestsPlaywright(
         reporter.reportStaticTest(staticDescription, outcome.status, outcome.detail, outcome.level);
         continue;
       }
-
       const isRedundantCheck = (selector: string, attrName: string, expectedVal?: string): boolean => {
         const attrPattern = new RegExp(`\\[${attrName}(?:=["']?([^\\]"']+)["']?)?\\]`);
         const match = selector.match(attrPattern);
-        
         if (!match) return false;
-        
         if (!expectedVal) return true;
-        
         const selectorValue = match[1];
         if (selectorValue) {
           const expectedValues = expectedVal.split(" | ");
           return expectedValues.includes(selectorValue);
         }
-        
         return false;
       };
-
+      // --- Support expectedValue as reference object ---
+      let expectedValue: string | undefined = test.expectedValue as string | undefined;
+      if (test.expectedValue && typeof test.expectedValue === 'object' && 'ref' in test.expectedValue) {
+        const context: RelativeContext = {};
+        const relTarget = (test as { relativeTarget?: string }).relativeTarget;
+        if (test.expectedValue.ref === 'relative' && test.target === 'relative' && relTarget) {
+          const baseSel = componentContract.selectors[relTarget];
+          if (!baseSel) throw new Error(`Selector for relativeTarget '${relTarget}' not found in contract selectors.`);
+          context.relativeBaseSelector = baseSel;
+        } else if (test.expectedValue.ref === 'relative' && relTarget) {
+          const baseSel = componentContract.selectors[relTarget];
+          if (!baseSel) throw new Error(`Selector for relativeTarget '${relTarget}' not found in contract selectors.`);
+          context.relativeBaseSelector = baseSel;
+        }
+        expectedValue = await resolveExpectedValue(test.expectedValue as ExpectedValueRef, componentContract.selectors as Record<string, string>, page, context);
+        console.log('Expected value in static check', expectedValue)
+      }
       if (!test.expectedValue) {
-        // Handle attribute existence check (no expected value)
+        // ...existing code...
         const attributes = test.attribute.split(" | ");
         let hasAny = false;
         let allRedundant = true;
-        
         for (const attr of attributes) {
           const attrTrimmed = attr.trim();
-          
           if (isRedundantCheck(targetSelector, attrTrimmed)) {
             passes.push(`${attrTrimmed} on ${test.target} verified by selector (already present in: ${targetSelector}).`);
             hasAny = true;
             continue;
           }
-          
           allRedundant = false;
           const value = await target.getAttribute(attrTrimmed);
           if (value !== null) {
@@ -423,7 +480,6 @@ export async function runContractTestsPlaywright(
             break;
           }
         }
-        
         if (!hasAny && !allRedundant) {
           const failure = test.failureMessage + ` None of the attributes "${test.attribute}" are present.`;
           const outcome = classifyFailure(failure, test.level);
@@ -435,26 +491,24 @@ export async function runContractTestsPlaywright(
           staticPassed += 1;
           reporter.reportStaticTest(staticDescription, 'pass', undefined, staticLevel);
         } else {
-          // All checks were redundant (already guaranteed by selector)
           staticPassed += 1;
           reporter.reportStaticTest(staticDescription, 'pass', undefined, staticLevel);
         }
       } else {
-        // Handle attribute value check using AssertionRunner
-        if (isRedundantCheck(targetSelector, test.attribute, test.expectedValue)) {
-          passes.push(`${test.attribute}="${test.expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
+        if (isRedundantCheck(targetSelector, test.attribute, typeof expectedValue === 'string' ? expectedValue : undefined)) {
+          passes.push(`${test.attribute}="${expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
           staticPassed += 1;
           reporter.reportStaticTest(staticDescription, 'pass', undefined, staticLevel);
         } else {
+          const valueToCheck: string = expectedValue ?? '';
           const result = await staticAssertionRunner.validateAttribute(
             target, 
             test.target, 
             test.attribute, 
-            test.expectedValue, 
+            valueToCheck, 
             test.failureMessage, 
             'Static ARIA Test'
           );
-          
           if (result.success && result.passMessage) {
             passes.push(result.passMessage);
             staticPassed += 1;
@@ -590,8 +644,38 @@ export async function runContractTestsPlaywright(
 
       // Run assertions for this test
       for (const assertion of assertions) {
-        const result = await assertionRunner.validate(assertion, dynamicTest.description);
-        
+        // Use RelativeTargetResolver for 'relative' expectedValue references
+        let expectedValue: string | undefined;
+        if (assertion.expectedValue && typeof assertion.expectedValue === 'object' && 'ref' in assertion.expectedValue) {
+          if (assertion.expectedValue.ref === 'relative') {
+            // Use RelativeTargetResolver to resolve the property from the correct relative element
+            const { RelativeTargetResolver } = await import('./RelativeTargetResolver');
+            const relativeSelector = componentContract.selectors.relative;
+            if (!relativeSelector) throw new Error('Relative selector not defined in contract selectors.');
+            const relTarget = assertion.relativeTarget || 'first';
+            const relElem = await RelativeTargetResolver.resolve(page, relativeSelector, relTarget);
+            if (!relElem) throw new Error(`Could not resolve relative target '${relTarget}' for expectedValue.`);
+            // Get property or attribute from the resolved element
+            const prop = assertion.expectedValue.property || assertion.expectedValue.attribute || 'id';
+            if (prop === 'textContent') {
+              expectedValue = await relElem.evaluate((el) => el.textContent ?? undefined);
+            } else {
+              const attr = await relElem.getAttribute(prop);
+              expectedValue = attr === null ? undefined : attr;
+            }
+          } else {
+            // Fallback to original resolveExpectedValue for non-relative refs
+            expectedValue = await resolveExpectedValue(assertion.expectedValue as ExpectedValueRef, componentContract.selectors as Record<string, string>, page, {});
+          }
+        } else if (typeof assertion.expectedValue === 'string' || typeof assertion.expectedValue === 'undefined') {
+          expectedValue = assertion.expectedValue;
+        } else {
+          // Defensive: if expectedValue is not string or reference, treat as empty string
+          expectedValue = '';
+        }
+        const assertionToRun = { ...assertion, expectedValue };
+        const valueToCheck: string = expectedValue ?? '';
+        const result = await assertionRunner.validate({ ...assertionToRun, expectedValue: valueToCheck }, dynamicTest.description);
         if (result.success && result.passMessage) {
           passes.push(result.passMessage);
         } else if (!result.success && result.failMessage) {

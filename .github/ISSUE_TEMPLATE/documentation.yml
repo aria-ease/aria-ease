@@ -31,7 +31,7 @@ body:
     attributes:
       label: Documentation Page
       description: Which page or section has the issue?
-      placeholder: "https://ariaease.site/docs (or README.md, API Reference, etc.)"
+      placeholder: "https://ariaease.site/getting-started (or README.md, API Reference, etc.)"
     validations:
       required: true
 

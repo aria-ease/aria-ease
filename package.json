@@ -46,7 +46,7 @@
   "bugs": {
     "url": "https://github.com/aria-ease/aria-ease/issues"
   },
-  "homepage": "https://ariaease.site/docs",
+  "homepage": "https://ariaease.site/",
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
     "@playwright/test": "^1.57.0",

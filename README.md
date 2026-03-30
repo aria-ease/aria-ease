@@ -1000,7 +1000,7 @@ export default {
   audit: {
     urls: [
       "http://localhost:5173", // Homepage
-      "http://localhost:5173/docs", // Docs
+      "http://localhost:5173/getting-started", // Docs
       "http://localhost:5173/examples", // Examples
     ],
     output: {
@@ -1130,7 +1130,7 @@ You've shifted accessibility left (into development), automated the verification
 
 ## 📖 More Resources
 
-- [Full Documentation](https://ariaease.site/docs)
+- [Full Documentation](https://ariaease.site/getting-started)
 - [GitHub Repository](https://github.com/aria-ease/aria-ease)
 - [Report Issues](https://github.com/aria-ease/aria-ease/issues)
 - [Contributing Guide](https://github.com/aria-ease/aria-ease/blob/main/CONTRIBUTION-GUIDELINES.md)

@@ -351,9 +351,7 @@ async function getOrCreateContext() {
   if (!sharedContext) {
     const browser = await getOrCreateBrowser();
     sharedContext = await browser.newContext({
-      // Isolated context - no permissions, no geolocation, etc.
       permissions: [],
-      // Ignore HTTPS errors for local dev servers
       ignoreHTTPSErrors: true
     });
   }
@@ -740,7 +738,7 @@ var init_ComboboxComponentStrategy = __esm({
         const popupElement = page.locator(popupSelector).first();
         const isPopupVisible = await popupElement.isVisible().catch(() => false);
         if (!isPopupVisible) return;
-        let listBoxClosed = false;
+        let popupClosed = false;
         let closeSelector = this.selectors.input;
         if (!closeSelector && this.selectors.focusable) {
           closeSelector = this.selectors.focusable;
@@ -751,18 +749,18 @@ var init_ComboboxComponentStrategy = __esm({
           const closeElement = page.locator(closeSelector).first();
           await closeElement.focus();
           await page.keyboard.press("Escape");
-          listBoxClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
+          popupClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
         }
-        if (!listBoxClosed && this.selectors.button) {
+        if (!popupClosed && this.selectors.button) {
           const buttonElement = page.locator(this.selectors.button).first();
           await buttonElement.click({ timeout: this.actionTimeoutMs });
-          listBoxClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
+          popupClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
         }
-        if (!listBoxClosed) {
+        if (!popupClosed) {
           await page.mouse.click(10, 10);
-          listBoxClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
+          popupClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
         }
-        if (!listBoxClosed) {
+        if (!popupClosed) {
           throw new Error(
             `\u274C FATAL: Cannot close combobox popup between tests. Popup remains visible after trying:
   1. Escape key
@@ -982,6 +980,10 @@ var init_ComponentDetector = __esm({
 });
 
 // src/utils/test/src/RelativeTargetResolver.ts
+var RelativeTargetResolver_exports = {};
+__export(RelativeTargetResolver_exports, {
+  RelativeTargetResolver: () => RelativeTargetResolver
+});
 var RelativeTargetResolver;
 var init_RelativeTargetResolver = __esm({
   "src/utils/test/src/RelativeTargetResolver.ts"() {
@@ -1057,16 +1059,16 @@ var init_ActionExecutor = __esm({
       async focus(target, relativeTarget, virtualId) {
         try {
           if (target === "virtual" && virtualId) {
-            const inputSelector = this.selectors.input;
-            if (!inputSelector) {
-              return { success: false, error: `Input selector not defined for virtual focus.` };
+            const mainSelector = this.selectors.main;
+            if (!mainSelector) {
+              return { success: false, error: `Main selector not defined for virtual focus.` };
             }
-            const input = this.page.locator(inputSelector).first();
-            const exists = await input.count();
+            const main = this.page.locator(mainSelector).first();
+            const exists = await main.count();
             if (!exists) {
-              return { success: false, error: `Input element not found for virtual focus.` };
+              return { success: false, error: `Main element not found for virtual focus.` };
             }
-            await input.evaluate((el, id) => {
+            await main.evaluate((el, id) => {
               el.setAttribute("aria-activedescendant", id);
             }, virtualId);
             return { success: true };
@@ -1367,6 +1369,10 @@ var init_AssertionRunner = __esm({
               failMessage: `${failureMessage} ${targetName} "${attribute}" should not be empty, found "${attributeValue2}".`
             };
           }
+        }
+        if (typeof expectedValue !== "string") {
+          console.error("[AssertionRunner] expectedValue is not a string:", expectedValue);
+          throw new Error(`AssertionRunner: expectedValue for attribute assertion must be a string, but got: ${JSON.stringify(expectedValue)}`);
         }
         const expectedValues = expectedValue.split(" | ").map((v) => v.trim());
         const attributeValue = await target.getAttribute(attribute);
@@ -1800,6 +1806,52 @@ This usually means:
         reporter.reportStaticTest(relDescription, "pass", void 0, relationshipLevel);
       }
     }
+    async function resolveExpectedValue(expectedValue, selectors, page2, context = {}) {
+      if (!expectedValue || typeof expectedValue !== "object" || !("ref" in expectedValue)) return expectedValue;
+      let refSelector;
+      if (expectedValue.ref === "relative") {
+        if (!expectedValue.relativeTarget || !context.relativeBaseSelector) return void 0;
+        const baseLocator = page2.locator(context.relativeBaseSelector);
+        const count = await baseLocator.count();
+        let idx = 0;
+        if (expectedValue.relativeTarget === "first") idx = 0;
+        else if (expectedValue.relativeTarget === "second") idx = 1;
+        else if (expectedValue.relativeTarget === "last") idx = count - 1;
+        else if (!isNaN(Number(expectedValue.relativeTarget))) idx = Number(expectedValue.relativeTarget);
+        else idx = 0;
+        if (idx < 0 || idx >= count) return void 0;
+        const relElem = baseLocator.nth(idx);
+        return await getPropertyFromLocator(relElem, expectedValue.property || expectedValue.attribute);
+      } else {
+        refSelector = selectors[expectedValue.ref];
+        if (!refSelector) throw new Error(`Selector for ref '${expectedValue.ref}' not found in contract selectors.`);
+        const refLocator = page2.locator(refSelector).first();
+        return await getPropertyFromLocator(refLocator, expectedValue.property || expectedValue.attribute);
+      }
+    }
+    async function getPropertyFromLocator(locator, property) {
+      if (!locator) return void 0;
+      if (!property || property === "id") {
+        return await locator.getAttribute("id") ?? void 0;
+      } else if (property === "class") {
+        return await locator.getAttribute("class") ?? void 0;
+      } else if (property === "textContent") {
+        return await locator.evaluate((el) => el.textContent ?? void 0);
+      } else if (property.startsWith("aria-")) {
+        return await locator.getAttribute(property) ?? void 0;
+      } else if (property.endsWith("*")) {
+        const attrs = await locator.evaluate((el) => {
+          const out = [];
+          for (const attr of Array.from(el.attributes)) {
+            if (attr.name.startsWith("aria-")) out.push(`${attr.name}=${attr.value}`);
+          }
+          return out.join(";");
+        });
+        return attrs;
+      } else {
+        return await locator.getAttribute(property) ?? void 0;
+      }
+    }
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
     for (const test of componentContract.static[0]?.assertions || []) {
       if (test.target === "relative") continue;
@@ -1842,6 +1894,22 @@ This usually means:
         }
         return false;
       };
+      let expectedValue = test.expectedValue;
+      if (test.expectedValue && typeof test.expectedValue === "object" && "ref" in test.expectedValue) {
+        const context = {};
+        const relTarget = test.relativeTarget;
+        if (test.expectedValue.ref === "relative" && test.target === "relative" && relTarget) {
+          const baseSel = componentContract.selectors[relTarget];
+          if (!baseSel) throw new Error(`Selector for relativeTarget '${relTarget}' not found in contract selectors.`);
+          context.relativeBaseSelector = baseSel;
+        } else if (test.expectedValue.ref === "relative" && relTarget) {
+          const baseSel = componentContract.selectors[relTarget];
+          if (!baseSel) throw new Error(`Selector for relativeTarget '${relTarget}' not found in contract selectors.`);
+          context.relativeBaseSelector = baseSel;
+        }
+        expectedValue = await resolveExpectedValue(test.expectedValue, componentContract.selectors, page, context);
+        console.log("Expected value in static check", expectedValue);
+      }
       if (!test.expectedValue) {
         const attributes = test.attribute.split(" | ");
         let hasAny = false;
@@ -1875,16 +1943,17 @@ This usually means:
           reporter.reportStaticTest(staticDescription, "pass", void 0, staticLevel);
         }
       } else {
-        if (isRedundantCheck(targetSelector, test.attribute, test.expectedValue)) {
-          passes.push(`${test.attribute}="${test.expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
+        if (isRedundantCheck(targetSelector, test.attribute, typeof expectedValue === "string" ? expectedValue : void 0)) {
+          passes.push(`${test.attribute}="${expectedValue}" on ${test.target} verified by selector (already present in: ${targetSelector}).`);
           staticPassed += 1;
           reporter.reportStaticTest(staticDescription, "pass", void 0, staticLevel);
         } else {
+          const valueToCheck = expectedValue ?? "";
           const result = await staticAssertionRunner.validateAttribute(
             target,
             test.target,
             test.attribute,
-            test.expectedValue,
+            valueToCheck,
             test.failureMessage,
             "Static ARIA Test"
           );
@@ -2002,7 +2071,33 @@ This usually means:
         continue;
       }
       for (const assertion of assertions) {
-        const result = await assertionRunner.validate(assertion, dynamicTest.description);
+        let expectedValue;
+        if (assertion.expectedValue && typeof assertion.expectedValue === "object" && "ref" in assertion.expectedValue) {
+          if (assertion.expectedValue.ref === "relative") {
+            const { RelativeTargetResolver: RelativeTargetResolver2 } = await Promise.resolve().then(() => (init_RelativeTargetResolver(), RelativeTargetResolver_exports));
+            const relativeSelector = componentContract.selectors.relative;
+            if (!relativeSelector) throw new Error("Relative selector not defined in contract selectors.");
+            const relTarget = assertion.relativeTarget || "first";
+            const relElem = await RelativeTargetResolver2.resolve(page, relativeSelector, relTarget);
+            if (!relElem) throw new Error(`Could not resolve relative target '${relTarget}' for expectedValue.`);
+            const prop = assertion.expectedValue.property || assertion.expectedValue.attribute || "id";
+            if (prop === "textContent") {
+              expectedValue = await relElem.evaluate((el) => el.textContent ?? void 0);
+            } else {
+              const attr = await relElem.getAttribute(prop);
+              expectedValue = attr === null ? void 0 : attr;
+            }
+          } else {
+            expectedValue = await resolveExpectedValue(assertion.expectedValue, componentContract.selectors, page, {});
+          }
+        } else if (typeof assertion.expectedValue === "string" || typeof assertion.expectedValue === "undefined") {
+          expectedValue = assertion.expectedValue;
+        } else {
+          expectedValue = "";
+        }
+        const assertionToRun = { ...assertion, expectedValue };
+        const valueToCheck = expectedValue ?? "";
+        const result = await assertionRunner.validate({ ...assertionToRun, expectedValue: valueToCheck }, dynamicTest.description);
         if (result.success && result.passMessage) {
           passes.push(result.passMessage);
         } else if (!result.success && result.failMessage) {
@@ -3329,6 +3424,7 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
         } else if (comboboxInput.value) {
           event.preventDefault();
           comboboxInput.value = "";
+          comboboxInput.setAttribute("aria-activedescendant", "");
           const visibleItems2 = getVisibleItems();
           visibleItems2.forEach((item) => {
             if (item.getAttribute("aria-selected") === "true") item.setAttribute("aria-selected", "false");
@@ -3737,7 +3833,7 @@ function resolveSetup(setup, ctx) {
   );
 }
 var COMBOBOX_STATES = {
-  "listbox.open": {
+  "popup.open": {
     setup: [
       {
         when: ["keyboard", "textInput"],
@@ -3754,7 +3850,7 @@ var COMBOBOX_STATES = {
     ],
     assertion: isComboboxOpen
   },
-  "listbox.closed": {
+  "popup.closed": {
     setup: [
       {
         when: ["keyboard"],
@@ -3769,18 +3865,18 @@ var COMBOBOX_STATES = {
         ]
       }
     ],
-    assertion: isComboboxClosed
+    assertion: [...isComboboxClosed(), ...isActiveDescendantEmpty()]
   },
-  "input.focused": {
+  "main.focused": {
     setup: [
       {
         when: ["keyboard"],
         steps: () => [
-          { type: "focus", target: "input" }
+          { type: "focus", target: "main" }
         ]
       }
     ],
-    assertion: isInputFocused
+    assertion: isMainFocused
   },
   "input.filled": {
     setup: [
@@ -3793,8 +3889,19 @@ var COMBOBOX_STATES = {
     ],
     assertion: isInputFilled
   },
+  "input.notFilled": {
+    setup: [
+      {
+        when: ["keyboard", "textInput"],
+        steps: () => [
+          { type: "type", target: "input", value: "" }
+        ]
+      }
+    ],
+    assertion: isInputNotFilled
+  },
   "activeOption.first": {
-    requires: ["listbox.open"],
+    requires: ["popup.open"],
     setup: [
       {
         when: ["keyboard"],
@@ -3803,7 +3910,7 @@ var COMBOBOX_STATES = {
         ]
       }
     ],
-    assertion: isActiveDescendantNotEmpty
+    assertion: isActiveDescendantFirst
   },
   "activeOption.last": {
     requires: ["activeOption.first"],
@@ -3815,10 +3922,30 @@ var COMBOBOX_STATES = {
         ]
       }
     ],
+    assertion: isActiveDescendantLast
+  },
+  "activeDescendant.notEmpty": {
+    requires: [],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => []
+      }
+    ],
     assertion: isActiveDescendantNotEmpty
   },
+  "activeDescendant.Empty": {
+    requires: [],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => []
+      }
+    ],
+    assertion: isActiveDescendantEmpty
+  },
   "selectedOption.first": {
-    requires: ["listbox.open"],
+    requires: ["popup.open"],
     setup: [
       {
         when: ["pointer"],
@@ -3830,7 +3957,7 @@ var COMBOBOX_STATES = {
     assertion: () => isAriaSelected("first")
   },
   "selectedOption.last": {
-    requires: ["listbox.open"],
+    requires: ["popup.open"],
     setup: [
       {
         when: ["pointer"],
@@ -3845,43 +3972,76 @@ var COMBOBOX_STATES = {
 function isComboboxOpen() {
   return [
     {
-      target: "listbox",
+      target: "popup",
       assertion: "toBeVisible",
-      failureMessage: "Expected listbox to be visible"
+      failureMessage: "Expected popup to be visible"
     },
     {
-      target: "input",
+      target: "main",
       assertion: "toHaveAttribute",
       attribute: "aria-expanded",
       expectedValue: "true",
-      failureMessage: "Expect combobox input to have aria-expanded='true'"
+      failureMessage: "Expect combobox main to have aria-expanded='true'."
     }
   ];
 }
 function isComboboxClosed() {
   return [
     {
-      target: "listbox",
+      target: "popup",
       assertion: "notToBeVisible",
-      failureMessage: "Expected listbox to be closed"
+      failureMessage: "Expected popup to be closed"
     },
     {
-      target: "input",
+      target: "main",
       assertion: "toHaveAttribute",
       attribute: "aria-expanded",
       expectedValue: "false",
-      failureMessage: "Expect combobox input to have aria-expanded='false'"
+      failureMessage: "Expect combobox main to have aria-expanded='false'."
+    }
+  ];
+}
+function isActiveDescendantFirst() {
+  return [
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-activedescendant",
+      expectedValue: { ref: "relative", relativeTarget: "first", property: "id" },
+      failureMessage: "Expected aria-activedescendant on main to match the id of the first option."
+    }
+  ];
+}
+function isActiveDescendantLast() {
+  return [
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-activedescendant",
+      expectedValue: { ref: "relative", relativeTarget: "last", property: "id" },
+      failureMessage: "Expected aria-activedescendant on main to match the id of the last option."
     }
   ];
 }
 function isActiveDescendantNotEmpty() {
   return [
     {
-      target: "input",
+      target: "main",
       assertion: "toHaveAttribute",
       attribute: "aria-activedescendant",
       expectedValue: "!empty",
-      failureMessage: "Expected aria-activedescendant to not be empty"
+      failureMessage: "Expected aria-activedescendant on main to not be empty."
+    }
+  ];
+}
+function isActiveDescendantEmpty() {
+  return [
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-activedescendant",
+      expectedValue: "",
+      failureMessage: "Expected aria-activedescendant on main to be empty."
     }
   ];
 }
@@ -3893,16 +4053,16 @@ function isAriaSelected(index) {
       assertion: "toHaveAttribute",
       attribute: "aria-selected",
       expectedValue: "true",
-      failureMessage: `Expected ${index} option to have aria-selected='true'`
+      failureMessage: `Expected ${index} option to have aria-selected='true'.`
     }
   ];
 }
-function isInputFocused() {
+function isMainFocused() {
   return [
     {
-      target: "input",
+      target: "main",
       assertion: "toHaveFocus",
-      failureMessage: "Expected input to be focused"
+      failureMessage: "Expected main to be focused."
     }
   ];
 }
@@ -3912,7 +4072,17 @@ function isInputFilled() {
       target: "input",
       assertion: "toHaveValue",
       expectedValue: "test",
-      failureMessage: "Expected input to have the value 'test'"
+      failureMessage: "Expected input to have the value 'test'."
+    }
+  ];
+}
+function isInputNotFilled() {
+  return [
+    {
+      target: "input",
+      assertion: "toHaveValue",
+      expectedValue: "",
+      failureMessage: "Expected input to have the value ''."
     }
   ];
 }
@@ -4256,7 +4426,7 @@ async function runContractTests(contractPath, componentName, component, strictne
           staticPassed += 1;
           reporter.reportStaticTest(`${test.target} has ${test.attribute}`, "pass", void 0, staticLevel);
         }
-      } else if (!attributeValue || !test.expectedValue.split(" | ").includes(attributeValue)) {
+      } else if (!attributeValue || typeof test.expectedValue === "string" && !test.expectedValue.split(" | ").includes(attributeValue)) {
         const outcome = classifyFailure(test.failureMessage + ` Attribute value does not match expected value. Expected: ${test.expectedValue}, Found: ${attributeValue}`, test.level);
         if (outcome.status === "fail") staticFailed += 1;
         if (outcome.status === "warn") staticWarnings += 1;

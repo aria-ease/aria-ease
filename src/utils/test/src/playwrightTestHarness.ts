@@ -25,9 +25,7 @@ export async function getOrCreateContext(): Promise<BrowserContext> {
   if (!sharedContext) {
     const browser = await getOrCreateBrowser();
     sharedContext = await browser.newContext({
-      // Isolated context - no permissions, no geolocation, etc.
       permissions: [],
-      // Ignore HTTPS errors for local dev servers
       ignoreHTTPSErrors: true,
     });
   }
