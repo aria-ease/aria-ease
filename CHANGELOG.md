@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [6.12.2](https://github.com/aria-ease/aria-ease/compare/v6.12.1...v6.12.2) (2026-03-31)
+
+
+### Bug Fixes
+
+* fixed Tab key not selecting active combobox listbox option in combobox utility ([98e43d7](https://github.com/aria-ease/aria-ease/commit/98e43d7efa1080299f10998aadb372ef73f8f0f9))
+
 ### [6.12.1](https://github.com/aria-ease/aria-ease/compare/v6.11.0...v6.12.1) (2026-03-30)
 
 
