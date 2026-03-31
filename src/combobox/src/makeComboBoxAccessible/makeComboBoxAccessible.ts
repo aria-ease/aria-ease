@@ -197,9 +197,14 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 break;
 
             case "Tab":
+                if (isOpen && activeIndex >= 0 && activeIndex < visibleItems.length) {
+                    selectOption(visibleItems[activeIndex]);
+                }
+
                 if (isOpen) {
                     closeListbox();
                 }
+                
                 break;
         }
     }

@@ -70,6 +70,17 @@ export const COMBOBOX_STATES = {
     ],
     assertion: isMainFocused
   },
+  "main.notFocused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [ //what to do here?
+          
+        ]
+      }
+    ],
+    assertion: isMainNotFocused
+  },
   "input.filled": {
     setup: [
       {
@@ -268,6 +279,16 @@ function isMainFocused() {
       target: "main",
       assertion: "toHaveFocus",
       failureMessage: "Expected main to be focused.",
+    }
+  ]
+}
+
+function isMainNotFocused() {
+  return [
+    {
+      target: "main",
+      assertion: "notToHaveFocus",
+      failureMessage: "Expected main to not have focused.",
     }
   ]
 }

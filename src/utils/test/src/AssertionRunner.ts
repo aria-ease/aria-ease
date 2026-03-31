@@ -199,13 +199,22 @@ export class AssertionRunner {
   /**
    * Validate focus assertion
    */
-  async validateFocus( target: Locator, targetName: string, failureMessage: string, testDescription: string ): Promise<AssertionResult> {
+  async validateFocus( target: Locator, targetName: string, expectedFocus: boolean, failureMessage: string, testDescription: string ): Promise<AssertionResult> {
     try {
-      await expect(target).toBeFocused({ timeout: this.timeoutMs });
-      return {
-        success: true,
-        passMessage: `${targetName} has focus as expected. Test: "${testDescription}".`
-      };
+      if(expectedFocus) {
+        await expect(target).toBeFocused({ timeout: this.timeoutMs });
+        return {
+          success: true,
+          passMessage: `${targetName} has focus as expected. Test: "${testDescription}".`
+        };
+      } else {
+        await expect(target).not.toBeFocused({ timeout: this.timeoutMs });
+        return {
+          success: true,
+          passMessage: `${targetName} does not have focus as expected. Test: "${testDescription}".`
+        };
+      }
+       
     } catch {
       const actualFocus = await this.page.evaluate(() => {
         const focused = document.activeElement;
@@ -315,7 +324,9 @@ export class AssertionRunner {
         }
         return { success: false, failMessage: "Missing expectedValue for toHaveValue assertion" };
       case "toHaveFocus":
-        return this.validateFocus(target, assertion.target, assertion.failureMessage || '', testDescription);
+        return this.validateFocus(target, assertion.target, true, assertion.failureMessage || '', testDescription);
+      case "notToHaveFocus":
+        return this.validateFocus(target, assertion.target, false, assertion.failureMessage || '', testDescription);
       case "toHaveRole":
         if (assertion.expectedValue !== undefined) {
           return this.validateRole(target, assertion.target, assertion.expectedValue as string, assertion.failureMessage || '', testDescription);

@@ -1144,6 +1144,9 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
         }
         break;
       case "Tab":
+        if (isOpen && activeIndex >= 0 && activeIndex < visibleItems.length) {
+          selectOption(visibleItems[activeIndex]);
+        }
         if (isOpen) {
           closeListbox();
         }
@@ -1571,6 +1574,17 @@ var COMBOBOX_STATES = {
     ],
     assertion: isMainFocused
   },
+  "main.notFocused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          //what to do here?
+        ]
+      }
+    ],
+    assertion: isMainNotFocused
+  },
   "input.filled": {
     setup: [
       {
@@ -1756,6 +1770,15 @@ function isMainFocused() {
       target: "main",
       assertion: "toHaveFocus",
       failureMessage: "Expected main to be focused."
+    }
+  ];
+}
+function isMainNotFocused() {
+  return [
+    {
+      target: "main",
+      assertion: "notToHaveFocus",
+      failureMessage: "Expected main to not have focused."
     }
   ];
 }
@@ -2204,7 +2227,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-NL3JNJYH.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-UJKXRXBS.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness, config, configBaseDir);
       } else {
         throw new Error(

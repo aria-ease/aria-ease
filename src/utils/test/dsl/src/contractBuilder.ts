@@ -53,7 +53,7 @@ type StaticAssertion = {
 
 type DynamicAssertion = {
   target: string;
-  assertion: "toBeVisible" | "notToBeVisible" | "toHaveAttribute" | "toHaveValue" | "toHaveFocus" | "toHaveRole";
+  assertion: "toBeVisible" | "notToBeVisible" | "toHaveAttribute" | "toHaveValue" | "toHaveFocus" | "notToHaveFocus" | "toHaveRole";
   attribute?: string;
   expectedValue?: string;
   failureMessage?: string;

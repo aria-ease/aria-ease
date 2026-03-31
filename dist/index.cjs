@@ -1434,13 +1434,21 @@ var init_AssertionRunner = __esm({
       /**
        * Validate focus assertion
        */
-      async validateFocus(target, targetName, failureMessage, testDescription) {
+      async validateFocus(target, targetName, expectedFocus, failureMessage, testDescription) {
         try {
-          await (0, test_exports.expect)(target).toBeFocused({ timeout: this.timeoutMs });
-          return {
-            success: true,
-            passMessage: `${targetName} has focus as expected. Test: "${testDescription}".`
-          };
+          if (expectedFocus) {
+            await (0, test_exports.expect)(target).toBeFocused({ timeout: this.timeoutMs });
+            return {
+              success: true,
+              passMessage: `${targetName} has focus as expected. Test: "${testDescription}".`
+            };
+          } else {
+            await (0, test_exports.expect)(target).not.toBeFocused({ timeout: this.timeoutMs });
+            return {
+              success: true,
+              passMessage: `${targetName} does not have focus as expected. Test: "${testDescription}".`
+            };
+          }
         } catch {
           const actualFocus = await this.page.evaluate(() => {
             const focused = document.activeElement;
@@ -1526,7 +1534,9 @@ var init_AssertionRunner = __esm({
             }
             return { success: false, failMessage: "Missing expectedValue for toHaveValue assertion" };
           case "toHaveFocus":
-            return this.validateFocus(target, assertion.target, assertion.failureMessage || "", testDescription);
+            return this.validateFocus(target, assertion.target, true, assertion.failureMessage || "", testDescription);
+          case "notToHaveFocus":
+            return this.validateFocus(target, assertion.target, false, assertion.failureMessage || "", testDescription);
           case "toHaveRole":
             if (assertion.expectedValue !== void 0) {
               return this.validateRole(target, assertion.target, assertion.expectedValue, assertion.failureMessage || "", testDescription);
@@ -3451,6 +3461,9 @@ function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, 
         }
         break;
       case "Tab":
+        if (isOpen && activeIndex >= 0 && activeIndex < visibleItems.length) {
+          selectOption(visibleItems[activeIndex]);
+        }
         if (isOpen) {
           closeListbox();
         }
@@ -3878,6 +3891,17 @@ var COMBOBOX_STATES = {
     ],
     assertion: isMainFocused
   },
+  "main.notFocused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          //what to do here?
+        ]
+      }
+    ],
+    assertion: isMainNotFocused
+  },
   "input.filled": {
     setup: [
       {
@@ -4063,6 +4087,15 @@ function isMainFocused() {
       target: "main",
       assertion: "toHaveFocus",
       failureMessage: "Expected main to be focused."
+    }
+  ];
+}
+function isMainNotFocused() {
+  return [
+    {
+      target: "main",
+      assertion: "notToHaveFocus",
+      failureMessage: "Expected main to not have focused."
     }
   ];
 }
