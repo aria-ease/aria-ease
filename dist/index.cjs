@@ -612,7 +612,7 @@ var init_MenuComponentStrategy = __esm({
         if (!closeSelector && this.selectors.focusable) {
           closeSelector = this.selectors.focusable;
         } else if (!closeSelector) {
-          closeSelector = this.selectors.trigger;
+          closeSelector = this.selectors.main;
         }
         if (closeSelector) {
           const closeElement = page.locator(closeSelector).first();
@@ -620,8 +620,8 @@ var init_MenuComponentStrategy = __esm({
           await page.keyboard.press("Escape");
           menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
         }
-        if (!menuClosed && this.selectors.trigger) {
-          const triggerElement = page.locator(this.selectors.trigger).first();
+        if (!menuClosed && this.selectors.main) {
+          const triggerElement = page.locator(this.selectors.main).first();
           await triggerElement.click({ timeout: this.actionTimeoutMs });
           menuClosed = await (0, test_exports.expect)(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs }).then(() => true).catch(() => false);
         }
@@ -641,8 +641,8 @@ This indicates a problem with the menu component's close functionality.`
         if (this.selectors.input) {
           await page.locator(this.selectors.input).first().clear();
         }
-        if (this.selectors.trigger) {
-          const triggerElement = page.locator(this.selectors.trigger).first();
+        if (this.selectors.main) {
+          const triggerElement = page.locator(this.selectors.main).first();
           await triggerElement.focus();
         }
       }
@@ -1559,12 +1559,7 @@ async function runContractTestsPlaywright(componentName, url, strictness, config
   const componentConfig = config?.test?.components?.find((c) => c.name === componentName);
   const isCustomContract = !!componentConfig?.contractPath;
   const reporter = new ContractReporter(true, isCustomContract);
-  const defaultTimeouts = {
-    actionTimeoutMs: 400,
-    assertionTimeoutMs: 400,
-    navigationTimeoutMs: 3e4,
-    componentReadyTimeoutMs: 5e3
-  };
+  const defaultTimeouts = { actionTimeoutMs: 400, assertionTimeoutMs: 400, navigationTimeoutMs: 3e4, componentReadyTimeoutMs: 5e3 };
   const globalDisableTimeouts = config?.test?.disableTimeouts === true;
   const componentDisableTimeouts = componentConfig?.disableTimeouts === true;
   const disableTimeouts = componentDisableTimeouts || globalDisableTimeouts;
@@ -1576,11 +1571,7 @@ async function runContractTestsPlaywright(componentName, url, strictness, config
     }
     return value;
   };
-  const actionTimeoutMs = resolveTimeout(
-    componentConfig?.actionTimeoutMs,
-    config?.test?.actionTimeoutMs,
-    defaultTimeouts.actionTimeoutMs
-  );
+  const actionTimeoutMs = resolveTimeout(componentConfig?.actionTimeoutMs, config?.test?.actionTimeoutMs, defaultTimeouts.actionTimeoutMs);
   const assertionTimeoutMs = resolveTimeout(
     componentConfig?.assertionTimeoutMs,
     config?.test?.assertionTimeoutMs,
@@ -1680,8 +1671,8 @@ This usually means:
       );
     }
     reporter.start(componentName, totalTests, apgUrl);
-    if (componentName === "menu" && componentContract.selectors.trigger) {
-      await page.locator(componentContract.selectors.trigger).first().waitFor({ state: "attached", timeout: componentReadyTimeoutMs }).catch(() => {
+    if (componentName === "menu" && componentContract.selectors.main) {
+      await page.locator(componentContract.selectors.main).first().waitFor({ state: "visible", timeout: componentReadyTimeoutMs }).catch(() => {
       });
     }
     const hasSubmenuCapability = componentName === "menu" && !!componentContract.selectors.submenuTrigger ? await page.locator(componentContract.selectors.submenuTrigger).count() > 0 : false;
@@ -1690,7 +1681,32 @@ This usually means:
     let staticFailed = 0;
     let staticWarnings = 0;
     for (const rel of componentContract.relationships || []) {
+      if (strategy && typeof strategy.resetState === "function") {
+        try {
+          await strategy.resetState(page);
+        } catch (err) {
+          warnings.push(`Warning: resetState failed before relationship test: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
       const relationshipLevel = normalizeLevel(rel.level);
+      if (Array.isArray(rel.setup) && rel.setup.length > 0) {
+        const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+        const relDescription = rel.type === "aria-reference" ? `${rel.from}.${rel.attribute} references ${rel.to}` : `${rel.parent} contains ${rel.child}`;
+        const setupResult = await runSetupActions(rel.setup, actionExecutor, strategy, page, relDescription, ["submenu", "submenuTrigger", "submenuItems"]);
+        if (setupResult.skip) {
+          skipped.push(setupResult.message);
+          reporter.reportStaticTest(relDescription, "skip", setupResult.message, relationshipLevel);
+          continue;
+        }
+        if (!setupResult.success) {
+          const failure = `Relationship setup failed: ${setupResult.error}`;
+          const outcome = classifyFailure(failure, rel.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+      }
       if (componentName === "menu" && !hasSubmenuCapability) {
         const involvesSubmenu = isSubmenuRelation(rel);
         if (involvesSubmenu) {
@@ -1863,7 +1879,53 @@ This usually means:
       }
     }
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
+    async function runSetupActions(setup, actionExecutor, strategy2, page2, description, skipKeywords = []) {
+      if (!Array.isArray(setup) || setup.length === 0) return { success: true };
+      if (strategy2 && typeof strategy2.resetState === "function") {
+        await strategy2.resetState(page2);
+      }
+      for (const setupAct of setup) {
+        let setupResult = { success: true };
+        try {
+          if (setupAct.type === "focus") {
+            if (setupAct.target === "relative" && setupAct.relativeTarget) {
+              setupResult = await actionExecutor.focus("relative", setupAct.relativeTarget);
+            } else {
+              setupResult = await actionExecutor.focus(setupAct.target);
+            }
+          } else if (setupAct.type === "type" && setupAct.value) {
+            setupResult = await actionExecutor.type(setupAct.target, setupAct.value);
+          } else if (setupAct.type === "click") {
+            setupResult = await actionExecutor.click(setupAct.target, setupAct.relativeTarget);
+          } else if (setupAct.type === "keypress" && setupAct.key) {
+            setupResult = await actionExecutor.keypress(setupAct.target, setupAct.key);
+          } else if (setupAct.type === "hover") {
+            setupResult = await actionExecutor.hover(setupAct.target, setupAct.relativeTarget);
+          } else {
+            continue;
+          }
+        } catch (err) {
+          setupResult = { success: false, error: err instanceof Error ? err.message : String(err) };
+        }
+        if (!setupResult.success) {
+          const setupMsg = setupResult.error || "Setup action failed";
+          const isSkip = skipKeywords.some((kw) => description.includes(kw) || setupMsg.includes(kw));
+          if (isSkip) {
+            return { success: false, skip: true, message: `Skipping test - capability not present: ${setupMsg}` };
+          }
+          return { success: false, error: setupMsg };
+        }
+      }
+      return { success: true };
+    }
     for (const test of componentContract.static[0]?.assertions || []) {
+      if (strategy && typeof strategy.resetState === "function") {
+        try {
+          await strategy.resetState(page);
+        } catch (err) {
+          warnings.push(`Warning: resetState failed before static test: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
       if (test.target === "relative") continue;
       const staticDescription = `${test.target}${test.attribute ? ` (${test.attribute})` : ""}`;
       const staticLevel = normalizeLevel(test.level);
@@ -1872,6 +1934,23 @@ This usually means:
         skipped.push(skipMessage);
         reporter.reportStaticTest(staticDescription, "skip", skipMessage, staticLevel);
         continue;
+      }
+      if (Array.isArray(test.setup) && test.setup.length > 0) {
+        const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+        const setupResult = await runSetupActions(test.setup, actionExecutor, strategy, page, staticDescription, ["submenu", "submenuTrigger", "submenuItems"]);
+        if (setupResult.skip) {
+          skipped.push(setupResult.message);
+          reporter.reportStaticTest(staticDescription, "skip", setupResult.message, staticLevel);
+          continue;
+        }
+        if (!setupResult.success) {
+          const failure = `Static setup failed: ${setupResult.error}`;
+          const outcome = classifyFailure(failure, test.level);
+          if (outcome.status === "fail") staticFailed += 1;
+          if (outcome.status === "warn") staticWarnings += 1;
+          reporter.reportStaticTest(staticDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
       }
       const targetSelector = componentContract.selectors[test.target];
       if (!targetSelector) {
@@ -1999,31 +2078,16 @@ This usually means:
       const dynamicLevel = normalizeLevel(dynamicTest.level);
       const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
       if (Array.isArray(setup) && setup.length > 0) {
-        for (const setupAct of setup) {
-          let setupResult;
-          if (setupAct.type === "focus") {
-            if (setupAct.target === "relative" && setupAct.relativeTarget) {
-              setupResult = await actionExecutor.focus("relative", setupAct.relativeTarget);
-            } else {
-              setupResult = await actionExecutor.focus(setupAct.target);
-            }
-          } else if (setupAct.type === "type" && setupAct.value) {
-            setupResult = await actionExecutor.type(setupAct.target, setupAct.value);
-          } else if (setupAct.type === "click") {
-            setupResult = await actionExecutor.click(setupAct.target, setupAct.relativeTarget);
-          } else if (setupAct.type === "keypress" && setupAct.key) {
-            setupResult = await actionExecutor.keypress(setupAct.target, setupAct.key);
-          } else if (setupAct.type === "hover") {
-            setupResult = await actionExecutor.hover(setupAct.target, setupAct.relativeTarget);
-          } else {
-            continue;
-          }
-          if (!setupResult.success) {
-            const setupMsg = setupResult.error || "Setup action failed";
-            const outcome = classifyFailure(`Setup failed: ${setupMsg}`, dynamicTest.level);
-            reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, outcome.status, outcome.detail);
-            continue;
-          }
+        const setupResult = await runSetupActions(setup, actionExecutor, strategy, page, dynamicTest.description, ["submenu", "submenuTrigger", "submenuItems"]);
+        if (setupResult.skip) {
+          skipped.push(setupResult.message);
+          reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, "skip", setupResult.message);
+          continue;
+        }
+        if (!setupResult.success) {
+          const outcome = classifyFailure(`Setup failed: ${setupResult.error}`, dynamicTest.level);
+          reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, outcome.status, outcome.detail);
+          continue;
         }
       }
       const failuresBeforeTest = failures.length;
@@ -3828,23 +3892,7 @@ function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation 
   return { activateTab, cleanup, refresh };
 }
 
-// src/utils/test/dsl/src/state-packs/comboboxStatePack.ts
-function hasCapabilities(ctx, requiredCaps) {
-  return requiredCaps.some((cap) => ctx.capabilities.includes(cap));
-}
-function resolveSetup(setup, ctx) {
-  if (Array.isArray(setup) && setup.length && !setup[0].when) {
-    setup = [{ when: ["keyboard"], steps: () => setup }];
-  }
-  for (const strat of setup) {
-    if (hasCapabilities(ctx, strat.when)) {
-      return strat.steps(ctx);
-    }
-  }
-  throw new Error(
-    `No setup strategy matches capabilities: ${ctx.capabilities.join(", ")}`
-  );
-}
+// src/utils/test/dsl/src/state-packs/combobox/comboboxStatePack.ts
 var COMBOBOX_STATES = {
   "popup.open": {
     setup: [
@@ -4120,9 +4168,313 @@ function isInputNotFilled() {
   ];
 }
 
+// src/utils/test/dsl/src/state-packs/menu/menuStatePack.ts
+var MENU_STATES = {
+  "popup.open": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "main", key: "Enter" }
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "main" }
+        ]
+      }
+    ],
+    assertion: isMenuPopupOpen
+  },
+  "popup.closed": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          // component resets after each test so popup is closed
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => []
+      }
+    ],
+    assertion: isMenuPopupClosed
+  },
+  "main.focused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "focus", target: "main" }
+        ]
+      }
+    ],
+    assertion: isMainFocused2
+  },
+  "main.notFocused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          //what to do here?
+        ]
+      }
+    ],
+    assertion: isMainNotFocused2
+  },
+  "activeItem.first": {
+    requires: ["popup.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          // By default, the first item should be active when the menu opens, so no action is needed to set this state
+        ]
+      }
+    ],
+    assertion: isActiveItemFirst
+  },
+  "activeItem.last": {
+    requires: ["popup.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "main", key: "ArrowUp" }
+        ]
+      }
+    ],
+    assertion: isActiveItemLast
+  },
+  "submenu.open": {
+    requires: ["popup.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "submenuTrigger", key: "ArrowRight" }
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "submenuTrigger" }
+        ]
+      }
+    ],
+    assertion: isSubmenuPopupOpen
+  },
+  "submenu.closed": {
+    requires: ["submenu.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "submenuTrigger", key: "ArrowLeft" }
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "submenuTrigger" }
+        ]
+      }
+    ],
+    assertion: isSubmenuPopupClosed
+  },
+  "submenuTrigger.focused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "focus", target: "submenuTrigger" }
+        ]
+      }
+    ],
+    assertion: isSubmenuTriggerFocused
+  },
+  "submenuTrigger.notFocused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          //what to do here?
+        ]
+      }
+    ],
+    assertion: isSubmenuTriggerNotFocused
+  },
+  "submenuActiveItem.first": {
+    requires: ["submenu.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          // By default, the first item should be active when the submenu opens, so no action is needed to set this state
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => []
+      }
+    ],
+    assertion: isSubmenuActiveItemFirst
+  }
+};
+function isMenuPopupOpen() {
+  return [
+    {
+      target: "popup",
+      assertion: "toBeVisible",
+      failureMessage: "Expected popup to be visible"
+    },
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "true",
+      failureMessage: "Expect menu main to have aria-expanded='true'."
+    }
+  ];
+}
+function isMenuPopupClosed() {
+  return [
+    {
+      target: "popup",
+      assertion: "notToBeVisible",
+      failureMessage: "Expected popup to be closed"
+    },
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "false",
+      failureMessage: "Expect menu main to have aria-expanded='false'."
+    }
+  ];
+}
+function isMainFocused2() {
+  return [
+    {
+      target: "main",
+      assertion: "toHaveFocus",
+      failureMessage: "Expected menu main to be focused."
+    }
+  ];
+}
+function isMainNotFocused2() {
+  return [
+    {
+      target: "main",
+      assertion: "notToHaveFocus",
+      failureMessage: "Expected menu main to not have focused."
+    }
+  ];
+}
+function isActiveItemFirst() {
+  return [
+    {
+      target: "relative",
+      assertion: "toHaveFocus",
+      expectedValue: "first",
+      failureMessage: "First menu item should have focus."
+    }
+  ];
+}
+function isActiveItemLast() {
+  return [
+    {
+      target: "relative",
+      assertion: "toHaveFocus",
+      expectedValue: "last",
+      failureMessage: "Last menu item should have focus."
+    }
+  ];
+}
+function isSubmenuPopupOpen() {
+  return [
+    {
+      target: "submenu",
+      assertion: "toBeVisible",
+      failureMessage: "Expected submenu to be visible"
+    },
+    {
+      target: "submenuTrigger",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "true",
+      failureMessage: "Expect submenu trigger to have aria-expanded='true'."
+    }
+  ];
+}
+function isSubmenuPopupClosed() {
+  return [
+    {
+      target: "submenu",
+      assertion: "notToBeVisible",
+      failureMessage: "Expected submenu to be closed"
+    },
+    {
+      target: "submenuTrigger",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "false",
+      failureMessage: "Expect submenu trigger to have aria-expanded='false'."
+    }
+  ];
+}
+function isSubmenuTriggerFocused() {
+  return [
+    {
+      target: "submenuTrigger",
+      assertion: "toHaveFocus",
+      failureMessage: "Expected submenu trigger to be focused."
+    }
+  ];
+}
+function isSubmenuTriggerNotFocused() {
+  return [
+    {
+      target: "submenuTrigger",
+      assertion: "notToHaveFocus",
+      failureMessage: "Expected submenu trigger to not have focused."
+    }
+  ];
+}
+function isSubmenuActiveItemFirst() {
+  return [
+    {
+      target: "submenuItems",
+      assertion: "toHaveFocus",
+      failureMessage: "First interactive item in the submenu should have focus after Right Arrow open the submenu."
+    }
+  ];
+}
+
+// src/utils/test/dsl/src/state-packs/Capability.ts
+function hasCapabilities(ctx, requiredCaps) {
+  return requiredCaps.some((cap) => ctx.capabilities.includes(cap));
+}
+function resolveSetup(setup, ctx) {
+  if (Array.isArray(setup) && setup.length && !setup[0].when) {
+    setup = [{ when: ["keyboard"], steps: () => setup }];
+  }
+  for (const strat of setup) {
+    if (hasCapabilities(ctx, strat.when)) {
+      return strat.steps(ctx);
+    }
+  }
+  throw new Error(
+    `No setup strategy matches capabilities: ${ctx.capabilities.join(", ")}`
+  );
+}
+
 // src/utils/test/dsl/src/contractBuilder.ts
 var STATE_PACKS = {
-  "combobox": COMBOBOX_STATES
+  "combobox": COMBOBOX_STATES,
+  "menu": MENU_STATES
   // Add more mappings as needed
 };
 var FluentContract = class {
@@ -4153,30 +4505,94 @@ var ContractBuilder = class {
     return this;
   }
   relationships(fn) {
+    const statePack = this.statePack;
+    const ctx = { capabilities: ["keyboard"] };
+    const resolveAllSetups = (stateName, visited = /* @__PURE__ */ new Set()) => {
+      if (visited.has(stateName)) return [];
+      visited.add(stateName);
+      const s = statePack[stateName];
+      if (!s) return [];
+      let actions = [];
+      if (Array.isArray(s.requires)) {
+        for (const req of s.requires) {
+          actions = actions.concat(resolveAllSetups(req, visited));
+        }
+      }
+      if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx));
+      return actions;
+    };
     const api = {
-      ariaReference: (from, attribute, to) => ({
-        required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" }),
-        recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended" })
-      }),
-      contains: (parent, child) => ({
-        required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" }),
-        recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended" })
-      })
+      ariaReference: (from, attribute, to) => {
+        return {
+          requires: (state) => {
+            const setupActions = resolveAllSetups(state, /* @__PURE__ */ new Set());
+            return {
+              required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required", setup: setupActions }),
+              optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional", setup: setupActions }),
+              recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended", setup: setupActions })
+            };
+          },
+          required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
+          optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" }),
+          recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended" })
+        };
+      },
+      contains: (parent, child) => {
+        return {
+          requires: (state) => {
+            const setupActions = resolveAllSetups(state, /* @__PURE__ */ new Set());
+            return {
+              required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required", setup: setupActions }),
+              optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional", setup: setupActions }),
+              recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended", setup: setupActions })
+            };
+          },
+          required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
+          optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" }),
+          recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended" })
+        };
+      }
     };
     fn(api);
     return this;
   }
   static(fn) {
     const api = {
-      target: (target) => ({
-        has: (attribute, expectedValue) => ({
-          required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required" }),
-          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" }),
-          recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "recommended" })
-        })
-      })
+      target: (target) => {
+        return {
+          requires: (state) => {
+            const statePack = this.statePack;
+            const ctx = { capabilities: ["keyboard"] };
+            const resolveAllSetups = (stateName, visited = /* @__PURE__ */ new Set()) => {
+              if (visited.has(stateName)) return [];
+              visited.add(stateName);
+              const s = statePack[stateName];
+              if (!s) return [];
+              let actions = [];
+              if (Array.isArray(s.requires)) {
+                for (const req of s.requires) {
+                  actions = actions.concat(resolveAllSetups(req, visited));
+                }
+              }
+              if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx));
+              return actions;
+            };
+            const setupActions = resolveAllSetups(state, /* @__PURE__ */ new Set());
+            return {
+              has: (attribute, expectedValue) => ({
+                required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required", setup: setupActions }),
+                optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional", setup: setupActions }),
+                recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "recommended", setup: setupActions })
+              })
+            };
+          },
+          has: (attribute, expectedValue) => ({
+            required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required" }),
+            optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" }),
+            recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "recommended" })
+          })
+        };
+      }
     };
     fn(api);
     return this;

@@ -27,7 +27,7 @@ class MenuComponentStrategy implements ComponentStrategy {
         if (!closeSelector && this.selectors.focusable) {
             closeSelector = this.selectors.focusable;
         } else if (!closeSelector) {
-            closeSelector = this.selectors.trigger;
+            closeSelector = this.selectors.main;
         }
         
         if (closeSelector) {
@@ -41,8 +41,8 @@ class MenuComponentStrategy implements ComponentStrategy {
         }
         
         // Strategy 2: Click trigger to toggle closed
-        if (!menuClosed && this.selectors.trigger) {
-            const triggerElement = page.locator(this.selectors.trigger).first();
+        if (!menuClosed && this.selectors.main) {
+            const triggerElement = page.locator(this.selectors.main).first();
             await triggerElement.click({ timeout: this.actionTimeoutMs });
             
             menuClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
@@ -75,8 +75,8 @@ class MenuComponentStrategy implements ComponentStrategy {
         }
         
         // Focus trigger after close (menu-specific behavior)
-        if (this.selectors.trigger) {
-            const triggerElement = page.locator(this.selectors.trigger).first();
+        if (this.selectors.main) {
+            const triggerElement = page.locator(this.selectors.main).first();
             await triggerElement.focus();
         }
     }

@@ -217,11 +217,15 @@ type RelationshipInvariant = {
     attribute: string;
     to: string;
     level?: Level;
+    requires?: string;
+    setup?: DynamicAction[];
 } | {
     type: "contains";
     parent: string;
     child: string;
     level?: Level;
+    requires?: string;
+    setup?: DynamicAction[];
 };
 type StaticAssertion = {
     target: string;
@@ -229,6 +233,8 @@ type StaticAssertion = {
     expectedValue?: string;
     failureMessage: string;
     level: Level;
+    requires?: string;
+    setup?: DynamicAction[];
 };
 type DynamicAssertion = {
     target: string;
@@ -286,11 +292,21 @@ declare class ContractBuilder {
     selectors(selectors: SelectorsMap): this;
     relationships(fn: (r: {
         ariaReference: (from: string, attribute: string, to: string) => {
+            requires: (state: string) => {
+                required: () => void;
+                optional: () => void;
+                recommended: () => void;
+            };
             required: () => void;
             optional: () => void;
             recommended: () => void;
         };
         contains: (parent: string, child: string) => {
+            requires: (state: string) => {
+                required: () => void;
+                optional: () => void;
+                recommended: () => void;
+            };
             required: () => void;
             optional: () => void;
             recommended: () => void;
@@ -298,6 +314,13 @@ declare class ContractBuilder {
     }) => void): this;
     static(fn: (s: {
         target: (target: string) => {
+            requires: (state: string) => {
+                has: (attribute: string, expectedValue: string) => {
+                    required: () => void;
+                    optional: () => void;
+                    recommended: () => void;
+                };
+            };
             has: (attribute: string, expectedValue: string) => {
                 required: () => void;
                 optional: () => void;

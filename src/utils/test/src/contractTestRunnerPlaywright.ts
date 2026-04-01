@@ -19,21 +19,12 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
   const componentConfig = config?.test?.components?.find(c => c.name === componentName);
   const isCustomContract = !!componentConfig?.contractPath;
   const reporter = new ContractReporter(true, isCustomContract);
-  const defaultTimeouts = {
-    actionTimeoutMs: 400,
-    assertionTimeoutMs: 400,
-    navigationTimeoutMs: 30000,
-    componentReadyTimeoutMs: 5000,
-  };
+  const defaultTimeouts = { actionTimeoutMs: 400, assertionTimeoutMs: 400, navigationTimeoutMs: 30000, componentReadyTimeoutMs: 5000 };
   const globalDisableTimeouts = config?.test?.disableTimeouts === true;
   const componentDisableTimeouts = componentConfig?.disableTimeouts === true;
   const disableTimeouts = componentDisableTimeouts || globalDisableTimeouts;
 
-  const resolveTimeout = (
-    componentValue: number | undefined,
-    globalValue: number | undefined,
-    fallback: number
-  ): number => {
+  const resolveTimeout = ( componentValue: number | undefined, globalValue: number | undefined, fallback: number ): number => {
     if (disableTimeouts) return 0;
     const value = componentValue ?? globalValue;
     if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
@@ -42,11 +33,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
     return value;
   };
 
-  const actionTimeoutMs = resolveTimeout(
-    componentConfig?.actionTimeoutMs,
-    config?.test?.actionTimeoutMs,
-    defaultTimeouts.actionTimeoutMs
-  );
+  const actionTimeoutMs = resolveTimeout( componentConfig?.actionTimeoutMs, config?.test?.actionTimeoutMs, defaultTimeouts.actionTimeoutMs );
   const assertionTimeoutMs = resolveTimeout(
     componentConfig?.assertionTimeoutMs,
     config?.test?.assertionTimeoutMs,
@@ -162,12 +149,11 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       );
     }
 
-    // Component exists - now we can start the test reporter
     reporter.start(componentName, totalTests, apgUrl);
 
     // Menu-specific: Wait for trigger to be visible
-    if (componentName === 'menu' && componentContract.selectors.trigger) {
-      await page.locator(componentContract.selectors.trigger).first().waitFor({ state: 'attached', timeout: componentReadyTimeoutMs })
+    if (componentName === 'menu' && componentContract.selectors.main) {
+      await page.locator(componentContract.selectors.main).first().waitFor({ state: 'visible', timeout: componentReadyTimeoutMs })
       .catch(() => {
         // Best-effort readiness check; action/assertion phases provide authoritative failures.
       });
@@ -191,10 +177,38 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
     // Run relationship invariants first
     for (const rel of componentContract.relationships || []) {
+      // Always reset state before each relationship test if supported
+      if (strategy && typeof strategy.resetState === 'function') {
+        try {
+          await strategy.resetState(page);
+        } catch (err) {
+          warnings.push(`Warning: resetState failed before relationship test: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
       const relationshipLevel = normalizeLevel(rel.level);
+      // Run setup for state-dependent relationships
+      if (Array.isArray(rel.setup) && rel.setup.length > 0) {
+        const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+        const relDescription = rel.type === "aria-reference"
+          ? `${rel.from}.${rel.attribute} references ${rel.to}`
+          : `${rel.parent} contains ${rel.child}`;
+        const setupResult = await runSetupActions(rel.setup, actionExecutor, strategy, page, relDescription, ["submenu", "submenuTrigger", "submenuItems"]);
+        if (setupResult.skip) {
+          skipped.push(setupResult.message);
+          reporter.reportStaticTest(relDescription, 'skip', setupResult.message, relationshipLevel);
+          continue;
+        }
+        if (!setupResult.success) {
+          const failure = `Relationship setup failed: ${setupResult.error}`;
+          const outcome = classifyFailure(failure, rel.level);
+          if (outcome.status === 'fail') staticFailed += 1;
+          if (outcome.status === 'warn') staticWarnings += 1;
+          reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
+      }
       if (componentName === 'menu' && !hasSubmenuCapability) {
         const involvesSubmenu = isSubmenuRelation(rel);
-
         if (involvesSubmenu) {
           const relDescription =
             rel.type === "aria-reference"
@@ -206,12 +220,10 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           continue;
         }
       }
-
       if (rel.type === "aria-reference") {
         const relDescription = `${rel.from}.${rel.attribute} references ${rel.to}`;
         const fromSelector = componentContract.selectors[rel.from as keyof typeof componentContract.selectors];
         const toSelector = componentContract.selectors[rel.to as keyof typeof componentContract.selectors];
-
         if (!fromSelector || !toSelector) {
           const outcome = classifyFailure(
             `Relationship selector missing: from="${rel.from}" or to="${rel.to}" not found in selectors.`
@@ -221,12 +233,10 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-
         const fromTarget = page.locator(fromSelector).first();
         const toTarget = page.locator(toSelector).first();
         const fromExists = (await fromTarget.count()) > 0;
         const toExists = (await toTarget.count()) > 0;
-
         if (!fromExists || !toExists) {
           if (componentName === 'menu' && isSubmenuRelation(rel)) {
             const skipMessage =
@@ -235,7 +245,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
             reporter.reportStaticTest(relDescription, 'skip', skipMessage, relationshipLevel);
             continue;
           }
-
           const outcome = classifyFailure(
             `Relationship target not found: ${!fromExists ? rel.from : rel.to}.`
           , rel.level);
@@ -244,10 +253,8 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-
         const attrValue = await fromTarget.getAttribute(rel.attribute);
         const toId = await toTarget.getAttribute("id");
-
         if (!toId) {
           const outcome = classifyFailure(
             `Relationship target "${rel.to}" must have an id for ${rel.attribute} validation.`
@@ -257,10 +264,8 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-
         const references = (attrValue || "").split(/\s+/).filter(Boolean);
         const matches = references.includes(toId);
-
         if (!matches) {
           const outcome = classifyFailure(
             `Expected ${rel.from} ${rel.attribute} to reference id "${toId}", found "${attrValue || ""}".`
@@ -270,18 +275,15 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-
         passes.push(`Relationship valid: ${rel.from}.${rel.attribute} -> ${rel.to} (id=${toId}).`);
         staticPassed += 1;
         reporter.reportStaticTest(relDescription, "pass", undefined, relationshipLevel);
         continue;
       }
-
       if (rel.type === "contains") {
         const relDescription = `${rel.parent} contains ${rel.child}`;
         const parentSelector = componentContract.selectors[rel.parent as keyof typeof componentContract.selectors];
         const childSelector = componentContract.selectors[rel.child as keyof typeof componentContract.selectors];
-
         if (!parentSelector || !childSelector) {
           const outcome = classifyFailure(
             `Relationship selector missing: parent="${rel.parent}" or child="${rel.child}" not found in selectors.`
@@ -291,7 +293,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-
         const parent = page.locator(parentSelector).first();
         const parentExists = (await parent.count()) > 0;
         if (!parentExists) {
@@ -302,14 +303,12 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
             reporter.reportStaticTest(relDescription, 'skip', skipMessage, relationshipLevel);
             continue;
           }
-
           const outcome = classifyFailure(`Relationship parent target not found: ${rel.parent}.`, rel.level);
           if (outcome.status === "fail") staticFailed += 1;
           if (outcome.status === "warn") staticWarnings += 1;
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-
         const descendants = parent.locator(childSelector);
         const descendantCount = await descendants.count();
         if (descendantCount < 1) {
@@ -320,7 +319,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
             reporter.reportStaticTest(relDescription, 'skip', skipMessage, relationshipLevel);
             continue;
           }
-
           const outcome = classifyFailure(
             `Expected ${rel.parent} to contain descendant matching selector for ${rel.child}.`
           , rel.level);
@@ -329,14 +327,12 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-
         passes.push(`Relationship valid: ${rel.parent} contains ${rel.child}.`);
         staticPassed += 1;
         reporter.reportStaticTest(relDescription, "pass", undefined, relationshipLevel);
       }
     }
 
-    // --- Types for expectedValue reference and context ---
     type ExpectedValueRef = {
       ref: string;
       property?: string;
@@ -346,7 +342,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
     type SelectorMap = Record<string, string>;
     type RelativeContext = { relativeBaseSelector?: string };
 
-    // --- Helper to resolve expectedValue reference objects ---
     async function resolveExpectedValue(
       expectedValue: string | ExpectedValueRef,
       selectors: SelectorMap,
@@ -376,7 +371,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       }
     }
 
-    // --- Helper to extract property/attribute/textContent from a locator ---
     async function getPropertyFromLocator(locator: import('playwright').Locator, property?: string): Promise<string | undefined> {
       if (!locator) return undefined;
       if (!property || property === 'id') {
@@ -403,7 +397,81 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
     // Run static tests using AssertionRunner
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
+    // Reusable setup runner for both static and dynamic tests
+    // Types for setup actions and executor
+    type SetupAction = {
+      type: "focus" | "type" | "click" | "keypress" | "hover";
+      target: string;
+      key?: string;
+      value?: string;
+      relativeTarget?: string;
+    };
+    type SetupResult = { success: boolean; error?: string; skip?: boolean; message?: string };
+    type ActionExecutorType = {
+      focus: (target: string, relativeTarget?: string) => Promise<SetupResult>;
+      type: (target: string, value: string) => Promise<SetupResult>;
+      click: (target: string, relativeTarget?: string) => Promise<SetupResult>;
+      keypress: (target: string, key: string) => Promise<SetupResult>;
+      hover: (target: string, relativeTarget?: string) => Promise<SetupResult>;
+    };
+    type StrategyType = { resetState?: (page: Page) => Promise<void> };
+
+    async function runSetupActions(
+      setup: SetupAction[],
+      actionExecutor: ActionExecutorType,
+      strategy: StrategyType,
+      page: Page,
+      description: string,
+      skipKeywords: string[] = []
+    ): Promise<SetupResult> {
+      if (!Array.isArray(setup) || setup.length === 0) return { success: true };
+      if (strategy && typeof strategy.resetState === 'function') {
+        await strategy.resetState(page);
+      }
+      for (const setupAct of setup) {
+        let setupResult: SetupResult = { success: true };
+        try {
+          if (setupAct.type === "focus") {
+            if (setupAct.target === "relative" && setupAct.relativeTarget) {
+              setupResult = await actionExecutor.focus("relative", setupAct.relativeTarget);
+            } else {
+              setupResult = await actionExecutor.focus(setupAct.target);
+            }
+          } else if (setupAct.type === "type" && setupAct.value) {
+            setupResult = await actionExecutor.type(setupAct.target, setupAct.value);
+          } else if (setupAct.type === "click") {
+            setupResult = await actionExecutor.click(setupAct.target, setupAct.relativeTarget);
+          } else if (setupAct.type === "keypress" && setupAct.key) {
+            setupResult = await actionExecutor.keypress(setupAct.target, setupAct.key);
+          } else if (setupAct.type === "hover") {
+            setupResult = await actionExecutor.hover(setupAct.target, setupAct.relativeTarget);
+          } else {
+            continue; // Unknown setup action type
+          }
+        } catch (err) {
+          setupResult = { success: false, error: err instanceof Error ? err.message : String(err) };
+        }
+        if (!setupResult.success) {
+          const setupMsg = setupResult.error || "Setup action failed";
+          const isSkip = skipKeywords.some(kw => description.includes(kw) || setupMsg.includes(kw));
+          if (isSkip) {
+            return { success: false, skip: true, message: `Skipping test - capability not present: ${setupMsg}` };
+          }
+          return { success: false, error: setupMsg };
+        }
+      }
+      return { success: true };
+    }
+
     for (const test of componentContract.static[0]?.assertions || []) {
+      // Always reset state before each static test if supported
+      if (strategy && typeof strategy.resetState === 'function') {
+        try {
+          await strategy.resetState(page);
+        } catch (err) {
+          warnings.push(`Warning: resetState failed before static test: ${err instanceof Error ? err.message : String(err)}`);
+        }
+      }
       if (test.target === "relative") continue;
       const staticDescription = `${test.target}${test.attribute ? ` (${test.attribute})` : ""}`;
       const staticLevel = normalizeLevel(test.level);
@@ -412,6 +480,24 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         skipped.push(skipMessage);
         reporter.reportStaticTest(staticDescription, 'skip', skipMessage, staticLevel);
         continue;
+      }
+      // If the static assertion has a .setup array, run those actions before the assertion
+      if (Array.isArray(test.setup) && test.setup.length > 0) {
+        const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+        const setupResult = await runSetupActions(test.setup, actionExecutor, strategy, page, staticDescription, ["submenu", "submenuTrigger", "submenuItems"]);
+        if (setupResult.skip) {
+          skipped.push(setupResult.message);
+          reporter.reportStaticTest(staticDescription, 'skip', setupResult.message, staticLevel);
+          continue;
+        }
+        if (!setupResult.success) {
+          const failure = `Static setup failed: ${setupResult.error}`;
+          const outcome = classifyFailure(failure, test.level);
+          if (outcome.status === 'fail') staticFailed += 1;
+          if (outcome.status === 'warn') staticWarnings += 1;
+          reporter.reportStaticTest(staticDescription, outcome.status, outcome.detail, outcome.level);
+          continue;
+        }
       }
       const targetSelector = componentContract.selectors[test.target as keyof typeof componentContract.selectors];
       if (!targetSelector) {
@@ -444,7 +530,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         }
         return false;
       };
-      // --- Support expectedValue as reference object ---
+      
       let expectedValue: string | undefined = test.expectedValue as string | undefined;
       if (test.expectedValue && typeof test.expectedValue === 'object' && 'ref' in test.expectedValue) {
         const context: RelativeContext = {};
@@ -462,7 +548,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         console.log('Expected value in static check', expectedValue)
       }
       if (!test.expectedValue) {
-        // ...existing code...
         const attributes = test.attribute.split(" | ");
         let hasAny = false;
         let allRedundant = true;
@@ -531,7 +616,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         break; // Exit dynamic test loop
       }
 
-      // Reset component state before each test using strategy pattern
       try {
         await strategy.resetState(page);
       } catch (error) {
@@ -542,37 +626,21 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
       const { setup = [], action, assertions } = dynamicTest;
       const dynamicLevel = normalizeLevel(dynamicTest.level);
-      // Create action executor for this test (before setup/actions)
+
       const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
 
       // Run setup actions if present
       if (Array.isArray(setup) && setup.length > 0) {
-        for (const setupAct of setup) {
-          let setupResult;
-          if (setupAct.type === "focus") {
-            if (setupAct.target === "relative" && setupAct.relativeTarget) {
-              setupResult = await actionExecutor.focus("relative", setupAct.relativeTarget);
-            } else {
-              setupResult = await actionExecutor.focus(setupAct.target);
-            }
-          } else if (setupAct.type === "type" && setupAct.value) {
-            setupResult = await actionExecutor.type(setupAct.target, setupAct.value);
-          } else if (setupAct.type === "click") {
-            setupResult = await actionExecutor.click(setupAct.target, setupAct.relativeTarget);
-          } else if (setupAct.type === "keypress" && setupAct.key) {
-            setupResult = await actionExecutor.keypress(setupAct.target, setupAct.key);
-          } else if (setupAct.type === "hover") {
-            setupResult = await actionExecutor.hover(setupAct.target, setupAct.relativeTarget);
-          } else {
-            continue; // Unknown setup action type
-          }
-          if (!setupResult.success) {
-            const setupMsg = setupResult.error || "Setup action failed";
-            const outcome = classifyFailure(`Setup failed: ${setupMsg}`, dynamicTest.level);
-            reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, outcome.status, outcome.detail);
-            // Abort this test if setup fails
-            continue;
-          }
+        const setupResult = await runSetupActions(setup, actionExecutor, strategy, page, dynamicTest.description, ["submenu", "submenuTrigger", "submenuItems"]);
+        if (setupResult.skip) {
+          skipped.push(setupResult.message);
+          reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, 'skip', setupResult.message);
+          continue;
+        }
+        if (!setupResult.success) {
+          const outcome = classifyFailure(`Setup failed: ${setupResult.error}`, dynamicTest.level);
+          reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, outcome.status, outcome.detail);
+          continue;
         }
       }
       
@@ -751,7 +819,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       }
     }
   } finally {
-    // Close only the page, not the shared browser
     if (page) await page.close();
   }
 

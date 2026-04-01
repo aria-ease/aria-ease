@@ -1511,23 +1511,7 @@ function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation 
   return { activateTab, cleanup, refresh };
 }
 
-// src/utils/test/dsl/src/state-packs/comboboxStatePack.ts
-function hasCapabilities(ctx, requiredCaps) {
-  return requiredCaps.some((cap) => ctx.capabilities.includes(cap));
-}
-function resolveSetup(setup, ctx) {
-  if (Array.isArray(setup) && setup.length && !setup[0].when) {
-    setup = [{ when: ["keyboard"], steps: () => setup }];
-  }
-  for (const strat of setup) {
-    if (hasCapabilities(ctx, strat.when)) {
-      return strat.steps(ctx);
-    }
-  }
-  throw new Error(
-    `No setup strategy matches capabilities: ${ctx.capabilities.join(", ")}`
-  );
-}
+// src/utils/test/dsl/src/state-packs/combobox/comboboxStatePack.ts
 var COMBOBOX_STATES = {
   "popup.open": {
     setup: [
@@ -1803,9 +1787,313 @@ function isInputNotFilled() {
   ];
 }
 
+// src/utils/test/dsl/src/state-packs/menu/menuStatePack.ts
+var MENU_STATES = {
+  "popup.open": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "main", key: "Enter" }
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "main" }
+        ]
+      }
+    ],
+    assertion: isMenuPopupOpen
+  },
+  "popup.closed": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          // component resets after each test so popup is closed
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => []
+      }
+    ],
+    assertion: isMenuPopupClosed
+  },
+  "main.focused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "focus", target: "main" }
+        ]
+      }
+    ],
+    assertion: isMainFocused2
+  },
+  "main.notFocused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          //what to do here?
+        ]
+      }
+    ],
+    assertion: isMainNotFocused2
+  },
+  "activeItem.first": {
+    requires: ["popup.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          // By default, the first item should be active when the menu opens, so no action is needed to set this state
+        ]
+      }
+    ],
+    assertion: isActiveItemFirst
+  },
+  "activeItem.last": {
+    requires: ["popup.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "main", key: "ArrowUp" }
+        ]
+      }
+    ],
+    assertion: isActiveItemLast
+  },
+  "submenu.open": {
+    requires: ["popup.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "submenuTrigger", key: "ArrowRight" }
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "submenuTrigger" }
+        ]
+      }
+    ],
+    assertion: isSubmenuPopupOpen
+  },
+  "submenu.closed": {
+    requires: ["submenu.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "submenuTrigger", key: "ArrowLeft" }
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "submenuTrigger" }
+        ]
+      }
+    ],
+    assertion: isSubmenuPopupClosed
+  },
+  "submenuTrigger.focused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "focus", target: "submenuTrigger" }
+        ]
+      }
+    ],
+    assertion: isSubmenuTriggerFocused
+  },
+  "submenuTrigger.notFocused": {
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          //what to do here?
+        ]
+      }
+    ],
+    assertion: isSubmenuTriggerNotFocused
+  },
+  "submenuActiveItem.first": {
+    requires: ["submenu.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          // By default, the first item should be active when the submenu opens, so no action is needed to set this state
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => []
+      }
+    ],
+    assertion: isSubmenuActiveItemFirst
+  }
+};
+function isMenuPopupOpen() {
+  return [
+    {
+      target: "popup",
+      assertion: "toBeVisible",
+      failureMessage: "Expected popup to be visible"
+    },
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "true",
+      failureMessage: "Expect menu main to have aria-expanded='true'."
+    }
+  ];
+}
+function isMenuPopupClosed() {
+  return [
+    {
+      target: "popup",
+      assertion: "notToBeVisible",
+      failureMessage: "Expected popup to be closed"
+    },
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "false",
+      failureMessage: "Expect menu main to have aria-expanded='false'."
+    }
+  ];
+}
+function isMainFocused2() {
+  return [
+    {
+      target: "main",
+      assertion: "toHaveFocus",
+      failureMessage: "Expected menu main to be focused."
+    }
+  ];
+}
+function isMainNotFocused2() {
+  return [
+    {
+      target: "main",
+      assertion: "notToHaveFocus",
+      failureMessage: "Expected menu main to not have focused."
+    }
+  ];
+}
+function isActiveItemFirst() {
+  return [
+    {
+      target: "relative",
+      assertion: "toHaveFocus",
+      expectedValue: "first",
+      failureMessage: "First menu item should have focus."
+    }
+  ];
+}
+function isActiveItemLast() {
+  return [
+    {
+      target: "relative",
+      assertion: "toHaveFocus",
+      expectedValue: "last",
+      failureMessage: "Last menu item should have focus."
+    }
+  ];
+}
+function isSubmenuPopupOpen() {
+  return [
+    {
+      target: "submenu",
+      assertion: "toBeVisible",
+      failureMessage: "Expected submenu to be visible"
+    },
+    {
+      target: "submenuTrigger",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "true",
+      failureMessage: "Expect submenu trigger to have aria-expanded='true'."
+    }
+  ];
+}
+function isSubmenuPopupClosed() {
+  return [
+    {
+      target: "submenu",
+      assertion: "notToBeVisible",
+      failureMessage: "Expected submenu to be closed"
+    },
+    {
+      target: "submenuTrigger",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "false",
+      failureMessage: "Expect submenu trigger to have aria-expanded='false'."
+    }
+  ];
+}
+function isSubmenuTriggerFocused() {
+  return [
+    {
+      target: "submenuTrigger",
+      assertion: "toHaveFocus",
+      failureMessage: "Expected submenu trigger to be focused."
+    }
+  ];
+}
+function isSubmenuTriggerNotFocused() {
+  return [
+    {
+      target: "submenuTrigger",
+      assertion: "notToHaveFocus",
+      failureMessage: "Expected submenu trigger to not have focused."
+    }
+  ];
+}
+function isSubmenuActiveItemFirst() {
+  return [
+    {
+      target: "submenuItems",
+      assertion: "toHaveFocus",
+      failureMessage: "First interactive item in the submenu should have focus after Right Arrow open the submenu."
+    }
+  ];
+}
+
+// src/utils/test/dsl/src/state-packs/Capability.ts
+function hasCapabilities(ctx, requiredCaps) {
+  return requiredCaps.some((cap) => ctx.capabilities.includes(cap));
+}
+function resolveSetup(setup, ctx) {
+  if (Array.isArray(setup) && setup.length && !setup[0].when) {
+    setup = [{ when: ["keyboard"], steps: () => setup }];
+  }
+  for (const strat of setup) {
+    if (hasCapabilities(ctx, strat.when)) {
+      return strat.steps(ctx);
+    }
+  }
+  throw new Error(
+    `No setup strategy matches capabilities: ${ctx.capabilities.join(", ")}`
+  );
+}
+
 // src/utils/test/dsl/src/contractBuilder.ts
 var STATE_PACKS = {
-  "combobox": COMBOBOX_STATES
+  "combobox": COMBOBOX_STATES,
+  "menu": MENU_STATES
   // Add more mappings as needed
 };
 var FluentContract = class {
@@ -1836,30 +2124,94 @@ var ContractBuilder = class {
     return this;
   }
   relationships(fn) {
+    const statePack = this.statePack;
+    const ctx = { capabilities: ["keyboard"] };
+    const resolveAllSetups = (stateName, visited = /* @__PURE__ */ new Set()) => {
+      if (visited.has(stateName)) return [];
+      visited.add(stateName);
+      const s = statePack[stateName];
+      if (!s) return [];
+      let actions = [];
+      if (Array.isArray(s.requires)) {
+        for (const req of s.requires) {
+          actions = actions.concat(resolveAllSetups(req, visited));
+        }
+      }
+      if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx));
+      return actions;
+    };
     const api = {
-      ariaReference: (from, attribute, to) => ({
-        required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" }),
-        recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended" })
-      }),
-      contains: (parent, child) => ({
-        required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" }),
-        recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended" })
-      })
+      ariaReference: (from, attribute, to) => {
+        return {
+          requires: (state) => {
+            const setupActions = resolveAllSetups(state, /* @__PURE__ */ new Set());
+            return {
+              required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required", setup: setupActions }),
+              optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional", setup: setupActions }),
+              recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended", setup: setupActions })
+            };
+          },
+          required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
+          optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" }),
+          recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended" })
+        };
+      },
+      contains: (parent, child) => {
+        return {
+          requires: (state) => {
+            const setupActions = resolveAllSetups(state, /* @__PURE__ */ new Set());
+            return {
+              required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required", setup: setupActions }),
+              optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional", setup: setupActions }),
+              recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended", setup: setupActions })
+            };
+          },
+          required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
+          optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" }),
+          recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended" })
+        };
+      }
     };
     fn(api);
     return this;
   }
   static(fn) {
     const api = {
-      target: (target) => ({
-        has: (attribute, expectedValue) => ({
-          required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required" }),
-          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" }),
-          recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "recommended" })
-        })
-      })
+      target: (target) => {
+        return {
+          requires: (state) => {
+            const statePack = this.statePack;
+            const ctx = { capabilities: ["keyboard"] };
+            const resolveAllSetups = (stateName, visited = /* @__PURE__ */ new Set()) => {
+              if (visited.has(stateName)) return [];
+              visited.add(stateName);
+              const s = statePack[stateName];
+              if (!s) return [];
+              let actions = [];
+              if (Array.isArray(s.requires)) {
+                for (const req of s.requires) {
+                  actions = actions.concat(resolveAllSetups(req, visited));
+                }
+              }
+              if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx));
+              return actions;
+            };
+            const setupActions = resolveAllSetups(state, /* @__PURE__ */ new Set());
+            return {
+              has: (attribute, expectedValue) => ({
+                required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required", setup: setupActions }),
+                optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional", setup: setupActions }),
+                recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "recommended", setup: setupActions })
+              })
+            };
+          },
+          has: (attribute, expectedValue) => ({
+            required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "required" }),
+            optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "optional" }),
+            recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: "", level: "recommended" })
+          })
+        };
+      }
     };
     fn(api);
     return this;
@@ -2227,7 +2579,7 @@ Error: ${error instanceof Error ? error.message : String(error)}`
       const devServerUrl = await checkDevServer(url);
       if (devServerUrl) {
         console.log(`\u{1F3AD} Running Playwright tests on ${devServerUrl}`);
-        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-UJKXRXBS.js");
+        const { runContractTestsPlaywright } = await import("./contractTestRunnerPlaywright-3NODOYIB.js");
         contract = await runContractTestsPlaywright(componentName, devServerUrl, strictness, config, configBaseDir);
       } else {
         throw new Error(

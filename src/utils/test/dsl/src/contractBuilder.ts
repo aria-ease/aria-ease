@@ -1,6 +1,8 @@
 
 
-import { COMBOBOX_STATES, resolveSetup, CapabilityContext } from "./state-packs/comboboxStatePack";
+import { COMBOBOX_STATES } from "./state-packs/combobox/comboboxStatePack";
+import { MENU_STATES } from "./state-packs/menu/menuStatePack";
+import { resolveSetup, CapabilityContext } from "./state-packs/Capability";
 
 type StatePack = Record<string, {
   setup?: DynamicAction[];
@@ -10,6 +12,7 @@ type StatePack = Record<string, {
 
 const STATE_PACKS: Record<string, unknown> = {
   "combobox": COMBOBOX_STATES,
+  "menu":  MENU_STATES
   // Add more mappings as needed
 };
 
@@ -35,12 +38,16 @@ type RelationshipInvariant =
       attribute: string;
       to: string;
       level?: Level;
+      requires?: string;
+      setup?: DynamicAction[];
     }
   | {
       type: "contains";
       parent: string;
       child: string;
       level?: Level;
+      requires?: string;
+      setup?: DynamicAction[];
     };
 
 type StaticAssertion = {
@@ -49,6 +56,8 @@ type StaticAssertion = {
   expectedValue?: string;
   failureMessage: string;
   level: Level;
+  requires?: string; // State-dependent static assertion
+  setup?: DynamicAction[]; // Setup actions to reach required state
 };
 
 type DynamicAssertion = {
@@ -127,27 +136,73 @@ class ContractBuilder {
 
   relationships(fn: (r: {
     ariaReference: (from: string, attribute: string, to: string) => {
+      requires: (state: string) => {
+        required: () => void;
+        optional: () => void;
+        recommended: () => void;
+      };
       required: () => void;
       optional: () => void;
       recommended: () => void;
     };
     contains: (parent: string, child: string) => {
+      requires: (state: string) => {
+        required: () => void;
+        optional: () => void;
+        recommended: () => void;
+      };
       required: () => void;
       optional: () => void;
       recommended: () => void;
     };
   }) => void) {
+    const statePack = this.statePack;
+    const ctx: CapabilityContext = { capabilities: ["keyboard"] };
+    const resolveAllSetups = (stateName: string, visited = new Set<string>()): DynamicAction[] => {
+      if (visited.has(stateName)) return [];
+      visited.add(stateName);
+      const s = statePack[stateName];
+      if (!s) return [];
+      let actions: DynamicAction[] = [];
+      if (Array.isArray(s.requires)) {
+        for (const req of s.requires) {
+          actions = actions.concat(resolveAllSetups(req, visited));
+        }
+      }
+      if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx) as DynamicAction[]);
+      return actions;
+    };
     const api = {
-      ariaReference: (from: string, attribute: string, to: string) => ({
-        required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" }),
-        recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended" })
-      }),
-      contains: (parent: string, child: string) => ({
-        required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
-        optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" }),
-        recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended" })
-      })
+      ariaReference: (from: string, attribute: string, to: string) => {
+        return {
+          requires: (state: string) => {
+            const setupActions = resolveAllSetups(state, new Set());
+            return {
+              required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required", setup: setupActions }),
+              optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional", setup: setupActions }),
+              recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended", setup: setupActions }),
+            };
+          },
+          required: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "required" }),
+          optional: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "optional" }),
+          recommended: () => this.relationshipInvariants.push({ type: "aria-reference", from, attribute, to, level: "recommended" })
+        };
+      },
+      contains: (parent: string, child: string) => {
+        return {
+          requires: (state: string) => {
+            const setupActions = resolveAllSetups(state, new Set());
+            return {
+              required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required", setup: setupActions }),
+              optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional", setup: setupActions }),
+              recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended", setup: setupActions }),
+            };
+          },
+          required: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "required" }),
+          optional: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "optional" }),
+          recommended: () => this.relationshipInvariants.push({ type: "contains", parent, child, level: "recommended" })
+        };
+      }
     };
     fn(api);
     return this;
@@ -155,6 +210,13 @@ class ContractBuilder {
 
   static(fn: (s: {
     target: (target: string) => {
+      requires: (state: string) => {
+        has: (attribute: string, expectedValue: string) => {
+          required: () => void;
+          optional: () => void;
+          recommended: () => void;
+        };
+      };
       has: (attribute: string, expectedValue: string) => {
         required: () => void;
         optional: () => void;
@@ -163,13 +225,41 @@ class ContractBuilder {
     };
   }) => void) {
     const api = {
-      target: (target: string) => ({
-        has: (attribute: string, expectedValue: string) => ({
-          required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "required" }),
-          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "optional" }),
-          recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "recommended" }),
-        })
-      })
+      target: (target: string) => {
+        return {
+          requires: (state: string) => {
+            const statePack = this.statePack;
+            const ctx: CapabilityContext = { capabilities: ["keyboard"] };
+            const resolveAllSetups = (stateName: string, visited = new Set<string>()): DynamicAction[] => {
+              if (visited.has(stateName)) return [];
+              visited.add(stateName);
+              const s = statePack[stateName];
+              if (!s) return [];
+              let actions: DynamicAction[] = [];
+              if (Array.isArray(s.requires)) {
+                for (const req of s.requires) {
+                  actions = actions.concat(resolveAllSetups(req, visited));
+                }
+              }
+              if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx) as DynamicAction[]);
+              return actions;
+            };
+            const setupActions = resolveAllSetups(state, new Set());
+            return {
+              has: (attribute: string, expectedValue: string) => ({
+                required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "required", setup: setupActions }),
+                optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "optional", setup: setupActions }),
+                recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "recommended", setup: setupActions }),
+              })
+            };
+          },
+          has: (attribute: string, expectedValue: string) => ({
+            required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "required" }),
+            optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "optional" }),
+            recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "recommended" }),
+          })
+        };
+      }
     };
     fn(api);
     return this;
