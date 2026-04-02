@@ -113,12 +113,26 @@ interface ComponentContract {
             attribute: string;
             to: string;
             level?: ContractLevel;
+            setup: Array<{
+                type: string;
+                target: string;
+                key?: string;
+                value?: string;
+                relativeTarget?: string;
+            }>;
         }
         | {
             type: 'contains';
             parent: string;
             child: string;
             level?: ContractLevel;
+            setup: Array<{
+                type: string;
+                target: string;
+                key?: string;
+                value?: string;
+                relativeTarget?: string;
+            }>;
         }
     >;
     states?: Array<{
@@ -132,10 +146,13 @@ interface ComponentContract {
             expectedValue: string | { ref: string, attribute?: string, property: string, relativeTarget?: string };
             failureMessage: string;
             level?: ContractLevel;
-            interpretation?: InterpretationMode;
-            confidence?: ContractConfidence;
-            rationale?: string;
-            note?: string;
+            setup: Array<{
+                type: string;
+                target: string;
+                key?: string;
+                value?: string;
+                relativeTarget?: string;
+            }>;
         }>;
     }>;
     dynamic: Array<{

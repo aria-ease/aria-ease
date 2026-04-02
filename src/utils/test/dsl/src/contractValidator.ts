@@ -261,27 +261,6 @@ export function validateContractSchema(contract: unknown): ValidationResult {
     }
   }
 
-  // Validate states if present
-  if (c.states !== undefined) {
-    if (!Array.isArray(c.states)) {
-      errors.push({ path: '$.states', message: 'states must be an array' });
-    } else {
-      c.states.forEach((state, idx) => {
-        if (typeof state !== 'object' || state === null) {
-          errors.push({ path: `$.states[${idx}]`, message: 'state must be an object' });
-          return;
-        }
-
-        const s = state as Record<string, unknown>;
-        if (typeof s.name !== 'string') {
-          errors.push({ path: `$.states[${idx}].name`, message: 'name is required and must be a string' });
-        }
-        if (!Array.isArray(s.requires)) {
-          errors.push({ path: `$.states[${idx}].requires`, message: 'requires is required and must be an array' });
-        }
-      });
-    }
-  }
 
   return {
     valid: errors.length === 0,
@@ -388,18 +367,8 @@ export function validateTargetReferences(contract: unknown, selectorKeys: Set<st
 
   // Check dynamic actions and assertions
   const dynamicItems = c.dynamic as Array<Record<string, unknown>> | undefined;
-  const states = c.states as Array<Record<string, unknown>> | undefined;
-  const stateNames = new Set((states || []).map((s) => String(s.name)));
   if (Array.isArray(dynamicItems)) {
     dynamicItems.forEach((item, itemIdx) => {
-      const given = item.given as string | undefined;
-      if (given && !stateNames.has(given)) {
-        errors.push({
-          path: `$.dynamic[${itemIdx}].given`,
-          message: `State '${given}' not found in states`
-        });
-      }
-
       // Check actions
       const actions = item.action as Array<Record<string, unknown>> | undefined;
       if (Array.isArray(actions)) {

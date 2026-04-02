@@ -1690,11 +1690,21 @@ This usually means:
       }
       const relationshipLevel = normalizeLevel(rel.level);
       if (Array.isArray(rel.setup) && rel.setup.length > 0) {
+        let isAllowedType2 = function(t) {
+          return allowedTypes.includes(t);
+        };
+        var isAllowedType = isAllowedType2;
         const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
         const relDescription = rel.type === "aria-reference" ? `${rel.from}.${rel.attribute} references ${rel.to}` : `${rel.parent} contains ${rel.child}`;
-        const setupResult = await runSetupActions(rel.setup, actionExecutor, strategy, page, relDescription, ["submenu", "submenuTrigger", "submenuItems"]);
+        const allowedTypes = ["focus", "type", "click", "keypress", "hover"];
+        const toSetupAction = (a) => ({
+          ...a,
+          type: isAllowedType2(a.type) ? a.type : "click"
+        });
+        const setupActions = rel.setup.map(toSetupAction);
+        const setupResult = await runSetupActions(setupActions, actionExecutor, strategy, page, relDescription, ["submenu", "submenuTrigger", "submenuItems"]);
         if (setupResult.skip) {
-          skipped.push(setupResult.message);
+          skipped.push(setupResult.message || "Setup action skipped");
           reporter.reportStaticTest(relDescription, "skip", setupResult.message, relationshipLevel);
           continue;
         }
@@ -1936,10 +1946,20 @@ This usually means:
         continue;
       }
       if (Array.isArray(test.setup) && test.setup.length > 0) {
+        let isAllowedType2 = function(t) {
+          return allowedTypes.includes(t);
+        };
+        var isAllowedType = isAllowedType2;
         const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
-        const setupResult = await runSetupActions(test.setup, actionExecutor, strategy, page, staticDescription, ["submenu", "submenuTrigger", "submenuItems"]);
+        const allowedTypes = ["focus", "type", "click", "keypress", "hover"];
+        const toSetupAction = (a) => ({
+          ...a,
+          type: isAllowedType2(a.type) ? a.type : "click"
+        });
+        const setupActions = test.setup.map(toSetupAction);
+        const setupResult = await runSetupActions(setupActions, actionExecutor, strategy, page, staticDescription, ["submenu", "submenuTrigger", "submenuItems"]);
         if (setupResult.skip) {
-          skipped.push(setupResult.message);
+          skipped.push(setupResult.message || "Setup action skipped");
           reporter.reportStaticTest(staticDescription, "skip", setupResult.message, staticLevel);
           continue;
         }
@@ -2078,9 +2098,19 @@ This usually means:
       const dynamicLevel = normalizeLevel(dynamicTest.level);
       const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
       if (Array.isArray(setup) && setup.length > 0) {
-        const setupResult = await runSetupActions(setup, actionExecutor, strategy, page, dynamicTest.description, ["submenu", "submenuTrigger", "submenuItems"]);
+        let isAllowedType2 = function(t) {
+          return allowedTypes.includes(t);
+        };
+        var isAllowedType = isAllowedType2;
+        const allowedTypes = ["focus", "type", "click", "keypress", "hover"];
+        const toSetupAction = (a) => ({
+          ...a,
+          type: isAllowedType2(a.type) ? a.type : "click"
+        });
+        const setupActions = setup.map(toSetupAction);
+        const setupResult = await runSetupActions(setupActions, actionExecutor, strategy, page, dynamicTest.description, ["submenu", "submenuTrigger", "submenuItems"]);
         if (setupResult.skip) {
-          skipped.push(setupResult.message);
+          skipped.push(setupResult.message || "Setup action skipped");
           reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, "skip", setupResult.message);
           continue;
         }

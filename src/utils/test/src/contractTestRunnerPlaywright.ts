@@ -177,7 +177,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
     // Run relationship invariants first
     for (const rel of componentContract.relationships || []) {
-      // Always reset state before each relationship test if supported
       if (strategy && typeof strategy.resetState === 'function') {
         try {
           await strategy.resetState(page);
@@ -192,9 +191,19 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         const relDescription = rel.type === "aria-reference"
           ? `${rel.from}.${rel.attribute} references ${rel.to}`
           : `${rel.parent} contains ${rel.child}`;
-        const setupResult = await runSetupActions(rel.setup, actionExecutor, strategy, page, relDescription, ["submenu", "submenuTrigger", "submenuItems"]);
+        // Map setup actions to SetupAction type
+        const allowedTypes = ["focus", "type", "click", "keypress", "hover"] as const;
+        function isAllowedType(t: string): t is SetupAction['type'] {
+          return (allowedTypes as readonly string[]).includes(t);
+        }
+        const toSetupAction = (a: { type: string; target: string; key?: string; value?: string; relativeTarget?: string }): SetupAction => ({
+          ...a,
+          type: isAllowedType(a.type) ? a.type : "click"
+        });
+        const setupActions: SetupAction[] = rel.setup.map(toSetupAction);
+        const setupResult = await runSetupActions(setupActions, actionExecutor, strategy, page, relDescription, ["submenu", "submenuTrigger", "submenuItems"]);
         if (setupResult.skip) {
-          skipped.push(setupResult.message);
+          skipped.push(setupResult.message || "Setup action skipped");
           reporter.reportStaticTest(relDescription, 'skip', setupResult.message, relationshipLevel);
           continue;
         }
@@ -397,8 +406,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
     // Run static tests using AssertionRunner
     const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
-    // Reusable setup runner for both static and dynamic tests
-    // Types for setup actions and executor
     type SetupAction = {
       type: "focus" | "type" | "click" | "keypress" | "hover";
       target: string;
@@ -464,7 +471,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
     }
 
     for (const test of componentContract.static[0]?.assertions || []) {
-      // Always reset state before each static test if supported
       if (strategy && typeof strategy.resetState === 'function') {
         try {
           await strategy.resetState(page);
@@ -484,9 +490,18 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       // If the static assertion has a .setup array, run those actions before the assertion
       if (Array.isArray(test.setup) && test.setup.length > 0) {
         const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
-        const setupResult = await runSetupActions(test.setup, actionExecutor, strategy, page, staticDescription, ["submenu", "submenuTrigger", "submenuItems"]);
+        const allowedTypes = ["focus", "type", "click", "keypress", "hover"] as const;
+        function isAllowedType(t: string): t is SetupAction['type'] {
+          return (allowedTypes as readonly string[]).includes(t);
+        }
+        const toSetupAction = (a: { type: string; target: string; key?: string; value?: string; relativeTarget?: string }): SetupAction => ({
+          ...a,
+          type: isAllowedType(a.type) ? a.type : "click"
+        });
+        const setupActions: SetupAction[] = test.setup.map(toSetupAction);
+        const setupResult = await runSetupActions(setupActions, actionExecutor, strategy, page, staticDescription, ["submenu", "submenuTrigger", "submenuItems"]);
         if (setupResult.skip) {
-          skipped.push(setupResult.message);
+          skipped.push(setupResult.message || "Setup action skipped");
           reporter.reportStaticTest(staticDescription, 'skip', setupResult.message, staticLevel);
           continue;
         }
@@ -631,9 +646,18 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
       // Run setup actions if present
       if (Array.isArray(setup) && setup.length > 0) {
-        const setupResult = await runSetupActions(setup, actionExecutor, strategy, page, dynamicTest.description, ["submenu", "submenuTrigger", "submenuItems"]);
+        const allowedTypes = ["focus", "type", "click", "keypress", "hover"] as const;
+        function isAllowedType(t: string): t is SetupAction['type'] {
+          return (allowedTypes as readonly string[]).includes(t);
+        }
+        const toSetupAction = (a: { type: string; target: string; key?: string; value?: string; relativeTarget?: string }): SetupAction => ({
+          ...a,
+          type: isAllowedType(a.type) ? a.type : "click"
+        });
+        const setupActions: SetupAction[] = setup.map(toSetupAction);
+        const setupResult = await runSetupActions(setupActions, actionExecutor, strategy, page, dynamicTest.description, ["submenu", "submenuTrigger", "submenuItems"]);
         if (setupResult.skip) {
-          skipped.push(setupResult.message);
+          skipped.push(setupResult.message || "Setup action skipped");
           reporter.reportTest({ description: dynamicTest.description, level: dynamicLevel }, 'skip', setupResult.message);
           continue;
         }
@@ -723,7 +747,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
             const relTarget = assertion.relativeTarget || 'first';
             const relElem = await RelativeTargetResolver.resolve(page, relativeSelector, relTarget);
             if (!relElem) throw new Error(`Could not resolve relative target '${relTarget}' for expectedValue.`);
-            // Get property or attribute from the resolved element
             const prop = assertion.expectedValue.property || assertion.expectedValue.attribute || 'id';
             if (prop === 'textContent') {
               expectedValue = await relElem.evaluate((el) => el.textContent ?? undefined);
