@@ -27,6 +27,11 @@ export async function runAudit(url: string, options: { browser?: Browser; }): Pr
         const context = await browser.newContext();
         const page = await context.newPage();
         await page.goto(url, { waitUntil, timeout });
+        try {
+            await page.waitForSelector('main', { state: 'visible', timeout });
+        } catch (waitError) {
+            console.warn(`⚠️  Warning: <main> landmark not found or not visible on ${url} after ${timeout}ms. Audit will continue, but results may be inaccurate. Consider adding a <main> element to improve audit accuracy. ${waitError instanceof Error ? waitError.message : String(waitError)}`);
+        }
         const axe = new AxeBuilder({ page });
         const axeResults: AxeResult = await axe.analyze();
         

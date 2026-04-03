@@ -86,8 +86,8 @@ function validateConfig(config: unknown): { valid: boolean; errors: string[] } {
               if (typeof comp.name !== 'string') {
                 errors.push(`test.components[${idx}].name must be a string`);
               }
-              if (comp.path !== undefined && typeof comp.path !== 'string') {
-                errors.push(`test.components[${idx}].path must be a string when provided`);
+              if (comp.contractPath !== undefined && typeof comp.contractPath !== 'string') {
+                errors.push(`test.components[${idx}].contractPath must be a string when provided`);
               }
               if (comp.strategyPath !== undefined && typeof comp.strategyPath !== 'string') {
                 errors.push(`test.components[${idx}].strategyPath must be a string when provided`);

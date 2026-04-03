@@ -4,7 +4,7 @@ contact_links:
     url: https://github.com/aria-ease/aria-ease/discussions
     about: Ask questions and discuss ideas with the community
   - name: 🌐 Visit Documentation
-    url: https://ariaease.site/docs
+    url: https://ariaease.site/getting-started
     about: Read the full documentation, guides, and examples
   - name: 🔒 Report a Security Vulnerability
     url: https://github.com/aria-ease/aria-ease/security/advisories/new

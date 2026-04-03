@@ -167,6 +167,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 } else if (comboboxInput.value) {
                     event.preventDefault();
                     comboboxInput.value = "";
+                    comboboxInput.setAttribute("aria-activedescendant", "");
                     const visibleItems = getVisibleItems();
                     visibleItems.forEach(item => {
                         if(item.getAttribute("aria-selected") === "true") item.setAttribute("aria-selected", "false");
@@ -196,9 +197,14 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 break;
 
             case "Tab":
+                if (isOpen && activeIndex >= 0 && activeIndex < visibleItems.length) {
+                    selectOption(visibleItems[activeIndex]);
+                }
+
                 if (isOpen) {
                     closeListbox();
                 }
+                
                 break;
         }
     }

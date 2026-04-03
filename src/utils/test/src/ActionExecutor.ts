@@ -38,18 +38,18 @@ export class ActionExecutor {
    */
   async focus(target: string, relativeTarget?: string, virtualId?: string): Promise<ActionResult> {
     try {
-      // Virtual focus: set aria-activedescendant on input
+      // Virtual focus: set aria-activedescendant on main
       if (target === "virtual" && virtualId) {
-        const inputSelector = this.selectors.input;
-        if (!inputSelector) {
-          return { success: false, error: `Input selector not defined for virtual focus.` };
+        const mainSelector = this.selectors.main;
+        if (!mainSelector) {
+          return { success: false, error: `Main selector not defined for virtual focus.` };
         }
-        const input = this.page.locator(inputSelector).first();
-        const exists = await input.count();
+        const main = this.page.locator(mainSelector).first();
+        const exists = await main.count();
         if (!exists) {
-          return { success: false, error: `Input element not found for virtual focus.` };
+          return { success: false, error: `Main element not found for virtual focus.` };
         }
-        await input.evaluate((el, id) => {
+        await main.evaluate((el, id) => {
           el.setAttribute("aria-activedescendant", id);
         }, virtualId);
         return { success: true };
@@ -194,7 +194,6 @@ export class ActionExecutor {
         keyValue = keyValue.replace(/ /g, "");
       }
 
-      // Use the currently focused element for menu-style keyboard interactions.
       if (target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape", "Home", "End", "Tab", "Shift+Tab"].includes(keyValue)) {
         await this.page.keyboard.press(keyValue);
         return { success: true };

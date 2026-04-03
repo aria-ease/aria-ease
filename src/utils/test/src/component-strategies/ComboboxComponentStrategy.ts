@@ -21,7 +21,7 @@ class ComboboxComponentStrategy implements ComponentStrategy {
         
         if (!isPopupVisible) return;
         
-        let listBoxClosed = false;
+        let popupClosed = false;
         
         // Strategy 1: Try Escape key (standard for combobox)
         let closeSelector = this.selectors.input; // For combobox
@@ -36,31 +36,31 @@ class ComboboxComponentStrategy implements ComponentStrategy {
             await closeElement.focus();
             await page.keyboard.press('Escape');
             
-            listBoxClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
+            popupClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
                 .then(() => true)
                 .catch(() => false);
         }
         
         // Strategy 2: Click button to toggle closed
-        if (!listBoxClosed && this.selectors.button) {
+        if (!popupClosed && this.selectors.button) {
             const buttonElement = page.locator(this.selectors.button).first();
             await buttonElement.click({ timeout: this.actionTimeoutMs });
             
-            listBoxClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
+            popupClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
                 .then(() => true)
                 .catch(() => false);
         }
         
         // Strategy 3: Click outside
-        if (!listBoxClosed) {
+        if (!popupClosed) {
             await page.mouse.click(10, 10);
-            listBoxClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
+            popupClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
                 .then(() => true)
                 .catch(() => false);
         }
         
         // Fatal error if still open
-        if (!listBoxClosed) {
+        if (!popupClosed) {
             throw new Error(
                 `❌ FATAL: Cannot close combobox popup between tests. Popup remains visible after trying:\n` +
                 `  1. Escape key\n` +

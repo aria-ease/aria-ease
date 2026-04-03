@@ -44,13 +44,6 @@ class StrategyRegistry {
         (m) => m.TabsComponentStrategy as unknown as StrategyConstructor
       )
     );
-
-    // Handle combobox.listbox variant
-    this.builtInStrategies.set("combobox.listbox", () =>
-      import("./component-strategies/ComboboxComponentStrategy").then(
-        (m) => m.ComboboxComponentStrategy as unknown as StrategyConstructor
-      )
-    );
   }
 
   /**

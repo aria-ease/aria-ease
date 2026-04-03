@@ -27,6 +27,7 @@
 
         "selectors": { 
             "type": "object",
+            "required": ["main"],
             "description": "CSS selectors keyed by logical name. Keys vary per component.",
             "additionalProperties": { "type": "string" }
         },
@@ -94,7 +95,21 @@
                                 "target": { "type": "string" },
                                 "assertion": { "type": "string" },
                                 "attribute": { "type": "string" },
-                                "expectedValue": { "type": "string" },
+                                "expectedValue": {
+                                    "oneOf": [
+                                        { "type": "string" },
+                                        {
+                                        "type": "object",
+                                        "properties": {
+                                            "ref": { "type": "string" },
+                                            "property": { "type": "string" },
+                                            "attribute": { "type": "string" },
+                                            "relativeTarget": { "type": "string" }
+                                        },
+                                        "required": ["ref"]
+                                        }
+                                    ]
+                                },
                                 "failureMessage": { "type": "string" },
                                 "level": { "type": "string", "enum": ["optional", "recommended", "required"] }
                             }
@@ -153,7 +168,21 @@
                                 "target": { "type": "string" },
                                 "assertion": { "type": "string" },
                                 "attribute": { "type": "string" },
-                                "expectedValue": { "type": "string" },
+                                "expectedValue": {
+                                    "oneOf": [
+                                        { "type": "string" },
+                                        {
+                                        "type": "object",
+                                        "properties": {
+                                            "ref": { "type": "string" },
+                                            "property": { "type": "string" },
+                                            "attribute": { "type": "string" },
+                                            "relativeTarget": { "type": "string" }
+                                        },
+                                        "required": ["ref"]
+                                        }
+                                    ]
+                                },
                                 "relativeTarget": { "type": "string" },
                                 "failureMessage": { "type": "string" },
                                 "level": { "type": "string", "enum": ["optional", "recommended", "required"] }

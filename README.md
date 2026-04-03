@@ -60,7 +60,7 @@ npx aria-ease audit --url https://yoursite.com
 
 #### 3. **Contract Testing** (Available Now)
 
-This is the game-changer. Encoded a deterministic, testable interpretation of WAI-ARIA APG guidance into JSON "contracts" using Aria-Ease DSL API, and validate your contract against your component using Aria-Ease's Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
+This is the game-changer. Encode a deterministic, testable interpretation of WAI-ARIA APG guidance into JSON "contracts" using Aria-Ease DSL API, and validate your contract against your component using Aria-Ease's Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
 
 Teams and experts can enforce their own standards and maintain reusability and consistency.
 
@@ -195,7 +195,7 @@ export default {
     strictness: "balanced",
     components: [
       {
-        name: "combobox.listbox",
+        name: "combobox",
         path: "./tests/external-contracts/combobox.listbox.contract.json",
         strategyPath: "./tests/external-strategies/CustomComboboxStrategy.js",
       },
@@ -1000,7 +1000,7 @@ export default {
   audit: {
     urls: [
       "http://localhost:5173", // Homepage
-      "http://localhost:5173/docs", // Docs
+      "http://localhost:5173/getting-started", // Docs
       "http://localhost:5173/examples", // Examples
     ],
     output: {
@@ -1130,7 +1130,7 @@ You've shifted accessibility left (into development), automated the verification
 
 ## 📖 More Resources
 
-- [Full Documentation](https://ariaease.site/docs)
+- [Full Documentation](https://ariaease.site/getting-started)
 - [GitHub Repository](https://github.com/aria-ease/aria-ease)
 - [Report Issues](https://github.com/aria-ease/aria-ease/issues)
 - [Contributing Guide](https://github.com/aria-ease/aria-ease/blob/main/CONTRIBUTION-GUIDELINES.md)

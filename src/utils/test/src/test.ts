@@ -2,12 +2,10 @@
  * Runs static and interactions accessibility test on UI components. 
  * @param {string} componentName The name of the component contract to test against
  * @param {HTMLElement} component The UI component to be tested
- * @param {string} url Optional URL to run full Playwright E2E tests. If omitted, uses isolated component testing with page.setContent()
+ * @param {string} url URL for Playwright E2E tests
  */
 
-import { axe } from "jest-axe";
 import type { JestAxeResult, ContractTestResult, AriaEaseConfig } from "Types";
-import { runContractTests } from "./contractTestRunner";
 import { closeSharedBrowser } from "./playwrightTestHarness";
 import { normalizeStrictness, type StrictnessMode } from "./strictness";
 import path from "path";
@@ -16,36 +14,22 @@ type TestAuditOptions = {
     strictness?: StrictnessMode;
 };
 
-export async function testUiComponent(componentName: string, component: HTMLElement | null, url: string | null, options: TestAuditOptions = {}): Promise<JestAxeResult> {
+export async function testUiComponent(componentName: string, url: string | null, options: TestAuditOptions = {}): Promise<JestAxeResult> {
     // Validate inputs
     if (!componentName || typeof componentName !== 'string') {
         throw new Error('❌ testUiComponent requires a valid componentName (string)');
     }
     
     // Component can be null if URL is provided (for URL-only testing)
-    if (!url && (!component || !(component instanceof HTMLElement))) {
-        throw new Error('❌ testUiComponent requires either a valid component (HTMLElement) or a URL');
+    if (!url) {
+        throw new Error('❌ testUiComponent requires a URL');
     }
     
     if (url && typeof url !== 'string') {
         throw new Error('❌ testUiComponent url parameter must be a string');
     }
-
-    // Run axe accessibility tests (skip if using URL-only mode)
-    let results;
-    if (component) {
-        try {
-            results = await axe(component);
-        } catch (error) {
-            throw new Error(
-                `❌ Axe accessibility scan failed\n` +
-                `Error: ${error instanceof Error ? error.message : String(error)}`
-            );
-        }
-    } else {
-        // URL-only mode - skip axe scan, Playwright will handle it
-        results = { violations: [] } as unknown as JestAxeResult;
-    }
+    
+    const results = { violations: [] } as unknown as JestAxeResult;
     
     // Check if dev server is running
     async function checkDevServer(url: string): Promise<string | null> {
@@ -63,16 +47,11 @@ export async function testUiComponent(componentName: string, component: HTMLElem
         return null;
     }
     
-    // Resolve strictness with precedence:
-    // 1) Explicit test call options
-    // 2) Matching component entry in ariaease.config.*
-    // 3) Global test.strictness in ariaease.config.*
-    // 4) balanced default
     let strictness: StrictnessMode = normalizeStrictness(options.strictness);
     let config: AriaEaseConfig = {};
     let configBaseDir = typeof process !== "undefined" ? process.cwd() : "";
 
-    // Load config in Node environments (including Vitest jsdom where window exists).
+    // Load config in Node environments (window may exist in some test runners).
     if (typeof process !== "undefined" && typeof process.cwd === "function") {
         try {
             const { loadConfig } = await import("../../cli/configLoader.js");
@@ -100,7 +79,6 @@ export async function testUiComponent(componentName: string, component: HTMLElem
     let contract;
     
     try {
-        // If URL provided, use it for full app testing; otherwise use isolated component injection
         if (url) {
             const devServerUrl = await checkDevServer(url);
             
@@ -115,13 +93,8 @@ export async function testUiComponent(componentName: string, component: HTMLElem
                     `Please start your dev server and try again.`
                 );
             }
-        } else if (component) {
-            // No URL provided - use isolated testing with page.setContent 
-            console.log(`🎭 Running component contract tests in JSDOM mode`);
-            
-            contract = await runContractTests(componentName, component as HTMLElement, strictness);
         } else {
-            throw new Error('❌ Either component or URL must be provided');
+            throw new Error('❌ URL is required for component testing. Please provide a URL to run full accessibility tests with testUiComponent.');
         }
     } catch (error) {
         if (error instanceof Error) {

@@ -40,7 +40,7 @@ interface AriaEaseConfigTest {
 
 interface AriaEaseConfigTestComponent {
     name: string;
-    path?: string;
+    contractPath?: string;
     strategyPath?: string;
     strictness?: StrictnessMode;
     disableTimeouts?: boolean;
@@ -73,6 +73,7 @@ interface JestAxeResult {
  */
 interface Selector extends Record<string, string | undefined> {
     // Standard baseline selectors (all optional)
+    main: string;
     trigger?: string;
     menu?: string;
     items?: string;
@@ -112,12 +113,26 @@ interface ComponentContract {
             attribute: string;
             to: string;
             level?: ContractLevel;
+            setup: Array<{
+                type: string;
+                target: string;
+                key?: string;
+                value?: string;
+                relativeTarget?: string;
+            }>;
         }
         | {
             type: 'contains';
             parent: string;
             child: string;
             level?: ContractLevel;
+            setup: Array<{
+                type: string;
+                target: string;
+                key?: string;
+                value?: string;
+                relativeTarget?: string;
+            }>;
         }
     >;
     states?: Array<{
@@ -128,13 +143,16 @@ interface ComponentContract {
         assertions: Array<{
             target: string;
             attribute: string;
-            expectedValue: string;
+            expectedValue: string | { ref: string, attribute?: string, property: string, relativeTarget?: string };
             failureMessage: string;
             level?: ContractLevel;
-            interpretation?: InterpretationMode;
-            confidence?: ContractConfidence;
-            rationale?: string;
-            note?: string;
+            setup: Array<{
+                type: string;
+                target: string;
+                key?: string;
+                value?: string;
+                relativeTarget?: string;
+            }>;
         }>;
     }>;
     dynamic: Array<{
@@ -161,7 +179,7 @@ interface ComponentContract {
             target: string;
             assertion: string;
             attribute?: string;
-            expectedValue?: string;
+            expectedValue?: string | { ref: string, attribute?: string, property: string, relativeTarget?: string };
             failureMessage?: string;
             relativeTarget?: string;
             level?: ContractLevel;

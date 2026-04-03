@@ -60,15 +60,13 @@ declare module 'aria-ease' {
 
   /**
    * Runs static and interaction accessibility tests on UI components.
-   * @param {string} componentName The component contract name.
-   * @param {HTMLElement | null} component The rendered component root for jsdom mode.
-   * @param {string | null} url URL for Playwright mode.
-   * @param {{ strictness?: StrictnessMode }} options Strictness mode for contract enforcement.
+   * @param {string} componentName The component name.
+   * @param {string} url URL of component's test harness page.
+   * @param {{ strictness?: StrictnessMode }} options Component specific configuration (e.g., strictness).
   */
   function testUiComponent(
     componentName: string,
-    component: HTMLElement | null,
-    url: string | null,
+    url: string,
     options?: { strictness?: StrictnessMode }
   ): Promise<JestAxeResult>
 }
