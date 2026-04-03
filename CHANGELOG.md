@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [7.0.0](https://github.com/aria-ease/aria-ease/compare/v6.14.0...v7.0.0) (2026-04-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* JSDOM-only tests have been discontinued and removed.
+
+### Features
+
+* removed JSDOM-only tests ([4d4e9a6](https://github.com/aria-ease/aria-ease/commit/4d4e9a6737420365575d978af85ed0c2858f5d90))
+
 ## [6.14.0](https://github.com/aria-ease/aria-ease/compare/v6.13.0...v6.14.0) (2026-04-02)
 
 ### Features
