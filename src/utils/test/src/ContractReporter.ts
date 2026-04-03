@@ -45,7 +45,7 @@ export class ContractReporter {
       this.apgUrl = apgUrl;
     }
     
-    const mode = this.isPlaywright ? 'Playwright (Real Browser)' : 'jsdom (Fast)';
+    const mode = 'Playwright (Real Browser)';
     this.log(`\n${'═'.repeat(60)}`);
     this.log(`🔍 Testing ${componentName.charAt(0).toUpperCase() + componentName.slice(1)} Component - ${mode}`);
     this.log(`${'═'.repeat(60)}\n`);
@@ -113,7 +113,7 @@ export class ContractReporter {
     this.log(`  ${icons[status]} ${levelPrefix}${test.description}`);
     
     if (status === 'skip' && !this.isPlaywright) {
-      this.log(`     ↳ Skipped in jsdom (runs in Playwright)`);
+      this.log(`     ↳ Skipped (runs only in Playwright)`);
     }
     
     if (status === 'fail' && failureMessage) {
@@ -186,7 +186,7 @@ export class ContractReporter {
     this.log(`\n${'─'.repeat(60)}`);
     this.log(`ℹ️  Skipped Tests (${this.skipped}):\n`);
     this.log(`These tests use native keyboard events via addEventListener,`);
-    this.log(`which jsdom cannot simulate. They run successfully in Playwright.\n`);
+    this.log(`which only run in Playwright (real browser).\n`);
     
     skippedTests.forEach((test, index) => {
       this.log(`${index + 1}. ${test.description}`);

@@ -200,17 +200,9 @@ test("combobox test", async () => {
 );
 ```
 
-#### JSDOM Mode (Fast Static Testing)
+#### Component Contract Test Modes
 
-```jsx
-import { render } from "@testing-library/react";
-
-test("my component test", async () => {
-  const { container } = render(<MyComponent />);
-  // No URL - uses fast JSDOM testing (skips interaction tests)
-  await testUiComponent("menu", container);
-});
-```
+Component contract tests should be run in **Playwright (Browser) Mode** only. This mode provides full browser automation, supports all interactions, and enables comprehensive accessibility checks. Static-only (JSDOM) testing is discontinued.
 
 ## Performance Comparison
 

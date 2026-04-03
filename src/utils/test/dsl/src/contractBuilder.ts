@@ -1,5 +1,3 @@
-
-
 import { COMBOBOX_STATES } from "./state-packs/combobox/comboboxStatePack";
 import { MENU_STATES } from "./state-packs/menu/menuStatePack";
 import { resolveSetup, CapabilityContext } from "./state-packs/Capability";
@@ -56,8 +54,8 @@ type StaticAssertion = {
   expectedValue?: string;
   failureMessage: string;
   level: Level;
-  requires?: string; // State-dependent static assertion
-  setup?: DynamicAction[]; // Setup actions to reach required state
+  requires?: string;
+  setup?: DynamicAction[];
 };
 
 type DynamicAssertion = {
@@ -120,7 +118,6 @@ class ContractBuilder {
   private statePack: StatePack;
 
   constructor(private readonly componentName: string) {
-    // Auto-register state pack based on componentName
     this.statePack = STATE_PACKS[componentName] as StatePack || {};
   }
 
@@ -210,57 +207,61 @@ class ContractBuilder {
 
   static(fn: (s: {
     target: (target: string) => {
-      requires: (state: string) => {
-        has: (attribute: string, expectedValue: string) => {
+      has: (attribute: string, expectedValue: string) => {
+        requires: (state: string) => {
           required: () => void;
           optional: () => void;
           recommended: () => void;
         };
-      };
-      has: (attribute: string, expectedValue: string) => {
         required: () => void;
         optional: () => void;
         recommended: () => void;
-      };
+      }
     };
   }) => void) {
     const api = {
       target: (target: string) => {
-        return {
-          requires: (state: string) => {
-            const statePack = this.statePack;
-            const ctx: CapabilityContext = { capabilities: ["keyboard"] };
-            const resolveAllSetups = (stateName: string, visited = new Set<string>()): DynamicAction[] => {
-              if (visited.has(stateName)) return [];
-              visited.add(stateName);
-              const s = statePack[stateName];
-              if (!s) return [];
-              let actions: DynamicAction[] = [];
-              if (Array.isArray(s.requires)) {
-                for (const req of s.requires) {
-                  actions = actions.concat(resolveAllSetups(req, visited));
-                }
+        const getSetupActions = (state: string): DynamicAction[] => {
+          const statePack = this.statePack;
+          const ctx: CapabilityContext = { capabilities: ["keyboard"] };
+          const resolveAllSetups = (stateName: string, visited = new Set<string>()): DynamicAction[] => {
+            if (visited.has(stateName)) return [];
+            visited.add(stateName);
+            const s = statePack[stateName];
+            if (!s) return [];
+            let actions: DynamicAction[] = [];
+            if (Array.isArray(s.requires)) {
+              for (const req of s.requires) {
+                actions = actions.concat(resolveAllSetups(req, visited));
               }
-              if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx) as DynamicAction[]);
-              return actions;
-            };
-            const setupActions = resolveAllSetups(state, new Set());
+            }
+            if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx) as DynamicAction[]);
+            return actions;
+          };
+          return resolveAllSetups(state, new Set());
+        };
+
+        const createFinalizers = (attribute: string, expectedValue: string, setupActions?: DynamicAction[]) => ({
+          required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "required", setup: setupActions }),
+          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "optional", setup: setupActions }),
+          recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "recommended", setup: setupActions }),
+        });
+
+        return {
+          has: (attribute: string, expectedValue: string) => {
+            const base = createFinalizers(attribute, expectedValue);
             return {
-              has: (attribute: string, expectedValue: string) => ({
-                required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "required", setup: setupActions }),
-                optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "optional", setup: setupActions }),
-                recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "recommended", setup: setupActions }),
-              })
+              ...base,
+              requires: (state: string) => {
+                const setupActions = getSetupActions(state);
+                return createFinalizers(attribute, expectedValue, setupActions);
+              }
             };
-          },
-          has: (attribute: string, expectedValue: string) => ({
-            required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "required" }),
-            optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "optional" }),
-            recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "recommended" }),
-          })
+          }
         };
       }
     };
+
     fn(api);
     return this;
   }
@@ -379,7 +380,6 @@ class DynamicTestBuilder {
       if (s && s.assertion !== undefined) {
         let value: unknown = s.assertion;
         if (typeof value === "function") {
-          // Type guard: only call if function has zero arguments
           try {
             value = (value as (() => unknown))();
           } catch (e) {

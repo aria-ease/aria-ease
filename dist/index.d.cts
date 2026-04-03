@@ -314,14 +314,12 @@ declare class ContractBuilder {
     }) => void): this;
     static(fn: (s: {
         target: (target: string) => {
-            requires: (state: string) => {
-                has: (attribute: string, expectedValue: string) => {
+            has: (attribute: string, expectedValue: string) => {
+                requires: (state: string) => {
                     required: () => void;
                     optional: () => void;
                     recommended: () => void;
                 };
-            };
-            has: (attribute: string, expectedValue: string) => {
                 required: () => void;
                 optional: () => void;
                 recommended: () => void;
@@ -361,13 +359,13 @@ type StrictnessMode = 'minimal' | 'balanced' | 'strict' | 'paranoid';
  * Runs static and interactions accessibility test on UI components.
  * @param {string} componentName The name of the component contract to test against
  * @param {HTMLElement} component The UI component to be tested
- * @param {string} url Optional URL to run full Playwright E2E tests. If omitted, uses isolated component testing with page.setContent()
+ * @param {string} url URL for Playwright E2E tests
  */
 
 type TestAuditOptions = {
     strictness?: StrictnessMode;
 };
-declare function testUiComponent(componentName: string, component: HTMLElement | null, url: string | null, options?: TestAuditOptions): Promise<JestAxeResult>;
+declare function testUiComponent(componentName: string, url: string | null, options?: TestAuditOptions): Promise<JestAxeResult>;
 /**
  * Cleanup function to close the shared Playwright browser
  * Call this in afterAll() or after all tests complete

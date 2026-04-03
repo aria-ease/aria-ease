@@ -64,7 +64,7 @@ You **must** complete the following steps:
 5. **Add Regression Test**
    - Add test cases covering the new/changed behavior
    - Ensure existing test coverage is not broken
-   - Test both jsdom and Playwright (browser) modes if applicable
+   - Test using Playwright (browser) mode for all component behavior and accessibility
 
 6. **Include Migration Notes (if breaking)**
    - Document breaking changes in `CHANGELOG.md`

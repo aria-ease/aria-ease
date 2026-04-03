@@ -487,7 +487,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         reporter.reportStaticTest(staticDescription, 'skip', skipMessage, staticLevel);
         continue;
       }
-      // If the static assertion has a .setup array, run those actions before the assertion
+  
       if (Array.isArray(test.setup) && test.setup.length > 0) {
         const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
         const allowedTypes = ["focus", "type", "click", "keypress", "hover"] as const;
@@ -628,7 +628,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       if (!page || page.isClosed()) {
         console.warn(`\n⚠️  Browser closed - skipping remaining ${componentContract.dynamic.length - componentContract.dynamic.indexOf(dynamicTest)} tests\n`);
         failures.push(`CRITICAL: Browser/page closed before completing all tests. ${componentContract.dynamic.length - componentContract.dynamic.indexOf(dynamicTest)} tests skipped.`);
-        break; // Exit dynamic test loop
+        break;
       }
 
       try {
@@ -644,7 +644,6 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
       const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
 
-      // Run setup actions if present
       if (Array.isArray(setup) && setup.length > 0) {
         const allowedTypes = ["focus", "type", "click", "keypress", "hover"] as const;
         function isAllowedType(t: string): t is SetupAction['type'] {
