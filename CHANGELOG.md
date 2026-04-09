@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.0.1](https://github.com/aria-ease/aria-ease/compare/v7.0.0...v7.0.1) (2026-04-09)
+
+
+### Bug Fixes
+
+* fixed component utilities breaking app when parameters are empty string ([4e1f6ca](https://github.com/aria-ease/aria-ease/commit/4e1f6ca52063586eda34cc43ca1bcea96fad0038))
+
 ## [7.0.0](https://github.com/aria-ease/aria-ease/compare/v6.14.0...v7.0.0) (2026-04-03)
 
 
