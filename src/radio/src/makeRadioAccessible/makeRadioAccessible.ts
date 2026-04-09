@@ -15,9 +15,18 @@ interface RadioConfig {
 }
 
 export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex = 0 }: RadioConfig): AccessibilityInstance {
+  if (radioGroupId === "") {
+    console.error(`[aria-ease] 'radioGroupId' should not be an empty string. Provide an id to the radio group container element that exists before calling makeRadioAccessible.`);
+    return { cleanup: () => {} };
+  }
   const radioGroup = document.querySelector(`#${radioGroupId}`) as HTMLElement;
   if (!radioGroup) {
     console.error(`[aria-ease] Element with id="${radioGroupId}" not found. Make sure the radio group container exists before calling makeRadioAccessible.`);
+    return { cleanup: () => {} };
+  }
+
+  if (radiosClass === "") {
+    console.error(`[aria-ease] 'radiosClass' should not be an empty string. Provide a class name that exists on the radio button elements before calling makeRadioAccessible.`);
     return { cleanup: () => {} };
   }
 

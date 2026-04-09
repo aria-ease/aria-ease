@@ -32,7 +32,7 @@ export async function runAudit(url: string, options: { browser?: Browser; }): Pr
         } catch (waitError) {
             console.warn(`⚠️  Warning: <main> landmark not found or not visible on ${url} after ${timeout}ms. Audit will continue, but results may be inaccurate. Consider adding a <main> element to improve audit accuracy. ${waitError instanceof Error ? waitError.message : String(waitError)}`);
         }
-        const axe = new AxeBuilder({ page });
+        const axe = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']);
         const axeResults: AxeResult = await axe.analyze();
         
         // Clean up page and context but not browser (if reused)

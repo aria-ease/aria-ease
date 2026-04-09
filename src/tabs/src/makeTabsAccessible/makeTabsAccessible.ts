@@ -12,15 +12,29 @@
 import { AccessibilityInstance, TabsConfig } from "Types";
 
 export function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation = "horizontal", activateOnFocus = true, callback }: TabsConfig): AccessibilityInstance {
+  if (tabListId === "") {
+    console.error(`[aria-ease] 'tabListId' should not be an empty string. Provide an id to the tab list container element that exists before calling makeTabsAccessible.`);
+    return { cleanup: () => {} };
+  }
   const tabList = document.querySelector(`#${tabListId}`) as HTMLElement;
   if (!tabList) {
     console.error(`[aria-ease] Element with id="${tabListId}" not found. Make sure the tab list container exists before calling makeTabsAccessible.`);
     return { cleanup: () => {} };
   }
 
+  if(tabsClass === "") {
+    console.error(`[aria-ease] 'tabsClass' should not be an empty string. Provide a class name that exists on the tab button elements before calling makeTabsAccessible.`);
+    return { cleanup: () => {} };
+  }
+
   const tabs = Array.from(tabList.querySelectorAll(`.${tabsClass}`)) as HTMLElement[];
   if (tabs.length === 0) {
     console.error(`[aria-ease] No elements with class="${tabsClass}" found. Make sure tab buttons exist before calling makeTabsAccessible.`);
+    return { cleanup: () => {} };
+  }
+
+  if(tabPanelsClass === "") {
+    console.error(`[aria-ease] 'tabPanelsClass' should not be an empty string. Provide a class name that exists on the tab panel elements before calling makeTabsAccessible.`);
     return { cleanup: () => {} };
   }
 
