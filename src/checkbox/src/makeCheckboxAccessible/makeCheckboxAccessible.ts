@@ -13,9 +13,19 @@ interface CheckboxConfig {
 }
 
 export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: CheckboxConfig): AccessibilityInstance {
+  if (checkboxGroupId === "") {
+    console.error(`[aria-ease] 'checkboxGroupId' should not be an empty string. Provide an id to the checkbox group container element that exists before calling makeCheckboxAccessible.`);
+    return { cleanup: () => {} };
+  }
+
   const checkboxGroup = document.querySelector(`#${checkboxGroupId}`) as HTMLElement;
   if (!checkboxGroup) {
     console.error(`[aria-ease] Element with id="${checkboxGroupId}" not found. Make sure the checkbox group container exists before calling makeCheckboxAccessible.`);
+    return { cleanup: () => {} };
+  }
+
+    if (checkboxesClass === "") {
+    console.error(`[aria-ease] 'checkboxesClass' should not be an empty string. Provide a class name that exists on the checkbox elements before calling makeCheckboxAccessible.`);
     return { cleanup: () => {} };
   }
 

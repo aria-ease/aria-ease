@@ -13,9 +13,19 @@ interface BlockConfig {
 }
 
 export function makeBlockAccessible({ blockId, blockItemsClass } : BlockConfig): AccessibilityInstance {
+  if (blockId === "") {
+    console.error(`[aria-ease] 'blockId' should not be an empty string. Provide an id to the block container element that exists before calling makeBlockAccessible.`);
+    return { cleanup: () => {} };
+  }
+
   const blockDiv: HTMLElement = document.querySelector(`#${blockId}`) as HTMLElement
   if(!blockDiv) {
     console.error(`[aria-ease] Element with id="${blockId}" not found. Make sure the block element exists before calling makeBlockAccessible.`);
+    return { cleanup: () => {} };
+  }
+
+  if (blockItemsClass === "") {
+    console.error(`[aria-ease] 'blockItemsClass' should not be an empty string. Provide a class name that exists on the block item elements before calling makeBlockAccessible.`);
     return { cleanup: () => {} };
   }
 
