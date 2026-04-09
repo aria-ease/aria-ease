@@ -12,9 +12,19 @@ import { AccessibilityInstance, AccordionConfig } from "Types";
 
 
 export function makeAccordionAccessible({ accordionId, triggersClass, panelsClass, allowMultipleOpen = false, callback }: AccordionConfig): AccessibilityInstance {
+  if (accordionId === "") {
+    console.error(`[aria-ease] 'accordionId' should not be an empty string. Provide an id to the accordion container element that exists before calling makeAccordionAccessible.`);
+    return { cleanup: () => {} };
+  }
+
   const accordionContainer = document.querySelector(`#${accordionId}`) as HTMLElement;
   if (!accordionContainer) {
     console.error(`[aria-ease] Element with id="${accordionId}" not found. Make sure the accordion container exists before calling makeAccordionAccessible.`);
+    return { cleanup: () => {} };
+  }
+
+  if (triggersClass === "") {
+    console.error(`[aria-ease] 'triggersClass' should not be an empty string. Provide a class name that exists on the accordion trigger elements before calling makeAccordionAccessible.`);
     return { cleanup: () => {} };
   }
 
@@ -24,6 +34,11 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
     return { cleanup: () => {} };
   }
 
+  if (panelsClass === "") {
+    console.error(`[aria-ease] 'panelsClass' should not be an empty string. Provide a class name that exists on the accordion panel elements before calling makeAccordionAccessible.`);
+    return { cleanup: () => {} };
+  }
+  
   const panels = Array.from(accordionContainer.querySelectorAll(`.${panelsClass}`)) as HTMLElement[];
   if (panels.length === 0) {
     console.error(`[aria-ease] No elements with class="${panelsClass}" found. Make sure accordion panels exist before calling makeAccordionAccessible.`);

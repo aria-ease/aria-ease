@@ -15,6 +15,10 @@ interface ToggleConfig {
 }
 
 export function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true }: ToggleConfig): AccessibilityInstance {
+  if (toggleId === "") {
+    console.error(`[aria-ease] 'toggleId' should not be an empty string. Provide an id to the toggle element or toggle container before calling makeToggleAccessible.`);
+    return { cleanup: () => {} };
+  }
   const toggleContainer = document.querySelector(`#${toggleId}`) as HTMLElement;
   if (!toggleContainer) {
     console.error(`[aria-ease] Element with id="${toggleId}" not found. Make sure the toggle element exists before calling makeToggleAccessible.`);

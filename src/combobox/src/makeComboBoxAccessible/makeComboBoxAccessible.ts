@@ -10,15 +10,36 @@
 import { AccessibilityInstance, ComboboxConfig } from "Types";
 
 export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, listBoxId, listBoxItemsClass, callback }: ComboboxConfig): AccessibilityInstance {
+    if (comboboxInputId === "") {
+        console.error(`[aria-ease] 'comboboxInputId' should not be an empty string. Provide an id to the combobox input element that exists before calling makeComboboxAccessible.`);
+        return { cleanup: () => {} };
+    }
+    
     const comboboxInput = document.getElementById(`${comboboxInputId}`) as HTMLInputElement;
     if(!comboboxInput) {
         console.error(`[aria-ease] Element with id="${comboboxInputId}" not found. Make sure the combobox input element exists before calling makeComboboxAccessible.`);
         return { cleanup: () => {} };
     }
 
+    if(listBoxId === "") {
+        console.error(`[aria-ease] 'listBoxId' should not be an empty string. Provide an id to the combobox listbox element that exists before calling makeComboboxAccessible.`);
+        return { cleanup: () => {} };
+    }
+
     const listBox = document.getElementById(`${listBoxId}`) as HTMLElement;
     if(!listBox) {
         console.error(`[aria-ease] Element with id="${listBoxId}" not found. Make sure the combobox listbox element exists before calling makeComboboxAccessible.`);
+        return { cleanup: () => {} };
+    }
+
+    if(listBoxItemsClass === "") {
+        console.error(`[aria-ease] 'listboxItemsClass' class should not be an empty string. Provide a class name to at least a listbox option that exists before calling makeComboboxAccessible.`);
+        return { cleanup: () => {} };
+    }
+
+    const listBoxOptions: NodeListOf<HTMLElement> = document.querySelectorAll(listBoxItemsClass);
+    if(!listBoxOptions) {
+        console.error(`[aria-ease] Listbox option(s) with class="${listBoxItemsClass}" not found. Make sure at least a combobox listbox option exists before calling makeComboboxAccessible.`);
         return { cleanup: () => {} };
     }
 

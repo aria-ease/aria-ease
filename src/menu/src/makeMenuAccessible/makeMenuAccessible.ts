@@ -9,15 +9,30 @@ import { NodeListOfHTMLElement, AccessibilityInstance, MenuConfig } from "Types"
 
 
 export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback }: MenuConfig): AccessibilityInstance {
+  if (menuId === "") {
+    console.error(`[aria-ease] 'menuId' should not be an empty string. Provide an id of the menu element before calling makeMenuAccessible.`);
+    return { openMenu: () => {}, closeMenu: () => {}, cleanup: () => {} };
+  }
+
   const menuDiv = document.querySelector(`#${menuId}`) as HTMLElement;
   if (!menuDiv) {
     console.error(`[aria-ease] Element with id="${menuId}" not found. Make sure the menu element exists before calling makeMenuAccessible.`);
     return { openMenu: () => {}, closeMenu: () => {}, cleanup: () => {} };
   }
 
+  if (triggerId === "") {
+    console.error(`[aria-ease] 'triggerId' should not be an empty string. Provide an id of the trigger button element before calling makeMenuAccessible.`);
+    return { openMenu: () => {}, closeMenu: () => {}, cleanup: () => {} };
+  }
+
   const triggerButton = document.querySelector(`#${triggerId}`) as HTMLElement;
   if (!triggerButton) {
     console.error(`[aria-ease] Element with id="${triggerId}" not found. Make sure the trigger button element exists before calling makeMenuAccessible.`);
+    return { openMenu: () => {}, closeMenu: () => {}, cleanup: () => {} };
+  }
+
+  if(menuItemsClass === "") {
+    console.error(`[aria-ease] 'menuItemsClass' should not be an empty string. Provide a class name to at least a menu item that exists before calling makeMenuAccessible.`);
     return { openMenu: () => {}, closeMenu: () => {}, cleanup: () => {} };
   }
 
