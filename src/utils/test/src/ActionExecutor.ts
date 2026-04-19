@@ -36,7 +36,7 @@ export class ActionExecutor {
    * @param relativeTarget - for relative focus (e.g. "first", "last")
    * @param virtualId - for virtual focus (aria-activedescendant value)
    */
-  async focus(target: string, relativeTarget?: string, virtualId?: string): Promise<ActionResult> {
+  async focus(target: string, relativeTarget?: string | number, virtualId?: string): Promise<ActionResult> {
     try {
       // Virtual focus: set aria-activedescendant on main
       if (target === "virtual" && virtualId) {
@@ -121,7 +121,7 @@ export class ActionExecutor {
   /**
    * Execute click action
    */
-  async click(target: string, relativeTarget?: string): Promise<ActionResult> {
+  async click(target: string, relativeTarget?: string | number): Promise<ActionResult> {
     try {
       // Special case: click outside component
       if (target === "document") {
@@ -171,7 +171,7 @@ export class ActionExecutor {
   /**
    * Execute keypress action
    */
-  async keypress(target: string, key: string): Promise<ActionResult> {
+  async keypress(target: string, key: string, relativeTarget?: string | number): Promise<ActionResult> {
     try {
       // Map human-readable key names to Playwright key codes
       const keyMap: Record<string, string> = {
@@ -199,6 +199,22 @@ export class ActionExecutor {
         return { success: true };
       }
 
+      if (target === "relative") {
+        if (relativeTarget === undefined || relativeTarget === null) {
+          return { success: false, error: `relativeTarget must be provided for relative keypress.` };
+        }
+        const relativeSelector = this.selectors.relative;
+        if (!relativeSelector) {
+          return { success: false, error: `Relative selector not defined for keypress action.` };
+        }
+        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget);
+        if (!element) {
+          return { success: false, error: `Could not resolve relative target ${relativeTarget} for keypress.` };
+        }
+        await element.press(keyValue, { timeout: this.timeoutMs });
+        return { success: true };
+      }
+
       // Standard keypress on element
       const selector = this.selectors[target as keyof typeof this.selectors];
       if (!selector) {
@@ -217,6 +233,7 @@ export class ActionExecutor {
         };
       }
       
+
       await locator.press(keyValue, { timeout: this.timeoutMs });
       return { success: true };
     } catch (error) {
@@ -237,7 +254,7 @@ export class ActionExecutor {
   /**
    * Execute hover action
    */
-  async hover(target: string, relativeTarget?: string): Promise<ActionResult> {
+  async hover(target: string, relativeTarget?: string | number): Promise<ActionResult> {
     try {
       // Relative target resolution
       if (target === "relative" && relativeTarget) {

@@ -128,7 +128,7 @@
                 "properties": {
                     "description": { "type": "string" },
                     "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
-                    "isVertical": { "type": "boolean" },
+                    "orientation": { "type": "string" },
                     "isMultiple": { "type": "boolean" },
                     "given": { "type": "string" },
                     "setup": {
@@ -172,16 +172,24 @@
                                     "oneOf": [
                                         { "type": "string" },
                                         {
-                                        "type": "object",
-                                        "properties": {
-                                            "ref": { "type": "string" },
-                                            "property": { "type": "string" },
-                                            "attribute": { "type": "string" },
-                                            "relativeTarget": { "type": "string" }
-                                        },
-                                        "required": ["ref"]
+                                            "type": "object",
+                                            "properties": {
+                                                "ref": { "type": "string" },
+                                                "property": { "type": "string" },
+                                                "attribute": { "type": "string" },
+                                                "relativeTarget": { "type": "string" }
+                                            },
+                                            "required": ["ref"]
                                         }
                                     ]
+                                },
+                                "controlledBy": {
+                                    "type": "object",
+                                    "properties": {
+                                        "target": { "type": "string" },
+                                        "relativeTarget": { "type": "string" } 
+                                    },
+                                    "required": ["target"]
                                 },
                                 "relativeTarget": { "type": "string" },
                                 "failureMessage": { "type": "string" },
