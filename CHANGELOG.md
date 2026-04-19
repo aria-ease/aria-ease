@@ -2,6 +2,22 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [7.1.0](https://github.com/aria-ease/aria-ease/compare/v7.0.0...v7.1.0) (2026-04-19)
+
+
+### ⚠ BREAKING CHANGES
+
+* DSL no longer uses relative state names like "activeTab.first" in .given() and .then(). Now uses {type: "activeTab", "first"}
+
+### Features
+
+* added tabs state pack ([29d3948](https://github.com/aria-ease/aria-ease/commit/29d39481e18d9134adbf8631d53b003a71c8502f))
+
+
+### Bug Fixes
+
+* fixed component utilities breaking app when parameters are empty string ([0483263](https://github.com/aria-ease/aria-ease/commit/0483263387f1bd0eea3b4975afbbd13dd5477ce1))
+
 ### [7.0.1](https://github.com/aria-ease/aria-ease/compare/v7.0.0...v7.0.1) (2026-04-09)
 
 
