@@ -15,14 +15,14 @@ class TabsComponentStrategy implements ComponentStrategy {
 
     async shouldSkipTest(test: DynamicTest, page: Page): Promise<boolean> {
         // Skip tests that don't match the tabs orientation
-        if (test.isVertical !== undefined && this.selectors.tablist) {
+        if (test.orientation !== undefined && this.selectors.tablist) {
             const tablistSelector = this.selectors.tablist;
             const tablist = page.locator(tablistSelector).first();
             const orientation = await tablist.getAttribute('aria-orientation');
             
-            const isVertical = orientation === 'vertical';
             
-            if (test.isVertical !== isVertical) {
+            
+            if (test.orientation !== orientation) {
                 return true; // Skip test - orientation mismatch
             }
         }

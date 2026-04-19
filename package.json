@@ -11,7 +11,7 @@
     "test": "vitest run --reporter verbose -- --config ./vitest.config.mts",
     "bench": "node --loader ts-node/esm benchmarks/sample.bench.ts",
     "lint": "eslint src --ext .ts",
-    "prepublishOnly": "tsc && npm run lint && npm run test && npm run build",
+    "prepublishOnly": "tsc && npm run lint && npm run test && npm run build && npm login --registry https://registry.npmjs.org/",
     "release": "standard-version",
     "release:patch": "standard-version --release-as patch",
     "release:minor": "standard-version --release-as minor",

@@ -77,29 +77,29 @@ export const COMBOBOX_STATES = {
     ],
     assertion: isInputNotFilled
   },
-  "activeOption": {
+  "activeOption.first": {
     requires: ["popup.open"],
     setup: [
       {
-        when: ["keyboard", "pointer"],
-        steps: (arg: { relativeTarget?: string | number } = {}) => {
-          // Start at first, then ArrowDown N-1 times to reach index N
-          if (typeof arg.relativeTarget === "number") {
-            return Array.from({ length: arg.relativeTarget }, () => ({
-              type: "keypress",
-              target: "input", // or "main" for menu
-              key: "ArrowDown"
-            }));
-          }
-          // For "first", "last", etc., handle as needed
-          if (arg.relativeTarget === "first") return [];
-          if (arg.relativeTarget === "last") return [{ type: "keypress", target: "input", key: "ArrowUp" }];
-          // ...handle "next", "previous" if needed
-          return [];
-        }
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowDown" }
+        ]
       }
     ],
-    assertion: (arg: { relativeTarget?: string | number } = {}) => isActiveDescendant(arg.relativeTarget as string | number)
+    assertion: isActiveDescendantFirst
+  },
+  "activeOption.last": {
+    requires: ["activeOption.first"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "input", key: "ArrowUp" }
+        ]
+      }
+    ],
+    assertion: isActiveDescendantLast
   },
   "activeDescendant.notEmpty": {
     requires: [],
@@ -125,24 +125,30 @@ export const COMBOBOX_STATES = {
     ],
     assertion: isActiveDescendantEmpty
   },
-  "selectedOption": {
+  "selectedOption.first": {
     requires: ["popup.open"],
     setup: [
       {
-        when: ["keyboard"],
-        steps: (arg: { relativeTarget?: string | number } = {}) => [
-          { type: "keypress", target: "relative", key: "Enter", relativeTargeta: arg.relativeTarget }
-        ]
-      },
-      {
         when: ["pointer"],
-        steps: (arg: { relativeTarget?: string | number } = {}) => [
-          { type: "click", target: "relative", relativeTargeta: arg.relativeTarget }
+        steps: () => [
+          { type: "click", target: "relative", relativeTarget: "first" }
         ]
       }
     ],
-    assertion: (arg: { relativeTarget?: string | number } = {}) => isAriaSelected(arg.relativeTarget as string | number)
-  }
+    assertion: () => isAriaSelected("first")
+  },
+  "selectedOption.last": {
+    requires: ["popup.open"],
+    setup: [
+      {
+        when: ["pointer"],
+        steps: () => [
+          { type: "click", target: "relative", relativeTarget: "last" }
+        ]
+      }
+    ],
+    assertion: () => isAriaSelected("last")
+  },
 };
 
 
@@ -154,11 +160,11 @@ function isComboboxOpen() {
       failureMessage: "Expected popup to be visible",
     },
     {
-      target: "main",
-      assertion: "toHaveAttribute",
-      attribute: "aria-expanded",
-      expectedValue: "true",
-      failureMessage: "Expected combobox main to have aria-expanded='true'."
+    target: "main",
+    assertion: "toHaveAttribute",
+    attribute: "aria-expanded",
+    expectedValue: "true",
+    failureMessage: "Expected combobox main to have aria-expanded='true'."
     }
   ];
 }
@@ -171,23 +177,35 @@ function isComboboxClosed() {
       failureMessage: "Expected popup to be closed",
     },
     {
-      target: "main",
-      assertion: "toHaveAttribute",
-      attribute: "aria-expanded",
-      expectedValue: "false",
-      failureMessage: "Expected combobox main to have aria-expanded='false'."
+    target: "main",
+    assertion: "toHaveAttribute",
+    attribute: "aria-expanded",
+    expectedValue: "false",
+    failureMessage: "Expected combobox main to have aria-expanded='false'."
     }
   ];
 }
 
-function isActiveDescendant(relativeTarget: string | number) {
+function isActiveDescendantFirst() {
   return [
     {
       target: "main",
       assertion: "toHaveAttribute",
       attribute: "aria-activedescendant",
-      expectedValue: { ref: "relative", relativeTarget, property: "id"},
+      expectedValue: { ref: "relative", relativeTarget: "first", property: "id"},
       failureMessage: "Expected aria-activedescendant on main to match the id of the first option."
+    }
+  ]
+}
+
+function isActiveDescendantLast() {
+  return [
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-activedescendant",
+      expectedValue: { ref: "relative", relativeTarget: "last", property: "id"}, 
+      failureMessage: "Expected aria-activedescendant on main to match the id of the last option."
     }
   ]
 }
@@ -216,15 +234,15 @@ function isActiveDescendantEmpty() {
   ]
 }
 
-function isAriaSelected(relativeTarget: string | number) {
+function isAriaSelected(index: "first" | "last" | "second" | "next" | "previous") {
   return [
     {
       target: "relative",
-      relativeTarget,
+      relativeTarget: index,
       assertion: "toHaveAttribute",
       attribute: "aria-selected",
       expectedValue: "true",
-      failureMessage: `Expected ${relativeTarget} option to have aria-selected='true'.`,
+      failureMessage: `Expected ${index} option to have aria-selected='true'.`,
     }
   ]
 }
