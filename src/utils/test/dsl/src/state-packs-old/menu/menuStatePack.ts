@@ -56,17 +56,29 @@ export const MENU_STATES = {
     assertion: isMainNotFocused
   },
 
-  "activeItem": {
+  "activeItem.first": {
     requires: ["popup.open"],
     setup: [
       {
         when: ["keyboard"],
-        steps: (arg: { relativeTarget?: string | number } = {}) => [
-          { type: "focus", target: "relative", relativeTarget: arg.relativeTarget }
+        steps: () => [
+          // By default, the first item should be active when the menu opens, so no action is needed to set this state
         ]
       }
     ],
-    assertion: (arg: { relativeTarget?: string | number } = {}) => isItemActive(arg.relativeTarget as string | number)
+    assertion: isActiveItemFirst
+  },
+  "activeItem.last": {
+    requires: ["popup.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          { type: "keypress", target: "main", key: "ArrowUp" }
+        ]
+      }
+    ],
+    assertion: isActiveItemLast
   }, 
   "submenu.open": {
     requires: ["popup.open"],
@@ -126,39 +138,24 @@ export const MENU_STATES = {
     ],
     assertion: isSubmenuTriggerNotFocused
   },
-  "activeSubmenuItem": {
-  requires: ["submenu.open"],
-  setup: [
-    {
-      when: ["keyboard"],
-      steps: (arg: { relativeTarget?: string | number } = {}) => {
-        // Focus trigger, ArrowRight to open, then ArrowDown N times
-        let steps = [
-          { type: "focus", target: "submenuTrigger" },
-          { type: "keypress", target: "submenuTrigger", key: "ArrowRight" }
-        ];
-        if (typeof arg.relativeTarget === "number") {
-          steps = steps.concat(
-            Array.from({ length: arg.relativeTarget }, () => ({
-              type: "keypress",
-              target: "submenuItems",
-              key: "ArrowDown"
-            }))
-          );
-        }
-        return steps;
+  "submenuActiveItem.first": {
+    requires: ["submenu.open"],
+    setup: [
+      {
+        when: ["keyboard"],
+        steps: () => [
+          // By default, the first item should be active when the submenu opens, so no action is needed to set this state
+        ]
+      },
+      {
+        when: ["pointer"],
+        steps: () => [
+          
+        ]
       }
-    },
-    {
-      when: ["pointer"],
-      steps: (arg: { relativeTarget?: string | number } = {}) => [
-        { type: "click", target: "submenuTrigger" },
-        { type: "click", target: "relative", relativeTarget: arg.relativeTarget }
-      ]
-    }
-  ],
-  assertion: (arg: { relativeTarget?: string | number } = {}) => isSubmenuActiveItem(arg.relativeTarget as string | number)
-}
+    ],
+    assertion: isSubmenuActiveItemFirst
+  }
 }
 
 
@@ -216,13 +213,24 @@ function isMainNotFocused() {
   ]
 }
 
-function isItemActive(relativeTarget: string | number) {
+function isActiveItemFirst() {
   return [
     {
       target: "relative",
       assertion: "toHaveFocus",
-      expectedValue: relativeTarget,
-      failureMessage: `${relativeTarget} menu item should have focus.`
+      expectedValue: "first",
+      failureMessage: "First menu item should have focus."
+    }
+  ]
+}
+
+function isActiveItemLast() {
+  return [
+    {
+      target: "relative",
+      assertion: "toHaveFocus",
+      expectedValue: "last",
+      failureMessage: "Last menu item should have focus."
     }
   ]
 }
@@ -281,13 +289,12 @@ function isSubmenuTriggerNotFocused() {
    ]
 }
 
-function isSubmenuActiveItem(relativeTarget: string | number) {
+function isSubmenuActiveItemFirst() {
   return [
     {
-      target: "relative",
-      relativeTarget,
+      target: "submenuItems",
       assertion: "toHaveFocus",
-      failureMessage: `Expected submenu item ${relativeTarget} to have focus.`
+      failureMessage: "First interactive item in the submenu should have focus after Right Arrow open the submenu."
     }
   ]
 }

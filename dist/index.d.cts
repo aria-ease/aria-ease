@@ -195,10 +195,21 @@ declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, lis
 declare function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation, activateOnFocus, callback }: TabsConfig): AccessibilityInstance;
 
 type StatePack = Record<string, {
-    setup?: DynamicAction[];
-    assertion?: DynamicAssertion[] | DynamicAssertion;
+    setup?: Array<{
+        when: string[];
+        steps: ((arg?: {
+            relativeTarget?: string | number;
+        }) => DynamicAction[]) | DynamicAction[];
+    }>;
+    assertion?: ((arg?: {
+        relativeTarget?: string | number;
+    }) => DynamicAssertion[] | DynamicAssertion) | DynamicAssertion[] | DynamicAssertion;
     requires?: string[];
 }>;
+type RelativeState = {
+    type: string;
+    ref: string | number;
+};
 type Level = "required" | "recommended" | "optional";
 type ContractMeta = {
     id?: string;
@@ -229,9 +240,10 @@ type RelationshipInvariant = {
 };
 type StaticAssertion = {
     target: string;
+    assertion: "toBeVisible" | "notToBeVisible" | "toHaveAttribute" | "toHaveValue" | "toHaveFocus" | "notToHaveFocus" | "toHaveRole";
     attribute: string;
     expectedValue?: string;
-    failureMessage: string;
+    failureMessage?: string;
     level: Level;
     requires?: string;
     setup?: DynamicAction[];
@@ -242,7 +254,7 @@ type DynamicAssertion = {
     attribute?: string;
     expectedValue?: string;
     failureMessage?: string;
-    relativeTarget?: string;
+    relativeTarget?: string | number;
     virtualId?: string;
     selectorKey?: string;
     level?: Level;
@@ -250,17 +262,18 @@ type DynamicAssertion = {
 type DynamicAction = {
     type: "focus";
     target: string;
-    relativeTarget?: "first" | "last" | "next" | "previous";
+    relativeTarget?: "first" | "last" | "next" | "previous" | number;
     virtualId?: string;
 } | {
-    type: "click" | "keypress" | "type" | "hover";
+    type: "click" | "keypress" | "type" | "hover" | "focus";
     target: string;
     key?: string;
     value?: string;
-    relativeTarget?: string;
+    relativeTarget?: string | number;
 };
 type DynamicTest = {
     description: string;
+    orientation?: "vertical" | "horizontal";
     level?: Level;
     action: DynamicAction[];
     assertions: DynamicAssertion[];
@@ -335,16 +348,27 @@ declare class DynamicTestBuilder {
     private statePack;
     private event;
     private _as;
-    private _on;
+    private _onTarget;
+    private _onRelativeTarget;
     private _given;
     private _then;
     private _desc;
     private _level;
+    private _orientation;
     constructor(parent: ContractBuilder, statePack: StatePack, event: string);
     as(actionType: string): this;
-    on(target: string): this;
-    given(states: string | string[]): this;
-    then(states: string | string[]): this;
+    on(target: string, relativeTarget?: string | number): this;
+    given(states: string | string[] | RelativeState | RelativeState[]): this;
+    then(states: string | string[] | RelativeState | RelativeState[]): this;
+    orientation(orientation: "vertical" | "horizontal"): this;
+    /**
+     * Normalize states to an array of string or resolved state keys from relative state objects.
+     */
+    private _normalizeStates;
+    /**
+     * Find a generic state key in the state pack by type.
+     */
+    private _findStateKeyByTypeAndRef;
     describe(desc: string): this;
     required(): ContractBuilder;
     optional(): ContractBuilder;

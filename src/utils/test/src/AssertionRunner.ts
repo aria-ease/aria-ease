@@ -13,14 +13,22 @@ export type AssertionResult = {
   failMessage?: string;
 };
 
+
+type ControlledBy = {
+  target: string;
+  relativeTarget?: string | number;
+  attribute?: string;
+};
+
 type ContractAssertion = {
   target: string;
   assertion: string;
   attribute?: string;
   expectedValue?: string | { ref: string, attribute?: string, property: string  };
   failureMessage?: string;
-  relativeTarget?: string;
+  relativeTarget?: string | number;
   selectorKey?: string;
+  controlledBy?: ControlledBy;
 };
 
 export class AssertionRunner {
@@ -33,7 +41,7 @@ export class AssertionRunner {
   /**
    * Resolve the target element for an assertion
    */
-  private async resolveTarget( targetName: string, relativeTarget?: string, selectorKey?: string ): Promise<{ target: Locator | null; error?: string }> {
+  private async resolveTarget( targetName: string, relativeTarget?: string | number, selectorKey?: string ): Promise<{ target: Locator | null; error?: string }> {
     try {
       if (targetName === "relative") {
         // Use selectorKey if provided (for semantic expressions like first(options))
@@ -258,6 +266,7 @@ export class AssertionRunner {
    * Main validation method - routes to specific validators
    */
   async validate(assertion: ContractAssertion, testDescription: string): Promise<AssertionResult & { target?: Locator | null }> {
+
     // Check for browser closed
     if (this.page.isClosed()) {
       return {
@@ -266,14 +275,49 @@ export class AssertionRunner {
       };
     }
 
-    // Resolve target element (support selectorKey for semantic relative assertions)
-    const { target, error } = await this.resolveTarget(
-      assertion.target,
-      assertion.relativeTarget as string || assertion.expectedValue as string,
-      assertion.selectorKey
-    );
-    if (error || !target) {
-      return { success: false, failMessage: error || `Target ${assertion.target} not found.`, target: null };
+    // Support for 'controlledBy' property
+    let target: Locator | null = null;
+    let error: string | undefined = undefined;
+    if (assertion.controlledBy) {
+      const ctrl: ControlledBy = assertion.controlledBy;
+      // 1. Find the controlling element
+      const ctrlSelector = this.selectors[ctrl.target as keyof typeof this.selectors];
+      if (!ctrlSelector) {
+        return { success: false, failMessage: `Selector for controlledBy.target '${ctrl.target}' not found.`, target: null };
+      }
+      let ctrlElem: Locator | null = null;
+      if (ctrl.relativeTarget) {
+        ctrlElem = await RelativeTargetResolver.resolve(this.page, ctrlSelector, ctrl.relativeTarget);
+      } else {
+        ctrlElem = this.page.locator(ctrlSelector).first();
+      }
+      if (!ctrlElem) {
+        return { success: false, failMessage: `Controlling element for controlledBy not found.`, target: null };
+      }
+      // 2. Get the controlled element's ID (default: aria-controls)
+      const attr = ctrl.attribute || 'aria-controls';
+      const controlledId = await ctrlElem.getAttribute(attr);
+      if (!controlledId) {
+        return { success: false, failMessage: `Controlling element does not have attribute '${attr}'.`, target: null };
+      }
+      // 3. Find the controlled element (by ID)
+      target = this.page.locator(`#${controlledId}`);
+      // Optionally, check if it exists
+      if (!target || (await target.count()) === 0) {
+        return { success: false, failMessage: `Controlled element with id '${controlledId}' not found.`, target: null };
+      }
+    } else {
+      // Resolve target element (support selectorKey for semantic relative assertions)
+      const resolved = await this.resolveTarget(
+        assertion.target,
+        assertion.relativeTarget as string || assertion.expectedValue as string,
+        assertion.selectorKey
+      );
+      target = resolved.target;
+      error = resolved.error;
+      if (error || !target) {
+        return { success: false, failMessage: error || `Target ${assertion.target} not found.`, target: null };
+      }
     }
 
     // Special case: for input[aria-activedescendant] assertions, check that the attribute matches the id of the correct option

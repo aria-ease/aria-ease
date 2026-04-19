@@ -1,17 +1,26 @@
 import { COMBOBOX_STATES } from "./state-packs/combobox/comboboxStatePack";
 import { MENU_STATES } from "./state-packs/menu/menuStatePack";
+import { TABS_STATES } from "./state-packs/tabs/tabsStatePack";
 import { resolveSetup, CapabilityContext } from "./state-packs/Capability";
 
 type StatePack = Record<string, {
-  setup?: DynamicAction[];
-  assertion?: DynamicAssertion[] | DynamicAssertion;
+  setup?: Array<{
+    when: string[];
+    steps: ((arg?: { relativeTarget?: string | number }) => DynamicAction[]) | DynamicAction[];
+  }>;
+  assertion?: ((arg?: { relativeTarget?: string | number }) => DynamicAssertion[] | DynamicAssertion) | DynamicAssertion[] | DynamicAssertion;
   requires?: string[];
 }>;
 
+type RelativeState = {
+  type: string;
+  ref: string | number
+}
+
 const STATE_PACKS: Record<string, unknown> = {
   "combobox": COMBOBOX_STATES,
-  "menu":  MENU_STATES
-  // Add more mappings as needed
+  "menu":  MENU_STATES,
+  "tabs": TABS_STATES
 };
 
 type Level = "required" | "recommended" | "optional";
@@ -50,9 +59,10 @@ type RelationshipInvariant =
 
 type StaticAssertion = {
   target: string;
+  assertion: "toBeVisible" | "notToBeVisible" | "toHaveAttribute" | "toHaveValue" | "toHaveFocus" | "notToHaveFocus" | "toHaveRole";
   attribute: string;
   expectedValue?: string;
-  failureMessage: string;
+  failureMessage?: string;
   level: Level;
   requires?: string;
   setup?: DynamicAction[];
@@ -64,7 +74,7 @@ type DynamicAssertion = {
   attribute?: string;
   expectedValue?: string;
   failureMessage?: string;
-  relativeTarget?: string;
+  relativeTarget?: string | number;
   virtualId?: string;
   selectorKey?: string;
   level?: Level;
@@ -74,19 +84,20 @@ type DynamicAction =
   | {
       type: "focus";
       target: string;
-      relativeTarget?: "first" | "last" | "next" | "previous";
+      relativeTarget?: "first" | "last" | "next" | "previous" | number;
       virtualId?: string;
     }
   | {
-      type: "click" | "keypress" | "type" | "hover";
+      type: "click" | "keypress" | "type" | "hover" | "focus";
       target: string;
       key?: string;
       value?: string;
-      relativeTarget?: string;
+      relativeTarget?: string | number;
     };
 
 type DynamicTest = {
   description: string;
+  orientation?: "vertical" | "horizontal";
   level?: Level;
   action: DynamicAction[];
   assertions: DynamicAssertion[];
@@ -241,11 +252,20 @@ class ContractBuilder {
           return resolveAllSetups(state, new Set());
         };
 
-        const createFinalizers = (attribute: string, expectedValue: string, setupActions?: DynamicAction[]) => ({
-          required: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "required", setup: setupActions }),
-          optional: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "optional", setup: setupActions }),
-          recommended: () => this.staticAssertions.push({ target, attribute, expectedValue, failureMessage: '', level: "recommended", setup: setupActions }),
-        });
+        // Helper to infer assertion type from attribute
+        const inferAssertionType = (attribute: string): StaticAssertion["assertion"] => {
+          if (attribute === "role") return "toHaveRole";
+          return "toHaveAttribute";
+        };
+
+        const createFinalizers = (attribute: string, expectedValue: string, setupActions?: DynamicAction[]) => {
+          const assertion = inferAssertionType(attribute);
+          return {
+            required: () => this.staticAssertions.push({ target, assertion, attribute, expectedValue, failureMessage: '', level: "required", setup: setupActions }),
+            optional: () => this.staticAssertions.push({ target, assertion, attribute, expectedValue, failureMessage: '', level: "optional", setup: setupActions }),
+            recommended: () => this.staticAssertions.push({ target, assertion, attribute, expectedValue, failureMessage: '', level: "recommended", setup: setupActions }),
+          };
+        };
 
         return {
           has: (attribute: string, expectedValue: string) => {
@@ -287,11 +307,13 @@ class ContractBuilder {
 
 class DynamicTestBuilder {
   private _as: string | undefined;
-  private _on: string | undefined;
-  private _given: string[] = [];
-  private _then: string[] = [];
+  private _onTarget: string | undefined;
+  private _onRelativeTarget: string | number | undefined;
+  private _given: (string | RelativeState)[] = [];
+  private _then: (string | RelativeState)[] = [];
   private _desc: string = '';
   private _level: Level = "required";
+  private _orientation: "vertical" | "horizontal" | undefined;
 
   constructor(
     private parent: ContractBuilder,
@@ -304,19 +326,51 @@ class DynamicTestBuilder {
     return this;
   }
 
-  on(target: string) {
-    this._on = target;
+  on(target: string, relativeTarget?: string | number) {
+    this._onTarget = target;
+    this._onRelativeTarget = relativeTarget;
     return this;
   }
 
-  given(states: string | string[]) {
-    this._given = Array.isArray(states) ? states : [states];
+  given(states: string | string[] | RelativeState | RelativeState[]) {
+    this._given = this._normalizeStates(states);
     return this;
   }
 
-  then(states: string | string[]) {
-    this._then = Array.isArray(states) ? states : [states];
+  then(states: string | string[] | RelativeState | RelativeState[]) {
+    this._then = this._normalizeStates(states);
     return this;
+  }
+
+  orientation(orientation: "vertical" | "horizontal") {
+    this._orientation = orientation;
+    return this;
+  }
+
+  /**
+   * Normalize states to an array of string or resolved state keys from relative state objects.
+   */
+  private _normalizeStates(states: string | string[] | RelativeState | RelativeState[]): (string | RelativeState)[] {
+    const arr = Array.isArray(states) ? states : [states];
+    return arr.flatMap((s): (string | RelativeState)[] => {
+      if (typeof s === "string") return [s];
+      if (typeof s === "object" && s !== null && "type" in s && "ref" in s) {
+        // Only include if the key exists in the state pack
+        const key = this._findStateKeyByTypeAndRef(s.type);
+        if (key) return [{ type: s.type, ref: s.ref }];
+        return [];
+      }
+      return [s];
+    });
+  }
+
+  /**
+   * Find a generic state key in the state pack by type.
+   */
+  private _findStateKeyByTypeAndRef(type: string): string | undefined {
+    const candidates = Object.keys(this.statePack);
+    if (candidates.includes(type)) return type;
+    return undefined;
   }
 
   describe(desc: string) {
@@ -348,7 +402,6 @@ class DynamicTestBuilder {
       type: "textInput",
       focus: "keyboard",
       hover: "pointer",
-      // add more mappings as needed
     };
     const capability = capabilityMap[this._as || "keyboard"] || (this._as || "keyboard");
     const ctx: CapabilityContext = { capabilities: [capability] };
@@ -367,40 +420,85 @@ class DynamicTestBuilder {
       return actions;
     };
 
-    // Build setup from .given (recursively)
-    const setup: DynamicAction[] = [];
+    // Build setup from .given (recursively) and deduplicate
+    let setup: DynamicAction[] = [];
     for (const state of this._given) {
-      setup.push(...resolveAllSetups(state));
+      if (typeof state === "string") {
+        setup.push(...resolveAllSetups(state));
+      } else if (typeof state === "object" && state !== null && "type" in state && "ref" in state) {
+        const key = this._findStateKeyByTypeAndRef(state.type);
+        if (key) {
+          const s = this.statePack[key];
+          if (s && s.setup) {
+            for (const setupItem of s.setup) {
+              if (typeof setupItem.steps === "function") {
+                setup.push(...setupItem.steps({ relativeTarget: state.ref }));
+              } else if (Array.isArray(setupItem.steps)) {
+                setup.push(...setupItem.steps);
+              }
+            }
+          }
+        }
+      }
     }
+    
+    const seen = new Set<string>();
+    setup = setup.filter(action => {
+      const key = JSON.stringify(action);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
     // Build assertions from .then
     const assertions: DynamicAssertion[] = [];
     for (const state of this._then) {
-      const s = this.statePack[state];
-      if (s && s.assertion !== undefined) {
-        let value: unknown = s.assertion;
-        if (typeof value === "function") {
-          try {
-            value = (value as (() => unknown))();
-          } catch (e) {
-            throw new Error(`Error calling assertion function for state '${state}': ${(e as Error).message}`);
+      if (typeof state === "string") {
+        const s = this.statePack[state];
+        if (s && s.assertion !== undefined) {
+          let value: unknown = s.assertion;
+          if (typeof value === "function") {
+            try {
+              value = (value as (() => unknown))();
+            } catch (e) {
+              throw new Error(`Error calling assertion function for state '${state}': ${(e as Error).message}`);
+            }
+          }
+          if (Array.isArray(value)) assertions.push(...value);
+          else assertions.push(value as DynamicAssertion);
+        }
+      } else if (typeof state === "object" && state !== null && "type" in state && "ref" in state) {
+        const key = this._findStateKeyByTypeAndRef(state.type);
+        if (key) {
+          const s = this.statePack[key];
+          if (s && s.assertion !== undefined) {
+            let value: unknown = s.assertion;
+            if (typeof value === "function") {
+              try {
+                value = (value as (arg: { relativeTarget?: string | number }) => unknown)({ relativeTarget: state.ref });
+              } catch (e) {
+                throw new Error(`Error calling assertion function for state '${key}': ${(e as Error).message}`);
+              }
+            }
+            if (Array.isArray(value)) assertions.push(...value);
+            else assertions.push(value as DynamicAssertion);
           }
         }
-        if (Array.isArray(value)) assertions.push(...value);
-        else assertions.push(value as DynamicAssertion);
       }
     }
     // Action from .when/.as/.on
     const action: DynamicAction[] = [
       {
         type: this._as as DynamicAction["type"],
-        target: this._on as string,
+        target: this._onTarget as string,
         key: this._as === "keypress" ? this.event : undefined,
+        relativeTarget: this._onRelativeTarget,
       }
     ];
     this.parent.addDynamicTest({
       description: this._desc || '',
       level: this._level,
+      orientation: this._orientation || "horizontal",
       action,
       assertions,
       ...(setup.length ? { setup } : {}),
