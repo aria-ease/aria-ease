@@ -80,7 +80,6 @@ interface Selector extends Record<string, string | undefined> {
     leafItem?: string;
     relative?: string;
     container?: string;
-    focusable?: string;
     submenuTrigger?: string;
     submenu?: string;
     submenuItems?: string;
