@@ -1,8 +1,8 @@
 export const COMBOBOX_STATES = {
-  "popup.open": {
+  "comboboxpopup.open": {
     setup: [
       {
-        when: ["keyboard", "textInput"],
+        when: ["keyboard", "textInput", "pointer"],
         steps: () => [
           { type: "keypress", target: "input", key: "ArrowDown" }
         ]
@@ -16,27 +16,19 @@ export const COMBOBOX_STATES = {
     ],
     assertion: isComboboxOpen
   },
-  "popup.closed": {
+  "comboboxpopup.closed": {
     setup: [
       {
-        when: ["keyboard"],
-        steps: () => [
-          /* { type: "keypress", target: "input", key: "Escape" } */
-        ]
-      },
-      {
-        when: ["pointer"],
-        steps: () => [
-          /* { type: "click", target: "button" } */
-        ]
+        when: ["keyboard", "pointer"],
+        steps: () => []
       }
     ],
-    assertion: [...isComboboxClosed(), ...isActiveDescendantEmpty()]
+    assertion: [...isComboboxClosed(), ...isActiveDescendantUnset()]
   },
   "main.focused": {
     setup: [
       {
-        when: ["keyboard"],
+        when: ["keyboard", "pointer"],
         steps: () => [
           { type: "focus", target: "main" }
         ]
@@ -44,21 +36,19 @@ export const COMBOBOX_STATES = {
     ],
     assertion: isMainFocused
   },
-  "main.notFocused": {
+  "main.blurred": {
     setup: [
       {
-        when: ["keyboard"],
-        steps: () => [ //what to do here?
-          
-        ]
+        when: ["keyboard", "pointer"],
+        steps: () => []
       }
     ],
-    assertion: isMainNotFocused
+    assertion: isMainBlurred
   },
   "input.filled": {
     setup: [
       {
-        when: ["keyboard", "textInput"],
+        when: ["keyboard", "textInput", "pointer"],
         steps: () => [
           { type: "type", target: "input", value: "test" }
         ]
@@ -66,19 +56,19 @@ export const COMBOBOX_STATES = {
     ],
     assertion: isInputFilled
   },
-  "input.notFilled": {
+  "input.empty": {
     setup: [
       {
-        when: ["keyboard", "textInput"],
+        when: ["keyboard", "textInput", "pointer"],
         steps: () => [
           { type: "type", target: "input", value: "" }
         ]
       }
     ],
-    assertion: isInputNotFilled
+    assertion: isInputEmpty
   },
-  "activeOption": {
-    requires: ["popup.open"],
+  "option.active": {
+    requires: ["comboboxpopup.open"],
     setup: [
       {
         when: ["keyboard", "pointer"],
@@ -87,46 +77,47 @@ export const COMBOBOX_STATES = {
           if (typeof arg.relativeTarget === "number") {
             return Array.from({ length: arg.relativeTarget }, () => ({
               type: "keypress",
-              target: "input", // or "main" for menu
+              target: "main",
               key: "ArrowDown"
             }));
           }
-          // For "first", "last", etc., handle as needed
-          if (arg.relativeTarget === "first") return [];
-          if (arg.relativeTarget === "last") return [{ type: "keypress", target: "input", key: "ArrowUp" }];
-          // ...handle "next", "previous" if needed
+          if (arg.relativeTarget === "first") {
+            return [{ type: "keypress", target: "main", key: "ArrowDown" }];
+          }
+          if (arg.relativeTarget === "last") {
+            return [
+              { type: "keypress", target: "main", key: "ArrowDown" },
+              { type: "keypress", target: "main", key: "ArrowUp" }
+            ]
+          };
           return [];
         }
       }
     ],
     assertion: (arg: { relativeTarget?: string | number } = {}) => isActiveDescendant(arg.relativeTarget as string | number)
   },
-  "activeDescendant.notEmpty": {
+  "activedescendant.set": {
     requires: [],
     setup: [
       {
-        when: ["keyboard"],
-        steps: () => [
-          
-        ]
+        when: ["keyboard", "pointer"],
+        steps: () => []
       }
     ],
-    assertion: isActiveDescendantNotEmpty
+    assertion: isActiveDescendantSet
   },
-  "activeDescendant.Empty": {
+  "activedescendant.unset": {
     requires: [],
     setup: [
       {
-        when: ["keyboard"],
-        steps: () => [
-          
-        ]
+        when: ["keyboard", "pointer"],
+        steps: () => []
       }
     ],
-    assertion: isActiveDescendantEmpty
+    assertion: isActiveDescendantUnset
   },
-  "selectedOption": {
-    requires: ["popup.open"],
+  "option.selected": {
+    requires: ["comboboxpopup.open"],
     setup: [
       {
         when: ["keyboard"],
@@ -187,12 +178,12 @@ function isActiveDescendant(relativeTarget: string | number) {
       assertion: "toHaveAttribute",
       attribute: "aria-activedescendant",
       expectedValue: { ref: "relative", relativeTarget, property: "id"},
-      failureMessage: "Expected aria-activedescendant on main to match the id of the first option."
+      failureMessage: "Expected aria-activedescendant on main to match the id of the first relative item."
     }
   ]
 }
 
-function isActiveDescendantNotEmpty() {
+function isActiveDescendantSet() {
   return [
     {
       target: "main",
@@ -204,7 +195,7 @@ function isActiveDescendantNotEmpty() {
   ]
 }
 
-function isActiveDescendantEmpty() {
+function isActiveDescendantUnset() {
   return [
     {
       target: "main",
@@ -224,7 +215,7 @@ function isAriaSelected(relativeTarget: string | number) {
       assertion: "toHaveAttribute",
       attribute: "aria-selected",
       expectedValue: "true",
-      failureMessage: `Expected ${relativeTarget} option to have aria-selected='true'.`,
+      failureMessage: `Expected ${relativeTarget} item to have aria-selected='true'.`,
     }
   ]
 }
@@ -239,7 +230,7 @@ function isMainFocused() {
   ]
 }
 
-function isMainNotFocused() {
+function isMainBlurred() {
   return [
     {
       target: "main",
@@ -260,7 +251,7 @@ function isInputFilled() {
   ]
 }
 
-function isInputNotFilled() {
+function isInputEmpty() {
   return [
     {
       target: "input",

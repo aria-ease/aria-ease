@@ -194,11 +194,6 @@ export class ActionExecutor {
         keyValue = keyValue.replace(/ /g, "");
       }
 
-      if (target === "focusable" && ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape", "Home", "End", "Tab", "Shift+Tab"].includes(keyValue)) {
-        await this.page.keyboard.press(keyValue);
-        return { success: true };
-      }
-
       if (target === "relative") {
         if (relativeTarget === undefined || relativeTarget === null) {
           return { success: false, error: `relativeTarget must be provided for relative keypress.` };

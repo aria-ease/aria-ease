@@ -23,12 +23,7 @@ class MenuComponentStrategy implements ComponentStrategy {
         let menuClosed = false;
         
         // Strategy 1: Try Escape key
-        let closeSelector = this.selectors.input; // For combobox
-        if (!closeSelector && this.selectors.focusable) {
-            closeSelector = this.selectors.focusable;
-        } else if (!closeSelector) {
-            closeSelector = this.selectors.main;
-        }
+        const closeSelector = this.selectors.main;
         
         if (closeSelector) {
             const closeElement = page.locator(closeSelector).first();
