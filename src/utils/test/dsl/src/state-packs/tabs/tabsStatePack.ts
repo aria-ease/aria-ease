@@ -1,5 +1,5 @@
 export const TABS_STATES = {
-    "activeTab": {
+    "tab.active": {
         setup: [
             {
                 when: ["keyboard"],
@@ -16,16 +16,10 @@ export const TABS_STATES = {
         ],
         assertion: (arg: { relativeTarget?: string | number } = {}) => isTabActive(arg.relativeTarget as string | number)
     },
-    "focusedTab": {
+    "tab.focused": {
         setup: [
             {
-                when: ["keyboard"],
-                steps: (arg: { relativeTarget?: string | number } = {}) => [
-                    { type: "focus", target: "relative", relativeTarget: arg.relativeTarget }
-                ]
-            },
-            {
-                when: ["pointer"],
+                when: ["keyboard", "pointer"],
                 steps: (arg: { relativeTarget?: string | number } = {}) => [
                     { type: "focus", target: "relative", relativeTarget: arg.relativeTarget }
                 ]

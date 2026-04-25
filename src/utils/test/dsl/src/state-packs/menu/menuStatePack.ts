@@ -1,5 +1,5 @@
 export const MENU_STATES = {
-  "popup.open": {
+  "menupopup.open": {
     setup: [
       {
         when: ["keyboard"],
@@ -16,19 +16,11 @@ export const MENU_STATES = {
     ],
     assertion: isMenuPopupOpen
   },
-  "popup.closed": {
+  "menupopup.closed": {
     setup: [
       {
-        when: ["keyboard"],
-        steps: () => [ // component resets after each test so popup is closed
-         
-        ]
-      },
-      {
-        when: ["pointer"],
-        steps: () => [
-          
-        ]
+        when: ["keyboard", "pointer"],
+        steps: () => []
       }
     ],
     assertion: isMenuPopupClosed
@@ -36,7 +28,7 @@ export const MENU_STATES = {
   "main.focused": {
     setup: [
       {
-        when: ["keyboard"],
+        when: ["keyboard", "pointer"],
         steps: () => [
           { type: "focus", target: "main" }
         ]
@@ -44,20 +36,17 @@ export const MENU_STATES = {
     ],
     assertion: isMainFocused
   },
-  "main.notFocused": {
+  "main.blurred": {
     setup: [
       {
-        when: ["keyboard"],
-        steps: () => [ //what to do here?
-          
-        ]
+        when: ["keyboard", "pointer"],
+        steps: () => []
       }
     ],
-    assertion: isMainNotFocused
+    assertion: isMainBlurred
   },
-
-  "activeItem": {
-    requires: ["popup.open"],
+  "menuitem.focused": {
+    requires: ["menupopup.open"],
     setup: [
       {
         when: ["keyboard"],
@@ -66,10 +55,10 @@ export const MENU_STATES = {
         ]
       }
     ],
-    assertion: (arg: { relativeTarget?: string | number } = {}) => isItemActive(arg.relativeTarget as string | number)
+    assertion: (arg: { relativeTarget?: string | number } = {}) => isItemFocused(arg.relativeTarget as string | number)
   }, 
-  "submenu.open": {
-    requires: ["popup.open"],
+  "submenupopup.open": {
+    requires: ["menupopup.open"],
     setup: [
       {
         when: ["keyboard"],
@@ -86,28 +75,19 @@ export const MENU_STATES = {
     ],
     assertion: isSubmenuPopupOpen
   },
-  "submenu.closed": {
-    requires: ["submenu.open"],
+  "submenupopup.closed": {
     setup: [
       {
-        when: ["keyboard"],
-        steps: () => [
-          { type: "keypress", target: "submenuTrigger", key: "ArrowLeft" }
-        ]
-      },
-      {
-        when: ["pointer"],
-        steps: () => [
-          { type: "click", target: "submenuTrigger" }
-        ]
+        when: ["keyboard", "pointer"],
+        steps: () => []
       }
     ],
     assertion: isSubmenuPopupClosed 
   },
-  "submenuTrigger.focused": {
+  "submenutrigger.focused": {
     setup: [
       {
-        when: ["keyboard"],
+        when: ["keyboard", "pointer"],
         steps: () => [
           { type: "focus", target: "submenuTrigger" }
         ]
@@ -115,50 +95,54 @@ export const MENU_STATES = {
     ],
     assertion: isSubmenuTriggerFocused
   },
-  "submenuTrigger.notFocused": {
+  "submenutrigger.blurred": {
+    setup: [
+      {
+        when: ["keyboard", "pointer"],
+        steps: () => []
+      }
+    ],
+    assertion: isSubmenuTriggerBlurred
+  },
+  "submenuitem.focused": {
+    requires: ["submenupopup.open"],
     setup: [
       {
         when: ["keyboard"],
-        steps: () => [ //what to do here?
-          
+        steps: (arg: { relativeTarget?: string | number } = {}) => {
+          // Focus trigger, ArrowRight to open, then ArrowDown N times
+          let steps = [
+            { type: "focus", target: "submenuTrigger" },
+            { type: "keypress", target: "submenuTrigger", key: "ArrowRight" }
+          ];
+          if (typeof arg.relativeTarget === "number") {
+            steps = steps.concat(
+              Array.from({ length: arg.relativeTarget }, () => ({
+                type: "keypress",
+                target: "submenuItems",
+                key: "ArrowDown"
+              }))
+            );
+          }
+          if (arg.relativeTarget === "first") {
+            steps = steps.concat({ type: "keypress", target: "submenuItems", key: "ArrowDown" })
+          }
+          if (arg.relativeTarget === "last") {
+            steps = steps.concat({ type: "keypress", target: "submenuItems", key: "ArrowUp" })
+          }
+          return steps;
+        }
+      },
+      {
+        when: ["pointer"],
+        steps: (arg: { relativeTarget?: string | number } = {}) => [
+          { type: "click", target: "submenuTrigger" },
+          { type: "click", target: "relative", relativeTarget: arg.relativeTarget }
         ]
       }
     ],
-    assertion: isSubmenuTriggerNotFocused
-  },
-  "activeSubmenuItem": {
-  requires: ["submenu.open"],
-  setup: [
-    {
-      when: ["keyboard"],
-      steps: (arg: { relativeTarget?: string | number } = {}) => {
-        // Focus trigger, ArrowRight to open, then ArrowDown N times
-        let steps = [
-          { type: "focus", target: "submenuTrigger" },
-          { type: "keypress", target: "submenuTrigger", key: "ArrowRight" }
-        ];
-        if (typeof arg.relativeTarget === "number") {
-          steps = steps.concat(
-            Array.from({ length: arg.relativeTarget }, () => ({
-              type: "keypress",
-              target: "submenuItems",
-              key: "ArrowDown"
-            }))
-          );
-        }
-        return steps;
-      }
-    },
-    {
-      when: ["pointer"],
-      steps: (arg: { relativeTarget?: string | number } = {}) => [
-        { type: "click", target: "submenuTrigger" },
-        { type: "click", target: "relative", relativeTarget: arg.relativeTarget }
-      ]
-    }
-  ],
-  assertion: (arg: { relativeTarget?: string | number } = {}) => isSubmenuActiveItem(arg.relativeTarget as string | number)
-}
+    assertion: (arg: { relativeTarget?: string | number } = {}) => isSubmenuItemFocused(arg.relativeTarget as string | number)
+  }
 }
 
 
@@ -206,7 +190,7 @@ function isMainFocused() {
   ]
 }
 
-function isMainNotFocused() {
+function isMainBlurred() {
   return [
     {
       target: "main",
@@ -216,7 +200,7 @@ function isMainNotFocused() {
   ]
 }
 
-function isItemActive(relativeTarget: string | number) {
+function isItemFocused(relativeTarget: string | number) {
   return [
     {
       target: "relative",
@@ -271,7 +255,7 @@ function isSubmenuTriggerFocused() {
   ]
 }
 
-function isSubmenuTriggerNotFocused() {
+function isSubmenuTriggerBlurred() {
   return [
     {
       target: "submenuTrigger",
@@ -281,7 +265,7 @@ function isSubmenuTriggerNotFocused() {
    ]
 }
 
-function isSubmenuActiveItem(relativeTarget: string | number) {
+function isSubmenuItemFocused(relativeTarget: string | number) {
   return [
     {
       target: "relative",

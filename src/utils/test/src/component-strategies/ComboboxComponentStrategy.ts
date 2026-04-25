@@ -24,12 +24,7 @@ class ComboboxComponentStrategy implements ComponentStrategy {
         let popupClosed = false;
         
         // Strategy 1: Try Escape key (standard for combobox)
-        let closeSelector = this.selectors.input; // For combobox
-        if (!closeSelector && this.selectors.focusable) {
-            closeSelector = this.selectors.focusable;
-        } else if (!closeSelector) {
-            closeSelector = this.selectors.button;
-        }
+        const closeSelector = this.selectors.main;
         
         if (closeSelector) {
             const closeElement = page.locator(closeSelector).first();
