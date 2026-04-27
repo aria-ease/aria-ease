@@ -1,6 +1,7 @@
 import { COMBOBOX_STATES } from "./state-packs/combobox/comboboxStatePack";
 import { MENU_STATES } from "./state-packs/menu/menuStatePack";
 import { TABS_STATES } from "./state-packs/tabs/tabsStatePack";
+import { ACCORDION_STATES } from "./state-packs/accordion/accordionStatePack";
 import { resolveSetup, CapabilityContext } from "./state-packs/Capability";
 
 type StatePack = Record<string, {
@@ -20,7 +21,8 @@ type RelativeState = {
 const STATE_PACKS: Record<string, unknown> = {
   "combobox": COMBOBOX_STATES,
   "menu":  MENU_STATES,
-  "tabs": TABS_STATES
+  "tabs": TABS_STATES,
+  "accordion": ACCORDION_STATES
 };
 
 type Level = "required" | "recommended" | "optional";
@@ -108,7 +110,7 @@ type JsonContract = {
   meta?: ContractMeta;
   selectors: SelectorsMap;
   relationships?: RelationshipInvariant[];
-  static: Array<{ assertions: StaticAssertion[] }>;
+  static: StaticAssertion[];
   dynamic: DynamicTest[];
 };
 
@@ -299,7 +301,7 @@ class ContractBuilder {
       meta: this.metaValue,
       selectors: this.selectorsValue,
       relationships: this.relationshipInvariants.length ? this.relationshipInvariants : undefined,
-      static: this.staticAssertions.length ? [{ assertions: this.staticAssertions }] : [],
+      static: this.staticAssertions.length ? this.staticAssertions : [],
       dynamic: this.dynamicTests,
     };
   }
@@ -498,7 +500,7 @@ class DynamicTestBuilder {
     this.parent.addDynamicTest({
       description: this._desc || '',
       level: this._level,
-      orientation: this._orientation || "horizontal",
+      orientation: this._orientation || "horizontal", //it's setting orientation for all components
       action,
       assertions,
       ...(setup.length ? { setup } : {}),

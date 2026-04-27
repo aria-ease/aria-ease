@@ -693,8 +693,6 @@ Aria-Ease includes a built-in testing framework for automated accessibility vali
 ```javascript
 import { describe, test, afterAll } from "vitest";
 import { testUiComponent, cleanupTests } from "aria-ease/test";
-import { render } from "@testing-library/react";
-import ShopifyUserMenu from "../src/components/menus/ShopifyUserMenu";
 
 afterAll(async () => {
   await cleanupTests();
@@ -703,17 +701,8 @@ afterAll(async () => {
 describe("Shopify User Menu Accessibility Test", () => {
   test("renders Shopify user menu without accessibility violation(s)", async () => {
     await testUiComponent(
-      "menu",
-      null,
-      "http://localhost:5173/test-harness?component=menu",
-    ); // For full component interaction test. Uses Playwright to test interaction and behaviors
-  });
-});
-
-describe("Shopify User Menu Accessibility Test", () => {
-  test("renders Shopify user menu without accessibility violation(s)", async () => {
-    const { container } = render(<ShopifyUserMenu />);
-    await testUiComponent("menu", container, null); // For fast limited static tests. Doesn't test for interaction and behaviors
+      "menu", "http://localhost:5173/test-harness?component=menu",
+    ); 
   });
 });
 ```

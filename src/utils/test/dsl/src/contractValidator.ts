@@ -48,62 +48,38 @@ export function validateContractSchema(contract: unknown): ValidationResult {
   if (!Array.isArray(c.static)) {
     errors.push({ path: '$.static', message: 'static must be an array' });
   } else {
-    c.static.forEach((item, idx) => {
-      if (typeof item !== 'object' || item === null) {
+    c.static.forEach((assertion, idx) => {
+      if (typeof assertion !== 'object' || assertion === null) {
         errors.push({ path: `$.static[${idx}]`, message: 'static item must be an object' });
         return;
       }
-
-      const staticItem = item as Record<string, unknown>;
-      if (!Array.isArray(staticItem.assertions)) {
+      const a = assertion as Record<string, unknown>;
+      // Validate required assertion fields
+      if (typeof a.target !== 'string') {
         errors.push({
-          path: `$.static[${idx}].assertions`,
-          message: 'assertions must be an array'
+          path: `$.static[${idx}].target`,
+          message: 'target is required and must be a string'
         });
-        return;
       }
-
-      staticItem.assertions.forEach((assertion, assertIdx) => {
-        if (typeof assertion !== 'object' || assertion === null) {
-          errors.push({
-            path: `$.static[${idx}].assertions[${assertIdx}]`,
-            message: 'assertion must be an object'
-          });
-          return;
-        }
-
-        const a = assertion as Record<string, unknown>;
-        
-        // Validate required assertion fields
-        if (typeof a.target !== 'string') {
-          errors.push({
-            path: `$.static[${idx}].assertions[${assertIdx}].target`,
-            message: 'target is required and must be a string'
-          });
-        }
-
-        if (typeof a.attribute !== 'string') {
-          errors.push({
-            path: `$.static[${idx}].assertions[${assertIdx}].attribute`,
-            message: 'attribute is required and must be a string'
-          });
-        }
-
-        if (typeof a.failureMessage !== 'string') {
-          errors.push({
-            path: `$.static[${idx}].assertions[${assertIdx}].failureMessage`,
-            message: 'failureMessage is required and must be a string'
-          });
-        }
-
-        // Validate level if present
-        if (a.level !== undefined && !['required', 'recommended', 'optional'].includes(a.level as string)) {
-          errors.push({
-            path: `$.static[${idx}].assertions[${assertIdx}].level`,
-            message: 'level must be one of: required, recommended, optional'
-          });
-        }
-      });
+      if (typeof a.attribute !== 'string') {
+        errors.push({
+          path: `$.static[${idx}].attribute`,
+          message: 'attribute is required and must be a string'
+        });
+      }
+      if (typeof a.failureMessage !== 'string') {
+        errors.push({
+          path: `$.static[${idx}].failureMessage`,
+          message: 'failureMessage is required and must be a string'
+        });
+      }
+      // Validate level if present
+      if (a.level !== undefined && !['required', 'recommended', 'optional'].includes(a.level as string)) {
+        errors.push({
+          path: `$.static[${idx}].level`,
+          message: 'level must be one of: required, recommended, optional'
+        });
+      }
     });
   }
 

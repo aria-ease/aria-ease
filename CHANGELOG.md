@@ -2,6 +2,27 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [7.3.0](https://github.com/aria-ease/aria-ease/compare/v7.0.0...v7.3.0) (2026-04-27)
+
+
+### ⚠ BREAKING CHANGES
+
+* **state-packs:** State names have changed (e.g., activeTab → tab.active, main.notFocused → main.blurred, selectedOption → option.selected, activeDescendant.empty → activedescendant.unset, etc.)
+* DSL no longer uses relative state names like "activeTab.first" in .given() and .then(). Now uses {type: "activeTab", "first"}
+
+### Features
+
+* added accordion component state pack ([ffa404c](https://github.com/aria-ease/aria-ease/commit/ffa404c62bca3caff51ec48335387b66154594a4))
+* added tabs state pack ([7d8a786](https://github.com/aria-ease/aria-ease/commit/7d8a786c06cfbc73e745dde23d15a5354663d7f1))
+
+
+### Bug Fixes
+
+* fixed component utilities breaking app when parameters are empty string ([0483263](https://github.com/aria-ease/aria-ease/commit/0483263387f1bd0eea3b4975afbbd13dd5477ce1))
+
+
+* **state-packs:** rename state keys for clarity and semantics ([6f0541d](https://github.com/aria-ease/aria-ease/commit/6f0541d917a38003b099ac8fb6c7dd8222c59fb4))
+
 ## [7.2.0](https://github.com/aria-ease/aria-ease/compare/v7.0.0...v7.2.0) (2026-04-25)
 
 
