@@ -139,19 +139,17 @@ interface ComponentContract {
         requires?: string[];
     }>;
     static: Array<{
-        assertions: Array<{
+        target: string;
+        attribute: string;
+        expectedValue: string | { ref: string, attribute?: string, property: string, relativeTarget?: string | number };
+        failureMessage: string;
+        level?: ContractLevel;
+        setup: Array<{
+            type: string;
             target: string;
-            attribute: string;
-            expectedValue: string | { ref: string, attribute?: string, property: string, relativeTarget?: string | number };
-            failureMessage: string;
-            level?: ContractLevel;
-            setup: Array<{
-                type: string;
-                target: string;
-                key?: string;
-                value?: string;
-                relativeTarget?: string | number;
-            }>;
+            key?: string;
+            value?: string;
+            relativeTarget?: string | number;
         }>;
     }>;
     dynamic: Array<{

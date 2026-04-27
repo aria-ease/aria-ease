@@ -282,9 +282,7 @@ type JsonContract = {
     meta?: ContractMeta;
     selectors: SelectorsMap;
     relationships?: RelationshipInvariant[];
-    static: Array<{
-        assertions: StaticAssertion[];
-    }>;
+    static: StaticAssertion[];
     dynamic: DynamicTest[];
 };
 declare class FluentContract {

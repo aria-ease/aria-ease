@@ -12,8 +12,8 @@ class AccordionComponentStrategy implements ComponentStrategy {
 
     async resetState(page: Page): Promise<void> {
         // Collapse all expanded panels for accordion components
-        if (!this.selectors.panel || !this.selectors.trigger || this.selectors.popup) {
-            return; // Not an accordion or has popup (menu/combobox)
+        if (!this.selectors.panel || !this.selectors.trigger) {
+            return; // Not an accordion
         }
         
         const triggerSelector = this.selectors.trigger;

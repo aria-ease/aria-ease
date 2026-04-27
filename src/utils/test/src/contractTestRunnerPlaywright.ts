@@ -66,7 +66,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
   const contractData = readFileSync(resolvedPath, "utf-8");
   const componentContract: ComponentContract = JSON.parse(contractData);
-  const totalTests = (componentContract.relationships?.length || 0) + (componentContract.static[0]?.assertions.length || 0) + componentContract.dynamic.length;
+  const totalTests = (componentContract.relationships?.length || 0) + (componentContract.static.length || 0) + componentContract.dynamic.length;
   const apgUrl = componentContract.meta?.source?.apg;
   const failures: string[] = [];
   const warnings: string[] = [];
@@ -457,7 +457,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       return { success: true };
     }
 
-    for (const test of componentContract.static[0]?.assertions || []) {
+    for (const test of componentContract.static || []) {
       if (strategy && typeof strategy.resetState === 'function') {
         try {
           await strategy.resetState(page);

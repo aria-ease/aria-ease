@@ -97,7 +97,6 @@ export const COMBOBOX_STATES = {
     assertion: (arg: { relativeTarget?: string | number } = {}) => isActiveDescendant(arg.relativeTarget as string | number)
   },
   "activedescendant.set": {
-    requires: [],
     setup: [
       {
         when: ["keyboard", "pointer"],
@@ -107,7 +106,6 @@ export const COMBOBOX_STATES = {
     assertion: isActiveDescendantSet
   },
   "activedescendant.unset": {
-    requires: [],
     setup: [
       {
         when: ["keyboard", "pointer"],
@@ -122,13 +120,13 @@ export const COMBOBOX_STATES = {
       {
         when: ["keyboard"],
         steps: (arg: { relativeTarget?: string | number } = {}) => [
-          { type: "keypress", target: "relative", key: "Enter", relativeTargeta: arg.relativeTarget }
+          { type: "keypress", target: "relative", key: "Enter", relativeTarget: arg.relativeTarget }
         ]
       },
       {
         when: ["pointer"],
         steps: (arg: { relativeTarget?: string | number } = {}) => [
-          { type: "click", target: "relative", relativeTargeta: arg.relativeTarget }
+          { type: "click", target: "relative", relativeTarget: arg.relativeTarget }
         ]
       }
     ],
