@@ -5,14 +5,11 @@
  * @param {string} checkboxesClass - The shared class of all checkboxes.
  */
 
-import { AccessibilityInstance } from "Types";
+import { AccessibilityInstance, CheckboxConfig } from "Types";
 
-interface CheckboxConfig {
-  checkboxGroupId: string;
-  checkboxesClass: string;
-}
 
-export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: CheckboxConfig): AccessibilityInstance {
+
+export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass, callback }: CheckboxConfig): AccessibilityInstance {
   if (checkboxGroupId === "") {
     console.error(`[aria-ease] 'checkboxGroupId' should not be an empty string. Provide an id to the checkbox group container element that exists before calling makeCheckboxAccessible.`);
     return { cleanup: () => {} };
@@ -60,6 +57,16 @@ export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: Che
     });
   }
 
+  function callBack(index: number, isChecked: boolean) {
+    if(callback?.onCheck) {
+      try {
+        callback.onCheck(index, isChecked);
+      } catch(error) {
+        console.error("[aria-ease] Error in checkbox onCheck callback:", error);
+      }
+    }
+  }
+
   function toggleCheckbox(index: number) {
     if (index < 0 || index >= checkboxes.length) {
       console.error(`[aria-ease] Invalid checkbox index: ${index}`);
@@ -69,6 +76,8 @@ export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: Che
     const checkbox = checkboxes[index];
     const isChecked = checkbox.getAttribute("aria-checked") === "true";
     checkbox.setAttribute("aria-checked", isChecked ? "false" : "true");
+    
+    callBack(index, isChecked);
   }
 
   function setCheckboxState(index: number, checked: boolean) {
@@ -78,6 +87,7 @@ export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: Che
     }
 
     checkboxes[index].setAttribute("aria-checked", checked ? "true" : "false");
+    callBack(index, checked);
   }
 
   function handleCheckboxClick(index: number) {

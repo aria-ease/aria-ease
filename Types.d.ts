@@ -284,6 +284,27 @@ interface ComboboxCallback {
     onClear?: () => void;
 }
 
+interface RadioConfig {
+  radioGroupId: string;
+  radiosClass: string;
+  defaultSelectedIndex?: number;
+  callback?: RadioCallback;
+}
+
+interface RadioCallback {
+    onCheck?: (index: number) => void;
+}
+
+interface CheckboxConfig {
+  checkboxGroupId: string;
+  checkboxesClass: string;
+  callback?: CheckboxCallback;
+}
+
+interface CheckboxCallback {
+    onCheck?: (index: number, checked: boolean) => void;
+}
+
 interface MenuConfig {
     menuId: string; 
     menuItemsClass: string; 
@@ -322,10 +343,12 @@ export {
     Selector,
     FailureReport,
     AccessibilityInstance,
+    CheckboxConfig,
     ComboboxConfig,
     ContractTestResult,
     AccordionConfig,
     MenuConfig,
+    RadioConfig,
     TabsConfig,
     TabsCallback,
     ComponentStrategy,
@@ -333,7 +356,7 @@ export {
     StrictnessMode,
     ContractLevel,
     InterpretationMode,
-    ContractConfidence
+    ContractConfidence,
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;

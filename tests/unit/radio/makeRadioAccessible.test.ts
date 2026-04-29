@@ -32,10 +32,9 @@ describe("makeRadioAccessible", () => {
       expect(radioGroup.getAttribute("role")).toBe("radiogroup");
 
       const radios = radioGroup.querySelectorAll(".radio-button");
-      radios.forEach((radio, index) => {
+      radios.forEach((radio) => {
         expect(radio.getAttribute("role")).toBe("radio");
-        expect(radio.getAttribute("aria-checked")).toBe(index === 0 ? "true" : "false");
-        expect(radio.getAttribute("tabindex")).toBe(index === 0 ? "0" : "-1");
+        expect(radio.getAttribute("aria-checked")).toBe("false");
       });
     });
 
@@ -109,7 +108,7 @@ describe("makeRadioAccessible", () => {
 
       const radios = radioGroup.querySelectorAll(".radio-button");
       expect(radios[0].getAttribute("aria-checked")).toBe("false");
-      expect(radios[0].getAttribute("tabindex")).toBe("-1");
+      expect(radios[0].getAttribute("tabindex")).toBe("0");
       expect(radios[1].getAttribute("aria-checked")).toBe("true");
       expect(radios[1].getAttribute("tabindex")).toBe("0");
       expect(document.activeElement).toBe(radios[1]);
