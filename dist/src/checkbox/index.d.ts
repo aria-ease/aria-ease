@@ -1,4 +1,4 @@
-import { a as AccessibilityInstance } from '../Types.d-DYfYR3Vc.js';
+import { C as CheckboxConfig, a as AccessibilityInstance } from '../Types.d-D96FYkCN.js';
 
 /**
  * Makes a checkbox group accessible by managing ARIA attributes and keyboard interaction.
@@ -7,10 +7,6 @@ import { a as AccessibilityInstance } from '../Types.d-DYfYR3Vc.js';
  * @param {string} checkboxesClass - The shared class of all checkboxes.
  */
 
-interface CheckboxConfig {
-    checkboxGroupId: string;
-    checkboxesClass: string;
-}
-declare function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: CheckboxConfig): AccessibilityInstance;
+declare function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass, callback }: CheckboxConfig): AccessibilityInstance;
 
 export { makeCheckboxAccessible };

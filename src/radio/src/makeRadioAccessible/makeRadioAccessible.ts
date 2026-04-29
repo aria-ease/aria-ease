@@ -4,17 +4,12 @@
  * @param {string} radioGroupId - The id of the radio group container.
  * @param {string} radiosClass - The shared class of all radio buttons.
  * @param {number} defaultSelectedIndex - The index of the initially selected radio (default: 0).
+ * @param {RadioCallback} callback - Configuration options for callbacks.
  */
 
-import { AccessibilityInstance } from "Types";
+import { AccessibilityInstance, RadioConfig } from "Types";
 
-interface RadioConfig {
-  radioGroupId: string;
-  radiosClass: string;
-  defaultSelectedIndex?: number;
-}
-
-export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex = 0 }: RadioConfig): AccessibilityInstance {
+export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex, callback }: RadioConfig): AccessibilityInstance {
   if (radioGroupId === "") {
     console.error(`[aria-ease] 'radioGroupId' should not be an empty string. Provide an id to the radio group container element that exists before calling makeRadioAccessible.`);
     return { cleanup: () => {} };
@@ -38,7 +33,12 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
 
   const handlerMap = new WeakMap<HTMLElement, (event: KeyboardEvent) => void>();
   const clickHandlerMap = new WeakMap<HTMLElement, () => void>();
-  let currentSelectedIndex = defaultSelectedIndex;
+
+  let currentSelectedIndex: number;
+
+  if(defaultSelectedIndex) {
+    currentSelectedIndex = defaultSelectedIndex;
+  }
 
   // Initialize ARIA attributes
   function initialize() {
@@ -49,7 +49,8 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
 
     radios.forEach((radio, index) => {
       radio.setAttribute("role", "radio");
-      radio.setAttribute("tabindex", index === currentSelectedIndex ? "0" : "-1");
+
+      radio.setAttribute("tabindex", "0");
 
       // Set initial checked state
       if (index === currentSelectedIndex) {
@@ -69,14 +70,18 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
     // Uncheck previous radio
     if (currentSelectedIndex >= 0 && currentSelectedIndex < radios.length) {
       radios[currentSelectedIndex].setAttribute("aria-checked", "false");
-      radios[currentSelectedIndex].setAttribute("tabindex", "-1");
     }
 
-    // Check new radio
+    // Check new radio and move focus
     radios[index].setAttribute("aria-checked", "true");
-    radios[index].setAttribute("tabindex", "0");
     radios[index].focus();
-
+    if(callback?.onCheck) {
+      try {
+        callback.onCheck(index);
+      } catch(error) {
+        console.error("[aria-ease] Error in radio onCheck callback:", error);
+      }
+    }
     currentSelectedIndex = index;
   }
 
@@ -89,7 +94,7 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
   function handleRadioKeydown(index: number) {
     return (event: KeyboardEvent) => {
       const { key } = event;
-      let nextIndex = index;
+      let nextIndex: number = index;
 
       switch (key) {
         case "ArrowDown":

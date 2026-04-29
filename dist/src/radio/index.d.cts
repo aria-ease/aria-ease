@@ -1,4 +1,4 @@
-import { a as AccessibilityInstance } from '../Types.d-DYfYR3Vc.cjs';
+import { R as RadioConfig, a as AccessibilityInstance } from '../Types.d-D96FYkCN.cjs';
 
 /**
  * Makes a radio group accessible by managing ARIA attributes, keyboard interaction, and state.
@@ -6,13 +6,9 @@ import { a as AccessibilityInstance } from '../Types.d-DYfYR3Vc.cjs';
  * @param {string} radioGroupId - The id of the radio group container.
  * @param {string} radiosClass - The shared class of all radio buttons.
  * @param {number} defaultSelectedIndex - The index of the initially selected radio (default: 0).
+ * @param {RadioCallback} callback - Configuration options for callbacks.
  */
 
-interface RadioConfig {
-    radioGroupId: string;
-    radiosClass: string;
-    defaultSelectedIndex?: number;
-}
-declare function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex }: RadioConfig): AccessibilityInstance;
+declare function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex, callback }: RadioConfig): AccessibilityInstance;
 
 export { makeRadioAccessible };

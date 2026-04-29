@@ -83,6 +83,27 @@ interface ComboboxCallback {
     onClear?: () => void;
 }
 
+interface RadioConfig {
+  radioGroupId: string;
+  radiosClass: string;
+  defaultSelectedIndex?: number;
+  callback?: RadioCallback;
+}
+
+interface RadioCallback {
+    onCheck?: (index: number) => void;
+}
+
+interface CheckboxConfig {
+  checkboxGroupId: string;
+  checkboxesClass: string;
+  callback?: CheckboxCallback;
+}
+
+interface CheckboxCallback {
+    onCheck?: (index: number, checked: boolean) => void;
+}
+
 interface MenuConfig {
     menuId: string; 
     menuItemsClass: string; 
@@ -125,11 +146,7 @@ declare function makeBlockAccessible({ blockId, blockItemsClass }: BlockConfig):
  * @param {string} checkboxesClass - The shared class of all checkboxes.
  */
 
-interface CheckboxConfig {
-    checkboxGroupId: string;
-    checkboxesClass: string;
-}
-declare function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass }: CheckboxConfig): AccessibilityInstance;
+declare function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass, callback }: CheckboxConfig): AccessibilityInstance;
 
 /**
   * Adds keyboard interaction to toggle menu. The menu traps focus and can be interacted with using the keyboard. The first interactive item of the menu has focus when menu open.
@@ -146,14 +163,10 @@ declare function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callbac
  * @param {string} radioGroupId - The id of the radio group container.
  * @param {string} radiosClass - The shared class of all radio buttons.
  * @param {number} defaultSelectedIndex - The index of the initially selected radio (default: 0).
+ * @param {RadioCallback} callback - Configuration options for callbacks.
  */
 
-interface RadioConfig {
-    radioGroupId: string;
-    radiosClass: string;
-    defaultSelectedIndex?: number;
-}
-declare function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex }: RadioConfig): AccessibilityInstance;
+declare function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelectedIndex, callback }: RadioConfig): AccessibilityInstance;
 
 /**
  * Makes a toggle button accessible by managing ARIA attributes and keyboard interactions.
