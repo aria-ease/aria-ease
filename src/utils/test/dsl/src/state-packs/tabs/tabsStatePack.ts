@@ -1,3 +1,5 @@
+import describeRelativeTarget from "../DescribeRelativeTarget"
+
 export const TABS_STATES = {
     "tab.active": {
         setup: [
@@ -35,7 +37,7 @@ function isTabFocused(relativeTarget: string | number) {
             target: "relative",
             assertion: "toHaveFocus",
             relativeTarget,
-            failureMessage: "Expected first tab to have focus."
+            failureMessage: `Expected ${describeRelativeTarget("tab", relativeTarget)} to have focus.`
         }
     ]
 }
@@ -48,7 +50,7 @@ function hasActiveTabIndex(relativeTarget: string | number) {
             attribute: "aria-selected",
             expectedValue: "true",
             relativeTarget,
-            failureMessage: `Expected ${relativeTarget} tab to have tabindex='0'.`    
+            failureMessage: `Expected ${describeRelativeTarget("tab", relativeTarget)} to have tabindex='0'.`    
         }
     ]
 }
@@ -61,13 +63,13 @@ function isTabActive(relativeTarget: string | number) {
             attribute: "aria-selected",
             expectedValue: "true",
             relativeTarget,
-            failureMessage: `Expected ${relativeTarget} tab to have aria-selected='true'.`    
+            failureMessage: `Expected ${describeRelativeTarget("tab", relativeTarget)} to have aria-selected='true'.`    
         },
         {
             target: "panel",
             assertion: "toBeVisible",
             controlledBy: { target: "relative", relativeTarget: relativeTarget },
-            failureMessage: `Expected panel controlled by the ${relativeTarget} tab to be visible.`
+            failureMessage: `Expected panel controlled by the ${describeRelativeTarget("tab", relativeTarget)} to be visible.`
         },
         hasActiveTabIndex(relativeTarget)
     ]

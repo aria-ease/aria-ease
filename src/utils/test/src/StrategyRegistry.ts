@@ -44,6 +44,18 @@ class StrategyRegistry {
         (m) => m.TabsComponentStrategy as unknown as StrategyConstructor
       )
     );
+
+    this.builtInStrategies.set("radio", () =>
+      import("./component-strategies/RadioComponentStrategy").then(
+        (m) => m.RadioComponentStrategy as unknown as StrategyConstructor
+      )
+    );
+
+    this.builtInStrategies.set("checkbox", () =>
+      import("./component-strategies/CheckboxComponentStrategy").then(
+        (m) => m.CheckboxComponentStrategy as unknown as StrategyConstructor
+      )
+    );
   }
 
   /**

@@ -2,6 +2,8 @@ import { COMBOBOX_STATES } from "./state-packs/combobox/comboboxStatePack";
 import { MENU_STATES } from "./state-packs/menu/menuStatePack";
 import { TABS_STATES } from "./state-packs/tabs/tabsStatePack";
 import { ACCORDION_STATES } from "./state-packs/accordion/accordionStatePack";
+import { RADIO_STATES } from "./state-packs/radio/RadioStatePack";
+import { CHECKBOX_STATES } from "./state-packs/checkbox/CheckboxStatePack";
 import { resolveSetup, CapabilityContext } from "./state-packs/Capability";
 
 type StatePack = Record<string, {
@@ -22,7 +24,9 @@ const STATE_PACKS: Record<string, unknown> = {
   "combobox": COMBOBOX_STATES,
   "menu":  MENU_STATES,
   "tabs": TABS_STATES,
-  "accordion": ACCORDION_STATES
+  "accordion": ACCORDION_STATES,
+  "radio": RADIO_STATES,
+  "checkbox": CHECKBOX_STATES
 };
 
 type Level = "required" | "recommended" | "optional";

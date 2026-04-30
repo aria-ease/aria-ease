@@ -14,7 +14,7 @@ class ComponentDetector {
     /**
      * Detect and instantiate a component strategy
      * Supports:
-     * - Built-in strategies (menu, accordion, combobox, tabs)
+     * - Built-in strategies (menu, accordion, combobox, tabs, radio, checkbox)
      * - Custom strategies via config (strategyPath)
      * - Custom contract paths via config (path)
      * @param componentName - Component name
