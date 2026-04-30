@@ -1,3 +1,5 @@
+import describeRelativeTarget from "../DescribeRelativeTarget";
+
 export const COMBOBOX_STATES = {
   "comboboxpopup.open": {
     setup: [
@@ -213,7 +215,7 @@ function isAriaSelected(relativeTarget: string | number) {
       assertion: "toHaveAttribute",
       attribute: "aria-selected",
       expectedValue: "true",
-      failureMessage: `Expected ${relativeTarget} item to have aria-selected='true'.`,
+      failureMessage: `Expected ${describeRelativeTarget("option", relativeTarget)} to have aria-selected='true'.`,
     }
   ]
 }
