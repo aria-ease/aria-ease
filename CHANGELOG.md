@@ -2,6 +2,23 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [7.8.0](https://github.com/aria-ease/aria-ease/compare/v7.7.0...v7.8.0) (2026-05-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Renamed callbacks for semantic clarity
+- Menu: onOpenChange → onExpandedChange
+- Combobox: onOpenChange → onExpandedChange
+- Radio: onCheck → onValueChange
+- Checkbox: onCheck → onCheckedChange
+- Accordion: onExpand && onCollapse → onExpandedChange
+- Tabs: onTabChange → onSelectedChange
+
+### Features
+
+* added Toggle component state pack, component strategy, and utility callback ([eae7335](https://github.com/aria-ease/aria-ease/commit/eae7335f509474f8a28b3bca7b1b30c0db08f15e))
+
 ## [7.7.0](https://github.com/aria-ease/aria-ease/compare/v7.0.0...v7.7.0) (2026-05-03)
 
 
