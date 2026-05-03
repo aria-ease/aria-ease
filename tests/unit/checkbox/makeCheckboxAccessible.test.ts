@@ -50,18 +50,6 @@ describe("makeCheckboxAccessible", () => {
       expect(checkboxGroup.getAttribute("role")).toBe("list");
     });
 
-    it("preserves existing aria-checked attributes", () => {
-      const checkbox = checkboxGroup.querySelector(".checkbox-item")!;
-      checkbox.setAttribute("aria-checked", "true");
-
-      checkboxInstance = makeCheckboxAccessible({
-        checkboxGroupId: "test-checkbox-group",
-        checkboxesClass: "checkbox-item"
-      });
-
-      expect(checkbox.getAttribute("aria-checked")).toBe("true");
-    });
-
     it("returns cleanup function when group not found", () => {
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 

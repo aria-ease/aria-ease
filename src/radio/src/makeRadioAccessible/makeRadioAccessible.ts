@@ -92,9 +92,16 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
   function handleRadioClick(index: number) {
     return () => {
       // Let native event toggle checked, just sync ARIA and native state
-      setTimeout(() => {
+      const radio = radios[index];
+      if ('checked' in radio && typeof (radio as HTMLInputElement).checked === "boolean") {
+        // Native input: let browser toggle checked, then sync aria-checked
+        setTimeout(() => {
+          selectRadio(index);
+        }, 0);
+      } else {
+        // Non-native element: toggle aria-checked directly
         selectRadio(index);
-      }, 0);
+      }
     };
   }
 
