@@ -510,37 +510,19 @@ describe("makeTabsAccessible", () => {
   });
 
   describe("callbacks", () => {
-    it("calls onTabChange callback when tab changes", () => {
-      const onTabChange = vi.fn();
+    it("calls onSelectedChange callback when tab changes", () => {
+      const onSelectedChange = vi.fn();
 
       tabsInstance = makeTabsAccessible({
         tabListId: "test-tabs",
         tabsClass: "tab",
         tabPanelsClass: "panel",
-        callback: { onTabChange }
+        callback: { onSelectedChange }
       });
-
-      // First initialization doesn't trigger callback (previousIndex === activeIndex)
-      expect(onTabChange).not.toHaveBeenCalled();
 
       tabsInstance.activateTab!(1);
 
-      expect(onTabChange).toHaveBeenCalledWith(1, 0);
-    });
-
-    it("does not call onTabChange when same tab is activated", () => {
-      const onTabChange = vi.fn();
-
-      tabsInstance = makeTabsAccessible({
-        tabListId: "test-tabs",
-        tabsClass: "tab",
-        tabPanelsClass: "panel",
-        callback: { onTabChange }
-      });
-
-      tabsInstance.activateTab!(0);
-
-      expect(onTabChange).not.toHaveBeenCalled();
+      expect(onSelectedChange).toHaveBeenCalledWith(1, true);
     });
 
     it("calls onContextMenu callback on Shift+F10", () => {
@@ -600,21 +582,21 @@ describe("makeTabsAccessible", () => {
       expect(preventDefaultSpy).not.toHaveBeenCalled();
     });
 
-    it("handles errors in onTabChange callback gracefully", () => {
+    it("handles errors in onSelectedChange callback gracefully", () => {
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-      const onTabChange = vi.fn(() => { throw new Error("Test error"); });
+      const onSelectedChange = vi.fn(() => { throw new Error("Test error"); });
 
       tabsInstance = makeTabsAccessible({
         tabListId: "test-tabs",
         tabsClass: "tab",
         tabPanelsClass: "panel",
-        callback: { onTabChange }
+        callback: { onSelectedChange }
       });
 
       tabsInstance.activateTab!(1);
 
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        expect.stringContaining("Error in tabs onTabChange callback"),
+        expect.stringContaining("Error in tabs onSelectedChange callback"),
         expect.any(Error)
       );
 

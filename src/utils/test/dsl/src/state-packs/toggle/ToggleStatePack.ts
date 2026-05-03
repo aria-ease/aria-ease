@@ -1,12 +1,12 @@
 import describeRelativeTarget from "../DescribeRelativeTarget"
 
-export const CHECKBOX_STATES = {
-    "checkbox.checked": {
+export const TOGGLE_STATES = {
+    "toggle.pressed": {
         setup: [
             {
                 when: ["keyboard"],
                 steps: (arg: { relativeTarget?: string | number }) => [
-                    { type: "keypress", target: "relative", relativeTarget: arg.relativeTarget, key: "Space" }
+                    { type: "keypress", target: "relative", relativeTarget: arg.relativeTarget, key: "Enter" }
                 ]
             },
             {
@@ -16,18 +16,18 @@ export const CHECKBOX_STATES = {
                 ]
             }
         ],
-        assertion: (arg: { relativeTarget?: string | number } = {}) => isCheckboxChecked(arg.relativeTarget as string | number)
+        assertion: (arg: { relativeTarget?: string | number } = {}) => isTogglePressed(arg.relativeTarget as string | number)
     },
-    "checkbox.unchecked": {
+    "toggle.unpressed": {
         setup: [
             {
                 when: ["keyboard", "pointer"],
                 steps: () => []
             }
         ],
-        assertion: (arg: { relativeTarget?: string | number } = {}) => isCheckboxUnchecked(arg.relativeTarget as string | number)
+        assertion: (arg: { relativeTarget?: string | number } = {}) => isToggleUnpressed(arg.relativeTarget as string | number)
     },
-    "checkbox.focused": {
+    "toggle.focused": {
         setup: [
             {
                 when: ["keyboard", "pointer"],
@@ -36,43 +36,43 @@ export const CHECKBOX_STATES = {
                 ]
             }
         ],
-        assertion: (arg: { relativeTarget?: string | number } = {}) => isCheckboxFocused(arg.relativeTarget as string | number)
+        assertion: (arg: { relativeTarget?: string | number } = {}) => isToggleFocused(arg.relativeTarget as string | number)
     }
 }
 
-function isCheckboxChecked(relativeTarget: string | number) {
+function isTogglePressed(relativeTarget: string | number) {
     return [
         {
             target: "relative",
             relativeTarget,
             assertion: "toHaveAttribute",
-            attribute: "aria-checked",
+            attribute: "aria-pressed",
             expectedValue: "true",
-            failureMessage: "Expected checkbox to have aria-checked='true' when checked."
+            failureMessage: "Expected toggle to have aria-pressed='true' when pressed."
         }
     ]
 }
 
-function isCheckboxUnchecked(relativeTarget: string | number) {
+function isToggleUnpressed(relativeTarget: string | number) {
     return [
         {
             target: "relative",
             relativeTarget,
             assertion: "toHaveAttribute",
-            attribute: "aria-checked",
+            attribute: "aria-pressed",
             expectedValue: "false",
-            failureMessage: "Expected checkbox to have aria-checked='false' when unchecked."
+            failureMessage: "Expected toggle to have aria-pressed='false' when unpressed."
         }
     ]  
 }
 
-function isCheckboxFocused(relativeTarget: string | number) {
+function isToggleFocused(relativeTarget: string | number) {
     return  [
         {
             target: "relative",
             assertion: "toHaveFocus",
             relativeTarget,
-            failureMessage: `Expected ${describeRelativeTarget("checkbox", relativeTarget)} to have focus.`
+            failureMessage: `Expected ${describeRelativeTarget("toggle", relativeTarget)} to have focus.`
         }
     ]
 }

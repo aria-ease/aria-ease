@@ -25,7 +25,7 @@ export const RADIO_STATES = {
                 steps: () => []
             }
         ],
-        assertion: (arg: { relativeTarget?: string | number } = {}) => isRadioUnChecked(arg.relativeTarget as string | number)
+        assertion: (arg: { relativeTarget?: string | number } = {}) => isRadioUnchecked(arg.relativeTarget as string | number)
     },
     "radio.focused": {
         setup: [
@@ -53,7 +53,7 @@ function isRadioChecked(relativeTarget: string | number) {
     ]
 }
 
-function isRadioUnChecked(relativeTarget: string | number) {
+function isRadioUnchecked(relativeTarget: string | number) {
     return [
         {
             target: "relative",

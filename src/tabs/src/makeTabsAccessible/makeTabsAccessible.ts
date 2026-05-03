@@ -6,7 +6,6 @@
  * @param {string} tabPanelsClass - The shared class of all tab panels.
  * @param {('horizontal' | 'vertical')} orientation - Tab list orientation (default: 'horizontal').
  * @param {boolean} activateOnFocus - Whether tabs activate automatically on focus (default: true).
- * @param {TabsCallback} callback - Configuration options for callbacks.
  */
 
 import { AccessibilityInstance, TabsConfig } from "Types";
@@ -116,11 +115,11 @@ export function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orien
 
     activeTabIndex = index;
 
-    if (callback?.onTabChange && previousIndex !== index) {
+    if (callback?.onSelectedChange) {
       try {
-        callback.onTabChange(index, previousIndex);
+        callback.onSelectedChange(index, true);
       } catch (error) {
-        console.error("[aria-ease] Error in tabs onTabChange callback:", error);
+        console.error("[aria-ease] Error in tabs onSelectedChange callback:", error);
       }
     }
   }

@@ -1,4 +1,4 @@
-import { a as AccessibilityInstance } from '../Types.d-C8k7pabS.js';
+import { c as ToggleConfig, a as AccessibilityInstance } from '../Types.d-BjBTlIzl.js';
 
 /**
  * Makes a toggle button accessible by managing ARIA attributes and keyboard interactions.
@@ -8,11 +8,6 @@ import { a as AccessibilityInstance } from '../Types.d-C8k7pabS.js';
  * @param {boolean} isSingleToggle - Whether this is a single toggle button (default: true).
  */
 
-interface ToggleConfig {
-    toggleId: string;
-    togglesClass?: string;
-    isSingleToggle?: boolean;
-}
-declare function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle }: ToggleConfig): AccessibilityInstance;
+declare function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle, callback }: ToggleConfig): AccessibilityInstance;
 
 export { makeToggleAccessible };

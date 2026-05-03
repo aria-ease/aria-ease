@@ -50,8 +50,7 @@ interface AccordionConfig {
 }
 
 interface AccordionCallback {
-    onExpand?: (index: number) => void;
-    onCollapse?: (index: number) => void;
+    onExpandedChange?: (index: number, expanded: boolean) => void;
 }
 
 interface TabsConfig {
@@ -64,7 +63,7 @@ interface TabsConfig {
 }
 
 interface TabsCallback {
-  onTabChange?: (activeIndex: number, previousIndex: number) => void;
+  onSelectedChange?: (index: number, selected: boolean) => void;
   onContextMenu?: (tabIndex: number, tabElement: HTMLElement) => void;
 }
 
@@ -78,7 +77,7 @@ interface ComboboxConfig {
 
 interface ComboboxCallback {
     onSelect?: (item: HTMLElement) => void;
-    onOpenChange?: (isOpen: boolean) => void;
+    onExpandedChange?: (expanded: boolean) => void;
     onActiveDescendantChange?: (optionId: string, item: HTMLElement) => void;
     onClear?: () => void;
 }
@@ -91,7 +90,7 @@ interface RadioConfig {
 }
 
 interface RadioCallback {
-    onCheck?: (index: number) => void;
+    onValueChange?: (index: number, value: string) => void;
 }
 
 interface CheckboxConfig {
@@ -101,7 +100,7 @@ interface CheckboxConfig {
 }
 
 interface CheckboxCallback {
-    onCheck?: (index: number, checked: boolean) => void;
+    onCheckedChange?: (index: number, checked: boolean) => void;
 }
 
 interface MenuConfig {
@@ -112,7 +111,18 @@ interface MenuConfig {
 }
 
 interface MenuCallback {
-    onOpenChange?: (isOpen: boolean) => void;
+    onExpandedChange?: (expanded: boolean) => void;
+}
+
+interface ToggleConfig {
+  toggleId: string;
+  togglesClass?: string;
+  isSingleToggle?: boolean;
+  callback: ToggleCallback;
+}
+
+interface ToggleCallback {
+    onPressedChange: (index: number, pressed: boolean) => void;
 }
 
 /**
@@ -176,12 +186,7 @@ declare function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelecte
  * @param {boolean} isSingleToggle - Whether this is a single toggle button (default: true).
  */
 
-interface ToggleConfig {
-    toggleId: string;
-    togglesClass?: string;
-    isSingleToggle?: boolean;
-}
-declare function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle }: ToggleConfig): AccessibilityInstance;
+declare function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle, callback }: ToggleConfig): AccessibilityInstance;
 
 /**
  * Makes a Combobox accessible by adding appropriate ARIA attributes, keyboard interactions and focus management.
@@ -202,7 +207,6 @@ declare function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, lis
  * @param {string} tabPanelsClass - The shared class of all tab panels.
  * @param {('horizontal' | 'vertical')} orientation - Tab list orientation (default: 'horizontal').
  * @param {boolean} activateOnFocus - Whether tabs activate automatically on focus (default: true).
- * @param {TabsCallback} callback - Configuration options for callbacks.
  */
 
 declare function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orientation, activateOnFocus, callback }: TabsConfig): AccessibilityInstance;

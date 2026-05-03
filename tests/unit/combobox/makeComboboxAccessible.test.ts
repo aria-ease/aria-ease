@@ -507,36 +507,36 @@ describe("makeComboboxAccessible - callbacks", () => {
     HTMLElement.prototype.scrollIntoView = vi.fn();
   });
 
-  it("calls onOpenChange callback when opening", () => {
-    const onOpenChange = vi.fn();
+  it("calls onExpandedChange callback when opening", () => {
+    const onExpandedChange = vi.fn();
     
     makeComboboxAccessible({
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      callback: { onOpenChange }
+      callback: { onExpandedChange }
     });
 
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
 
-    expect(onOpenChange).toHaveBeenCalledWith(true);
+    expect(onExpandedChange).toHaveBeenCalledWith(true);
   });
 
-  it("calls onOpenChange callback when closing", () => {
-    const onOpenChange = vi.fn();
+  it("calls onExpandedChange callback when closing", () => {
+    const onExpandedChange = vi.fn();
     
     makeComboboxAccessible({
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      callback: { onOpenChange }
+      callback: { onExpandedChange }
     });
 
     // Open then close
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
 
-    expect(onOpenChange).toHaveBeenCalledWith(false);
+    expect(onExpandedChange).toHaveBeenCalledWith(false);
   });
 
   it("calls onSelect callback when option is selected", () => {
