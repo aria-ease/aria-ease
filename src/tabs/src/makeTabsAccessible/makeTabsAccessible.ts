@@ -93,8 +93,6 @@ export function makeTabsAccessible({ tabListId, tabsClass, tabPanelsClass, orien
       return;
     }
 
-    const previousIndex = activeTabIndex;
-
     tabs.forEach((tab, i) => {
       const panel = tabPanels[i];
       tab.setAttribute("aria-selected", "false");
