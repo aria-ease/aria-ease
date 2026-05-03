@@ -2,6 +2,93 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [7.8.0](https://github.com/aria-ease/aria-ease/compare/v7.7.0...v7.8.0) (2026-05-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Renamed callbacks for semantic clarity
+- Menu: onOpenChange → onExpandedChange
+- Combobox: onOpenChange → onExpandedChange
+- Radio: onCheck → onValueChange
+- Checkbox: onCheck → onCheckedChange
+- Accordion: onExpand && onCollapse → onExpandedChange
+- Tabs: onTabChange → onSelectedChange
+
+### Features
+
+* added Toggle component state pack, component strategy, and utility callback ([eae7335](https://github.com/aria-ease/aria-ease/commit/eae7335f509474f8a28b3bca7b1b30c0db08f15e))
+
+## [7.7.0](https://github.com/aria-ease/aria-ease/compare/v7.0.0...v7.7.0) (2026-05-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Renamed callbacks for semantic clarity
+- Menu: onOpenChange → onExpandedChange
+- Combobox: onOpenChange → onExpandedChange
+- Radio: onCheck → onValueChange
+- Checkbox: onCheck → onCheckedChange
+- Accordion: onExpand && onCollapse → onExpandedChange
+- Tabs: onTabChange → onSelectedChange
+* Renamed callbacks for semantic clarity
+- Menu: onOpenChange → onExpandedChange
+- Combobox: onOpenChange → onExpandedChange
+- Radio: onCheck → onValueChange
+- Checkbox: onCheck → onCheckedChange
+- Accordion: onExpand && onCollapse → onExpandedChange
+- Tabs: onTabChange → onSelectedChange
+* **state-packs:** State names have changed (e.g., activeTab → tab.active, main.notFocused → main.blurred, selectedOption → option.selected, activeDescendant.empty → activedescendant.unset, etc.)
+* DSL no longer uses relative state names like "activeTab.first" in .given() and .then(). Now uses {type: "activeTab", "first"}
+
+### Features
+
+* added accordion component state pack ([517053f](https://github.com/aria-ease/aria-ease/commit/517053fdd39b31ca263b403f9639ceb787abe0a2))
+* added checkbox and radio state packs and component strategies ([c4ccae3](https://github.com/aria-ease/aria-ease/commit/c4ccae3b2fbf1fbf7f0276e4e2c3133d78375f10))
+* added radio and checkbox utilities callback ([cc3c4cd](https://github.com/aria-ease/aria-ease/commit/cc3c4cd5f4412f789edd746ccaecc41283763e36))
+* added tabs state pack ([7d8a786](https://github.com/aria-ease/aria-ease/commit/7d8a786c06cfbc73e745dde23d15a5354663d7f1))
+* added Toggle component state pack, component strategy, and utility callback ([1b71c7f](https://github.com/aria-ease/aria-ease/commit/1b71c7ff351975871ccea6aec7a884d3acf9208c))
+* added Toggle component state pack, component strategy, and utility callback ([69b1a0e](https://github.com/aria-ease/aria-ease/commit/69b1a0e126241b86166d333d471995324367f282))
+
+
+### Bug Fixes
+
+* fixed component utilities breaking app when parameters are empty string ([0483263](https://github.com/aria-ease/aria-ease/commit/0483263387f1bd0eea3b4975afbbd13dd5477ce1))
+
+
+* **state-packs:** rename state keys for clarity and semantics ([6f0541d](https://github.com/aria-ease/aria-ease/commit/6f0541d917a38003b099ac8fb6c7dd8222c59fb4))
+
+## [7.6.0](https://github.com/aria-ease/aria-ease/compare/v7.0.0...v7.6.0) (2026-05-03)
+
+
+### ⚠ BREAKING CHANGES
+
+* Renamed callbacks for semantic clarity
+- Menu: onOpenChange → onExpandedChange
+- Combobox: onOpenChange → onExpandedChange
+- Radio: onCheck → onValueChange
+- Checkbox: onCheck → onCheckedChange
+- Accordion: onExpand && onCollapse → onExpandedChange
+- Tabs: onTabChange → onSelectedChange
+* **state-packs:** State names have changed (e.g., activeTab → tab.active, main.notFocused → main.blurred, selectedOption → option.selected, activeDescendant.empty → activedescendant.unset, etc.)
+* DSL no longer uses relative state names like "activeTab.first" in .given() and .then(). Now uses {type: "activeTab", "first"}
+
+### Features
+
+* added accordion component state pack ([517053f](https://github.com/aria-ease/aria-ease/commit/517053fdd39b31ca263b403f9639ceb787abe0a2))
+* added checkbox and radio state packs and component strategies ([c4ccae3](https://github.com/aria-ease/aria-ease/commit/c4ccae3b2fbf1fbf7f0276e4e2c3133d78375f10))
+* added radio and checkbox utilities callback ([cc3c4cd](https://github.com/aria-ease/aria-ease/commit/cc3c4cd5f4412f789edd746ccaecc41283763e36))
+* added tabs state pack ([7d8a786](https://github.com/aria-ease/aria-ease/commit/7d8a786c06cfbc73e745dde23d15a5354663d7f1))
+* added Toggle component state pack, component strategy, and utility callback ([6b56adf](https://github.com/aria-ease/aria-ease/commit/6b56adfa5ea8e57ab4d2c85f7ac208be1e95e1cb))
+
+
+### Bug Fixes
+
+* fixed component utilities breaking app when parameters are empty string ([0483263](https://github.com/aria-ease/aria-ease/commit/0483263387f1bd0eea3b4975afbbd13dd5477ce1))
+
+
+* **state-packs:** rename state keys for clarity and semantics ([6f0541d](https://github.com/aria-ease/aria-ease/commit/6f0541d917a38003b099ac8fb6c7dd8222c59fb4))
+
 ## [7.5.0](https://github.com/aria-ease/aria-ease/compare/v7.0.0...v7.5.0) (2026-04-30)
 
 

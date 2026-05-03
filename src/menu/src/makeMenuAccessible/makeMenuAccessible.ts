@@ -210,8 +210,8 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
         event.preventDefault();
         closeMenu();
         triggerButton.focus();
-        if (onOpenChange) {
-          onOpenChange(false);
+        if (onExpandedChange) {
+          onExpandedChange(false);
         }
           
         break;
@@ -231,8 +231,8 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
 
         menuItem.click();
         closeMenu();
-        if (onOpenChange) {
-          onOpenChange(false);
+        if (onExpandedChange) {
+          onExpandedChange(false);
         }
         break;
       }
@@ -240,8 +240,8 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
       case "Tab": {
         closeMenu();
         closeAncestorMenusFromTrigger(triggerButton);
-        if (onOpenChange) {
-          onOpenChange(false);
+        if (onExpandedChange) {
+          onExpandedChange(false);
         }
         break;
       }
@@ -269,8 +269,8 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
     return false;
   }
 
-  function setAria(isOpen: boolean) {
-    triggerButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+  function setAria(expanded: boolean) {
+    triggerButton.setAttribute("aria-expanded", expanded ? "true" : "false");
   }
 
   function openSubmenu(submenuId: string) {
@@ -305,12 +305,12 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
     submenuInstance.openMenu();
   }
 
-  function onOpenChange(isOpen: boolean) {
-    if (callback?.onOpenChange) {
+  function onExpandedChange(expanded: boolean) {
+    if (callback?.onExpandedChange) {
       try {
-        callback.onOpenChange(isOpen);
+        callback.onExpandedChange(expanded);
       } catch (error) {
-        console.error("[aria-ease] Error in menu onOpenChange callback:", error);
+        console.error("[aria-ease] Error in menu onExpandedChange callback:", error);
       }
     }
   }
@@ -349,11 +349,11 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
       items[0].focus();
     }
 
-    if (callback?.onOpenChange) {
+    if (callback?.onExpandedChange) {
       try {
-        callback.onOpenChange(true);
+        callback.onExpandedChange(true);
       } catch (error) {
-        console.error("[aria-ease] Error in menu onOpenChange callback:", error);
+        console.error("[aria-ease] Error in menu onExpandedChange callback:", error);
       }
     }
   }
@@ -366,18 +366,18 @@ export function makeMenuAccessible({ menuId, menuItemsClass, triggerId, callback
     removeListeners();
     triggerButton.focus();
     
-    if (callback?.onOpenChange) {
+    if (callback?.onExpandedChange) {
       try {
-        callback.onOpenChange(false);
+        callback.onExpandedChange(false);
       } catch (error) {
-        console.error("[aria-ease] Error in menu onOpenChange callback:", error);
+        console.error("[aria-ease] Error in menu onExpandedChange callback:", error);
       }
     }
   }
 
   function handleTriggerClick() {
-    const isOpen = triggerButton.getAttribute("aria-expanded") === "true";
-    if (isOpen) {
+    const expanded = triggerButton.getAttribute("aria-expanded") === "true";
+    if (expanded) {
       closeMenu();
     } else {
       openMenu();

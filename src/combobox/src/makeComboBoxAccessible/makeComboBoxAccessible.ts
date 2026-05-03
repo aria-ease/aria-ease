@@ -104,11 +104,11 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         comboboxInput.setAttribute("aria-expanded", "true");
         listBox.style.display = "block";
 
-        if (callback?.onOpenChange) {
+        if (callback?.onExpandedChange) {
             try {
-                callback.onOpenChange(true);
+                callback.onExpandedChange(true);
             } catch (error) {
-                console.error("[aria-ease] Error in combobox onOpenChange callback:", error);
+                console.error("[aria-ease] Error in combobox onExpandedChange callback:", error);
             }
         }
     }
@@ -119,11 +119,11 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         listBox.style.display = "none";
         activeIndex = -1;
         
-        if (callback?.onOpenChange) {
+        if (callback?.onExpandedChange) {
             try {
-                callback.onOpenChange(false);
+                callback.onExpandedChange(false);
             } catch (error) {
-                console.error("[aria-ease] Error in combobox onOpenChange callback:", error);
+                console.error("[aria-ease] Error in combobox onExpandedChange callback:", error);
             }
         }
     }

@@ -56,6 +56,12 @@ class StrategyRegistry {
         (m) => m.CheckboxComponentStrategy as unknown as StrategyConstructor
       )
     );
+
+    this.builtInStrategies.set("toggle", () =>
+      import("./component-strategies/ToggleComponentStrategy").then(
+        (m) => m.ToggleComponentStrategy as unknown as StrategyConstructor
+      )
+    );
   }
 
   /**

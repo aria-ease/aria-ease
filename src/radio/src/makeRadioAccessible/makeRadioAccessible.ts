@@ -49,14 +49,12 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
 
     radios.forEach((radio, index) => {
       radio.setAttribute("role", "radio");
-
       radio.setAttribute("tabindex", "0");
-
-      // Set initial checked state
-      if (index === currentSelectedIndex) {
-        radio.setAttribute("aria-checked", "true");
-      } else {
-        radio.setAttribute("aria-checked", "false");
+      // Set initial checked state for both ARIA and native
+      const isChecked = index === currentSelectedIndex;
+      radio.setAttribute("aria-checked", isChecked ? "true" : "false");
+      if ((radio as HTMLInputElement).checked !== undefined) {
+        (radio as HTMLInputElement).checked = isChecked;
       }
     });
   }
@@ -70,16 +68,22 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
     // Uncheck previous radio
     if (currentSelectedIndex >= 0 && currentSelectedIndex < radios.length) {
       radios[currentSelectedIndex].setAttribute("aria-checked", "false");
+      if ((radios[currentSelectedIndex] as HTMLInputElement).checked !== undefined) {
+        (radios[currentSelectedIndex] as HTMLInputElement).checked = false;
+      }
     }
 
     // Check new radio and move focus
     radios[index].setAttribute("aria-checked", "true");
+    if ((radios[index] as HTMLInputElement).checked !== undefined) {
+      (radios[index] as HTMLInputElement).checked = true;
+    }
     radios[index].focus();
-    if(callback?.onCheck) {
+    if(callback?.onValueChange) {
       try {
-        callback.onCheck(index);
+        callback.onValueChange(index, radios[index].getAttribute("value") as string);
       } catch(error) {
-        console.error("[aria-ease] Error in radio onCheck callback:", error);
+        console.error("[aria-ease] Error in radio onValueChange callback:", error);
       }
     }
     currentSelectedIndex = index;
@@ -87,7 +91,17 @@ export function makeRadioAccessible({ radioGroupId, radiosClass, defaultSelected
 
   function handleRadioClick(index: number) {
     return () => {
-      selectRadio(index);
+      // Let native event toggle checked, just sync ARIA and native state
+      const radio = radios[index];
+      if ('checked' in radio && typeof (radio as HTMLInputElement).checked === "boolean") {
+        // Native input: let browser toggle checked, then sync aria-checked
+        setTimeout(() => {
+          selectRadio(index);
+        }, 0);
+      } else {
+        // Non-native element: toggle aria-checked directly
+        selectRadio(index);
+      }
     };
   }
 

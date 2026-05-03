@@ -91,11 +91,11 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
     trigger.setAttribute("aria-expanded", "true");
     panel.style.display = "block";
     
-    if (callback?.onExpand) {
+    if (callback?.onExpandedChange) {
       try {
-        callback.onExpand(index);
+        callback.onExpandedChange(index, true);
       } catch (error) {
-        console.error("[aria-ease] Error in accordion onExpand callback:", error);
+        console.error("[aria-ease] Error in accordion onExpandedChange callback:", error);
       }
     }
   }
@@ -112,12 +112,12 @@ export function makeAccordionAccessible({ accordionId, triggersClass, panelsClas
     trigger.setAttribute("aria-expanded", "false");
     panel.style.display = "none";
     
-    if (callback?.onCollapse) {
+    if (callback?.onExpandedChange) {
       
       try {
-        callback.onCollapse(index);
+        callback.onExpandedChange(index, false);
       } catch (error) {
-        console.error("[aria-ease] Error in accordion onCollapse callback:", error);
+        console.error("[aria-ease] Error in accordion onExpandedChange callback:", error);
       }
     }
   }

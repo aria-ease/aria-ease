@@ -6,15 +6,9 @@
  * @param {boolean} isSingleToggle - Whether this is a single toggle button (default: true).
  */
 
-import { AccessibilityInstance } from "Types";
+import { AccessibilityInstance, ToggleConfig } from "Types";
 
-interface ToggleConfig {
-  toggleId: string;
-  togglesClass?: string;
-  isSingleToggle?: boolean;
-}
-
-export function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true }: ToggleConfig): AccessibilityInstance {
+export function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = true, callback }: ToggleConfig): AccessibilityInstance {
   if (toggleId === "") {
     console.error(`[aria-ease] 'toggleId' should not be an empty string. Provide an id to the toggle element or toggle container before calling makeToggleAccessible.`);
     return { cleanup: () => {} };
@@ -73,8 +67,9 @@ export function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = 
     }
 
     const toggle = toggles[index];
-    const isPressed = toggle.getAttribute("aria-pressed") === "true";
-    toggle.setAttribute("aria-pressed", isPressed ? "false" : "true");
+    const pressed = toggle.getAttribute("aria-pressed") === "true";
+    
+    setPressed(index, !pressed)
   }
 
   function setPressed(index: number, pressed: boolean) {
@@ -84,6 +79,14 @@ export function makeToggleAccessible({ toggleId, togglesClass, isSingleToggle = 
     }
 
     toggles[index].setAttribute("aria-pressed", pressed ? "true" : "false");
+
+    if(callback?.onPressedChange) {
+      try {
+        callback.onPressedChange(index, pressed);
+      } catch(error) {
+        console.error("[aria-ease] Error in checkbox onPressedChange callback:", error);
+      }
+    }
   }
 
   function handleToggleClick(index: number) {

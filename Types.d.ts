@@ -251,8 +251,7 @@ interface AccordionConfig {
 }
 
 interface AccordionCallback {
-    onExpand?: (index: number) => void;
-    onCollapse?: (index: number) => void;
+    onExpandedChange?: (index: number, expanded: boolean) => void;
 }
 
 interface TabsConfig {
@@ -265,7 +264,7 @@ interface TabsConfig {
 }
 
 interface TabsCallback {
-  onTabChange?: (activeIndex: number, previousIndex: number) => void;
+  onSelectedChange?: (index: number, selected: boolean) => void;
   onContextMenu?: (tabIndex: number, tabElement: HTMLElement) => void;
 }
 
@@ -279,7 +278,7 @@ interface ComboboxConfig {
 
 interface ComboboxCallback {
     onSelect?: (item: HTMLElement) => void;
-    onOpenChange?: (isOpen: boolean) => void;
+    onExpandedChange?: (expanded: boolean) => void;
     onActiveDescendantChange?: (optionId: string, item: HTMLElement) => void;
     onClear?: () => void;
 }
@@ -292,7 +291,7 @@ interface RadioConfig {
 }
 
 interface RadioCallback {
-    onCheck?: (index: number) => void;
+    onValueChange?: (index: number, value: string) => void;
 }
 
 interface CheckboxConfig {
@@ -302,7 +301,7 @@ interface CheckboxConfig {
 }
 
 interface CheckboxCallback {
-    onCheck?: (index: number, checked: boolean) => void;
+    onCheckedChange?: (index: number, checked: boolean) => void;
 }
 
 interface MenuConfig {
@@ -313,8 +312,20 @@ interface MenuConfig {
 }
 
 interface MenuCallback {
-    onOpenChange?: (isOpen: boolean) => void;
+    onExpandedChange?: (expanded: boolean) => void;
 }
+
+interface ToggleConfig {
+  toggleId: string;
+  togglesClass?: string;
+  isSingleToggle?: boolean;
+  callback: ToggleCallback;
+}
+
+interface ToggleCallback {
+    onPressedChange: (index: number, pressed: boolean) => void;
+}
+
 interface ContractTestResult {
   passes: string[];
   failures: string[];
@@ -350,7 +361,7 @@ export {
     MenuConfig,
     RadioConfig,
     TabsConfig,
-    TabsCallback,
+    ToggleConfig,
     ComponentStrategy,
     DynamicTest,
     StrictnessMode,

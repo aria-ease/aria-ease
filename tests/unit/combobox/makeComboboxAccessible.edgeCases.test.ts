@@ -450,12 +450,12 @@ describe("makeComboboxAccessible - edge cases: focus management", () => {
   });
 
   it("handles Tab key to move focus to next element", () => {
-    const onOpenChangeMock = vi.fn();
+    const onExpandedChangeMock = vi.fn();
     makeComboboxAccessible({
       comboboxInputId: "combo-input",
       listBoxId: "combo-listbox",
       listBoxItemsClass: "combo-option",
-      callback: { onOpenChange: onOpenChangeMock }
+      callback: { onExpandedChange: onExpandedChangeMock }
     });
 
     input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown" }));
@@ -575,7 +575,7 @@ describe("makeComboboxAccessible - edge cases: callback edge cases", () => {
       listBoxItemsClass: "combo-option",
       callback: {
         onSelect: undefined,
-        onOpenChange: undefined,
+        onExpandedChange: undefined,
         onActiveDescendantChange: undefined
       }
     });

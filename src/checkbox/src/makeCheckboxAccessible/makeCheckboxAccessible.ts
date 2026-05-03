@@ -44,12 +44,9 @@ export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass, callb
 
     checkboxes.forEach((checkbox) => {
       checkbox.setAttribute("role", "checkbox");
-      
-      // Set initial checked state if not already set
-      if (!checkbox.hasAttribute("aria-checked")) {
-        checkbox.setAttribute("aria-checked", "false");
-      }
-
+      // Set initial checked state to match native checked property
+      const isChecked = (checkbox as HTMLInputElement).checked;
+      checkbox.setAttribute("aria-checked", isChecked ? "true" : "false");
       // Make focusable
       if (!checkbox.hasAttribute("tabindex")) {
         checkbox.setAttribute("tabindex", "0");
@@ -57,12 +54,12 @@ export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass, callb
     });
   }
 
-  function callBack(index: number, isChecked: boolean) {
-    if(callback?.onCheck) {
+  function callBack(index: number, checked: boolean) {
+    if(callback?.onCheckedChange) {
       try {
-        callback.onCheck(index, isChecked);
+        callback.onCheckedChange(index, checked);
       } catch(error) {
-        console.error("[aria-ease] Error in checkbox onCheck callback:", error);
+        console.error("[aria-ease] Error in checkbox onCheckedChange callback:", error);
       }
     }
   }
@@ -72,12 +69,12 @@ export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass, callb
       console.error(`[aria-ease] Invalid checkbox index: ${index}`);
       return;
     }
-
-    const checkbox = checkboxes[index];
-    const isChecked = checkbox.getAttribute("aria-checked") === "true";
-    checkbox.setAttribute("aria-checked", isChecked ? "false" : "true");
-    
-    callBack(index, isChecked);
+    const checkbox = checkboxes[index] as HTMLInputElement;
+    // Toggle native checked state
+    const newChecked = !(checkbox as HTMLInputElement).checked;
+    (checkbox as HTMLInputElement).checked = newChecked;
+    checkbox.setAttribute("aria-checked", newChecked ? "true" : "false");
+    callBack(index, newChecked);
   }
 
   function setCheckboxState(index: number, checked: boolean) {
@@ -85,23 +82,38 @@ export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass, callb
       console.error(`[aria-ease] Invalid checkbox index: ${index}`);
       return;
     }
-
-    checkboxes[index].setAttribute("aria-checked", checked ? "true" : "false");
+    const checkbox = checkboxes[index] as HTMLInputElement;
+    (checkbox as HTMLInputElement).checked = checked;
+    checkbox.setAttribute("aria-checked", checked ? "true" : "false");
     callBack(index, checked);
   }
 
   function handleCheckboxClick(index: number) {
     return () => {
-      toggleCheckbox(index);
+      const checkbox = checkboxes[index];
+
+      if ('checked' in checkbox && typeof (checkbox as HTMLInputElement).checked === "boolean") {
+        // Native input: let browser toggle checked, then sync aria-checked
+        setTimeout(() => {
+          const checked = checkbox.checked;
+          checkbox.setAttribute("aria-checked", checked ? "true" : "false");
+          callBack(index, checked as boolean);
+        }, 0);
+      } else {
+        // Non-native element: toggle aria-checked directly
+        const checked = checkbox.getAttribute("aria-checked") === "true";
+        checkbox.setAttribute("aria-checked", !checked ? "true" : "false");
+        callBack(index, !checked);
+      }
     };
   }
 
   function handleCheckboxKeydown(index: number) {
     return (event: KeyboardEvent) => {
       const { key } = event;
-
       switch (key) {
         case " ":
+        case "Spacebar": // for older browsers
           event.preventDefault();
           toggleCheckbox(index);
           break;

@@ -16,12 +16,9 @@ Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that
 | Phase              | Feature                                       | Status       | Impact                                        |
 | ------------------ | --------------------------------------------- | ------------ | --------------------------------------------- |
 | **🔧 Development** | Component utilities for accessible patterns   | ✅ Available | Build it right from the start                 |
-| **⚡ Linting**     | ESLint rules to enforce accessible coding     | 🚧 Roadmap   | Catch mistakes as you type                    |
 | **🔍 Pre-Deploy**  | Axe-core powered static accessibility audit   | ✅ Available | Verify before it ships                        |
 | **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | ✅ Available | Fast, determinic component accessibility test |
 | **🚀 CI/CD**       | Accessibility as deployment gatekeeper        | ✅ Available | Block inaccessible code from production       |
-| **📊 Production**  | Real user signal monitoring and replay        | 🚧 Roadmap   | Understand how users actually interact        |
-| **📈 Insights**    | Dashboard for reporting and analytics         | 🚧 Roadmap   | Visualize accessibility health                |
 
 ---
 
@@ -31,16 +28,16 @@ Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that
 
 **Traditional approach:** Build features → Manual testing → Find accessibility issues → Fix them → Manual testing again → Ship (maybe)
 
-**Aria-Ease approach:** Build with accessible baseline utilities → Automated audits catch issues → Contract tests verify consistent baseline component behaviors → CI/CD gates deployment → Ship with confidence
+**Aria-Ease approach:** Build with accessible baseline utilities → Automated audits catch issues → Contract tests verify consistent component behaviors → CI/CD gates deployment → Ship with confidence
 
 ### What Makes This Different?
 
-#### 1. **Component Utilities** (Available Now)
+#### 1. **Component Utilities**
 
 Reusable accessible interaction patterns based on Aria-Ease's baseline interpretation of WAI-ARIA APG guidance. Not the only valid implementation, but a proven, consistent place to start. Tree-shakable, framework-agnostic, production-ready.
 
 ```javascript
-// Instead of 50+ lines managing ARIA attributes and keyboard events...
+// Instead of 50+ lines managing ARIA accessibility states and interactions...
 import { makeMenuAccessible } from "aria-ease/menu";
 
 const menu = makeMenuAccessible({
@@ -50,19 +47,19 @@ const menu = makeMenuAccessible({
 }); // Arrow keys, Escape, focus management — all handled
 ```
 
-#### 2. **Static Audit** (Available Now)
+#### 2. **Static Audit**
 
-Axe-core powered CLI that scans your entire site and generates comprehensive reports. Run it locally or in CI/CD.
+Axe-core powered CLI that scans your entire site and generates multi-format reports in HTML, CSV or JSON. Run it locally or in CI/CD.
 
 ```bash
 npx aria-ease audit --url https://yoursite.com
 ```
 
-#### 3. **Contract Testing** (Available Now)
+#### 3. **Contract Testing**
 
 This is the game-changer. Encode a deterministic, testable interpretation of WAI-ARIA APG guidance into JSON "contracts" using Aria-Ease DSL API, and validate your contract against your component using Aria-Ease's Playwright runner with isolated test-harness architecture. Run it locally or in CI/CD.
 
-Teams and experts can enforce their own standards and maintain reusability and consistency.
+Teams and experts can enforce their own standards, maintain reusability and consistency, and prevent regression.
 
 **The result?** Component interaction testing that feels closer to unit testing than manual QA.
 
@@ -72,9 +69,9 @@ npx aria-ease test
 # ✓ 26 assertions in ~1 second in CI
 ```
 
-**Why this matters:** Before, verifying a combobox meant testing every interaction manually. Now, Aria-Ease automates the repeatable, deterministic aspects of testing a combobox: keyboard interaction, ARIA state updates, visibility, and semantic roles.
+**Why this matters:** Before, testing for regression in combobox meant testing every interaction manually. Now, Aria-Ease automates the repeatable, deterministic aspects of testing a combobox: keyboard interaction, ARIA state updates, visibility, and semantic attributes.
 
-#### 4. **CI/CD Integration** (Available Now)
+#### 4. **CI/CD Integration**
 
 Turn accessibility into a deployment invariant. Add audit and test commands to your pipeline — if they fail, deployment is blocked.
 
@@ -90,21 +87,9 @@ jobs:
       # Only deploy if both pass ☝️
 ```
 
-Real example from our docs site: Push to branch → Accessibility checks run → Green check mark → Deploys to Firebase. Red X → Deploy blocked.
+Real example from our docs site: Push to branch → Accessibility checks run → Green check mark → Deploys to Prod. Red X → Deploy blocked.
 
 **No one has any excuse to ship inaccessible code anymore.**
-
-#### 5. **Linting** (Roadmap)
-
-ESLint rules that enforce accessible coding patterns as you type. Catch issues before they compile.
-
-#### 6. **Production Monitoring** (Roadmap)
-
-Real user signal monitoring, interaction replay, and analytics. Understand how assistive technology users actually experience your app.
-
-#### 7. **Insights Dashboard** (Roadmap)
-
-Visualize accessibility health across your entire application. Track progress, identify patterns, generate reports.
 
 ---
 
@@ -113,9 +98,9 @@ Visualize accessibility health across your entire application. Track progress, i
 - 🎯 **Tree-shakable** - Import only what you need (1.4KB - 3.7KB per component)
 - ♿ **WCAG Compliant** - Follows WAI-ARIA best practices
 - ⌨️ **Keyboard Interaction** - Full keyboard support out of the box
-- 🧪 **Contract Testing** - Built-in baseline accessibility testing framework
+- 🧪 **Contract Testing** - Built-in accessibility interaction testing framework
 - 🎭 **Framework Agnostic** - Works with React, Vue, vanilla JS, etc.
-- 🔍 **CLI Audit Tool** - Automated accessibility testing for your sites
+- 🔍 **CLI Audit Tool** - Automated static accessibility testing for your sites
 - 📦 **TypeScript Support** - Full type definitions included
 
 ## 📦 Installation
@@ -156,9 +141,7 @@ export default {
       out: "./accessibility-reports",
     },
   },
-  test: {
-    strictness: "balanced", // 'minimal' | 'balanced' | 'strict' | 'paranoid'
-  },
+  test: {...},
 };
 ```
 
@@ -180,7 +163,7 @@ The CLI will automatically find and load your config file, with validation to ca
 
 ### Contract DSL Build Workflow
 
-You can author custom component contracts as readable DSL files and compile them with a built-in CLI command.
+You can author custom component interaction contracts as readable DSL files and compile them with a built-in CLI command.
 
 1. Create one or more `*.contract.mjs` files that export a contract built with `contract("component.name", ...)`.
 2. Configure contract sources in `ariaease.config.js`.
@@ -191,16 +174,7 @@ Example config with multiple contract sources:
 
 ```javascript
 export default {
-  test: {
-    strictness: "balanced",
-    components: [
-      {
-        name: "combobox",
-        path: "./tests/external-contracts/combobox.listbox.contract.json",
-        strategyPath: "./tests/external-strategies/CustomComboboxStrategy.js",
-      },
-    ],
-  },
+  test: {...},
   contracts: [
     {
       src: "./tests/external-contracts/**/*.contract.mjs",
@@ -296,6 +270,11 @@ useEffect(() => {
     menuId: "menu-div",
     menuItemsClass: "profile-menu-items",
     triggerId: "display-button",
+    callback: {
+      onExpandedChange: (expanded) => {
+        // Side effect
+      },
+    },
   });
 
   return () => menuRef.current.cleanup(); // Clean up on unmount
@@ -311,6 +290,11 @@ const menu = Menu.makeMenuAccessible({
   menuId: "dropdown-menu",
   menuItemsClass: "menu-item",
   triggerId: "menu-button",
+  callback: {
+    onExpandedChange: (expanded) => {
+      // Side effect
+    },
+  },
 });
 
 // Programmatically control
@@ -358,6 +342,12 @@ useEffect(() => {
     comboboxInputId: "search-input",
     listBoxId: "suggestions-list",
     listBoxItemsClass: "suggestion-item",
+    callback: {
+      onSelect: (option) => {...} //when a listbox option is selected
+      onExpandedChange: (expanded) => {...} //when a combobox listbox opens or closes
+      onActiveDescendantChange: (optId, item) => {...} //when combobox aria-activedescendant changes
+      onClear: () => {...} //when combobox input (if present) is cleared by Escape key
+    }
   });
 
   return () => {
@@ -378,15 +368,11 @@ const combobox = Combobox.makeComboboxAccessible({
   listBoxId: "fruits-listbox",
   listBoxItemsClass: "list-option",
   callback: {
-    onSelect: (option) => {
-      input.value = option.textContent;
-      // Show all options after selection
-      options.forEach((opt) => (opt.hidden = false));
-    },
-    onOpenChange: (isOpen) => {
-      console.log("Listbox is", isOpen ? "open" : "closed");
-    },
-  },
+    onSelect: (option) => {...} //when a listbox option is selected
+    onExpandedChange: (expanded) => {...} //when a combobox listbox opens or closes
+    onActiveDescendantChange: (optId, item) => {...} //when combobox aria-activedescendant changes
+    onClear: () => {...} //when combobox input (if present) is cleared by Escape key
+  }
 });
 
 // Programmatically control
@@ -444,6 +430,9 @@ useEffect(() => {
     triggersClass: "accordion-trigger",
     panelsClass: "accordion-panel",
     allowMultipleOpen: false, // Only one panel open at a time (default)
+    callback: {
+      onExpandedChange: (index, expanded) => {...}
+    }
   });
 
   return () => accordion.cleanup();
@@ -508,6 +497,9 @@ useEffect(() => {
   const checkboxGroup = makeCheckboxAccessible({
     checkboxGroupId: "checkbox-group",
     checkboxesClass: "custom-checkbox",
+    callback: {
+      onCheckedChange: (index, checked) => {...}
+    }
   });
 
   return () => checkboxGroup.cleanup();
@@ -566,6 +558,9 @@ useEffect(() => {
     radioGroupId: "radio-group",
     radiosClass: "custom-radio",
     defaultSelectedIndex: 0, // Initially selected (optional)
+    callback: {
+      onValueChange: (index, value) => {...}
+    }
   });
 
   return () => radioGroup.cleanup();
@@ -620,6 +615,11 @@ import { makeToggleAccessible } from "aria-ease/toggle";
 const toggle = makeToggleAccessible({
   toggleId: "mute-button",
   isSingleToggle: true,
+  callback: {
+    onPressedChange: (pressed) => {
+      console.log("Toggle has pressed of value pressed");
+    },
+  },
 });
 
 // Toggle button group
@@ -627,6 +627,11 @@ const toggleGroup = makeToggleAccessible({
   toggleId: "toolbar",
   togglesClass: "toggle-btn",
   isSingleToggle: false,
+  callback: {
+    onPressedChange: (index, pressed) => {
+      console.log("Toggle at index has pressed of value pressed");
+    },
+  },
 });
 
 // Programmatic control
@@ -701,8 +706,9 @@ afterAll(async () => {
 describe("Shopify User Menu Accessibility Test", () => {
   test("renders Shopify user menu without accessibility violation(s)", async () => {
     await testUiComponent(
-      "menu", "http://localhost:5173/test-harness?component=menu",
-    ); 
+      "menu",
+      "http://localhost:5173/test-harness?component=menu",
+    );
   });
 });
 ```
@@ -765,7 +771,6 @@ Or override per test call:
 ```javascript
 await testUiComponent(
   "menu",
-  null,
   "http://localhost:5173/test-harness?component=menu",
   {
     strictness: "strict",
@@ -788,7 +793,7 @@ Aria-Ease is designed to be lightweight and tree-shakable:
 | `aria-ease/menu`             | ~6.7KB                |
 | `aria-ease/block`            | ~1.7KB                |
 | `aria-ease/combobox`         | ~8.1KB                |
-| Full bundle (all components) | ~459KB (uncompressed) |
+| Full bundle (all components) | ~659KB (uncompressed) |
 
 **💡 Tip:** Always import individual components for optimal bundle size:
 
@@ -817,27 +822,6 @@ useEffect(() => {
   return () => menuRef.current.cleanup(); // Prevents double-initialization
 }, []);
 ```
-
----
-
-## 🎨 Focus Styling
-
-Aria-Ease handles ARIA attributes and keyboard interaction, but **you must provide visible focus styles**:
-
-```css
-:focus {
-  outline: 2px solid rgba(0, 91, 211, 1);
-  outline-offset: 2px;
-}
-
-/* Or custom styles */
-.menu-item:focus {
-  background: #e3f2fd;
-  box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.3);
-}
-```
-
-Without visible focus indicators, keyboard users cannot tell which element is active.
 
 ---
 
@@ -997,6 +981,7 @@ export default {
       out: "./accessibility-reports",
     },
   },
+  test: {...}
   contracts: [
     {
       src: "./tests/external-contracts/**/*.contract.mjs",
