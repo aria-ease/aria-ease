@@ -88,20 +88,13 @@ type DynamicAssertion = {
   level?: Level;
 };
 
-type DynamicAction =
-  | {
-      type: "focus";
-      target: string;
-      relativeTarget?: "first" | "last" | "next" | "previous" | number;
-      virtualId?: string;
-    }
-  | {
-      type: "click" | "keypress" | "type" | "hover" | "focus";
-      target: string;
-      key?: string;
-      value?: string;
-      relativeTarget?: string | number;
-    };
+type DynamicAction = {
+  type: "click" | "keypress" | "type" | "hover" | "focus";
+  target: string;
+  key?: string;
+  value?: string;
+  relativeTarget?: string | number;
+};
 
 type DynamicTest = {
   description: string;
@@ -413,7 +406,7 @@ class DynamicTestBuilder {
     };
     const capability = capabilityMap[this._as || "keyboard"] || (this._as || "keyboard");
     const ctx: CapabilityContext = { capabilities: [capability] };
-    const resolveAllSetups = (stateName: string, visited = new Set<string>()): DynamicAction[] => {
+    const resolveAllSetups = (stateName: string, visited = new Set<string>(), relativeTarget?: string | number): DynamicAction[] => {
       if (visited.has(stateName)) return [];
       visited.add(stateName);
       const s = this.statePack[stateName];
@@ -421,38 +414,38 @@ class DynamicTestBuilder {
       let actions: DynamicAction[] = [];
       if (Array.isArray(s.requires)) {
         for (const req of s.requires) {
-          actions = actions.concat(resolveAllSetups(req, visited));
+          actions = actions.concat(resolveAllSetups(req, visited, relativeTarget));
         }
       }
-      if (s.setup) actions = actions.concat(resolveSetup(s.setup, ctx) as DynamicAction[]);
-      return actions;
-    };
-
-    // Build setup from .given (recursively) and deduplicate
-    let setup: DynamicAction[] = [];
-    for (const state of this._given) {
-      if (typeof state === "string") {
-        setup.push(...resolveAllSetups(state));
-      } else if (typeof state === "object" && state !== null && "type" in state && "ref" in state) {
-        const key = this._findStateKeyByTypeAndRef(state.type);
-        if (key) {
-          const s = this.statePack[key];
-          if (s && s.setup) {
-            for (const setupItem of s.setup) {
-              if (typeof setupItem.steps === "function") {
-                setup.push(...setupItem.steps({ relativeTarget: state.ref }));
-              } else if (Array.isArray(setupItem.steps)) {
-                setup.push(...setupItem.steps);
-              }
-            }
+      if (s.setup) {
+        const filteredSetups = s.setup.filter(setupObj =>
+          setupObj.when.some(w => ctx.capabilities.includes(w))
+        );
+        for (const setupObj of filteredSetups) {
+          if (typeof setupObj.steps === "function") {
+            actions = actions.concat(setupObj.steps({ relativeTarget }));
+          } else {
+            actions = actions.concat(setupObj.steps);
           }
         }
       }
+      return actions;
+    };
+
+    // Build setup from .given (recursively)
+    let setup: (DynamicAction)[] = [];
+    for (const state of this._given) {
+      if (typeof state === "string") {
+        setup = setup.concat(resolveAllSetups(state, new Set()));
+      } else if (typeof state === "object" && state.type) {
+        setup = setup.concat(resolveAllSetups(state.type, new Set(), state.ref));
+      }
     }
-    
+
+    // Deduplicate setup actions
     const seen = new Set<string>();
     setup = setup.filter(action => {
-      const key = JSON.stringify(action);
+      const key = [action.type, action.target, action.relativeTarget].join(":");
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -506,7 +499,7 @@ class DynamicTestBuilder {
     this.parent.addDynamicTest({
       description: this._desc || '',
       level: this._level,
-      orientation: this._orientation || "horizontal", //it's setting orientation for all components
+      orientation: this._orientation || "horizontal", //it's setting orientation for all components. how do I fix that?
       action,
       assertions,
       ...(setup.length ? { setup } : {}),

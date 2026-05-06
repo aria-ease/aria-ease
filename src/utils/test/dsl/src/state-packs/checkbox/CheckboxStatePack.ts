@@ -37,6 +37,15 @@ export const CHECKBOX_STATES = {
             }
         ],
         assertion: (arg: { relativeTarget?: string | number } = {}) => isCheckboxFocused(arg.relativeTarget as string | number)
+    },
+    "checkbox.blurred": {
+        setup: [
+            {
+                when: ["keyboard", "pointer"],
+                steps: () => []
+            }
+        ],
+        assertion: (arg: { relativeTarget?: string | number } = {}) => isCheckboxBlurred(arg.relativeTarget as string | number)
     }
 }
 
@@ -73,6 +82,17 @@ function isCheckboxFocused(relativeTarget: string | number) {
             assertion: "toHaveFocus",
             relativeTarget,
             failureMessage: `Expected ${describeRelativeTarget("checkbox", relativeTarget)} to have focus.`
+        }
+    ]
+}
+
+function isCheckboxBlurred(relativeTarget: string | number) {
+    return  [
+        {
+            target: "relative",
+            assertion: "toHaveFocus",
+            relativeTarget,
+            failureMessage: `Expected ${describeRelativeTarget("checkbox", relativeTarget)} not to have focus.`
         }
     ]
 }

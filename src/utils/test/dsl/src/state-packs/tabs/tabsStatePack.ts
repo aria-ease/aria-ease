@@ -28,6 +28,15 @@ export const TABS_STATES = {
             }
         ],
         assertion: (arg: { relativeTarget?: string | number } = {}) => isTabFocused(arg.relativeTarget as string | number)
+    },
+    "tab.blurred": {
+        setup: [
+            {
+                when: ["keyboard", "pointer"],
+                steps: () => []
+            }
+        ],
+        assertion: (arg: { relativeTarget?: string | number } = {}) => isTabBlurred(arg.relativeTarget as string | number)
     }
 }
 
@@ -38,6 +47,17 @@ function isTabFocused(relativeTarget: string | number) {
             assertion: "toHaveFocus",
             relativeTarget,
             failureMessage: `Expected ${describeRelativeTarget("tab", relativeTarget)} to have focus.`
+        }
+    ]
+}
+
+function isTabBlurred(relativeTarget: string | number) {
+    return  [
+        {
+            target: "relative",
+            assertion: "toHaveFocus",
+            relativeTarget,
+            failureMessage: `Expected ${describeRelativeTarget("tab", relativeTarget)} not to have focus.`
         }
     ]
 }

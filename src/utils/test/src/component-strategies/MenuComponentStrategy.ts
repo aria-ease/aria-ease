@@ -2,6 +2,7 @@ import { ComponentStrategy, DynamicTest } from "Types";
 import { Page, expect } from "@playwright/test";
 import type { ComponentContract } from "Types";
 
+
 class MenuComponentStrategy implements ComponentStrategy {
     constructor(
         private mainSelector: string,

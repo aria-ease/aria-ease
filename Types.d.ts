@@ -164,6 +164,7 @@ interface ComponentContract {
             key?: string;
             value?: string;
             relativeTarget?: string | number;
+
         }>;
         action: Array<{
             type: string;
@@ -327,18 +328,22 @@ interface ToggleCallback {
 }
 
 interface ContractTestResult {
-  passes: string[];
-  failures: string[];
-  skipped: string[];
+    passes: string[];
+    failures: string[];
+    skipped: string[];
     warnings?: string[];
 }
 
 type DynamicTest = ComponentContract['dynamic'][number];
 
+interface StatePackArg {
+    relativeTarget?: string | number
+}
+
 interface ComponentStrategy {
   resetState(page: Page): Promise<void>;
   shouldSkipTest(test: DynamicTest, page: Page): Promise<boolean>;
-  getMainSelector(): string; 
+  getMainSelector(): string;
 }
 
 export {
@@ -368,6 +373,7 @@ export {
     ContractLevel,
     InterpretationMode,
     ContractConfidence,
+    StatePackArg
 };
 
 export type NodeListOfHTMLElement<T extends Element = HTMLElement> = NodeListOf<T>;

@@ -277,11 +277,6 @@ type DynamicAssertion = {
     level?: Level;
 };
 type DynamicAction = {
-    type: "focus";
-    target: string;
-    relativeTarget?: "first" | "last" | "next" | "previous" | number;
-    virtualId?: string;
-} | {
     type: "click" | "keypress" | "type" | "hover" | "focus";
     target: string;
     key?: string;
