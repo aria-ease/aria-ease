@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.8.1](https://github.com/aria-ease/aria-ease/compare/v7.8.0...v7.8.1) (2026-05-06)
+
+
+### Bug Fixes
+
+* fixed contract runner throwing false positives ([3202e92](https://github.com/aria-ease/aria-ease/commit/3202e92b98f39331c9dc6967022c9697284d6127))
+
 ## [7.8.0](https://github.com/aria-ease/aria-ease/compare/v7.7.0...v7.8.0) (2026-05-03)
 
 
