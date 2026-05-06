@@ -12,7 +12,7 @@ import { createTestPage } from "./playwrightTestHarness";
 import { ComponentDetector } from "./ComponentDetector";
 import { ContractReporter } from "./ContractReporter";
 import { ActionExecutor } from "./ActionExecutor";
-import { AssertionRunner } from "./AssertionRunner";
+import { AssertionRunner, AssertionResult } from "./AssertionRunner";
 import { normalizeLevel, normalizeStrictness, resolveEnforcement } from "./strictness";
 
 export async function runContractTestsPlaywright( componentName: string, url?: string, strictness?: string, config?: AriaEaseConfig, configBaseDir?: string ): Promise<ContractTestResult> {
@@ -92,6 +92,8 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
     skipped.push(ignoredMessage);
     return { status: 'skip', level, detail: ignoredMessage };
   };
+
+  const isStrictSuccess = (result: AssertionResult) => result && typeof result === "object" && result.success === true;
 
   try {
     page = await createTestPage();
@@ -740,6 +742,8 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       }
 
       // Run assertions for this test
+      let assertionFailed = false;
+      let assertionFailureMessage = '';
       for (const assertion of assertions) {
         // Use RelativeTargetResolver for 'relative' expectedValue references
         let expectedValue: string | undefined;
@@ -771,28 +775,23 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         const assertionToRun = { ...assertion, expectedValue };
         const valueToCheck: string = expectedValue ?? '';
         const result = await assertionRunner.validate({ ...assertionToRun, expectedValue: valueToCheck }, dynamicTest.description);
-        if (result.success && result.passMessage) {
-          passes.push(result.passMessage);
-        } else if (!result.success && result.failMessage) {
-          const missingFields = [];
-          if (!assertion.target) missingFields.push('target');
-          if (!assertion.assertion) missingFields.push('assertion');
-          if (["toHaveAttribute", "toHaveValue", "toHaveRole"].includes(assertion.assertion)) {
-            if (typeof assertion.attribute === 'undefined' && assertion.assertion === 'toHaveAttribute') missingFields.push('attribute');
-            if (typeof assertion.expectedValue === 'undefined') missingFields.push('expectedValue');
-          }
-          if (missingFields.length > 0) {
-            const assertionLevel = normalizeLevel(assertion.level || dynamicTest.level);
-            const failure = `Dynamic assertion missing required field(s): ${missingFields.join(', ')}`;
-            const outcome = classifyFailure(failure, assertionLevel);
-            if (outcome.status === 'skip') {
-              continue;
-            }
-            failures.push(failure);
-            reporter.reportTest({ description: dynamicTest.description, level: assertionLevel }, outcome.status, outcome.detail);
-            continue;
-          }
+        
+        if (!isStrictSuccess(result)) {
+          assertionFailed = true;
+          assertionFailureMessage = result.failMessage || 'Assertion failed.';
+        } else {
+          passes.push(result.passMessage as string);
         }
+      }
+
+      // Report test result
+      if (assertionFailed) {
+        reporter.reportTest(
+          { description: dynamicTest.description, level: dynamicLevel },
+          'fail',
+          assertionFailureMessage
+        );
+        continue;
       }
       
       // Report test result

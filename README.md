@@ -13,12 +13,12 @@ Stop treating accessibility as an afterthought. Aria-Ease engineers accessibilit
 
 Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that integrates into every phase of your frontend engineering lifecycle:
 
-| Phase              | Feature                                       | Status       | Impact                                        |
-| ------------------ | --------------------------------------------- | ------------ | --------------------------------------------- |
-| **🔧 Development** | Component utilities for accessible patterns   | ✅ Available | Build it right from the start                 |
-| **🔍 Pre-Deploy**  | Axe-core powered static accessibility audit   | ✅ Available | Verify before it ships                        |
-| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | ✅ Available | Fast, determinic component accessibility test |
-| **🚀 CI/CD**       | Accessibility as deployment gatekeeper        | ✅ Available | Block inaccessible code from production       |
+| Phase              | Feature                                       | Impact                                        |
+| ------------------ | --------------------------------------------- | --------------------------------------------- |
+| **🔧 Development** | Component utilities for accessible patterns   | Build it right from the start                 |
+| **🔍 Pre-Deploy**  | Axe-core powered static accessibility audit   | Verify before it ships                        |
+| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | Fast, determinic component accessibility test |
+| **🚀 CI/CD**       | Accessibility as deployment gatekeeper        | Block inaccessible code from production       |
 
 ---
 

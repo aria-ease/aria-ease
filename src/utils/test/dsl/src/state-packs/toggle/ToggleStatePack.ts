@@ -37,6 +37,15 @@ export const TOGGLE_STATES = {
             }
         ],
         assertion: (arg: { relativeTarget?: string | number } = {}) => isToggleFocused(arg.relativeTarget as string | number)
+    },
+    "toggle.blurred": {
+        setup: [
+            {
+                when: ["keyboard", "pointer"],
+                steps: () => []
+            }
+        ],
+        assertion: (arg: { relativeTarget?: string | number } = {}) => isToggleBlurred(arg.relativeTarget as string | number)
     }
 }
 
@@ -73,6 +82,17 @@ function isToggleFocused(relativeTarget: string | number) {
             assertion: "toHaveFocus",
             relativeTarget,
             failureMessage: `Expected ${describeRelativeTarget("toggle", relativeTarget)} to have focus.`
+        }
+    ]
+}
+
+function isToggleBlurred(relativeTarget: string | number) {
+    return  [
+        {
+            target: "relative",
+            assertion: "notToHaveFocus",
+            relativeTarget,
+            failureMessage: `Expected ${describeRelativeTarget("toggle", relativeTarget)} not to have focus.`
         }
     ]
 }

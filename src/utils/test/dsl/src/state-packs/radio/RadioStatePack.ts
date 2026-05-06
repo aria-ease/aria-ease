@@ -37,6 +37,15 @@ export const RADIO_STATES = {
             }
         ],
         assertion: (arg: { relativeTarget?: string | number } = {}) => isRadioFocused(arg.relativeTarget as string | number)
+    },
+    "radio.blurred": {
+        setup: [
+            {
+                when: ["keyboard", "pointer"],
+                steps: () => []
+            }
+        ],
+        assertion: (arg: { relativeTarget?: string | number } = {}) => isRadioBlurred(arg.relativeTarget as string | number)
     }
 }
 
@@ -73,6 +82,17 @@ function isRadioFocused(relativeTarget: string | number) {
             assertion: "toHaveFocus",
             relativeTarget,
             failureMessage: `Expected ${describeRelativeTarget("radio", relativeTarget)} to have focus.`
+        }
+    ]
+}
+
+function isRadioBlurred(relativeTarget: string | number) {
+    return  [
+        {
+            target: "relative",
+            assertion: "toHaveFocus",
+            relativeTarget,
+            failureMessage: `Expected ${describeRelativeTarget("radio", relativeTarget)} not to have focus.`
         }
     ]
 }
