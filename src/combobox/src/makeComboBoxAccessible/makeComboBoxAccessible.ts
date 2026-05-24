@@ -100,7 +100,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         activeIndex = index;
     }
 
-    function openListbox() {
+    function openListBox() {
         comboboxInput.setAttribute("aria-expanded", "true");
         listBox.style.display = "block";
 
@@ -113,7 +113,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         }
     }
 
-    function closeListbox() {
+    function closeListBox() {
         comboboxInput.setAttribute("aria-expanded", "false");
         comboboxInput.setAttribute("aria-activedescendant", "");
         listBox.style.display = "none";
@@ -129,10 +129,8 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
     }
 
     function selectOption(item: HTMLElement) {
-        const value = item.textContent?.trim() || "";
-        comboboxInput.value = value;
         item.setAttribute("aria-selected", "true");
-        closeListbox();
+        closeListBox();
         
         if (callback?.onSelect) {
             try {
@@ -151,7 +149,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
             case "ArrowDown":
                 event.preventDefault();
                 if (!isOpen) {
-                    openListbox();
+                    openListBox();
                     return;
                 }
 
@@ -184,7 +182,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
             case "Escape":
                 if (isOpen) {
                     event.preventDefault();
-                    closeListbox();
+                    closeListBox();
                 } else if (comboboxInput.value) {
                     event.preventDefault();
                     comboboxInput.value = "";
@@ -223,7 +221,7 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
                 }
 
                 if (isOpen) {
-                    closeListbox();
+                    closeListBox();
                 }
                 
                 break;
@@ -252,15 +250,15 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
     function handleClickOutside(event: MouseEvent) {
         const target = event.target as HTMLElement;
         if (!comboboxInput.contains(target) && !listBox.contains(target) && (!listButton || !listButton.contains(target))) {
-            closeListbox();
+            closeListBox();
         }
     }
 
     function handleListButtonClick() {
         if (isListboxOpen()) {
-            closeListbox();
+            closeListBox();
         } else {
-            openListbox();
+            openListBox();
             comboboxInput.focus();
         }
     }
@@ -341,5 +339,5 @@ export function makeComboboxAccessible({ comboboxInputId, comboboxButtonId, list
         setActiveDescendant(-1);
     }
 
-    return { cleanup, refresh, openListbox, closeListbox }
+    return { cleanup, refresh, openListBox, closeListBox }
 }

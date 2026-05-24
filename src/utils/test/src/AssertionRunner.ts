@@ -35,7 +35,7 @@ export class AssertionRunner {
   constructor(
     private page: Page,
     private selectors: ComponentContract["selectors"],
-    private timeoutMs: number = 400
+    private assertionTimeoutMs: number
   ) {}
 
   /**
@@ -78,13 +78,13 @@ export class AssertionRunner {
   async validateVisibility( target: Locator, targetName: string, expectedVisible: boolean, failureMessage: string, testDescription: string ): Promise<AssertionResult> {
     try {
       if (expectedVisible) {
-        await expect(target).toBeVisible({ timeout: this.timeoutMs });
+        await expect(target).toBeVisible({ timeout: this.assertionTimeoutMs });
         return {
           success: true,
           passMessage: `${targetName} is visible as expected. Test: "${testDescription}".`
         };
       } else {
-        await expect(target).toBeHidden({ timeout: this.timeoutMs });
+        await expect(target).toBeHidden({ timeout: this.assertionTimeoutMs });
         return {
           success: true,
           passMessage: `${targetName} is not visible as expected. Test: "${testDescription}".`
@@ -136,7 +136,6 @@ export class AssertionRunner {
     // Type guard: expectedValue must be a string at this point
     if (typeof expectedValue !== 'string') {
       // Debug log for diagnosis
-      console.error('[AssertionRunner] expectedValue is not a string:', expectedValue);
       throw new Error(`AssertionRunner: expectedValue for attribute assertion must be a string, but got: ${JSON.stringify(expectedValue)}`);
     }
 
@@ -210,13 +209,13 @@ export class AssertionRunner {
   async validateFocus( target: Locator, targetName: string, expectedFocus: boolean, failureMessage: string, testDescription: string ): Promise<AssertionResult> {
     try {
       if(expectedFocus) {
-        await expect(target).toBeFocused({ timeout: this.timeoutMs });
+        await expect(target).toBeFocused({ timeout: this.assertionTimeoutMs });
         return {
           success: true,
           passMessage: `${targetName} has focus as expected. Test: "${testDescription}".`
         };
       } else {
-        await expect(target).not.toBeFocused({ timeout: this.timeoutMs });
+        await expect(target).not.toBeFocused({ timeout: this.assertionTimeoutMs });
         return {
           success: true,
           passMessage: `${targetName} does not have focus as expected. Test: "${testDescription}".`
@@ -226,9 +225,8 @@ export class AssertionRunner {
     } catch {
       const actualFocus = await this.page.evaluate(() => {
         const focused = document.activeElement;
-        return focused
-          ? `${focused.tagName}#${focused.id || 'no-id'}.${focused.className || 'no-class'}`
-          : 'no element focused';
+        if (!focused) return 'no element focused';
+        return `${focused.tagName}#${focused.id || 'no-id'}.${focused.className || 'no-class'} [text="${(focused as HTMLElement).innerText || (focused as HTMLElement).textContent || ''}"]`;
       });
       return {
         success: false,

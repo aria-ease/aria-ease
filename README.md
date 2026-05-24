@@ -358,7 +358,7 @@ useEffect(() => {
 }, []);
 
 // Programmatically control
-comboboxRef.current.openListbox(); // Open the listbox
+comboboxRef.current.openListBox(); // Open the listbox
 comboboxRef.current.refresh(); // Refresh the cache after dynamically adding/removing a listbox option item
 
 // Vanilla JS Example
@@ -376,8 +376,8 @@ const combobox = Combobox.makeComboboxAccessible({
 });
 
 // Programmatically control
-combobox.openListbox();
-combobox.closeListbox();
+combobox.openListBox();
+combobox.closeListBox();
 
 // If you dynamically add/remove listbox option items, refresh the cache
 combobox.refresh();

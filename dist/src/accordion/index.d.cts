@@ -1,4 +1,4 @@
-import { A as AccordionConfig, a as AccessibilityInstance } from '../Types.d-BRP-k6gJ.cjs';
+import { A as AccordionConfig, a as AccessibilityInstance } from '../Types.d-BEsUjX-3.cjs';
 
 /**
  * Makes an accordion accessible by managing ARIA attributes, keyboard interaction, and state.

@@ -6,8 +6,8 @@ class AccordionComponentStrategy implements ComponentStrategy {
     constructor(
         private mainSelector: string,
         private selectors: ComponentContract["selectors"],
-        private actionTimeoutMs: number = 400,
-        private assertionTimeoutMs: number = 400
+        private actionTimeoutMs: number,
+        private assertionTimeoutMs: number
     ) {}
 
     async resetState(page: Page): Promise<void> {

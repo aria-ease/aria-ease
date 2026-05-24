@@ -17,7 +17,7 @@ export class ActionExecutor {
   constructor(
     private page: Page,
     private selectors: ComponentContract["selectors"],
-    private timeoutMs: number = 400
+    private actionTimeoutMs: number
   ) {}
 
   /**
@@ -56,16 +56,19 @@ export class ActionExecutor {
       }
 
       // Relative focus: focus a specific option (e.g. first/last)
-      if (target === "relative" && relativeTarget) {
+      if (target === "relative" && relativeTarget) { 
         const relativeSelector = this.selectors.relative;
         if (!relativeSelector) {
           return { success: false, error: `Relative selector not defined for focus action.` };
         }
+        
         const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget);
         if (!element) {
           return { success: false, error: `Could not resolve relative target ${relativeTarget} for focus.` };
         }
-        await element.focus({ timeout: this.timeoutMs });
+
+        await element.focus({ timeout: this.actionTimeoutMs });
+  
         return { success: true };
       }
 
@@ -74,7 +77,7 @@ export class ActionExecutor {
       if (!selector) {
         return { success: false, error: `Selector for focus target ${target} not found.` };
       }
-      await this.page.locator(selector).first().focus({ timeout: this.timeoutMs });
+      await this.page.locator(selector).first().focus({ timeout: this.actionTimeoutMs });
       return { success: true };
     } catch (error) {
       if (this.isBrowserClosedError(error)) {
@@ -101,7 +104,7 @@ export class ActionExecutor {
         return { success: false, error: `Selector for type target ${target} not found.` };
       }
       
-      await this.page.locator(selector).first().fill(value, { timeout: this.timeoutMs });
+      await this.page.locator(selector).first().fill(value, { timeout: this.actionTimeoutMs });
       return { success: true };
     } catch (error) {
       if (this.isBrowserClosedError(error)) {
@@ -141,17 +144,19 @@ export class ActionExecutor {
           return { success: false, error: `Could not resolve relative target ${relativeTarget} for click.` };
         }
         
-        await element.click({ timeout: this.timeoutMs });
+        await element.click({ timeout: this.actionTimeoutMs });
+
         return { success: true };
       }
 
       // Standard click
       const selector = this.selectors[target as keyof typeof this.selectors];
       if (!selector) {
-        return { success: false, error: `Selector for action target ${target} not found.` };
+        return { success: false, error: `Selector for action target ${target} not found.` };    
       }
       
-      await this.page.locator(selector).first().click({ timeout: this.timeoutMs });
+      await this.page.locator(selector).first().click({ timeout: this.actionTimeoutMs });
+
       return { success: true };
     } catch (error) {
       if (this.isBrowserClosedError(error)) {
@@ -206,7 +211,7 @@ export class ActionExecutor {
         if (!element) {
           return { success: false, error: `Could not resolve relative target ${relativeTarget} for keypress.` };
         }
-        await element.press(keyValue, { timeout: this.timeoutMs });
+        await element.press(keyValue, { timeout: this.actionTimeoutMs });
         return { success: true };
       }
 
@@ -229,7 +234,7 @@ export class ActionExecutor {
       }
       
 
-      await locator.press(keyValue, { timeout: this.timeoutMs });
+      await locator.press(keyValue, { timeout: this.actionTimeoutMs });
       return { success: true };
     } catch (error) {
       if (this.isBrowserClosedError(error)) {
@@ -263,7 +268,8 @@ export class ActionExecutor {
           return { success: false, error: `Could not resolve relative target ${relativeTarget} for hover.` };
         }
         
-        await element.hover({ timeout: this.timeoutMs });
+        await element.hover({ timeout: this.actionTimeoutMs });
+    
         return { success: true };
       }
 
@@ -273,7 +279,7 @@ export class ActionExecutor {
         return { success: false, error: `Selector for hover target ${target} not found.` };
       }
       
-      await this.page.locator(selector).first().hover({ timeout: this.timeoutMs });
+      await this.page.locator(selector).first().hover({ timeout: this.actionTimeoutMs });
       return { success: true };
     } catch (error) {
       if (this.isBrowserClosedError(error)) {
