@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.8.2](https://github.com/aria-ease/aria-ease/compare/v7.8.0...v7.8.2) (2026-05-24)
+
+
+### Bug Fixes
+
+* fixed contract runner throwing false positives ([479299b](https://github.com/aria-ease/aria-ease/commit/479299bfb7de9c201c68acc11c1313da264cad57))
+* removed combobox utility setting input value to option text content on selection ([9a4d6f1](https://github.com/aria-ease/aria-ease/commit/9a4d6f11fc018d999fa84d686e84438f76aafe51))
+
 ### [7.8.1](https://github.com/aria-ease/aria-ease/compare/v7.8.0...v7.8.1) (2026-05-06)
 
 
