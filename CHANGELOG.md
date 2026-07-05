@@ -2,6 +2,15 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.8.3](https://github.com/aria-ease/aria-ease/compare/v7.8.0...v7.8.3) (2026-07-05)
+
+
+### Bug Fixes
+
+* fixed contract runner throwing false positives ([479299b](https://github.com/aria-ease/aria-ease/commit/479299bfb7de9c201c68acc11c1313da264cad57))
+* fixed static audit failing when page has no main landmark ([07e4616](https://github.com/aria-ease/aria-ease/commit/07e46162e27c5ecf736f0d6ef5cc439339cb015a))
+* removed combobox utility setting input value to option text content on selection ([2c39492](https://github.com/aria-ease/aria-ease/commit/2c3949209fa032b523c1d39441078b088cc0dee3))
+
 ### [7.8.2](https://github.com/aria-ease/aria-ease/compare/v7.8.0...v7.8.2) (2026-05-24)
 
 
