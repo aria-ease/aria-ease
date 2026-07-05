@@ -1,3 +1,11 @@
+type Steps = {
+  type: string;
+  target: string;
+  key?: string;
+  value?: string;
+  relativeTarget?: string | number;
+}
+
 export const MENU_STATES = {
   "menupopup.open": {
     setup: [
@@ -108,37 +116,26 @@ export const MENU_STATES = {
     requires: ["submenupopup.open"],
     setup: [
       {
-        when: ["keyboard"],
+        when: ["keyboard", "pointer"],
         steps: (arg: { relativeTarget?: string | number } = {}) => {
-          // Focus trigger, ArrowRight to open, then ArrowDown N times
-          let steps = [
-            { type: "focus", target: "submenuTrigger" },
-            { type: "keypress", target: "submenuTrigger", key: "ArrowRight" }
-          ];
+          // Focus trigger, ArrowRight to open, then ArrowDown N - 1 times. First item should be focus when opened
+          let steps: Steps[] = [];
           if (typeof arg.relativeTarget === "number") {
-            steps = steps.concat(
-              Array.from({ length: arg.relativeTarget }, () => ({
-                type: "keypress",
-                target: "submenuItems",
-                key: "ArrowDown"
-              }))
-            );
-          }
-          if (arg.relativeTarget === "first") {
-            steps = steps.concat({ type: "keypress", target: "submenuItems", key: "ArrowDown" })
+            if(arg.relativeTarget > 1) {
+              steps = steps.concat(
+                Array.from({ length: arg.relativeTarget - 1 }, () => ({
+                  type: "keypress",
+                  target: "submenuItems",
+                  key: "ArrowDown"
+                }))
+              );
+            }
           }
           if (arg.relativeTarget === "last") {
             steps = steps.concat({ type: "keypress", target: "submenuItems", key: "ArrowUp" })
           }
           return steps;
         }
-      },
-      {
-        when: ["pointer"],
-        steps: (arg: { relativeTarget?: string | number } = {}) => [
-          { type: "click", target: "submenuTrigger" },
-          { type: "click", target: "relative", relativeTarget: arg.relativeTarget }
-        ]
       }
     ],
     assertion: (arg: { relativeTarget?: string | number } = {}) => isSubmenuItemFocused(arg.relativeTarget as string | number)

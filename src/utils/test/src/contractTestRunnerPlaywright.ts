@@ -115,7 +115,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       await page.addStyleTag({ content: `* { transition: none !important; animation: none !important; }` });
     }
 
-    const strategy = await ComponentDetector.detect(componentName, componentConfig, actionTimeoutMs, assertionTimeoutMs, configBaseDir);
+    const strategy = await ComponentDetector.detect(componentName, actionTimeoutMs, assertionTimeoutMs, componentConfig, configBaseDir);
     if (!strategy) {
       throw new Error(`Unsupported component: ${componentName}`);
     }

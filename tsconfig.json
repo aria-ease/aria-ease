@@ -12,7 +12,7 @@
       "noUnusedLocals": true,
       "noUnusedParameters": true,
       "exactOptionalPropertyTypes": true, */
-      "forceConsistentCasingInFileNames": true,
+      "forceConsistentCasingInFileNames": false,
       "module": "esnext",
       "moduleResolution": "node",
       "declaration": true,

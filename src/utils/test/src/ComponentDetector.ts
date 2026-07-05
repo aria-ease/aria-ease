@@ -25,9 +25,9 @@ class ComponentDetector {
      */
     static async detect(
         componentName: string,
+        actionTimeoutMs: number,
+        assertionTimeoutMs: number,
         componentConfig?: unknown,
-        actionTimeoutMs: number = 400,
-        assertionTimeoutMs: number = 400,
         configBaseDir?: string
     ): Promise<ComponentStrategy | null> {
         const typedComponentConfig = this.isComponentConfig(componentConfig) ? componentConfig : undefined;

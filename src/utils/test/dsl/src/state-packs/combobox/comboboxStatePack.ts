@@ -4,7 +4,7 @@ export const COMBOBOX_STATES = {
   "comboboxpopup.open": {
     setup: [
       {
-        when: ["keyboard", "textInput", "pointer"],
+        when: ["keyboard", "textInput"],
         steps: () => [
           { type: "keypress", target: "input", key: "ArrowDown" }
         ]

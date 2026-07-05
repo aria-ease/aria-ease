@@ -239,8 +239,8 @@ interface AccessibilityInstance {
   getPressedIndices?: () => number[];
 
   //Combobox methods
-  openListbox?: () => void;
-  closeListbox?: () => void;
+  openListBox?: () => void;
+  closeListBox?: () => void;
 }
 
 interface AccordionConfig {
