@@ -1,4 +1,4 @@
-import { b as CheckboxConfig, a as AccessibilityInstance } from '../Types.d-BEsUjX-3.js';
+import { C as CheckboxConfig, a as AccessibilityInstance } from '../Types.d-DO31Kt2y.js';
 
 /**
  * Makes a checkbox group accessible by managing ARIA attributes and keyboard interaction.

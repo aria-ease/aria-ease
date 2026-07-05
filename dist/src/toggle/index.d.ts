@@ -1,4 +1,4 @@
-import { c as ToggleConfig, a as AccessibilityInstance } from '../Types.d-BEsUjX-3.js';
+import { c as ToggleConfig, a as AccessibilityInstance } from '../Types.d-DO31Kt2y.js';
 
 /**
  * Makes a toggle button accessible by managing ARIA attributes and keyboard interactions.
