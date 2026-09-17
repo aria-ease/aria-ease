@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.8.4](https://github.com/aria-ease/aria-ease/compare/v7.8.3...v7.8.4) (2026-09-17)
+
+
+### Bug Fixes
+
+* added Floss Africa donation link to README ([0dad73a](https://github.com/aria-ease/aria-ease/commit/0dad73a3b2e13034741eb681f8e5613de770274c))
+
 ### [7.8.3](https://github.com/aria-ease/aria-ease/compare/v7.8.0...v7.8.3) (2026-07-05)
 
 
