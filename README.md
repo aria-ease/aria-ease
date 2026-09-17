@@ -17,7 +17,7 @@ Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that
 | ------------------ | --------------------------------------------- | --------------------------------------------- |
 | **🔧 Development** | Component utilities for accessible patterns   | Build it right from the start                 |
 | **🔍 Pre-Deploy**  | Axe-core powered static accessibility audit   | Verify before it ships                        |
-| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | Fast, determinic component accessibility test |
+| **🧪 Testing**     | WAI-ARIA APG contract testing with Playwright | Fast, deterministic component accessibility test |
 | **🚀 CI/CD**       | Accessibility as deployment gatekeeper        | Block inaccessible code from production       |
 
 ---
@@ -26,7 +26,7 @@ Aria-Ease isn't a utility library. **It's an accessibility infrastructure** that
 
 ### From Development to Production
 
-**Traditional approach:** Build features → Manual testing → Find accessibility issues → Fix them → Manual testing again → Ship (maybe)
+**Traditional approach:** Build features → Manual testing → Find accessibility issues → Fix them → Manual testing again → Ship
 
 **Aria-Ease approach:** Build with accessible baseline utilities → Automated audits catch issues → Contract tests verify consistent component behaviors → CI/CD gates deployment → Ship with confidence
 
@@ -178,11 +178,11 @@ export default {
   contracts: [
     {
       src: "./tests/external-contracts/**/*.contract.mjs",
-      // optional: out: "./tests/external-contracts/generated"
+      // optional: out: "./tests/external-contracts"
     },
     {
       src: "./tests/client-a/**/*.contract.mjs",
-      out: "./tests/client-a/generated",
+      out: "./tests/client-a",
     },
   ],
 };
@@ -1124,3 +1124,5 @@ ISC License - see [LICENSE](LICENSE) file for details.
 ---
 
 **Created by [Isaac Victor](https://github.com/Scriptkidd98)**
+
+[![Fund my work on FLOSSAfrica](https://flossafrica.com/badge.svg)](https://flossafrica.com/m/scriptkidd98?p=aria-ease)
