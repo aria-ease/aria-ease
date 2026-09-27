@@ -267,6 +267,7 @@ function isSubmenuItemFocused(relativeTarget: string | number) {
     {
       target: "relative",
       relativeTarget,
+      selectorKey: "submenuItems",
       assertion: "toHaveFocus",
       failureMessage: `Expected submenu item ${relativeTarget} to have focus.`
     }
