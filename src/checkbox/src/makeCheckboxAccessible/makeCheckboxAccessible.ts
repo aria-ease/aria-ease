@@ -93,12 +93,10 @@ export function makeCheckboxAccessible({ checkboxGroupId, checkboxesClass, callb
       const checkbox = checkboxes[index];
 
       if ('checked' in checkbox && typeof (checkbox as HTMLInputElement).checked === "boolean") {
-        // Native input: let browser toggle checked, then sync aria-checked
-        setTimeout(() => {
-          const checked = checkbox.checked;
-          checkbox.setAttribute("aria-checked", checked ? "true" : "false");
-          callBack(index, checked as boolean);
-        }, 0);
+        // Native input: the click event runs after the browser toggles checked.
+        const checked = checkbox.checked;
+        checkbox.setAttribute("aria-checked", checked ? "true" : "false");
+        callBack(index, checked as boolean);
       } else {
         // Non-native element: toggle aria-checked directly
         const checked = checkbox.getAttribute("aria-checked") === "true";

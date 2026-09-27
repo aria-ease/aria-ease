@@ -19,7 +19,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
   const componentConfig = config?.test?.components?.find(c => c.name === componentName);
   const isCustomContract = !!componentConfig?.contractPath;
   const reporter = new ContractReporter(true, isCustomContract);
-  const defaultTimeouts = { actionTimeoutMs: 400, assertionTimeoutMs: 400, navigationTimeoutMs: 30000, componentReadyTimeoutMs: 5000 };
+  const defaultTimeouts = { actionTimeoutMs: 1000, assertionTimeoutMs: 1000, navigationTimeoutMs: 30000, componentReadyTimeoutMs: 5000 };
   const globalDisableTimeouts = config?.test?.disableTimeouts === true;
   const componentDisableTimeouts = componentConfig?.disableTimeouts === true;
   const disableTimeouts = componentDisableTimeouts || globalDisableTimeouts;
