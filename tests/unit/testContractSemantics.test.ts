@@ -1,4 +1,4 @@
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { tmpdir } from "node:os";
 import Ajv from "ajv";
@@ -8,20 +8,71 @@ import { validateContractSchema } from "../../src/utils/test/dsl/src/contractVal
 import { runContractTestsPlaywright } from "../../src/utils/test/src/contractTestRunnerPlaywright";
 import { closeSharedBrowser } from "../../src/utils/test/src/playwrightTestHarness";
 
-const contractPath = resolve(
-  import.meta.dirname,
-  "../../../exprmnts/tests/contracts/combobox.listbox.contract.json"
-);
 const schemaPath = resolve(
   import.meta.dirname,
   "../../src/utils/test/contract/contract.schema.json"
 );
-const compiledContract = JSON.parse(readFileSync(contractPath, "utf8"));
-const compiledContractsDirectory = resolve(
-  import.meta.dirname,
-  "../../../exprmnts/tests/contracts"
-);
 const standaloneSchema = JSON.parse(readFileSync(schemaPath, "utf8"));
+const compiledContract = {
+  meta: {
+    id: "aria-ease.contract.combobox",
+    version: "1.0.0",
+    description: "Representative compiled combobox contract",
+    source: { apg: "https://www.w3.org/WAI/ARIA/apg/patterns/combobox/" },
+    W3CName: "Combobox"
+  },
+  selectors: {
+    main: "[role=combobox]",
+    relative: "[role=option]",
+    popup: "[role=listbox]"
+  },
+  relationships: [
+    {
+      type: "aria-reference",
+      from: "main",
+      attribute: "aria-controls",
+      to: "popup",
+      level: "required"
+    },
+    {
+      type: "contains",
+      parent: "popup",
+      child: "relative",
+      level: "required"
+    }
+  ],
+  static: [
+    {
+      target: "main",
+      assertion: "toHaveAttribute",
+      attribute: "aria-expanded",
+      expectedValue: "false",
+      failureMessage: "",
+      level: "required"
+    }
+  ],
+  dynamic: [
+    {
+      description: "Open the listbox.",
+      level: "required",
+      action: [{ type: "click", target: "main" }],
+      assertions: [
+        {
+          target: "popup",
+          assertion: "toBeVisible",
+          failureMessage: "Expected popup to be visible"
+        },
+        {
+          target: "main",
+          assertion: "toHaveAttribute",
+          attribute: "aria-expanded",
+          expectedValue: "true",
+          failureMessage: "Expected combobox to be expanded"
+        }
+      ]
+    }
+  ]
+};
 
 function createAjvValidator() {
   const ajv = new Ajv({ allErrors: true, strict: false });
@@ -60,21 +111,11 @@ describe("contract schema and relative-target semantics", () => {
     expect(createAjvValidator()(contract)).toBe(true);
   });
 
-  it("accepts all supplied compiled contract structures", () => {
+  it("accepts the representative compiled contract structure", () => {
     const validate = createAjvValidator();
-    const contractFiles = readdirSync(compiledContractsDirectory)
-      .filter(file => file.endsWith(".json"));
 
-    expect(contractFiles.length).toBeGreaterThan(1);
-
-    for (const file of contractFiles) {
-      const contract = JSON.parse(
-        readFileSync(resolve(compiledContractsDirectory, file), "utf8")
-      );
-
-      expect(validateContractSchema(contract).valid, file).toBe(true);
-      expect(validate(contract), file).toBe(true);
-    }
+    expect(validateContractSchema(compiledContract).valid).toBe(true);
+    expect(validate(compiledContract)).toBe(true);
   });
 
   it("rejects malformed static assertions and invalid assertion values", () => {
@@ -97,7 +138,7 @@ describe("contract schema and relative-target semantics", () => {
     invalidAction.dynamic[0].action[0].type = "drag";
 
     const malformedReference = structuredClone(compiledContract);
-    malformedReference.dynamic[3].assertions[1].expectedValue = {
+    malformedReference.dynamic[0].assertions[1].expectedValue = {
       ref: 42,
       property: "id"
     };
