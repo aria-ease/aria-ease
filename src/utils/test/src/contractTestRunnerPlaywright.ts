@@ -356,8 +356,16 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         if (expectedValue.relativeTarget === 'first') idx = 0;
         else if (expectedValue.relativeTarget === 'second') idx = 1;
         else if (expectedValue.relativeTarget === 'last') idx = count - 1;
-        else if (!isNaN(Number(expectedValue.relativeTarget))) idx = Number(expectedValue.relativeTarget);
-        else idx = 0;
+        else if (typeof expectedValue.relativeTarget === 'number' && Number.isInteger(expectedValue.relativeTarget)) {
+          idx = expectedValue.relativeTarget - 1;
+        } else if (
+          typeof expectedValue.relativeTarget === 'string' &&
+          /^[1-9]\d*$/.test(expectedValue.relativeTarget)
+        ) {
+          idx = Number(expectedValue.relativeTarget) - 1;
+        } else {
+          return undefined;
+        }
         if (idx < 0 || idx >= count) return undefined;
         const relElem = baseLocator.nth(idx);
         return await getPropertyFromLocator(relElem, expectedValue.property || expectedValue.attribute);
@@ -748,25 +756,16 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         // Use RelativeTargetResolver for 'relative' expectedValue references
         let expectedValue: string | undefined;
         if (assertion.expectedValue && typeof assertion.expectedValue === 'object' && 'ref' in assertion.expectedValue) {
-          if (assertion.expectedValue.ref === 'relative') {
-            // Use RelativeTargetResolver to resolve the property from the correct relative element
-            const { RelativeTargetResolver } = await import('./RelativeTargetResolver');
-            const relativeSelector = componentContract.selectors.relative;
-            if (!relativeSelector) throw new Error('Relative selector not defined in contract selectors.');
-            const relTarget = assertion.relativeTarget || 'first';
-            const relElem = await RelativeTargetResolver.resolve(page, relativeSelector, relTarget);
-            if (!relElem) throw new Error(`Could not resolve relative target '${relTarget}' for expectedValue.`);
-            const prop = assertion.expectedValue.property || assertion.expectedValue.attribute || 'id';
-            if (prop === 'textContent') {
-              expectedValue = await relElem.evaluate((el) => el.textContent ?? undefined);
-            } else {
-              const attr = await relElem.getAttribute(prop);
-              expectedValue = attr === null ? undefined : attr;
-            }
-          } else {
-            // Fallback to original resolveExpectedValue for non-relative refs
-            expectedValue = await resolveExpectedValue(assertion.expectedValue as ExpectedValueRef, componentContract.selectors as Record<string, string>, page, {});
-          }
+            const expectedValueRef = assertion.expectedValue as ExpectedValueRef;
+            const context: RelativeContext = expectedValueRef.ref === 'relative'
+              ? { relativeBaseSelector: componentContract.selectors.relative }
+              : {};
+            expectedValue = await resolveExpectedValue(
+              expectedValueRef,
+              componentContract.selectors as Record<string, string>,
+              page,
+              context
+            );
         } else if (typeof assertion.expectedValue === 'string' || typeof assertion.expectedValue === 'undefined') {
           expectedValue = assertion.expectedValue;
         } else {
@@ -786,6 +785,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
       // Report test result
       if (assertionFailed) {
+        failures.push(assertionFailureMessage);
         reporter.reportTest(
           { description: dynamicTest.description, level: dynamicLevel },
           'fail',
