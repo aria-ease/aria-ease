@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.8.7](https://github.com/aria-ease/aria-ease/compare/v7.8.6...v7.8.7) (2026-10-10)
+
+
+### Bug Fixes
+
+* aligned contract schema validation and relative references ([9336b95](https://github.com/aria-ease/aria-ease/commit/9336b957a7d4bc2db7577d0e03a2094c44e1450d))
+
 ### [7.8.6](https://github.com/aria-ease/aria-ease/compare/v7.8.5...v7.8.6) (2026-10-10)
 
 
