@@ -3,10 +3,10 @@ import { resolve } from "node:path";
 import { tmpdir } from "node:os";
 import Ajv from "ajv";
 import { afterAll, describe, expect, it } from "vitest";
-import { RelativeTargetResolver } from "../../src/utils/test/src/RelativeTargetResolver";
-import { validateContractSchema } from "../../src/utils/test/dsl/src/contractValidator";
-import { runContractTestsPlaywright } from "../../src/utils/test/src/contractTestRunnerPlaywright";
-import { closeSharedBrowser } from "../../src/utils/test/src/playwrightTestHarness";
+import { RelativeTargetResolver } from "../../../src/utils/test/src/RelativeTargetResolver";
+import { validateContractSchema } from "../../../src/utils/test/dsl/src/contractValidator";
+import { runContractTestsPlaywright } from "../../../src/utils/test/src/contractTestRunnerPlaywright";
+import { closeSharedBrowser } from "../../../src/utils/test/src/playwrightTestHarness";
 
 const schemaPath = resolve(
   import.meta.dirname,
@@ -468,7 +468,7 @@ describe("contract schema and relative-target semantics", () => {
         <input role="combobox" aria-controls="two"><ul id="two" role="listbox"></ul>
       `),
       undefined,
-      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "../../../exprmnts/tests/contracts/combobox.listbox.contract.json") }] } },
+      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "./combobox.listbox.contract.json") }] } },
       undefined,
       { targetSelector: "[role=combobox]" }
     )).rejects.toThrow(/matched 2 elements/);
@@ -479,7 +479,7 @@ describe("contract schema and relative-target semantics", () => {
       "combobox",
       "data:text/html,<input role=\"combobox\" aria-controls=\"popup\"><ul id=\"popup\" role=\"listbox\"></ul>",
       undefined,
-      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "../../../exprmnts/tests/contracts/combobox.listbox.contract.json") }] } },
+      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "./combobox.listbox.contract.json") }] } },
       undefined,
       { targetSelector: "#missing" }
     )).rejects.toThrow(/matched no elements/);
@@ -490,7 +490,7 @@ describe("contract schema and relative-target semantics", () => {
       "combobox",
       "data:text/html,<button id=\"not-combobox\">Open</button>",
       undefined,
-      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "../../../exprmnts/tests/contracts/combobox.listbox.contract.json") }] } },
+      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "./combobox.listbox.contract.json") }] } },
       undefined,
       { targetSelector: "#not-combobox" }
     )).rejects.toThrow(/does not identify a valid combobox/);
@@ -501,7 +501,7 @@ describe("contract schema and relative-target semantics", () => {
       "combobox",
       "data:text/html,<input id=\"broken\" role=\"combobox\" aria-controls=\"missing-popup\">",
       undefined,
-      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "../../../exprmnts/tests/contracts/combobox.listbox.contract.json") }] } },
+      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "./combobox.listbox.contract.json") }] } },
       undefined,
       { targetSelector: "#broken" }
     )).rejects.toThrow(/missing or ambiguous popup/);
