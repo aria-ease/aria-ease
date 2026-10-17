@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs-extra";
+import { pathToFileURL } from "node:url";
 import { AriaEaseConfig } from "Types";
 
 /**
@@ -165,7 +166,7 @@ async function loadConfigFile(filePath: string): Promise<AriaEaseConfig | null> 
       return JSON.parse(content);
     } else if (['.js', '.mjs', '.cjs', '.ts'].includes(ext)) {
       // Dynamic import for JS/TS modules
-      const imported = await import(filePath);
+      const imported = await import(pathToFileURL(filePath).href);
       // Handle both default export and named exports
       return imported.default || imported;
     }
