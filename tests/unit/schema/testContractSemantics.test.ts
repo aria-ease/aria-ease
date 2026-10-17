@@ -1,4 +1,4 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { tmpdir } from "node:os";
 import Ajv from "ajv";
@@ -7,12 +7,8 @@ import { RelativeTargetResolver } from "../../../src/utils/test/src/RelativeTarg
 import { validateContractSchema } from "../../../src/utils/test/dsl/src/contractValidator";
 import { runContractTestsPlaywright } from "../../../src/utils/test/src/contractTestRunnerPlaywright";
 import { closeSharedBrowser } from "../../../src/utils/test/src/playwrightTestHarness";
-
-const schemaPath = resolve(
-  import.meta.dirname,
-  "../../src/utils/test/contract/contract.schema.json"
-);
-const standaloneSchema = JSON.parse(readFileSync(schemaPath, "utf8"));
+import schemaPath from "../../../src/utils/test/contract/contract.schema.json";
+const standaloneSchema = schemaPath;
 const compiledContract = {
   meta: {
     id: "aria-ease.contract.combobox",
