@@ -7,15 +7,18 @@
 import { Page } from "playwright";
 import { readFileSync } from "fs";
 import path from "path";
-import type { ComponentContract, ContractTestResult, AriaEaseConfig } from "Types";
+import type { ComponentContract, ContractTestResult, ContractFinding, AriaEaseConfig } from "Types";
 import { createTestPage } from "./playwrightTestHarness";
 import { ComponentDetector } from "./ComponentDetector";
 import { ContractReporter } from "./ContractReporter";
 import { ActionExecutor } from "./ActionExecutor";
 import { AssertionRunner, AssertionResult } from "./AssertionRunner";
 import { normalizeLevel, normalizeStrictness, resolveEnforcement } from "./strictness";
+import { TargetScope } from "./TargetScope";
 
-export async function runContractTestsPlaywright( componentName: string, url?: string, strictness?: string, config?: AriaEaseConfig, configBaseDir?: string ): Promise<ContractTestResult> {
+export type ContractExecutionOptions = { targetSelector?: string };
+
+export async function runContractTestsPlaywright( componentName: string, url?: string, strictness?: string, config?: AriaEaseConfig, configBaseDir?: string, options: ContractExecutionOptions = {} ): Promise<ContractTestResult> {
   const componentConfig = config?.test?.components?.find(c => c.name === componentName);
   const isCustomContract = !!componentConfig?.contractPath;
   const reporter = new ContractReporter(true, isCustomContract);
@@ -72,11 +75,22 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
   const warnings: string[] = [];
   const passes: string[] = [];
   const skipped: string[] = [];
+  const findings: ContractFinding[] = [];
+  let findingContext: Omit<ContractFinding, "id" | "status" | "level" | "message"> = { phase: "execution" };
   let page: Page | null = null;
 
   const classifyFailure = (message: string, levelRaw?: string): { status: 'fail' | 'warn' | 'skip'; level: string; detail: string } => {
     const level = normalizeLevel(levelRaw);
     const enforcement = resolveEnforcement(level, strictnessMode);
+    const status = enforcement === 'error' ? 'fail' : enforcement === 'warning' ? 'warn' : 'skip';
+    const contextKey = `${findingContext.phase}:${findingContext.rule || findingContext.target || "execution"}`;
+    findings.push({
+      id: `${componentContract.meta?.id || componentName}:${contextKey}`,
+      status,
+      level,
+      message,
+      ...findingContext
+    });
 
     if (enforcement === 'error') {
       failures.push(message);
@@ -126,8 +140,38 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       throw new Error(`CRITICAL: No selector found in contract for ${componentName}`);
     }
     
+    let targetScope: TargetScope | undefined;
+    if (options.targetSelector !== undefined) {
+      if (componentName !== "combobox") {
+        throw new Error("targetSelector is currently supported only for combobox audits.");
+      }
+      const target = page.locator(options.targetSelector);
+      const targetCount = await target.count();
+      if (targetCount === 0) throw new Error(`Target selector matched no elements: ${options.targetSelector}`);
+      if (targetCount !== 1) throw new Error(`Target selector matched ${targetCount} elements; expected exactly one: ${options.targetSelector}`);
+      const role = await target.getAttribute("role");
+      if (role !== "combobox") {
+        throw new Error(`Target selector does not identify a valid combobox: expected role="combobox", found ${role ? `role="${role}"` : "no role"}.`);
+      }
+      const matchesMain = await target.evaluate((element, selector) => element.matches(selector as string), mainSelector);
+      if (!matchesMain) throw new Error(`Target selector does not match the combobox contract main selector: ${mainSelector}`);
+      const controlsId = await target.getAttribute("aria-controls");
+      if (!controlsId) throw new Error("Targeted combobox must reference its popup with aria-controls.");
+      const popup = page.locator(`#${controlsId}`);
+      if (await popup.count() !== 1) throw new Error(`Targeted combobox aria-controls references missing or ambiguous popup: ${controlsId}`);
+      const popupSelector = componentContract.selectors.popup;
+      if (popupSelector && !(await popup.evaluate((element, selector) => element.matches(selector as string), popupSelector))) {
+        throw new Error(`Targeted combobox popup does not match the contract popup selector: ${popupSelector}`);
+      }
+      targetScope = new TargetScope(target, componentContract.selectors, popup);
+      if ("setTargetScope" in strategy && typeof strategy.setTargetScope === "function") {
+        strategy.setTargetScope(targetScope);
+      }
+    }
+
     try {
-      await page.locator(mainSelector as string).first().waitFor({ state: 'attached', timeout: componentReadyTimeoutMs });
+      const main = targetScope?.locator("main", mainSelector) ?? page.locator(mainSelector).first();
+      await main.waitFor({ state: 'attached', timeout: componentReadyTimeoutMs });
     } catch (error) {
       throw new Error(
         "\n❌ CRITICAL: Component not found on page!\n" +
@@ -142,7 +186,8 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
     reporter.start(componentName, totalTests, apgUrl);
 
     if (componentName === 'menu' && componentContract.selectors.main) {
-      await page.locator(componentContract.selectors.main).first().waitFor({ state: 'visible', timeout: componentReadyTimeoutMs })
+      const main = targetScope?.locator("main", componentContract.selectors.main) ?? page.locator(componentContract.selectors.main).first();
+      await main.waitFor({ state: 'visible', timeout: componentReadyTimeoutMs })
       .catch(() => {
         // Best-effort readiness check; action/assertion phases provide authoritative failures.
       });
@@ -176,7 +221,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       const relationshipLevel = normalizeLevel(rel.level);
       // Run setup for state-dependent relationship test
       if (Array.isArray(rel.setup) && rel.setup.length > 0) {
-        const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+        const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs, targetScope);
         const relDescription = rel.type === "aria-reference"
           ? `${rel.from}.${rel.attribute} references ${rel.to}`
           : `${rel.parent} contains ${rel.child}`;
@@ -231,8 +276,8 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-        const fromTarget = page.locator(fromSelector).first();
-        const toTarget = page.locator(toSelector).first();
+        const fromTarget = targetScope?.locator(rel.from || "", fromSelector) ?? page.locator(fromSelector).first();
+        const toTarget = targetScope?.locator(rel.to || "", toSelector) ?? page.locator(toSelector).first();
         const fromExists = (await fromTarget.count()) > 0;
         const toExists = (await toTarget.count()) > 0;
         if (!fromExists || !toExists) {
@@ -291,7 +336,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-        const parent = page.locator(parentSelector).first();
+        const parent = targetScope?.locator(rel.parent || "", parentSelector) ?? page.locator(parentSelector).first();
         const parentExists = (await parent.count()) > 0;
         if (!parentExists) {
           if (componentName === 'menu' && isSubmenuRelation(rel)) {
@@ -307,7 +352,9 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           reporter.reportStaticTest(relDescription, outcome.status, outcome.detail, outcome.level);
           continue;
         }
-        const descendants = parent.locator(childSelector);
+        const descendants = targetScope && rel.parent === "popup"
+          ? targetScope.locator(rel.child || "", childSelector)
+          : parent.locator(childSelector);
         const descendantCount = await descendants.count();
         if (descendantCount < 1) {
           if (componentName === 'menu' && isSubmenuRelation(rel)) {
@@ -344,13 +391,16 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       expectedValue: string | ExpectedValueRef,
       selectors: SelectorMap,
       page: Page,
-      context: RelativeContext = {}
+      context: RelativeContext = {},
+      scope?: TargetScope
     ): Promise<string | undefined> {
       if (!expectedValue || typeof expectedValue !== 'object' || !('ref' in expectedValue)) return expectedValue as string;
       let refSelector: string | undefined;
       if (expectedValue.ref === 'relative') {
         if (!expectedValue.relativeTarget || !context.relativeBaseSelector) return undefined;
-        const baseLocator = page.locator(context.relativeBaseSelector);
+        const baseLocator = scope
+          ? scope.locator("relative", context.relativeBaseSelector)
+          : page.locator(context.relativeBaseSelector);
         const count = await baseLocator.count();
         let idx = 0;
         if (expectedValue.relativeTarget === 'first') idx = 0;
@@ -372,7 +422,9 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       } else {
         refSelector = selectors[expectedValue.ref];
         if (!refSelector) throw new Error(`Selector for ref '${expectedValue.ref}' not found in contract selectors.`);
-        const refLocator = page.locator(refSelector).first();
+        const refLocator = scope
+          ? scope.locator(expectedValue.ref, refSelector)
+          : page.locator(refSelector).first();
         return await getPropertyFromLocator(refLocator, expectedValue.property || expectedValue.attribute);
       }
     }
@@ -402,7 +454,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
     }
 
     // Run static tests using AssertionRunner
-    const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
+    const staticAssertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs, targetScope);
     type SetupAction = {
       type: "focus" | "type" | "click" | "keypress" | "hover";
       target: string;
@@ -468,6 +520,12 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
     }
 
     for (const test of componentContract.static || []) {
+      findingContext = {
+        phase: "static",
+        rule: `static[${componentContract.static.indexOf(test)}]`,
+        target: test.target,
+        expected: test.expectedValue
+      };
       if (strategy && typeof strategy.resetState === 'function') {
         try {
           await strategy.resetState(page);
@@ -501,7 +559,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       }
 
       if (Array.isArray(test.setup) && test.setup.length > 0) {
-        const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+        const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs, targetScope);
         const allowedTypes = ["focus", "type", "click", "keypress", "hover"] as const;
         function isAllowedType(t: string): t is SetupAction['type'] {
           return (allowedTypes as readonly string[]).includes(t);
@@ -535,7 +593,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         reporter.reportStaticTest(staticDescription, outcome.status, outcome.detail, outcome.level);
         continue;
       }
-      const target = page.locator(targetSelector).first();
+      const target = targetScope?.locator(test.target, targetSelector) ?? page.locator(targetSelector).first();
       const exists = await target.count() > 0;
       if (!exists) {
         const failure = `Target ${test.target} not found.`;
@@ -571,7 +629,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
           if (!baseSel) throw new Error(`Selector for relativeTarget '${relTarget}' not found in contract selectors.`);
           context.relativeBaseSelector = baseSel;
         }
-        expectedValue = await resolveExpectedValue(test.expectedValue as ExpectedValueRef, componentContract.selectors as Record<string, string>, page, context);
+        expectedValue = await resolveExpectedValue(test.expectedValue as ExpectedValueRef, componentContract.selectors as Record<string, string>, page, context, targetScope);
       }
       if (!test.expectedValue) {
         const attributes = test.attribute.split(" | ");
@@ -626,6 +684,8 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
             reporter.reportStaticTest(staticDescription, 'pass', undefined, staticLevel);
           } else if (!result.success && result.failMessage) {
             const outcome = classifyFailure(result.failMessage, test.level);
+            const currentFinding = findings[findings.length - 1];
+            if (currentFinding) currentFinding.actual = result.actual;
             if (outcome.status === 'fail') staticFailed += 1;
             if (outcome.status === 'warn') staticWarnings += 1;
             reporter.reportStaticTest(staticDescription, outcome.status, outcome.detail, outcome.level);
@@ -636,6 +696,13 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
 
     // Run dynamic tests
     for (const dynamicTest of componentContract.dynamic || []) {
+      const dynamicIndex = componentContract.dynamic.indexOf(dynamicTest);
+      findingContext = {
+        phase: "dynamic",
+        rule: `dynamic[${dynamicIndex}]`,
+        scenario: dynamicTest.description,
+        expected: undefined
+      };
       if (!dynamicTest.assertions || dynamicTest.assertions.length === 0) {
         const skipMsg = 'Skipping test - no assertions found for this dynamic test.';
         skipped.push(skipMsg);
@@ -659,7 +726,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       const { setup = [], action, assertions } = dynamicTest;
       const dynamicLevel = normalizeLevel(dynamicTest.level);
 
-      const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs);
+      const actionExecutor = new ActionExecutor(page, componentContract.selectors, actionTimeoutMs, targetScope);
 
       if (Array.isArray(setup) && setup.length > 0) {
         const allowedTypes = ["focus", "type", "click", "keypress", "hover"] as const;
@@ -698,7 +765,7 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       }
 
       // Create assertion runner for this test
-      const assertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs);
+      const assertionRunner = new AssertionRunner(page, componentContract.selectors, assertionTimeoutMs, targetScope);
 
       let shouldAbortCurrentTest = false;
       let actionOutcome: { status: 'fail' | 'warn' | 'skip'; detail: string } | null = null;
@@ -753,6 +820,15 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
       let assertionFailed = false;
       let assertionFailureMessage = '';
       for (const assertion of assertions) {
+        const assertionIndex = assertions.indexOf(assertion);
+        findingContext = {
+          phase: "dynamic",
+          rule: `dynamic[${dynamicIndex}].assertions[${assertionIndex}]`,
+          scenario: dynamicTest.description,
+          target: assertion.target,
+          expected: assertion.expectedValue,
+          assertion: assertion.assertion
+        };
         // Use RelativeTargetResolver for 'relative' expectedValue references
         let expectedValue: string | undefined;
         if (assertion.expectedValue && typeof assertion.expectedValue === 'object' && 'ref' in assertion.expectedValue) {
@@ -764,7 +840,8 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
               expectedValueRef,
               componentContract.selectors as Record<string, string>,
               page,
-              context
+              context,
+              targetScope
             );
         } else if (typeof assertion.expectedValue === 'string' || typeof assertion.expectedValue === 'undefined') {
           expectedValue = assertion.expectedValue;
@@ -778,6 +855,25 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
         if (!isStrictSuccess(result)) {
           assertionFailed = true;
           assertionFailureMessage = result.failMessage || 'Assertion failed.';
+          const level = normalizeLevel(assertion.level ?? dynamicTest.level);
+          const enforcement = resolveEnforcement(level, strictnessMode);
+          const status = enforcement === 'error' ? 'fail' : enforcement === 'warning' ? 'warn' : 'skip';
+          const detail = enforcement === 'ignore'
+            ? `${assertionFailureMessage} (ignored by strictness=${strictnessMode}, level=${level})`
+            : assertionFailureMessage;
+          findings.push({
+            id: `${componentContract.meta?.id || componentName}:dynamic:dynamic[${dynamicIndex}].assertions[${assertionIndex}]`,
+            status,
+            level,
+            phase: "dynamic",
+            scenario: dynamicTest.description,
+            rule: `dynamic[${dynamicIndex}].assertions[${assertionIndex}]`,
+            assertion: assertion.assertion,
+            target: assertion.target,
+            expected: expectedValue,
+            actual: result.actual,
+            message: detail
+          });
         } else {
           passes.push(result.passMessage as string);
         }
@@ -861,5 +957,5 @@ export async function runContractTestsPlaywright( componentName: string, url?: s
     if (page) await page.close();
   }
 
-  return { passes, failures, skipped, warnings }
+  return { passes, failures, skipped, warnings, findings }
 }
