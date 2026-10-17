@@ -33,7 +33,7 @@ Aria-Ease is **accessibility infrastructure for the entire frontend engineering 
 
 Aria-Ease provides **production-ready accessibility utilities** for common interactive patterns. These utilities encode Aria-Ease's baseline interpretation of accessible behavior: a consistent starting point you can trust and verify.
 
-### Component Patterns (7 Core)
+### Component Patterns (8 Core)
 
 We provide baseline WCAG-aligned implementations for:
 
@@ -44,6 +44,7 @@ We provide baseline WCAG-aligned implementations for:
 - ✅ **Toggle Buttons** - On/off switches, settings toggles
 - ✅ **Combobox** - Autocomplete, search with suggestions, editable dropdowns
 - ✅ **Block Navigation** - Landmark region navigation (skip links)
+- ✅ **Tabs** - Tabbed interfaces with focus and selection management
 
 ### Technical Implementation
 
@@ -153,18 +154,17 @@ For each pattern, Aria-Ease automatically handles:
 
 ### Custom & Complex Patterns
 
-- ❌ **Custom Widgets** - Patterns not in our 7 core components
+- ❌ **Custom Widgets** - Patterns not in our 8 core components
 - ❌ **Data Tables** - Sortable, filterable, complex tables
 - ❌ **Rich Text Editors** - Complex WYSIWYG interfaces
 - ❌ **Drag-and-Drop** - Accessible drag interfaces with keyboard
 - ❌ **Charts/Graphs** - Data visualization accessibility
 - ❌ **Maps** - Interactive map accessibility
 - ❌ **Carousels** - Image carousels, slideshows
-- ❌ **Tabs** - Tabbed interfaces (coming soon)
 - ❌ **Modals/Dialogs** - Alert dialogs, confirmations (coming soon)
 - ❌ **Tooltips** - Hover/focus tooltips (coming soon)
 
-**Why:** We focus on doing 7 patterns exceptionally well. Custom patterns need custom solutions.
+**Why:** We focus on doing 8 patterns exceptionally well. Custom patterns need custom solutions.
 
 **Use Instead:** Build using WAI-ARIA APG as reference, or wait for us to add support
 
@@ -424,7 +424,7 @@ When using Aria-Ease, you are still responsible for:
 
 ### ⚠️ Maybe Not a Fit
 
-- Need patterns we don't support yet (tabs, modals, tooltips - coming soon)
+- Need patterns we don't support yet (modals and tooltips are coming soon)
 - Need zero-code solution (we're a developer tool)
 - Need comprehensive accessibility solution (we're one layer)
 - Building with design system that already has accessible components
