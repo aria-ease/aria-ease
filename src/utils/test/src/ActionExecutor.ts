@@ -6,6 +6,7 @@
 import { Page } from "playwright";
 import type { ComponentContract } from "Types";
 import { RelativeTargetResolver } from "./RelativeTargetResolver";
+import { TargetScope } from "./TargetScope";
 
 export type ActionResult = {
   success: boolean;
@@ -17,7 +18,8 @@ export class ActionExecutor {
   constructor(
     private page: Page,
     private selectors: ComponentContract["selectors"],
-    private actionTimeoutMs: number
+    private actionTimeoutMs: number,
+    private scope?: TargetScope
   ) {}
 
   /**
@@ -44,7 +46,7 @@ export class ActionExecutor {
         if (!mainSelector) {
           return { success: false, error: `Main selector not defined for virtual focus.` };
         }
-        const main = this.page.locator(mainSelector).first();
+        const main = this.scope?.locator("main", mainSelector) ?? this.page.locator(mainSelector).first();
         const exists = await main.count();
         if (!exists) {
           return { success: false, error: `Main element not found for virtual focus.` };
@@ -62,7 +64,7 @@ export class ActionExecutor {
           return { success: false, error: `Relative selector not defined for focus action.` };
         }
         
-        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget);
+        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget, this.scope);
         if (!element) {
           return { success: false, error: `Could not resolve relative target ${relativeTarget} for focus.` };
         }
@@ -77,7 +79,7 @@ export class ActionExecutor {
       if (!selector) {
         return { success: false, error: `Selector for focus target ${target} not found.` };
       }
-      await this.page.locator(selector).first().focus({ timeout: this.actionTimeoutMs });
+      await (this.scope?.locator(target, selector) ?? this.page.locator(selector).first()).focus({ timeout: this.actionTimeoutMs });
       return { success: true };
     } catch (error) {
       if (this.isBrowserClosedError(error)) {
@@ -104,7 +106,7 @@ export class ActionExecutor {
         return { success: false, error: `Selector for type target ${target} not found.` };
       }
       
-      await this.page.locator(selector).first().fill(value, { timeout: this.actionTimeoutMs });
+      await (this.scope?.locator(target, selector) ?? this.page.locator(selector).first()).fill(value, { timeout: this.actionTimeoutMs });
       return { success: true };
     } catch (error) {
       if (this.isBrowserClosedError(error)) {
@@ -139,7 +141,7 @@ export class ActionExecutor {
           return { success: false, error: `Relative selector not defined for click action.` };
         }
 
-        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget);
+        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget, this.scope);
         if (!element) {
           return { success: false, error: `Could not resolve relative target ${relativeTarget} for click.` };
         }
@@ -155,7 +157,7 @@ export class ActionExecutor {
         return { success: false, error: `Selector for action target ${target} not found.` };    
       }
       
-      await this.page.locator(selector).first().click({ timeout: this.actionTimeoutMs });
+      await (this.scope?.locator(target, selector) ?? this.page.locator(selector).first()).click({ timeout: this.actionTimeoutMs });
 
       return { success: true };
     } catch (error) {
@@ -207,7 +209,7 @@ export class ActionExecutor {
         if (!relativeSelector) {
           return { success: false, error: `Relative selector not defined for keypress action.` };
         }
-        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget);
+        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget, this.scope);
         if (!element) {
           return { success: false, error: `Could not resolve relative target ${relativeTarget} for keypress.` };
         }
@@ -221,7 +223,7 @@ export class ActionExecutor {
         return { success: false, error: `Selector for keypress target ${target} not found.` };
       }
 
-      const locator = this.page.locator(selector).first();
+      const locator = this.scope?.locator(target, selector) ?? this.page.locator(selector).first();
       const elementCount = await locator.count();
       
       // Element not found for keypress target.
@@ -263,7 +265,7 @@ export class ActionExecutor {
           return { success: false, error: `Relative selector not defined for hover action.` };
         }
 
-        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget);
+        const element = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget, this.scope);
         if (!element) {
           return { success: false, error: `Could not resolve relative target ${relativeTarget} for hover.` };
         }
@@ -279,7 +281,7 @@ export class ActionExecutor {
         return { success: false, error: `Selector for hover target ${target} not found.` };
       }
       
-      await this.page.locator(selector).first().hover({ timeout: this.actionTimeoutMs });
+      await (this.scope?.locator(target, selector) ?? this.page.locator(selector).first()).hover({ timeout: this.actionTimeoutMs });
       return { success: true };
     } catch (error) {
       if (this.isBrowserClosedError(error)) {
