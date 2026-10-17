@@ -13,6 +13,47 @@ interface ValidationResult {
   errors: ValidationError[];
 }
 
+const supportedAssertions = [
+  'toBeVisible',
+  'notToBeVisible',
+  'toHaveAttribute',
+  'toHaveValue',
+  'toHaveFocus',
+  'notToHaveFocus',
+  'toHaveRole'
+] as const;
+
+const supportedActions = ['click', 'keypress', 'type', 'hover', 'focus'] as const;
+
+function validateExpectedValue(value: unknown, path: string, errors: ValidationError[]): void {
+  if (value === undefined || typeof value === 'string') return;
+
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    errors.push({ path, message: 'expectedValue must be a string or reference object' });
+    return;
+  }
+
+  const reference = value as Record<string, unknown>;
+  if (typeof reference.ref !== 'string') {
+    errors.push({ path: `${path}.ref`, message: 'ref is required and must be a string' });
+  }
+  for (const property of ['property', 'attribute']) {
+    if (reference[property] !== undefined && typeof reference[property] !== 'string') {
+      errors.push({ path: `${path}.${property}`, message: `${property} must be a string` });
+    }
+  }
+  if (
+    reference.relativeTarget !== undefined &&
+    (typeof reference.relativeTarget !== 'string' &&
+      (!Number.isInteger(reference.relativeTarget) || (reference.relativeTarget as number) < 1))
+  ) {
+    errors.push({
+      path: `${path}.relativeTarget`,
+      message: 'relativeTarget must be a string or a positive integer'
+    });
+  }
+}
+
 /**
  * Validates a contract JSON object against the expected schema
  * @param contract - The contract object to validate
@@ -61,12 +102,19 @@ export function validateContractSchema(contract: unknown): ValidationResult {
           message: 'target is required and must be a string'
         });
       }
+      if (!supportedAssertions.includes(a.assertion as typeof supportedAssertions[number])) {
+        errors.push({
+          path: `$.static[${idx}].assertion`,
+          message: `assertion must be one of: ${supportedAssertions.join(', ')}`
+        });
+      }
       if (typeof a.attribute !== 'string') {
         errors.push({
           path: `$.static[${idx}].attribute`,
           message: 'attribute is required and must be a string'
         });
       }
+      validateExpectedValue(a.expectedValue, `$.static[${idx}].expectedValue`, errors);
       if (typeof a.failureMessage !== 'string') {
         errors.push({
           path: `$.static[${idx}].failureMessage`,
@@ -120,10 +168,10 @@ export function validateContractSchema(contract: unknown): ValidationResult {
           }
 
           const a = action as Record<string, unknown>;
-          if (typeof a.type !== 'string') {
+          if (!supportedActions.includes(a.type as typeof supportedActions[number])) {
             errors.push({
               path: `$.dynamic[${idx}].action[${actIdx}].type`,
-              message: 'type is required and must be a string'
+              message: `type must be one of: ${supportedActions.join(', ')}`
             });
           }
 
@@ -166,6 +214,17 @@ export function validateContractSchema(contract: unknown): ValidationResult {
               message: 'assertion is required and must be a string'
             });
           }
+          if (!supportedAssertions.includes(a.assertion as typeof supportedAssertions[number])) {
+            errors.push({
+              path: `$.dynamic[${idx}].assertions[${assertIdx}].assertion`,
+              message: `assertion must be one of: ${supportedAssertions.join(', ')}`
+            });
+          }
+          validateExpectedValue(
+            a.expectedValue,
+            `$.dynamic[${idx}].assertions[${assertIdx}].expectedValue`,
+            errors
+          );
 
           // Validate level if present
           if (a.level !== undefined && !['required', 'recommended', 'optional'].includes(a.level as string)) {

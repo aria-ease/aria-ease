@@ -7,10 +7,11 @@ import fs from "fs-extra";
 import { AxeResult } from "Types";
 import { loadConfig } from "./configLoader.js";
 import { displayBadgeInfo, promptAddBadge } from "./badgeHelper.js";
+import packageJson from "../../../package.json";
 
 const program = new Command();
 
-program.name('aria-ease').description('Run accessibility tests and audits').version('2.2.3');
+program.name('aria-ease').description('Run accessibility tests and audits').version(packageJson.version);
 
 program.command('audit')
 .description('Run axe-core powered accessibility audit on webpages')

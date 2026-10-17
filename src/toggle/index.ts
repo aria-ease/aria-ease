@@ -1,1 +1,1 @@
-export * from "./src/makeTogggleAccessible/makeToggleAccessible";
+export * from "./src/makeToggleAccessible/makeToggleAccessible";

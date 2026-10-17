@@ -1,3 +1,44 @@
+interface AriaEaseConfigAudit {
+    urls?: [];
+    rules?: object;
+    output?: object;
+    timeout?: number;
+    waitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
+}
+
+interface AriaEaseConfigTest {
+    components?: AriaEaseConfigTestComponent[];
+    strictness?: StrictnessMode;
+    disableTimeouts?: boolean;
+    actionTimeoutMs?: number;
+    assertionTimeoutMs?: number;
+    navigationTimeoutMs?: number;
+    componentReadyTimeoutMs?: number;
+}
+
+interface AriaEaseConfigTestComponent {
+    name: string;
+    contractPath?: string;
+    strategyPath?: string;
+    strictness?: StrictnessMode;
+    disableTimeouts?: boolean;
+    actionTimeoutMs?: number;
+    assertionTimeoutMs?: number;
+    navigationTimeoutMs?: number;
+    componentReadyTimeoutMs?: number;
+}
+
+interface AriaEaseConfigContractSource {
+    src: string;
+    out?: string;
+}
+
+interface AriaEaseConfig {
+    audit?: AriaEaseConfigAudit;
+    test?: AriaEaseConfigTest;
+    contracts?: AriaEaseConfigContractSource[];
+}
+
 interface JestAxeResult {
     violations: unknown[];
     raw: unknown;
@@ -387,7 +428,19 @@ declare class DynamicTestBuilder {
 }
 declare function createContract(componentName: string, define: (c: ContractBuilder) => void): FluentContract;
 
-type StrictnessMode = 'minimal' | 'balanced' | 'strict' | 'paranoid';
+/**
+ * Builds (compiles) DSL contract files to JSON format
+ * @param cwd - Current working directory (config file location)
+ * @param config - AriaEase config object
+ * @returns Object with summary of built contracts
+ */
+declare function buildContracts(cwd: string, config: AriaEaseConfig): Promise<{
+    success: boolean;
+    built: string[];
+    errors: string[];
+}>;
+
+type StrictnessMode$1 = 'minimal' | 'balanced' | 'strict' | 'paranoid';
 
 /**
  * Runs static and interactions accessibility test on UI components.
@@ -397,7 +450,7 @@ type StrictnessMode = 'minimal' | 'balanced' | 'strict' | 'paranoid';
  */
 
 type TestAuditOptions = {
-    strictness?: StrictnessMode;
+    strictness?: StrictnessMode$1;
 };
 declare function testUiComponent(componentName: string, url: string | null, options?: TestAuditOptions): Promise<JestAxeResult>;
 /**
@@ -406,4 +459,4 @@ declare function testUiComponent(componentName: string, url: string | null, opti
  */
 declare function cleanupTests(): Promise<void>;
 
-export { cleanupTests, createContract, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };
+export { buildContracts, cleanupTests, createContract, makeAccordionAccessible, makeBlockAccessible, makeCheckboxAccessible, makeComboboxAccessible, makeMenuAccessible, makeRadioAccessible, makeTabsAccessible, makeToggleAccessible, testUiComponent };

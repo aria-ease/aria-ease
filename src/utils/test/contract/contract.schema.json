@@ -84,36 +84,48 @@
             "description": "Define static assertions that can be validated against the initial HTML state of the component.",
             "items": {
                 "type": "object",
-                "required": ["assertions"],
+                "required": ["target", "assertion", "attribute", "failureMessage"],
                 "properties": {
-                    "assertions": {
-                        "type": "array",
-                        "items": {
-                            "type": "object",
-                            "required": ["target", "assertion", "failureMessage", "level"],
-                            "properties": {
-                                "target": { "type": "string" },
-                                "assertion": { "type": "string" },
-                                "attribute": { "type": "string" },
-                                "expectedValue": {
-                                    "oneOf": [
-                                        { "type": "string" },
-                                        {
-                                        "type": "object",
-                                        "properties": {
-                                            "ref": { "type": "string" },
-                                            "property": { "type": "string" },
-                                            "attribute": { "type": "string" },
-                                            "relativeTarget": { "type": "string" }
-                                        },
-                                        "required": ["ref"]
-                                        }
-                                    ]
+                    "target": { "type": "string" },
+                    "assertion": {
+                        "type": "string",
+                        "enum": [
+                            "toBeVisible",
+                            "notToBeVisible",
+                            "toHaveAttribute",
+                            "toHaveValue",
+                            "toHaveFocus",
+                            "notToHaveFocus",
+                            "toHaveRole"
+                        ]
+                    },
+                    "attribute": { "type": "string" },
+                    "expectedValue": {
+                        "oneOf": [
+                            { "type": "string" },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "ref": { "type": "string" },
+                                    "property": { "type": "string" },
+                                    "attribute": { "type": "string" },
+                                    "relativeTarget": {
+                                        "oneOf": [
+                                            { "type": "string" },
+                                            { "type": "integer" }
+                                        ]
+                                    }
                                 },
-                                "failureMessage": { "type": "string" },
-                                "level": { "type": "string", "enum": ["optional", "recommended", "required"] }
+                                "required": ["ref"]
                             }
-                        }
+                        ]
+                    },
+                    "failureMessage": { "type": "string" },
+                    "level": { "type": "string", "enum": ["optional", "recommended", "required"] },
+                    "requires": { "type": "string" },
+                    "setup": {
+                        "type": "array",
+                        "items": { "$ref": "#/definitions/action" }
                     }
                 }
             }
@@ -133,40 +145,31 @@
                     "given": { "type": "string" },
                     "setup": {
                         "type": "array",
-                        "items": {
-                            "type": "object",
-                            "required": ["type", "target"],
-                            "properties": {
-                                "type": { "type": "string" },
-                                "target": { "type": "string" },
-                                "key": { "type": "string" },
-                                "value": { "type": "string" },
-                                "relativeTarget": { "type": "string" }
-                            }
-                        }
+                        "items": { "$ref": "#/definitions/action" }
                     },
                     "action": {
                         "type": "array",
-                        "items": {
-                            "type": "object",
-                            "required": ["type", "target"],
-                            "properties": {
-                                "type": { "type": "string" },
-                                "target": { "type": "string" },
-                                "key": { "type": "string" },
-                                "value": { "type": "string" },
-                                "relativeTarget": { "type": "string" }
-                            }
-                        }
+                        "items": { "$ref": "#/definitions/action" }
                     },
                     "assertions": {
                         "type": "array",
                         "items": {
                             "type": "object",
-                            "required": ["target", "assertion", "failureMessage", "level"],
+                            "required": ["target", "assertion", "failureMessage"],
                             "properties": {
                                 "target": { "type": "string" },
-                                "assertion": { "type": "string" },
+                                "assertion": {
+                                    "type": "string",
+                                    "enum": [
+                                        "toBeVisible",
+                                        "notToBeVisible",
+                                        "toHaveAttribute",
+                                        "toHaveValue",
+                                        "toHaveFocus",
+                                        "notToHaveFocus",
+                                        "toHaveRole"
+                                    ]
+                                },
                                 "attribute": { "type": "string" },
                                 "expectedValue": {
                                     "oneOf": [
@@ -177,7 +180,12 @@
                                                 "ref": { "type": "string" },
                                                 "property": { "type": "string" },
                                                 "attribute": { "type": "string" },
-                                                "relativeTarget": { "type": "string" }
+                                                "relativeTarget": {
+                                                    "oneOf": [
+                                                        { "type": "string" },
+                                                        { "type": "integer" }
+                                                    ]
+                                                }
                                             },
                                             "required": ["ref"]
                                         }
@@ -187,11 +195,21 @@
                                     "type": "object",
                                     "properties": {
                                         "target": { "type": "string" },
-                                        "relativeTarget": { "type": "string" } 
+                                        "relativeTarget": {
+                                            "oneOf": [
+                                                { "type": "string" },
+                                                { "type": "integer" }
+                                            ]
+                                        }
                                     },
                                     "required": ["target"]
                                 },
-                                "relativeTarget": { "type": "string" },
+                                "relativeTarget": {
+                                    "oneOf": [
+                                        { "type": "string" },
+                                        { "type": "integer" }
+                                    ]
+                                },
                                 "failureMessage": { "type": "string" },
                                 "level": { "type": "string", "enum": ["optional", "recommended", "required"] }
                             }
@@ -199,6 +217,28 @@
                     }
                 }
             }
+        }
+    },
+    "definitions": {
+        "action": {
+            "type": "object",
+            "required": ["type", "target"],
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "enum": ["click", "keypress", "type", "hover", "focus"]
+                },
+                "target": { "type": "string" },
+                "key": { "type": "string" },
+                "value": { "type": "string" },
+                "relativeTarget": {
+                    "oneOf": [
+                        { "type": "string" },
+                        { "type": "integer" }
+                    ]
+                }
+            },
+            "additionalProperties": false
         }
     }
 }
