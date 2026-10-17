@@ -238,6 +238,275 @@ describe("contract schema and relative-target semantics", () => {
     }
   });
 
+  it("preserves dynamic assertion metadata in structured findings", async () => {
+    const tempDirectory = mkdtempSync(resolve(tmpdir(), "aria-ease-dynamic-findings-"));
+    const contractFile = resolve(tempDirectory, "dynamic-findings.contract.json");
+    writeFileSync(contractFile, JSON.stringify({
+      selectors: {
+        main: "[role=combobox]",
+        input: "[role=combobox]"
+      },
+      relationships: [],
+      static: [],
+      dynamic: [
+        {
+          description: "Escape clears the combobox.",
+          level: "required",
+          action: [],
+          assertions: [
+            {
+              target: "main",
+              assertion: "toHaveAttribute",
+              attribute: "aria-activedescendant",
+              expectedValue: "apple",
+              failureMessage: "Expected active option."
+            }
+          ]
+        },
+        {
+          description: "Escape clears the active descendant.",
+          level: "required",
+          action: [],
+          assertions: [
+            {
+              target: "main",
+              assertion: "toHaveAttribute",
+              attribute: "aria-activedescendant",
+              expectedValue: "",
+              failureMessage: "Expected no active option."
+            }
+          ]
+        },
+        {
+          description: "Escape clears the input.",
+          level: "required",
+          action: [],
+          assertions: [
+            {
+              target: "input",
+              assertion: "toHaveValue",
+              expectedValue: "",
+              failureMessage: "Expected empty input."
+            }
+          ]
+        },
+        {
+          description: "Arrow opens the combobox.",
+          level: "required",
+          action: [],
+          assertions: [
+            {
+              target: "main",
+              assertion: "toHaveAttribute",
+              attribute: "aria-expanded",
+              expectedValue: "true",
+              failureMessage: "Expected expanded combobox."
+            }
+          ]
+        },
+        {
+          description: "Enter selects the active option.",
+          level: "required",
+          action: [],
+          assertions: [
+            {
+              target: "main",
+              assertion: "toHaveAttribute",
+              attribute: "aria-selected",
+              expectedValue: "true",
+              failureMessage: "Expected selected option."
+            }
+          ]
+        }
+      ]
+    }));
+
+    try {
+      const result = await runContractTestsPlaywright(
+        "combobox",
+        "data:text/html," + encodeURIComponent(`
+          <input role="combobox" aria-expanded="false" value="test">
+        `),
+        "strict",
+        {
+          test: {
+            components: [{ name: "combobox", contractPath: contractFile }],
+            assertionTimeoutMs: 300,
+            componentReadyTimeoutMs: 300
+          }
+        }
+      );
+
+      const dynamicFindings = result.findings?.filter(({ phase }) => phase === "dynamic") ?? [];
+      expect(dynamicFindings).toHaveLength(5);
+      expect(dynamicFindings.map(({ scenario }) => scenario)).toEqual([
+        "Escape clears the combobox.",
+        "Escape clears the active descendant.",
+        "Escape clears the input.",
+        "Arrow opens the combobox.",
+        "Enter selects the active option."
+      ]);
+      expect(dynamicFindings.map(({ expected }) => expected)).toEqual(["apple", "", "", "true", "true"]);
+      expect(dynamicFindings.map(({ actual }) => actual)).toEqual([null, null, "test", "false", null]);
+      expect(dynamicFindings.every(({ status, level, assertion }) =>
+        status === "fail" && level === "required" && assertion
+      )).toBe(true);
+      expect(result.failures).toHaveLength(5);
+    } finally {
+      rmSync(tempDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("scopes a targeted combobox to one instance and its aria-controls popup", async () => {
+    const tempDirectory = mkdtempSync(resolve(tmpdir(), "aria-ease-targeted-"));
+    const contractFile = resolve(tempDirectory, "targeted.contract.json");
+    writeFileSync(contractFile, JSON.stringify({
+      selectors: {
+        main: "[role=combobox]",
+        input: "[role=combobox]",
+        button: "button[data-combo-button]",
+        popup: "[role=listbox]",
+        options: "[role=option]",
+        relative: "[role=option]"
+      },
+      relationships: [{
+        type: "aria-reference",
+        from: "main",
+        attribute: "aria-controls",
+        to: "popup",
+        level: "required"
+      }, {
+        type: "contains",
+        parent: "popup",
+        child: "options",
+        level: "required"
+      }],
+      static: [{
+        target: "main",
+        assertion: "toHaveRole",
+        attribute: "role",
+        expectedValue: "combobox",
+        level: "required"
+      }],
+      dynamic: [{
+        description: "The selected combobox uses its own button and popup.",
+        level: "required",
+        setup: [{
+          type: "type",
+          target: "input",
+          value: "second value"
+        }],
+        action: [{
+          type: "click",
+          target: "button"
+        }],
+        assertions: [{
+          target: "input",
+          assertion: "toHaveValue",
+          expectedValue: "second value",
+          failureMessage: "The selected input was not used."
+        }, {
+          target: "popup",
+          assertion: "toBeVisible",
+          failureMessage: "The selected popup was not opened."
+        }, {
+          target: "relative",
+          selectorKey: "relative",
+          relativeTarget: "first",
+          assertion: "toHaveAttribute",
+          attribute: "id",
+          expectedValue: "second-option",
+          failureMessage: "The selected popup options were not used."
+        }]
+      }]
+    }));
+
+    try {
+      const result = await runContractTestsPlaywright(
+        "combobox",
+        "data:text/html," + encodeURIComponent(`
+          <script>
+            document.addEventListener("click", (event) => {
+              const button = event.target.closest("button[data-combo-button]");
+              if (!button) return;
+              const input = button.parentElement.querySelector("[role=combobox]");
+              const popup = document.getElementById(input.getAttribute("aria-controls"));
+              popup.hidden = !popup.hidden;
+            });
+          </script>
+          <div><input id="first" role="combobox" aria-controls="first-popup" aria-expanded="false">
+            <button type="button" data-combo-button>First button</button></div>
+          <ul id="first-popup" role="listbox" hidden><li id="first-option" role="option" aria-selected="false">First</li></ul>
+          <div><input id="second" role="combobox" aria-controls="second-popup" aria-expanded="false">
+            <button type="button" data-combo-button>Second button</button></div>
+          <ul id="second-popup" role="listbox" hidden><li id="second-option" role="option" aria-selected="false">Second</li></ul>
+        `),
+        undefined,
+        {
+          test: {
+            components: [{ name: "combobox", contractPath: contractFile }],
+            assertionTimeoutMs: 500,
+            componentReadyTimeoutMs: 500
+          }
+        },
+        undefined,
+        { targetSelector: "#second" }
+      );
+
+      expect(result.failures).toEqual([]);
+      expect(result.passes.filter((pass) => pass.includes("The selected combobox uses its own button and popup.")).length).toBe(3);
+    } finally {
+      rmSync(tempDirectory, { recursive: true, force: true });
+    }
+  });
+
+  it("rejects an ambiguous targeted combobox selector", async () => {
+    await expect(runContractTestsPlaywright(
+      "combobox",
+      "data:text/html," + encodeURIComponent(`
+        <input role="combobox" aria-controls="one"><ul id="one" role="listbox"></ul>
+        <input role="combobox" aria-controls="two"><ul id="two" role="listbox"></ul>
+      `),
+      undefined,
+      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "../../../exprmnts/tests/contracts/combobox.listbox.contract.json") }] } },
+      undefined,
+      { targetSelector: "[role=combobox]" }
+    )).rejects.toThrow(/matched 2 elements/);
+  });
+
+  it("rejects a targeted selector that matches no elements", async () => {
+    await expect(runContractTestsPlaywright(
+      "combobox",
+      "data:text/html,<input role=\"combobox\" aria-controls=\"popup\"><ul id=\"popup\" role=\"listbox\"></ul>",
+      undefined,
+      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "../../../exprmnts/tests/contracts/combobox.listbox.contract.json") }] } },
+      undefined,
+      { targetSelector: "#missing" }
+    )).rejects.toThrow(/matched no elements/);
+  });
+
+  it("rejects a targeted element that is not a combobox", async () => {
+    await expect(runContractTestsPlaywright(
+      "combobox",
+      "data:text/html,<button id=\"not-combobox\">Open</button>",
+      undefined,
+      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "../../../exprmnts/tests/contracts/combobox.listbox.contract.json") }] } },
+      undefined,
+      { targetSelector: "#not-combobox" }
+    )).rejects.toThrow(/does not identify a valid combobox/);
+  });
+
+  it("rejects a targeted combobox with an invalid popup relationship", async () => {
+    await expect(runContractTestsPlaywright(
+      "combobox",
+      "data:text/html,<input id=\"broken\" role=\"combobox\" aria-controls=\"missing-popup\">",
+      undefined,
+      { test: { components: [{ name: "combobox", contractPath: resolve(import.meta.dirname, "../../../exprmnts/tests/contracts/combobox.listbox.contract.json") }] } },
+      undefined,
+      { targetSelector: "#broken" }
+    )).rejects.toThrow(/missing or ambiguous popup/);
+  });
+
   it.each([
     [0, "zero"],
     [3, "out of range"],

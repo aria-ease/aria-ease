@@ -332,6 +332,21 @@ interface ContractTestResult {
     failures: string[];
     skipped: string[];
     warnings?: string[];
+    findings?: ContractFinding[];
+}
+
+interface ContractFinding {
+    id: string;
+    status: 'fail' | 'warn' | 'skip';
+    level: string;
+    phase: 'static' | 'dynamic' | 'relationship' | 'execution';
+    scenario?: string;
+    target?: string;
+    rule?: string;
+    assertion?: string;
+    expected?: unknown;
+    actual?: unknown;
+    message: string;
 }
 
 type DynamicTest = ComponentContract['dynamic'][number];
@@ -361,7 +376,7 @@ export {
     AccessibilityInstance,
     CheckboxConfig,
     ComboboxConfig,
-    ContractTestResult,
+    ContractTestResult, ContractFinding,
     AccordionConfig,
     MenuConfig,
     RadioConfig,

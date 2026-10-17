@@ -111,6 +111,11 @@
       "import": "./dist/src/utils/test/index.js",
       "require": "./dist/src/utils/test/index.cjs"
     },
+    "./test/dsl": {
+      "types": "./dist/src/utils/test/dsl/index.d.ts",
+      "import": "./dist/src/utils/test/dsl/index.js",
+      "require": "./dist/src/utils/test/dsl/index.cjs"
+    },
     "./tabs": {
       "types": "./dist/src/tabs/index.d.ts",
       "import": "./dist/src/tabs/index.js",
