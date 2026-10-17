@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [7.8.9](https://github.com/aria-ease/aria-ease/compare/v7.8.8...v7.8.9) (2026-10-17)
+
+
+### Bug Fixes
+
+* fixed runContractTestsPlaywright not exposed to aria-ease/test import ([bc17445](https://github.com/aria-ease/aria-ease/commit/bc174452401c3996989dee61dc38bd0c1f3a941a))
+* fixed state pack filename casing causing GitHub workflow to fail ([ac89ee9](https://github.com/aria-ease/aria-ease/commit/ac89ee954656e17968949d353764e1ab19a1498f))
+* moving test combobox JSON contract for schema unit test to testing directory ([f1d9742](https://github.com/aria-ease/aria-ease/commit/f1d97429db8dbb3642195c8359c3b92a7953e0f7))
+* moving test combobox JSON contract for schema unit test to testing directory ([2f75b64](https://github.com/aria-ease/aria-ease/commit/2f75b64b819daeb87195145293dc2d3d57a4aa0f))
+* repair cross-platform module build ([21de604](https://github.com/aria-ease/aria-ease/commit/21de60401e38003ae58e35efc45f3e69482524b4))
+* source CLI version from package metadata ([0c55355](https://github.com/aria-ease/aria-ease/commit/0c55355991605f080b66efd628bfc898e5ccc8d8))
+
 ### [7.8.8](https://github.com/aria-ease/aria-ease/compare/v7.8.6...v7.8.8) (2026-10-10)
 
 
