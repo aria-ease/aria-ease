@@ -22,10 +22,19 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
+
+      - name: Check TypeScript
+        run: npx tsc --noEmit
+
+      - name: Lint source
+        run: npm run lint
 
       - name: Install Playwright Chromium
         run: npx playwright install --with-deps chromium
 
       - name: Run unit and integration tests
         run: npm test
+
+      - name: Build package
+        run: npm run build
