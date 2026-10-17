@@ -1,6 +1,6 @@
 {
   "name": "aria-ease",
-  "version": "7.8.5",
+  "version": "7.8.8",
   "description": "Accessibility infrastructure for the entire frontend engineering lifecycle. Build accessible patterns, run automated audits, verify component interactions, and gate deployments — all in one system.",
   "main": "dist/index.cjs",
   "type": "module",
@@ -110,6 +110,11 @@
       "types": "./dist/src/utils/test/index.d.ts",
       "import": "./dist/src/utils/test/index.js",
       "require": "./dist/src/utils/test/index.cjs"
+    },
+    "./test/dsl": {
+      "types": "./dist/src/utils/test/dsl/index.d.ts",
+      "import": "./dist/src/utils/test/dsl/index.js",
+      "require": "./dist/src/utils/test/dsl/index.cjs"
     },
     "./tabs": {
       "types": "./dist/src/tabs/index.d.ts",
