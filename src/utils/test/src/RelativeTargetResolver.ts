@@ -4,6 +4,7 @@
  */
 
 import { Page, Locator } from "playwright";
+import { TargetScope } from "./TargetScope";
 
 export class RelativeTargetResolver {
   /**
@@ -13,7 +14,8 @@ export class RelativeTargetResolver {
    * @param relative Relative position (first, second, last, next, previous)
    * @returns The resolved Locator or null if not found
    */
-  static async resolve( page: Page, selector: string, relative: string | number ): Promise<Locator | null> {
+  static async resolve( page: Page, selector: string, relative: string | number, scope?: TargetScope ): Promise<Locator | null> {
+    if (scope) return scope.resolveRelative(selector, relative);
     const items = await page.locator(selector).all();
 
     if (typeof relative === "number") {

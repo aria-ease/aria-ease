@@ -6,11 +6,13 @@
 import { Page, Locator, expect } from "@playwright/test";
 import type { ComponentContract } from "Types";
 import { RelativeTargetResolver } from "./RelativeTargetResolver";
+import { TargetScope } from "./TargetScope";
 
 export type AssertionResult = {
   success: boolean;
   passMessage?: string;
   failMessage?: string;
+  actual?: unknown;
 };
 
 
@@ -35,7 +37,8 @@ export class AssertionRunner {
   constructor(
     private page: Page,
     private selectors: ComponentContract["selectors"],
-    private assertionTimeoutMs: number
+    private assertionTimeoutMs: number,
+    private scope?: TargetScope
   ) {}
 
   /**
@@ -52,7 +55,7 @@ export class AssertionRunner {
         if (!relativeTarget) {
           return { target: null, error: "Relative target or expected value is not defined." };
         }
-        const target = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget);
+        const target = await RelativeTargetResolver.resolve(this.page, relativeSelector, relativeTarget, this.scope);
         if (!target) {
           return { target: null, error: `Target ${targetName} not found.` };
         }
@@ -63,7 +66,7 @@ export class AssertionRunner {
       if (!selector) {
         return { target: null, error: `Selector for assertion target ${targetName} not found.` };
       }
-      return { target: this.page.locator(selector).first() };
+      return { target: this.scope?.locator(targetName, selector) ?? this.page.locator(selector).first() };
     } catch (error) {
       return {
         target: null,
@@ -128,7 +131,8 @@ export class AssertionRunner {
       } else {
         return {
           success: false,
-          failMessage: `${failureMessage} ${targetName} "${attribute}" should not be empty, found "${attributeValue}".`
+          failMessage: `${failureMessage} ${targetName} "${attribute}" should not be empty, found "${attributeValue}".`,
+          actual: attributeValue
         };
       }
     }
@@ -151,7 +155,8 @@ export class AssertionRunner {
     } else {
       return {
         success: false,
-        failMessage: `${failureMessage} ${targetName} "${attribute}" should be "${expectedValue}", found "${attributeValue}".`
+        failMessage: `${failureMessage} ${targetName} "${attribute}" should be "${expectedValue}", found "${attributeValue}".`,
+        actual: attributeValue
       };
     }
   }
@@ -171,7 +176,8 @@ export class AssertionRunner {
       } else {
         return {
           success: false,
-          failMessage: `${failureMessage} ${targetName} value should not be empty, found "${inputValue}".`
+          failMessage: `${failureMessage} ${targetName} value should not be empty, found "${inputValue}".`,
+          actual: inputValue
         };
       }
     }
@@ -185,7 +191,8 @@ export class AssertionRunner {
       } else {
         return {
           success: false,
-          failMessage: `${failureMessage} ${targetName} value should be empty, found "${inputValue}".`
+          failMessage: `${failureMessage} ${targetName} value should be empty, found "${inputValue}".`,
+          actual: inputValue
         };
       }
     }
@@ -198,7 +205,8 @@ export class AssertionRunner {
     } else {
       return {
         success: false,
-        failMessage: `${failureMessage} ${targetName} value should be "${expectedValue}", found "${inputValue}".`
+        failMessage: `${failureMessage} ${targetName} value should be "${expectedValue}", found "${inputValue}".`,
+        actual: inputValue
       };
     }
   }
@@ -255,7 +263,8 @@ export class AssertionRunner {
     } else {
       return {
         success: false,
-        failMessage: `${failureMessage} Expected role "${expectedRole}", found "${roleValue}".`
+        failMessage: `${failureMessage} Expected role "${expectedRole}", found "${roleValue}".`,
+        actual: roleValue
       };
     }
   }
@@ -285,9 +294,9 @@ export class AssertionRunner {
       }
       let ctrlElem: Locator | null = null;
       if (ctrl.relativeTarget) {
-        ctrlElem = await RelativeTargetResolver.resolve(this.page, ctrlSelector, ctrl.relativeTarget);
+        ctrlElem = await RelativeTargetResolver.resolve(this.page, ctrlSelector, ctrl.relativeTarget, this.scope);
       } else {
-        ctrlElem = this.page.locator(ctrlSelector).first();
+        ctrlElem = this.scope?.locator(ctrl.target, ctrlSelector) ?? this.page.locator(ctrlSelector).first();
       }
       if (!ctrlElem) {
         return { success: false, failMessage: `Controlling element for controlledBy not found.`, target: null };
@@ -299,7 +308,7 @@ export class AssertionRunner {
         return { success: false, failMessage: `Controlling element does not have attribute '${attr}'.`, target: null };
       }
       // 3. Find the controlled element (by ID)
-      target = this.page.locator(`#${controlledId}`);
+      target = this.scope ? this.scope.popup() : this.page.locator(`#${controlledId}`);
       // Optionally, check if it exists
       if (!target || (await target.count()) === 0) {
         return { success: false, failMessage: `Controlled element with id '${controlledId}' not found.`, target: null };
@@ -326,7 +335,7 @@ export class AssertionRunner {
       assertion.relativeTarget && assertion.selectorKey
     ) {
       // Find the expected option element
-      const optionLocator = await RelativeTargetResolver.resolve(this.page, this.selectors[assertion.selectorKey] as string, assertion.relativeTarget);
+      const optionLocator = await RelativeTargetResolver.resolve(this.page, this.selectors[assertion.selectorKey] as string, assertion.relativeTarget, this.scope);
       const optionId = optionLocator ? await optionLocator.getAttribute("id") : null;
       const inputId = await target.getAttribute("aria-activedescendant");
       if (optionId && inputId === optionId) {
@@ -337,7 +346,8 @@ export class AssertionRunner {
       } else {
         return {
           success: false,
-          failMessage: `input[aria-activedescendant] should match id of ${assertion.relativeTarget}(${assertion.selectorKey}), found "${inputId}".`
+          failMessage: `input[aria-activedescendant] should match id of ${assertion.relativeTarget}(${assertion.selectorKey}), found "${inputId}".`,
+          actual: inputId
         };
       }
     }

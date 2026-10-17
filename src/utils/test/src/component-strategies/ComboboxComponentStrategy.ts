@@ -1,13 +1,15 @@
 import { ComponentStrategy } from "Types";
 import { Page, expect } from "@playwright/test";
 import type { ComponentContract } from "Types";
+import { TargetScope } from "../TargetScope";
 
 class ComboboxComponentStrategy implements ComponentStrategy {
     constructor(
         private mainSelector: string,
         private selectors: ComponentContract["selectors"],
         private actionTimeoutMs: number,
-        private assertionTimeoutMs: number
+        private assertionTimeoutMs: number,
+        private scope?: TargetScope
     ) {}
 
     async resetState(page: Page): Promise<void> {
@@ -15,7 +17,7 @@ class ComboboxComponentStrategy implements ComponentStrategy {
         if (!this.selectors.popup) return;
         
         const popupSelector = this.selectors.popup;
-        const popupElement = page.locator(popupSelector).first();
+        const popupElement = this.scope ? this.scope.popup() : page.locator(popupSelector).first();
         
         const isPopupVisible = await popupElement.isVisible().catch(() => false);
         
@@ -27,7 +29,7 @@ class ComboboxComponentStrategy implements ComponentStrategy {
         const closeSelector = this.selectors.main;
         
         if (closeSelector) {
-            const closeElement = page.locator(closeSelector).first();
+            const closeElement = this.scope?.locator("main", closeSelector) ?? page.locator(closeSelector).first();
             await closeElement.focus();
             await page.keyboard.press('Escape');
             
@@ -38,7 +40,7 @@ class ComboboxComponentStrategy implements ComponentStrategy {
         
         // Strategy 2: Click button to toggle closed
         if (!popupClosed && this.selectors.button) {
-            const buttonElement = page.locator(this.selectors.button).first();
+            const buttonElement = this.scope?.locator("button", this.selectors.button) ?? page.locator(this.selectors.button).first();
             await buttonElement.click({ timeout: this.actionTimeoutMs });
             
             popupClosed = await expect(popupElement).toBeHidden({ timeout: this.assertionTimeoutMs })
@@ -67,7 +69,7 @@ class ComboboxComponentStrategy implements ComponentStrategy {
         
         // Clear input if exists
         if (this.selectors.input) {
-            await page.locator(this.selectors.input).first().clear();
+            await (this.scope?.locator("input", this.selectors.input) ?? page.locator(this.selectors.input).first()).clear();
         }
     }
 
@@ -78,6 +80,10 @@ class ComboboxComponentStrategy implements ComponentStrategy {
 
     getMainSelector(): string {
         return this.mainSelector;
+    }
+
+    setTargetScope(scope: TargetScope): void {
+        this.scope = scope;
     }
 }
 
